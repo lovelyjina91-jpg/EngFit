@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Lesson 2 빈칸 채우기 시험</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: #0f172a; color: #f1f5f9; font-family: 'Apple SD Gothic Neo','Malgun Gothic',sans-serif; min-height: 100vh; }
+
+    .hidden { display: none !important; }
+
+    /* ── HOME ── */
+    #s-home {
+      min-height: 100vh;
+      background: linear-gradient(145deg,#0f172a 0%,#1a2744 60%,#0f172a 100%);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .home-inner { max-width: 420px; width: 100%; }
+    .home-eyebrow {
+      font-size: 11px; letter-spacing: 5px; color: #475569;
+      text-transform: uppercase; text-align: center; margin-bottom: 10px;
+    }
+    .home-title {
+      font-size: 30px; font-weight: 800; color: #f8fafc;
+      text-align: center; line-height: 1.25; margin-bottom: 6px;
+    }
+    .home-sub { font-size: 14px; color: #64748b; text-align: center; margin-bottom: 36px; }
+    .home-label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+    #inp-name {
+      width: 100%; padding: 14px 16px; font-size: 16px;
+      border-radius: 12px; border: 1px solid #334155;
+      background: #1e293b; color: #f1f5f9; outline: none; margin-bottom: 18px;
+      transition: border-color .2s;
+    }
+    #inp-name:focus { border-color: #3b82f6; }
+    .btn-start {
+      width: 100%; padding: 18px; border-radius: 14px; border: none;
+      background: linear-gradient(135deg,#3b82f6,#6d28d9);
+      color: #fff; font-size: 18px; font-weight: 700; cursor: pointer;
+      letter-spacing: 0.5px; transition: opacity .15s;
+    }
+    .btn-start:active { opacity: .85; }
+    .home-info {
+      margin-top: 20px; padding: 14px 18px; border-radius: 12px;
+      background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.15);
+      font-size: 13px; color: #64748b; line-height: 1.9;
+    }
+
+    /* ── QUIZ ── */
+    #s-quiz { min-height: 100vh; background: #0f172a; }
+
+    .qz-header {
+      position: sticky; top: 0; z-index: 20;
+      background: #1e293b; border-bottom: 1px solid #2d3f55;
+      padding: 10px 16px 10px;
+    }
+    .qz-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .qz-qnum { font-size: 13px; color: #64748b; }
+    .qz-meta { font-size: 13px; color: #475569; font-variant-numeric: tabular-nums; }
+    .prog-track { height: 4px; background: #2d3f55; border-radius: 2px; overflow: hidden; }
+    .prog-fill { height: 100%; background: linear-gradient(90deg,#3b82f6,#6d28d9); border-radius: 2px; transition: width .3s; }
+
+    .qz-body { max-width: 440px; margin: 0 auto; padding: 20px 16px 110px; }
+
+    .q-card {
+      background: #1e293b; border-radius: 16px; padding: 22px 20px 18px;
+      margin-bottom: 14px; border: 1px solid #2d3f55;
+    }
+    .q-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .q-tag { font-size: 12px; color: #3b82f6; font-weight: 700; letter-spacing: 1px; }
+    .q-badge {
+      font-size: 11px; color: #3b82f6; font-weight: 600;
+      padding: 3px 9px; border-radius: 20px; background: rgba(59,130,246,0.12);
+    }
+    .q-sentence {
+      font-size: 17px; color: #e2e8f0; line-height: 1.75; word-break: keep-all;
+    }
+    .blank-slot {
+      display: inline-block; min-width: 70px;
+      border-bottom: 2.5px solid #3b82f6;
+      color: #93c5fd; font-weight: 700; padding: 0 4px 2px;
+      vertical-align: bottom; text-align: center;
+      font-style: italic; font-size: 15px;
+    }
+    .q-hint { display: none; }
+
+    .ans-wrap { margin-bottom: 8px; }
+    .ans-label { font-size: 12px; color: #475569; margin-bottom: 6px; }
+    #ans-input {
+      width: 100%; padding: 14px 16px; font-size: 17px;
+      border-radius: 12px; border: 1.5px solid #334155;
+      background: #1e293b; color: #f1f5f9; outline: none;
+      transition: border-color .2s; letter-spacing: 0.3px;
+    }
+    #ans-input:focus { border-color: #3b82f6; }
+
+    .qz-footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #1a2438; border-top: 1px solid #2d3f55;
+      padding: 12px 16px; display: flex; gap: 8px; align-items: center;
+    }
+    .btn-prev {
+      flex: 0 0 auto; padding: 13px 18px; border-radius: 10px;
+      border: 1px solid #334155; background: transparent;
+      color: #94a3b8; font-size: 15px; font-weight: 600; cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .btn-prev:disabled { color: #334155; border-color: #253047; cursor: default; }
+    .btn-next {
+      flex: 1; padding: 13px; border-radius: 10px; border: none;
+      background: #3b82f6; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-next:active { background: #2563eb; }
+    .btn-submit {
+      flex: 0 0 auto; padding: 13px 16px; border-radius: 10px; border: none;
+      background: #16a34a; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+
+    /* confirm modal */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 50;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal {
+      background: #1e293b; border-radius: 20px; padding: 28px 24px;
+      max-width: 360px; width: 100%; border: 1px solid #334155;
+    }
+    .modal h3 { font-size: 18px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+    .modal-warn { font-size: 14px; color: #f97316; margin-bottom: 10px; }
+    .modal-desc { font-size: 14px; color: #64748b; margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 8px; }
+    .btn-mc { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #475569; background: transparent; color: #e2e8f0; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-mo { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #16a34a; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+
+    /* ── RESULT ── */
+    #s-result { min-height: 100vh; background: #0f172a; padding: 20px 16px; }
+    .res-inner { max-width: 440px; margin: 0 auto; padding-top: 16px; padding-bottom: 32px; }
+
+    .score-card {
+      background: #1e293b; border-radius: 20px; padding: 30px 24px;
+      text-align: center; margin-bottom: 16px; border: 1px solid #2d3f55;
+    }
+    .sc-label { font-size: 12px; color: #475569; letter-spacing: 3px; margin-bottom: 4px; }
+    .sc-name { font-size: 18px; color: #e2e8f0; font-weight: 700; margin-bottom: 14px; }
+    .sc-grade { font-size: 64px; font-weight: 800; line-height: 1; }
+    .sc-score { font-size: 38px; font-weight: 700; color: #f8fafc; margin-top: 8px; }
+    .sc-denom { font-size: 20px; color: #475569; }
+    .sc-pct { font-size: 15px; color: #64748b; margin-top: 4px; }
+    .sc-bar { margin: 18px auto 0; width: 180px; height: 10px; background: #2d3f55; border-radius: 5px; overflow: hidden; }
+    .sc-bar-fill { height: 100%; border-radius: 5px; }
+
+    .btn-copy-toggle {
+      width: 100%; padding: 15px; border-radius: 14px; border: none;
+      background: #d97706; color: #fff; font-size: 17px; font-weight: 700;
+      cursor: pointer; margin-bottom: 14px; letter-spacing: 0.3px;
+    }
+    #copy-area { margin-bottom: 14px; }
+    .copy-tip { font-size: 12px; color: #d97706; margin-bottom: 7px; font-weight: 600; }
+    #copy-ta {
+      width: 100%; min-height: 180px; padding: 14px; font-size: 13px;
+      border-radius: 12px; border: 1px solid rgba(217,119,6,.35);
+      background: #0a1628; color: #e2e8f0; font-family: monospace;
+      line-height: 1.65; resize: none; outline: none;
+    }
+
+    .wrong-card {
+      background: #1e293b; border-radius: 16px; padding: 20px;
+      border: 1px solid #2d3f55; margin-bottom: 16px;
+    }
+    .wc-title { font-size: 15px; font-weight: 700; color: #f87171; margin-bottom: 12px; }
+    .wi {
+      padding: 10px 12px; border-radius: 8px; margin-bottom: 3px;
+    }
+    .wi:nth-child(odd) { background: rgba(0,0,0,.25); }
+    .wi-sent { font-size: 12px; color: #64748b; margin-bottom: 5px; line-height: 1.55; }
+    .wi-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .wi-yours { font-size: 13px; color: #f87171; }
+    .wi-arr { font-size: 13px; color: #475569; }
+    .wi-correct { font-size: 13px; color: #4ade80; font-weight: 700; }
+    .wi-empty { font-size: 13px; color: #f97316; font-style: italic; }
+
+    .res-btns { display: flex; gap: 8px; }
+    .btn-home { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #475569; background: transparent; color: #e2e8f0; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-retry { flex: 1; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg,#3b82f6,#6d28d9); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="s-home">
+  <div class="home-inner">
+    <div class="home-eyebrow">Lesson 2 · 영어 단어시험</div>
+    <div class="home-title">빈칸 채우기</div>
+    <div class="home-sub" id="home-sub">예문 30문장 · 주관식 입력</div>
+    <div class="home-label">이름</div>
+    <input id="inp-name" type="text" placeholder="이름을 입력하세요" autocomplete="off">
+    <button class="btn-start" onclick="startQuiz()">시험 시작</button>
+    <div class="home-info">
+      · 예문의 밑줄 친 단어를 빈칸에 직접 입력<br>
+      · 제출 전까지 답 자유롭게 수정 가능<br>
+      · 결과 텍스트 복사 → 카톡 전송
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="s-quiz" class="hidden">
+  <div class="qz-header">
+    <div class="qz-header-row">
+      <span class="qz-qnum" id="qz-qnum">1 / 30</span>
+      <span class="qz-meta" id="qz-meta">0:00 · 0개 응답</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="qz-body">
+    <div class="q-card">
+      <div class="q-top">
+        <span class="q-tag" id="q-tag">Q1</span>
+        <span class="q-badge" id="q-badge">leash · 목줄</span>
+      </div>
+      <div class="q-sentence" id="q-sentence"></div>
+      <div class="q-hint" id="q-hint"></div>
+    </div>
+
+    <div class="ans-wrap">
+      <div class="ans-label">정답 입력</div>
+      <input id="ans-input" type="text" placeholder="영어 단어를 입력하세요" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+  </div>
+
+  <div class="qz-footer">
+    <button class="btn-prev" id="btn-prev" onclick="goPrev()" disabled>이전</button>
+    <button class="btn-next" id="btn-next" onclick="goNext()">다음</button>
+    <button class="btn-submit" onclick="openConfirm()">제출 <span id="ans-count">0</span>/30</button>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="overlay hidden" id="modal">
+  <div class="modal">
+    <h3>시험을 제출할까요?</h3>
+    <div class="modal-warn hidden" id="modal-warn"></div>
+    <div class="modal-desc">제출하면 답을 수정할 수 없습니다.</div>
+    <div class="modal-btns">
+      <button class="btn-mc" onclick="closeConfirm()">돌아가기</button>
+      <button class="btn-mo" onclick="finishQuiz()">제출하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="hidden">
+  <div class="res-inner">
+    <div class="score-card">
+      <div class="sc-label">LESSON 2 · 빈칸 채우기</div>
+      <div class="sc-name hidden" id="sc-name"></div>
+      <div class="sc-grade" id="sc-grade"></div>
+      <div class="sc-score">
+        <span id="sc-correct"></span><span class="sc-denom" id="sc-denom"></span>
+      </div>
+      <div class="sc-pct" id="sc-pct"></div>
+      <div class="sc-bar"><div class="sc-bar-fill" id="sc-bar-fill"></div></div>
+    </div>
+
+    <button class="btn-copy-toggle" id="btn-copy" onclick="showCopy()">📋 카톡 전송용 텍스트 보기</button>
+    <div id="copy-area" class="hidden">
+      <div class="copy-tip">꾹 눌러서 전체선택 → 복사 → 카톡 붙여넣기</div>
+      <textarea id="copy-ta" readonly onfocus="this.select()"></textarea>
+    </div>
+
+    <div class="wrong-card hidden" id="wrong-card">
+      <div class="wc-title" id="wc-title"></div>
+      <div id="wrong-list"></div>
+    </div>
+
+    <div class="res-btns">
+      <button class="btn-home" onclick="goHome()">처음으로</button>
+      <button class="btn-retry" onclick="startQuiz()">다시 풀기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ALL_QS = [
+  { word:"leash", kor:"목줄",
+    sent:"The dogs should be kept on a ___ when people take it for a walk.",
+    ans:"leashes" },
+  { word:"leash", kor:"목줄",
+    sent:"She held the cats' ___ carefully because there were many cars.",
+    ans:"leashes" },
+  { word:"reduce", kor:"줄이다, 감소시키다",
+    sent:"We ___ the use of plastic bags because we wanted to protect the environment.",
+    ans:"reduced" },
+  { word:"reduce", kor:"줄이다, 감소시키다",
+    sent:"Exercising regularly ___ stress and help you feel much healthier.",
+    ans:"reduces" },
+  { word:"still", kor:"아직, 여전히",
+    sent:"He is ___ waiting for his friend even though it is getting dark.",
+    ans:"still" },
+  { word:"still", kor:"아직, 여전히",
+    sent:"I studied hard for the test, but I ___ got a few questions wrong.",
+    ans:"still" },
+  { word:"advice", kor:"조언, 충고",
+    sent:"My teacher gave me useful ___ about how to improve my writing skills.",
+    ans:"advice" },
+  { word:"advice", kor:"조언, 충고",
+    sent:"You should listen to your parents' ___ when you have to make important decisions.",
+    ans:"advice" },
+  { word:"be into", kor:"~에 빠져있다",
+    sent:"Last year, my brother ___ basketball, so he played it every weekend.",
+    ans:"was into" },
+  { word:"be into", kor:"~에 빠져있다",
+    sent:"She ___ reading mystery novels, and she often borrows them from the library.",
+    ans:"is into" },
+  { word:"tale", kor:"이야기",
+    sent:"My grandmother told me interesting ___ about her childhood in the countryside.",
+    ans:"tales" },
+  { word:"tale", kor:"이야기",
+    sent:"The movie is based on old folk ___ that has been loved for many years.",
+    ans:"tales" },
+  { word:"increase", kor:"늘리다, 증가시키다",
+    sent:"The company ___ the number of workers to meet customer demand last year.",
+    ans:"increased" },
+  { word:"increase", kor:"늘리다, 증가시키다",
+    sent:"Drinking enough water every day ___ your energy and help you stay focused.",
+    ans:"increases" },
+  { word:"according to", kor:"~에 따르면",
+    sent:"___ the weather report, it will rain heavily in our area tomorrow afternoon.",
+    ans:"according to" },
+  { word:"according to", kor:"~에 따르면",
+    sent:"___ my science teacher, plants need clean water and sunlight to grow well.",
+    ans:"according to" },
+  { word:"block out", kor:"(빛·소리를) 막다",
+    sent:"A thick curtain ___ the sunlight, so I can sleep better in the morning.",
+    ans:"blocks out" },
+  { word:"block out", kor:"(빛·소리를) 막다",
+    sent:"His headphones ___ the noise because the street was very crowded.",
+    ans:"blocked out" },
+  { word:"rule", kor:"규칙",
+    sent:"Some important school ___ say that students must arrive in class before the bell rings.",
+    ans:"rules" },
+  { word:"rule", kor:"규칙",
+    sent:"You must follow all the safety ___ carefully when you are doing experiments in the science lab.",
+    ans:"rules" },
+  { word:"stretch", kor:"펴다, 뻗다",
+    sent:"He ___ his arms and legs before exercising to avoid getting hurt.",
+    ans:"stretches" },
+  { word:"stretch", kor:"펴다, 뻗다",
+    sent:"The cat woke up from its nap and ___ its body slowly on the warm floor.",
+    ans:"stretched" },
+  { word:"harm", kor:"해를 끼치다",
+    sent:"Eating too much sugar every day ___ your teeth and cause other health problems.",
+    ans:"harms" },
+  { word:"harm", kor:"해를 끼치다",
+    sent:"We should not use cruel words because they can ___ other people's feelings deeply.",
+    ans:"harm" },
+  { word:"thundering", kor:"천둥 같은",
+    sent:"We heard a ___ sound just before the heavy rain started.",
+    ans:"thundering" },
+  { word:"thundering", kor:"천둥 같은",
+    sent:"The audience gave the singer ___ applause after her amazing final performance.",
+    ans:"thundering" },
+  { word:"instead of", kor:"~ 대신에",
+    sent:"I drank a bottle of water ___ soda because I wanted to stay healthy.",
+    ans:"instead of" },
+  { word:"instead of", kor:"~ 대신에",
+    sent:"She walked home ___ taking the bus since the weather was nice.",
+    ans:"instead of" },
+  { word:"rub", kor:"문지르다",
+    sent:"He ___ his eyes for a moment because he was very tired after studying all night.",
+    ans:"rubbed" },
+  { word:"rub", kor:"문지르다",
+    sent:"She ___ the table with a clean cloth to remove the dust completely.",
+    ans:"rubs" },
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+let questions = [];
+let curQ = 0;
+let userAnswers = {};
+let startTime = null;
+let timerID = null;
+let playerName = "";
+
+function show(id) {
+  ['s-home','s-quiz','s-result'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+function startQuiz() {
+  playerName = document.getElementById('inp-name').value.trim();
+  questions = shuffle(ALL_QS);
+  curQ = 0;
+  userAnswers = {};
+  clearInterval(timerID);
+  startTime = Date.now();
+  timerID = setInterval(updateMeta, 1000);
+  show('s-quiz');
+  renderQ();
+}
+
+function renderQ() {
+  const q = questions[curQ];
+  const total = questions.length;
+
+  document.getElementById('qz-qnum').textContent = `${curQ+1} / ${total}`;
+  document.getElementById('q-tag').textContent = `Q${curQ+1}`;
+  document.getElementById('q-badge').textContent = '';
+
+  // Render sentence with blank
+  const sentEl = document.getElementById('q-sentence');
+  const parts = q.sent.split('___');
+  const blankTxt = userAnswers[curQ] !== undefined ? userAnswers[curQ] : '\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0';
+  sentEl.innerHTML = '';
+  parts.forEach((part, i) => {
+    sentEl.appendChild(document.createTextNode(part));
+    if (i < parts.length - 1) {
+      const sp = document.createElement('span');
+      sp.className = 'blank-slot';
+      sp.id = 'live-blank';
+      sp.textContent = blankTxt;
+      sentEl.appendChild(sp);
+    }
+  });
+
+  document.getElementById('q-hint').innerHTML = '';
+
+  // Input
+  const inp = document.getElementById('ans-input');
+  inp.value = userAnswers[curQ] !== undefined ? userAnswers[curQ] : '';
+  inp.oninput = function() {
+    userAnswers[curQ] = this.value;
+    updateBlank(this.value);
+    updateFooter();
+  };
+  inp.onkeydown = function(e) {
+    if (e.key === 'Enter') {
+      if (curQ < questions.length - 1) goNext(); else openConfirm();
+    }
+  };
+
+  // Progress
+  const answered = Object.values(userAnswers).filter(v => v.trim() !== '').length;
+  document.getElementById('prog-fill').style.width = `${answered/total*100}%`;
+
+  // Buttons
+  document.getElementById('btn-prev').disabled = curQ === 0;
+  document.getElementById('btn-next').textContent = curQ < total-1 ? '다음' : '마지막 문제';
+  document.getElementById('btn-next').style.background = curQ < total-1 ? '#3b82f6' : '#6d28d9';
+
+  updateFooter();
+  setTimeout(() => inp.focus(), 80);
+}
+
+function updateBlank(val) {
+  const bl = document.getElementById('live-blank');
+  if (bl) bl.textContent = val || '\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0';
+}
+
+function updateFooter() {
+  const answered = Object.values(userAnswers).filter(v => v !== undefined && v.trim() !== '').length;
+  document.getElementById('ans-count').textContent = answered;
+}
+
+function updateMeta() {
+  const s = Math.floor((Date.now() - startTime) / 1000);
+  const mm = Math.floor(s/60), ss = String(s%60).padStart(2,'0');
+  const answered = Object.values(userAnswers).filter(v => v !== undefined && v.trim() !== '').length;
+  document.getElementById('qz-meta').textContent = `${mm}:${ss} · ${answered}개 응답`;
+}
+
+function goNext() {
+  if (curQ < questions.length - 1) { curQ++; renderQ(); window.scrollTo(0,0); }
+}
+
+function goPrev() {
+  if (curQ > 0) { curQ--; renderQ(); window.scrollTo(0,0); }
+}
+
+function openConfirm() {
+  const answered = Object.values(userAnswers).filter(v => v !== undefined && v.trim() !== '').length;
+  const unanswered = questions.length - answered;
+  const warnEl = document.getElementById('modal-warn');
+  if (unanswered > 0) {
+    warnEl.textContent = `아직 ${unanswered}문제를 풀지 않았습니다.`;
+    warnEl.classList.remove('hidden');
+  } else {
+    warnEl.classList.add('hidden');
+  }
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function closeConfirm() {
+  document.getElementById('modal').classList.add('hidden');
+}
+
+function finishQuiz() {
+  clearInterval(timerID);
+  closeConfirm();
+
+  const timeSec = Math.floor((Date.now() - startTime) / 1000);
+  const timeStr = `${Math.floor(timeSec/60)}분 ${timeSec%60}초`;
+
+  let correct = 0;
+  const wrongs = [];
+
+  questions.forEach((q, i) => {
+    const ua = (userAnswers[i] || '').trim().toLowerCase();
+    const ca = q.ans.toLowerCase();
+    if (ua === ca) correct++;
+    else wrongs.push({ q, userAns: userAnswers[i] || '' });
+  });
+
+  const total = questions.length;
+  const pct = Math.round(correct/total*100);
+
+  // Grade
+  let grade, gc;
+  if (pct >= 95) { grade='A+'; gc='#22c55e'; }
+  else if (pct >= 90) { grade='A';  gc='#4ade80'; }
+  else if (pct >= 85) { grade='B+'; gc='#3b82f6'; }
+  else if (pct >= 80) { grade='B';  gc='#60a5fa'; }
+  else if (pct >= 70) { grade='C';  gc='#f97316'; }
+  else                 { grade='D';  gc='#ef4444'; }
+
+  // Score card
+  const nameEl = document.getElementById('sc-name');
+  if (playerName) { nameEl.textContent = playerName; nameEl.classList.remove('hidden'); }
+  else nameEl.classList.add('hidden');
+
+  const gradeEl = document.getElementById('sc-grade');
+  gradeEl.textContent = grade; gradeEl.style.color = gc;
+  document.getElementById('sc-correct').textContent = correct;
+  document.getElementById('sc-denom').textContent = `/${total}`;
+  document.getElementById('sc-pct').textContent = `${pct}% · ${timeStr}`;
+  const barFill = document.getElementById('sc-bar-fill');
+  barFill.style.width = `${pct}%`; barFill.style.background = gc;
+
+  // Copy text
+  const date = new Date().toLocaleDateString('ko-KR');
+  let txt = `[Lesson 2 빈칸 채우기]\n`;
+  txt += `${playerName ? playerName+' | ' : ''}${date}\n`;
+  txt += `${correct}/${total} (${pct}%) | ${timeStr}\n`;
+  if (wrongs.length > 0) {
+    txt += `\n[오답 ${wrongs.length}개]\n`;
+    wrongs.forEach((w, i) => {
+      txt += `${i+1}. ${w.q.word} (${w.q.kor})\n`;
+      txt += `   정답: ${w.q.ans}${w.userAns ? ' / 내답: '+w.userAns : ' (미입력)'}\n`;
+    });
+  } else {
+    txt += `\n만점! 전부 정답! 🎉`;
+  }
+  document.getElementById('copy-ta').value = txt;
+
+  // Wrong list
+  const wCard = document.getElementById('wrong-card');
+  if (wrongs.length > 0) {
+    wCard.classList.remove('hidden');
+    document.getElementById('wc-title').textContent = `오답 목록 (${wrongs.length}개)`;
+    const wList = document.getElementById('wrong-list');
+    wList.innerHTML = '';
+    wrongs.forEach((w, i) => {
+      const blankedSent = w.q.sent.replace('___', `[${w.q.ans}]`);
+      const div = document.createElement('div');
+      div.className = 'wi';
+      const yoursHtml = w.userAns
+        ? `<span class="wi-yours">✗ ${w.userAns}</span><span class="wi-arr">→</span>`
+        : `<span class="wi-empty">미입력</span><span class="wi-arr">→</span>`;
+      div.innerHTML = `
+        <div class="wi-sent">${blankedSent}</div>
+        <div class="wi-row">
+          ${yoursHtml}
+          <span class="wi-correct">✓ ${w.q.ans}</span>
+        </div>`;
+      wList.appendChild(div);
+    });
+  } else {
+    wCard.classList.add('hidden');
+  }
+
+  // Hide copy area
+  document.getElementById('copy-area').classList.add('hidden');
+  document.getElementById('btn-copy').classList.remove('hidden');
+
+  show('s-result');
+  window.scrollTo(0,0);
+}
+
+function showCopy() {
+  document.getElementById('btn-copy').classList.add('hidden');
+  document.getElementById('copy-area').classList.remove('hidden');
+  setTimeout(() => {
+    const ta = document.getElementById('copy-ta');
+    ta.focus(); ta.select();
+  }, 100);
+}
+
+function goHome() {
+  show('s-home');
+}
+
+// Init
+document.getElementById('home-sub').textContent = `예문 ${ALL_QS.length}문장 · 주관식 입력`;
+document.getElementById('inp-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startQuiz();
+});
+</script>
+</body>
+</html>
