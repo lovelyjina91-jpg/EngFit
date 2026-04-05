@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Lesson 1 문법 시험 - Express Your Feelings</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: #0f172a; color: #f1f5f9; font-family: 'Apple SD Gothic Neo','Malgun Gothic',sans-serif; min-height: 100vh; }
+    .hidden { display: none !important; }
+
+    #s-home {
+      min-height: 100vh;
+      background: linear-gradient(145deg, #0f172a 0%, #16213e 55%, #0f172a 100%);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .home-inner { max-width: 420px; width: 100%; }
+    .home-eyebrow { font-size: 11px; letter-spacing: 5px; color: #475569; text-transform: uppercase; text-align: center; margin-bottom: 10px; }
+    .home-title { font-size: 28px; font-weight: 800; color: #f8fafc; text-align: center; line-height: 1.3; margin-bottom: 6px; }
+    .home-sub { font-size: 14px; color: #64748b; text-align: center; margin-bottom: 32px; }
+    .home-label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+    #inp-name { width: 100%; padding: 14px 16px; font-size: 16px; border-radius: 12px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; outline: none; margin-bottom: 18px; transition: border-color .2s; }
+    #inp-name:focus { border-color: #818cf8; }
+    .btn-start { width: 100%; padding: 18px; border-radius: 14px; border: none; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
+    .home-info { margin-top: 20px; padding: 14px 18px; border-radius: 12px; background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.15); font-size: 13px; color: #64748b; line-height: 1.9; }
+    .topic-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .tc { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(99,102,241,0.3); color: #818cf8; }
+
+    #s-quiz { min-height: 100vh; background: #0f172a; }
+    .qz-header { position: sticky; top: 0; z-index: 20; background: #1e293b; border-bottom: 1px solid #2d3f55; padding: 10px 16px; }
+    .qz-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .qz-qnum { font-size: 13px; color: #64748b; }
+    .qz-meta { font-size: 13px; color: #475569; font-variant-numeric: tabular-nums; }
+    .prog-track { height: 4px; background: #2d3f55; border-radius: 2px; overflow: hidden; }
+    .prog-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 2px; transition: width .3s; }
+
+    .qz-body { max-width: 440px; margin: 0 auto; padding: 18px 16px 110px; }
+
+    .q-card { background: #1e293b; border-radius: 16px; padding: 20px 18px 16px; margin-bottom: 12px; border: 1px solid #2d3f55; }
+    .q-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+    .q-tag { font-size: 12px; color: #818cf8; font-weight: 700; letter-spacing: 1px; flex-shrink: 0; }
+    .q-topic { font-size: 11px; color: #818cf8; font-weight: 600; padding: 3px 9px; border-radius: 20px; background: rgba(99,102,241,0.12); }
+    .q-grammar { display: none; }
+    .q-sentence { font-size: 16px; color: #e2e8f0; line-height: 1.85; word-break: keep-all; white-space: pre-line; }
+    .q-note { font-size: 12px; color: #94a3b8; margin-top: 10px; font-style: italic; }
+
+    .opts-wrap { display: grid; gap: 8px; }
+    .opts-wrap.cols2 { grid-template-columns: 1fr 1fr; }
+    .opts-wrap.cols1 { grid-template-columns: 1fr; }
+    .opt-btn { padding: 15px 12px; border-radius: 12px; border: 1.5px solid #334155; background: #1e293b; color: #cbd5e1; font-size: 15px; font-weight: 500; cursor: pointer; transition: all .12s; text-align: center; line-height: 1.4; word-break: keep-all; }
+    .opt-btn.sel { border-color: #6366f1; background: rgba(99,102,241,0.13); color: #f1f5f9; font-weight: 700; }
+    .ox-o { font-size: 26px; font-weight: 800; padding: 20px; color: #64748b; }
+    .ox-x { font-size: 26px; font-weight: 800; padding: 20px; color: #64748b; }
+    .ox-o.sel { border-color: #22c55e; background: rgba(34,197,94,0.1); color: #22c55e; }
+    .ox-x.sel { border-color: #ef4444; background: rgba(239,68,68,0.1); color: #ef4444; }
+
+    .qz-footer { position: fixed; bottom: 0; left: 0; right: 0; background: #1a2438; border-top: 1px solid #2d3f55; padding: 12px 16px; display: flex; gap: 8px; }
+    .btn-prev { flex: 0 0 auto; padding: 13px 16px; border-radius: 10px; border: 1px solid #334155; background: transparent; color: #94a3b8; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-prev:disabled { color: #334155; border-color: #253047; cursor: default; }
+    .btn-next { flex: 1; padding: 13px; border-radius: 10px; border: none; background: #6366f1; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .btn-submit { flex: 0 0 auto; padding: 13px 14px; border-radius: 10px; border: none; background: #16a34a; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal { background: #1e293b; border-radius: 20px; padding: 28px 24px; max-width: 360px; width: 100%; border: 1px solid #334155; }
+    .modal h3 { font-size: 18px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+    .modal-warn { font-size: 14px; color: #f97316; margin-bottom: 10px; }
+    .modal-desc { font-size: 14px; color: #64748b; margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 8px; }
+    .btn-mc { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #475569; background: transparent; color: #e2e8f0; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-mo { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #16a34a; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+
+    #s-result { min-height: 100vh; background: #0f172a; padding: 20px 16px; }
+    .res-inner { max-width: 440px; margin: 0 auto; padding-top: 16px; padding-bottom: 32px; }
+    .score-card { background: #1e293b; border-radius: 20px; padding: 30px 24px; text-align: center; margin-bottom: 16px; border: 1px solid #2d3f55; }
+    .sc-label { font-size: 12px; color: #475569; letter-spacing: 2px; margin-bottom: 4px; }
+    .sc-name { font-size: 18px; color: #e2e8f0; font-weight: 700; margin-bottom: 14px; }
+    .sc-grade { font-size: 64px; font-weight: 800; line-height: 1; }
+    .sc-score { font-size: 38px; font-weight: 700; color: #f8fafc; margin-top: 8px; }
+    .sc-denom { font-size: 20px; color: #475569; }
+    .sc-pct { font-size: 15px; color: #64748b; margin-top: 4px; }
+    .sc-bar { margin: 18px auto 0; width: 180px; height: 10px; background: #2d3f55; border-radius: 5px; overflow: hidden; }
+    .sc-bar-fill { height: 100%; border-radius: 5px; }
+
+    .topic-summary { background: #1e293b; border-radius: 16px; padding: 18px 20px; margin-bottom: 14px; border: 1px solid #2d3f55; }
+    .ts-title { font-size: 13px; font-weight: 700; color: #94a3b8; margin-bottom: 12px; }
+    .ts-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(30,58,92,.3); }
+    .ts-row:last-child { border-bottom: none; }
+    .ts-topic { font-size: 13px; color: #cbd5e1; }
+    .ts-score { font-size: 13px; font-weight: 700; }
+
+    .btn-copy-toggle { width: 100%; padding: 15px; border-radius: 14px; border: none; background: #d97706; color: #fff; font-size: 17px; font-weight: 700; cursor: pointer; margin-bottom: 14px; }
+    #copy-area { margin-bottom: 14px; }
+    .copy-tip { font-size: 12px; color: #d97706; margin-bottom: 7px; font-weight: 600; }
+    #copy-ta { width: 100%; min-height: 160px; padding: 14px; font-size: 13px; border-radius: 12px; border: 1px solid rgba(217,119,6,.35); background: #0a1628; color: #e2e8f0; font-family: monospace; line-height: 1.65; resize: none; outline: none; }
+
+    .wrong-card { background: #1e293b; border-radius: 16px; padding: 20px; border: 1px solid #2d3f55; margin-bottom: 16px; }
+    .wc-title { font-size: 15px; font-weight: 700; color: #f87171; margin-bottom: 12px; }
+    .wi { padding: 13px 14px; border-radius: 10px; margin-bottom: 8px; background: rgba(0,0,0,.3); }
+    .wi-topic { font-size: 11px; color: #818cf8; font-weight: 600; margin-bottom: 5px; }
+    .wi-sent { font-size: 13px; color: #94a3b8; margin-bottom: 8px; line-height: 1.65; white-space: pre-line; }
+    .wi-ans-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .wi-yours { font-size: 13px; color: #f87171; }
+    .wi-arr { font-size: 13px; color: #475569; }
+    .wi-correct { font-size: 13px; color: #4ade80; font-weight: 700; }
+    .wi-corrform { font-size: 12px; color: #34d399; margin-bottom: 5px; }
+    .wi-exp { font-size: 12px; color: #64748b; line-height: 1.55; }
+    .wi-exp-rule { font-size: 13px; color: #94a3b8; font-weight: 600; margin-bottom: 6px; line-height: 1.5; }
+    .wi-exp-examples { margin-top: 8px; }
+    .wi-exp-ex { font-size: 12px; color: #64748b; line-height: 1.6; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .wi-exp-ex:last-child { border-bottom: none; }
+    .wi-exp-ex b { color: #818cf8; }
+
+    .res-btns { display: flex; gap: 8px; }
+    .btn-home { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #475569; background: transparent; color: #e2e8f0; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-retry { flex: 1; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<div id="s-home">
+  <div class="home-inner">
+    <div class="home-eyebrow">Lesson 1 · Express Your Feelings</div>
+    <div class="home-title">문법 시험</div>
+    <div class="home-sub" id="home-sub">문법 36문항 · 선택형</div>
+    <div class="home-label">이름</div>
+    <input id="inp-name" type="text" placeholder="이름을 입력하세요" autocomplete="off">
+    <button class="btn-start" onclick="startQuiz()">시험 시작</button>
+    <div class="home-info">
+      · 간접의문문 · 현재/과거분사 · with분사구 · 관계대명사
+      <div class="topic-chips">
+        <span class="tc">O/X 어법 판단</span>
+        <span class="tc">2지선다 선택</span>
+        <span class="tc">오답 해설 제공</span>
+        <span class="tc">영역별 결과</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="s-quiz" class="hidden">
+  <div class="qz-header">
+    <div class="qz-header-row">
+      <span class="qz-qnum" id="qz-qnum">1 / 36</span>
+      <span class="qz-meta" id="qz-meta">0:00 · 0개 응답</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div class="qz-body">
+    <div class="q-card">
+      <div class="q-top">
+        <span class="q-tag" id="q-tag">Q1</span>
+        <span class="q-topic" id="q-topic"></span>
+      </div>
+      <div class="q-grammar" id="q-grammar"></div>
+      <div class="q-sentence" id="q-sentence"></div>
+      <div class="q-note hidden" id="q-note"></div>
+    </div>
+    <div id="opts-container"></div>
+  </div>
+  <div class="qz-footer">
+    <button class="btn-prev" id="btn-prev" onclick="goPrev()" disabled>이전</button>
+    <button class="btn-next" id="btn-next" onclick="goNext()">다음</button>
+    <button class="btn-submit" onclick="openConfirm()">제출 <span id="ans-count">0</span>/<span id="total-count">36</span></button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="modal">
+  <div class="modal">
+    <h3>시험을 제출할까요?</h3>
+    <div class="modal-warn hidden" id="modal-warn"></div>
+    <div class="modal-desc">제출하면 답을 수정할 수 없습니다.</div>
+    <div class="modal-btns">
+      <button class="btn-mc" onclick="closeConfirm()">돌아가기</button>
+      <button class="btn-mo" onclick="finishQuiz()">제출하기</button>
+    </div>
+  </div>
+</div>
+
+<div id="s-result" class="hidden">
+  <div class="res-inner">
+    <div class="score-card">
+      <div class="sc-label">LESSON 1 · 문법 시험</div>
+      <div class="sc-name hidden" id="sc-name"></div>
+      <div class="sc-grade" id="sc-grade"></div>
+      <div class="sc-score"><span id="sc-correct"></span><span class="sc-denom" id="sc-denom"></span></div>
+      <div class="sc-pct" id="sc-pct"></div>
+      <div class="sc-bar"><div class="sc-bar-fill" id="sc-bar-fill"></div></div>
+    </div>
+    <div class="topic-summary" id="topic-summary"></div>
+    <button class="btn-copy-toggle" id="btn-copy" onclick="showCopy()">📋 카톡 전송용 텍스트 보기</button>
+    <div id="copy-area" class="hidden">
+      <div class="copy-tip">꾹 눌러서 전체선택 → 복사 → 카톡 붙여넣기</div>
+      <textarea id="copy-ta" readonly onfocus="this.select()"></textarea>
+    </div>
+    <div class="wrong-card hidden" id="wrong-card">
+      <div class="wc-title" id="wc-title"></div>
+      <div id="wrong-list"></div>
+    </div>
+    <div class="res-btns">
+      <button class="btn-home" onclick="goHome()">처음으로</button>
+      <button class="btn-retry" onclick="startQuiz()">다시 풀기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const Q = [
+  // 간접의문문 O/X
+  { topic:"간접의문문", grammar:"", type:"ox",
+    sent:"Could you tell me where the nearest subway station is?",
+    note:"이 문장의 어법이 맞으면 O, 틀리면 X", answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">✓ 올바른 문장입니다.<br>간접의문문 어순: 의문사 + 주어 + 동사 (평서문 어순)</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. Could you tell me <b>where the station is</b>? (O) ← 의문사+주어+동사</div><div class="wi-exp-ex">2. Do you know <b>what time it starts</b>? (O)</div><div class="wi-exp-ex">3. I wonder <b>who she is</b>. (O)</div><div class="wi-exp-ex">4. She asked me <b>where I lived</b>. (O)</div><div class="wi-exp-ex">5. Tell me <b>why you are late</b>. (O)</div></div>` },
+  { topic:"간접의문문", grammar:"", type:"ox",
+    sent:"I don't know why did she leave the meeting early.",
+    note:"이 문장의 어법이 맞으면 O, 틀리면 X", answer:1, cf:"→ I don't know why she left the meeting early.",
+    exp:`<div class="wi-exp-rule">✗ 틀린 문장입니다.<br>간접의문문에서는 조동사 did를 쓰지 않습니다. "did + 동사원형"을 "동사 과거형"으로 바꿔야 합니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. I don't know why <b>did she leave</b>. (✗) → why <b>she left</b>. (✓)</div><div class="wi-exp-ex">2. Do you know where <b>did he go</b>? (✗) → where <b>he went</b>? (✓)</div><div class="wi-exp-ex">3. She wonders what <b>did I say</b>. (✗) → what <b>I said</b>. (✓)</div><div class="wi-exp-ex">4. Tell me when <b>did the bus arrive</b>. (✗) → when <b>the bus arrived</b>. (✓)</div><div class="wi-exp-ex">5. I wonder how <b>did they find it</b>. (✗) → how <b>they found it</b>. (✓)</div></div>` },
+  { topic:"간접의문문", grammar:"", type:"ox",
+    sent:"Do you remember what time the movie starts?",
+    note:"이 문장의 어법이 맞으면 O, 틀리면 X", answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">✓ 올바른 문장입니다.<br>간접의문문 어순: 의문사(구) + 주어 + 동사. "what time"이 의문사구로 쓰였습니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. Do you know <b>what time the store closes</b>? (O)</div><div class="wi-exp-ex">2. I wonder <b>how long the trip takes</b>. (O)</div><div class="wi-exp-ex">3. She asked me <b>which bus I should take</b>. (O)</div><div class="wi-exp-ex">4. Nobody knows <b>how many people were there</b>. (O)</div><div class="wi-exp-ex">5. He asked <b>whose bag this was</b>. (O)</div></div>` },
+  { topic:"간접의문문", grammar:"", type:"ox",
+    sent:"Why you didn't answer my message yesterday?",
+    note:"이 문장의 어법이 맞으면 O, 틀리면 X", answer:1, cf:"→ Why didn't you answer my message yesterday?",
+    exp:`<div class="wi-exp-rule">✗ 틀린 문장입니다.<br>이것은 직접의문문으로, 어순은 "의문사 + 조동사 + 주어 + 동사"여야 합니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. Why <b>you didn't come</b>? (✗) → Why <b>didn't you come</b>? (✓)</div><div class="wi-exp-ex">2. Where <b>she is going</b>? (✗) → Where <b>is she going</b>? (✓)</div><div class="wi-exp-ex">3. What <b>he wants</b>? (✗) → What <b>does he want</b>? (✓)</div><div class="wi-exp-ex">4. How <b>you solved this</b>? (✗) → How <b>did you solve this</b>? (✓)</div><div class="wi-exp-ex">5. When <b>they arrived</b>? (✗) → When <b>did they arrive</b>? (✓)</div></div>` },
+  { topic:"간접의문문", grammar:"", type:"binary",
+    sent:"When does the school festival start? (직접)\n→ Do you know when the school festival ___?",
+    options:["does start","starts"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">간접의문문에서는 조동사 does를 제거하고, 동사에 -s를 붙입니다.<br>"does + 동사원형" → "동사-s"</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. When does it open? → Do you know when it <b>opens</b>?</div><div class="wi-exp-ex">2. Where does she live? → I wonder where she <b>lives</b>.</div><div class="wi-exp-ex">3. What does he want? → Tell me what he <b>wants</b>.</div><div class="wi-exp-ex">4. How does it work? → Do you know how it <b>works</b>?</div><div class="wi-exp-ex">5. Why does the sky look red? → She explained why the sky <b>looks</b> red.</div></div>` },
+  { topic:"간접의문문", grammar:"", type:"binary",
+    sent:"What is the capital of France? (직접)\n→ Everybody knows what the capital of France ___.",
+    options:["does","is"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">be동사가 있는 의문문을 간접의문문으로 바꿀 때: "의문사 + be동사 + 주어?" → "의문사 + 주어 + be동사"<br>be동사를 주어 뒤로 이동시킵니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. What is her name? → I know what her name <b>is</b>.</div><div class="wi-exp-ex">2. Where is the bus stop? → Do you know where the bus stop <b>is</b>?</div><div class="wi-exp-ex">3. Who is that man? → I wonder who that man <b>is</b>.</div><div class="wi-exp-ex">4. How old is she? → Tell me how old she <b>is</b>.</div><div class="wi-exp-ex">5. When is the exam? → He asked me when the exam <b>was</b>.</div></div>` },
+  { topic:"간접의문문", grammar:"", type:"binary",
+    sent:"Why is the sky blue? (직접)\n→ She explains ___ the sky is blue.",
+    options:["why","what"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">의문사는 그 문장이 묻고 있는 내용에 따라 결정됩니다. why는 이유, what은 무엇, where는 장소, when은 시간, how는 방법.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. Why does it rain? → She explains <b>why</b> it rains. (이유)</div><div class="wi-exp-ex">2. What is he doing? → I wonder <b>what</b> he is doing. (무엇)</div><div class="wi-exp-ex">3. Where do they live? → I know <b>where</b> they live. (장소)</div><div class="wi-exp-ex">4. When did she leave? → He told me <b>when</b> she left. (시간)</div><div class="wi-exp-ex">5. How does this work? → Show me <b>how</b> this works. (방법)</div></div>` },
+  { topic:"간접의문문", grammar:"", type:"binary",
+    sent:"Where can we buy tickets? (직접)\n→ They didn't know ___ we could buy tickets.",
+    options:["what","where"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">장소를 묻는 의문사 where는 간접의문문이 되어도 where를 그대로 씁니다. 조동사 can → could로 바뀐 점도 주목하세요 (시제 일치).</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. Where can I park? → I don't know <b>where</b> I can park.</div><div class="wi-exp-ex">2. Where does she study? → Tell me <b>where</b> she studies.</div><div class="wi-exp-ex">3. Where did you find it? → I wonder <b>where</b> you found it.</div><div class="wi-exp-ex">4. Where is the library? → Do you know <b>where</b> the library is?</div><div class="wi-exp-ex">5. Where should we meet? → She asked <b>where</b> we should meet.</div></div>` },
+  // 현재/과거분사
+  { topic:"현재/과거분사", grammar:"", type:"binary",
+    sent:"한강's books are ___ worldwide.\n(한강의 책들은 전 세계적으로 읽힌다.)",
+    options:["reading","read"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">명사가 "~되는/된" 수동의 의미일 때 → 과거분사(p.p.)<br>명사가 "~하는" 능동의 의미일 때 → 현재분사(-ing)</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. The window was <b>broken</b>. (창문이 깨졌다 → 수동 p.p.)</div><div class="wi-exp-ex">2. English is <b>spoken</b> worldwide. (영어가 사용된다 → 수동 p.p.)</div><div class="wi-exp-ex">3. The children are <b>playing</b> outside. (아이들이 놀고 있다 → 능동 -ing)</div><div class="wi-exp-ex">4. The letter was <b>written</b> in French. (편지가 쓰여졌다 → 수동 p.p.)</div><div class="wi-exp-ex">5. The project is being <b>reviewed</b> now. (프로젝트가 검토되고 있다 → 수동 p.p.)</div></div>` },
+  { topic:"현재/과거분사", grammar:"", type:"binary",
+    sent:"His story is ___ everywhere.\n(그의 이야기는 어디서나 전해진다.)",
+    options:["telling","told"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">이야기(story)가 스스로 말하는 것이 아니라 "전해지는" 것 → 수동 → 과거분사 told</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. The news was <b>told</b> to everyone. (소식이 모든 이에게 전해졌다)</div><div class="wi-exp-ex">2. Her story is <b>known</b> by many people. (그녀의 이야기는 많이 알려져 있다)</div><div class="wi-exp-ex">3. The song is <b>sung</b> at every event. (그 노래는 매 행사에서 불린다)</div><div class="wi-exp-ex">4. The poem was <b>recited</b> beautifully. (그 시는 아름답게 낭송되었다)</div><div class="wi-exp-ex">5. Legends are <b>passed down</b> from generation to generation. (전설은 대대로 전해진다)</div></div>` },
+  { topic:"현재/과거분사", grammar:"", type:"binary",
+    sent:"Many people are ___ coffee.\n(많은 사람들이 커피를 즐기고 있다.)",
+    options:["enjoying","enjoyed"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">사람들이 스스로 능동적으로 즐기는 것 → 현재분사 -ing<br>"be + -ing"는 진행 또는 능동의 의미입니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. She is <b>reading</b> a book. (그녀가 책을 읽고 있다 → 능동)</div><div class="wi-exp-ex">2. They are <b>enjoying</b> the party. (그들이 파티를 즐기고 있다 → 능동)</div><div class="wi-exp-ex">3. He is <b>driving</b> to school. (그가 학교로 운전하고 있다 → 능동)</div><div class="wi-exp-ex">4. We are <b>watching</b> a movie. (우리가 영화를 보고 있다 → 능동)</div><div class="wi-exp-ex">5. The kids are <b>playing</b> in the park. (아이들이 공원에서 놀고 있다 → 능동)</div></div>` },
+  { topic:"현재/과거분사", grammar:"", type:"binary",
+    sent:"I found a ___ umbrella in the box.\n(나는 상자 안에서 부서진 우산을 발견했다.)",
+    options:["breaking","broken"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">우산이 스스로 부수는 것이 아니라 "부서진" 상태 → 수동 → 과거분사 broken<br>명사를 꾸밀 때: 수동/완료 의미 → p.p.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. a <b>broken</b> window (부서진 창문 → 수동 p.p.)</div><div class="wi-exp-ex">2. a <b>stolen</b> car (도난당한 자동차 → 수동 p.p.)</div><div class="wi-exp-ex">3. a <b>used</b> book (중고책 → 수동 p.p.)</div><div class="wi-exp-ex">4. a <b>melted</b> candle (녹은 양초 → 수동 p.p.)</div><div class="wi-exp-ex">5. a <b>locked</b> door (잠긴 문 → 수동 p.p.)</div></div>` },
+  { topic:"현재/과거분사", grammar:"", type:"binary",
+    sent:"Look, I got ___ news.\n(봐봐, 나 놀라운 소식 들었어.)",
+    options:["surprising","surprised"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">news(소식)가 듣는 사람을 놀라게 하는 것 → 능동(-ing)<br>사물이나 상황이 감정을 "일으키는" 쪽 → -ing</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. The news was <b>surprising</b>. (소식이 놀라운 것 → 사물이 감정 유발)</div><div class="wi-exp-ex">2. The result was <b>shocking</b>. (결과가 충격적인 것 → 사물이 감정 유발)</div><div class="wi-exp-ex">3. It was an <b>exciting</b> game. (흥미진진한 경기 → 사물이 흥미 유발)</div><div class="wi-exp-ex">4. The movie was <b>boring</b>. (영화가 지루한 것 → 사물이 감정 유발)</div><div class="wi-exp-ex">5. It was a <b>touching</b> story. (감동적인 이야기 → 사물이 감동 유발)</div></div>` },
+  { topic:"현재/과거분사", grammar:"", type:"binary",
+    sent:"His ___ lips mean that he will tell nothing.\n(그의 굳게 닫힌 입술은 아무것도 말하지 않을 것임을 의미한다.)",
+    options:["closing","closed"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">입술이 "닫혀있는" 상태 → 수동 → 과거분사 closed<br>closing은 "지금 닫히는 중"(능동진행)이므로 의미가 다릅니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. <b>closed</b> eyes (감긴 눈 → 눈이 감겨있는 상태, 수동)</div><div class="wi-exp-ex">2. a <b>locked</b> door (잠긴 문 → 문이 잠겨있는 상태, 수동)</div><div class="wi-exp-ex">3. a <b>folded</b> letter (접힌 편지 → 편지가 접혀있는 상태, 수동)</div><div class="wi-exp-ex">4. <b>frozen</b> food (냉동된 음식 → 음식이 얼려있는 상태, 수동)</div><div class="wi-exp-ex">5. a <b>crumpled</b> paper (구겨진 종이 → 종이가 구겨진 상태, 수동)</div></div>` },
+  // 감정 분사
+  { topic:"감정 분사", grammar:"", type:"binary",
+    sent:"She looked at me with a ___ expression.\n(그녀는 혼란스러운 표정으로 나를 바라봤다.)",
+    options:["confusing","confused"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">사람이 감정을 "느끼는" 쪽 → p.p. (수동적으로 감정을 받음)<br>상황/사물이 감정을 "일으키는" 쪽 → -ing</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. I was <b>confused</b> by the question. (나는 혼란스러웠다 → 사람이 감정 느낌)</div><div class="wi-exp-ex">2. The question was <b>confusing</b>. (질문이 혼란스러운 것 → 사물이 감정 유발)</div><div class="wi-exp-ex">3. She felt <b>surprised</b>. (그녀는 놀랐다 → 사람이 감정 느낌)</div><div class="wi-exp-ex">4. He was <b>bored</b> at the meeting. (그는 회의에서 지루함을 느꼈다 → 사람)</div><div class="wi-exp-ex">5. The lecture was <b>boring</b>. (강의가 지루한 것 → 사물이 감정 유발)</div></div>` },
+  { topic:"감정 분사", grammar:"", type:"binary",
+    sent:"The movie was so ___ that many students fell asleep.\n(그 영화는 너무 지루해서 많은 학생들이 잠들었다.)",
+    options:["boring","bored"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">영화(사물)가 지루함을 "일으키는" 것 → -ing<br>bored는 사람이 지루함을 "느낄 때" 사용합니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. The class was <b>boring</b>. / The students were <b>bored</b>. (수업이 지루했다 / 학생들이 지루함을 느꼈다)</div><div class="wi-exp-ex">2. The game was <b>exciting</b>. / The fans were <b>excited</b>. (경기가 흥미로웠다 / 팬들이 흥분했다)</div><div class="wi-exp-ex">3. The speech was <b>moving</b>. / She was <b>moved</b>. (연설이 감동적이었다 / 그녀는 감동받았다)</div><div class="wi-exp-ex">4. The story was <b>shocking</b>. / We were <b>shocked</b>. (이야기가 충격적이었다 / 우리는 충격받았다)</div><div class="wi-exp-ex">5. The joke was <b>amusing</b>. / Everyone was <b>amused</b>. (농담이 재미있었다 / 모두가 즐거워했다)</div></div>` },
+  { topic:"감정 분사", grammar:"", type:"binary",
+    sent:"I heard a ___ baby in the next room.\n(나는 옆방에서 우는 아기 소리를 들었다.)",
+    options:["crying","cried"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">아기가 능동적으로 "울고 있는" 것 → -ing<br>명사를 꾸밀 때: 명사가 스스로 동작을 하는 경우 → -ing</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. a <b>crying</b> baby (우는 아기 → 아기가 능동적으로 울다)</div><div class="wi-exp-ex">2. a <b>sleeping</b> cat (자는 고양이 → 고양이가 능동적으로 자다)</div><div class="wi-exp-ex">3. a <b>running</b> man (달리는 남자 → 남자가 능동적으로 달리다)</div><div class="wi-exp-ex">4. a <b>smiling</b> girl (웃는 소녀 → 소녀가 능동적으로 웃다)</div><div class="wi-exp-ex">5. a <b>barking</b> dog (짖는 개 → 개가 능동적으로 짖다)</div></div>` },
+  { topic:"감정 분사", grammar:"", type:"binary",
+    sent:"The students listened carefully to the ___ news.\n(학생들은 놀라운 뉴스를 주의 깊게 들었다.)",
+    options:["surprising","surprised"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">뉴스(사물)가 듣는 사람을 놀라게 하는 것 → -ing<br>surprised는 사람이 놀랐을 때 씁니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. <b>surprising</b> news (놀라운 소식 → 소식이 사람을 놀라게 함)</div><div class="wi-exp-ex">2. <b>surprised</b> students (놀란 학생들 → 학생들이 놀람을 느낌)</div><div class="wi-exp-ex">3. an <b>interesting</b> book (흥미로운 책 → 책이 흥미를 유발)</div><div class="wi-exp-ex">4. an <b>interested</b> reader (관심 있는 독자 → 독자가 흥미를 느낌)</div><div class="wi-exp-ex">5. a <b>frightening</b> experience (무서운 경험 → 경험이 공포를 유발)</div></div>` },
+  { topic:"감정 분사", grammar:"", type:"binary",
+    sent:"He walked into the room with a ___ face.\n(그는 웃는 얼굴로 방에 들어왔다.)",
+    options:["smiling","smiled"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">얼굴이 능동적으로 "웃고 있는" 것 → -ing<br>명사가 스스로 동작을 하는 경우 → -ing로 수식합니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. a <b>smiling</b> face (웃는 얼굴 → 얼굴이 웃고 있음)</div><div class="wi-exp-ex">2. a <b>waving</b> hand (흔드는 손 → 손이 능동적으로 흔들림)</div><div class="wi-exp-ex">3. a <b>glowing</b> light (빛나는 빛 → 빛이 능동적으로 빛남)</div><div class="wi-exp-ex">4. a <b>shining</b> star (빛나는 별 → 별이 능동적으로 빛남)</div><div class="wi-exp-ex">5. a <b>beating</b> heart (뛰는 심장 → 심장이 능동적으로 뜀)</div></div>` },
+  // with + 분사구
+  { topic:"with + 분사구", grammar:"", type:"binary",
+    sent:"He stood there with his arms ___.\n(그는 팔짱을 낀 채 거기 서 있었다.)",
+    options:["crossing","crossed"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">"with + 명사 + 분사" 구조에서 명사가 분사의 의미상 주어입니다.<br>arms(팔)이 "교차된" 상태 → 수동 → p.p.(crossed)</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. He sat with his legs <b>crossed</b>. (다리가 꼬여있는 → 수동 p.p.)</div><div class="wi-exp-ex">2. She stood with her arms <b>folded</b>. (팔이 접혀있는 → 수동 p.p.)</div><div class="wi-exp-ex">3. He slept with his mouth <b>open</b>. (입이 벌어진 → 수동 p.p.)</div><div class="wi-exp-ex">4. She listened with her eyes <b>closed</b>. (눈이 감긴 → 수동 p.p.)</div><div class="wi-exp-ex">5. He stood with his hands <b>tied</b>. (손이 묶인 → 수동 p.p.)</div></div>` },
+  { topic:"with + 분사구", grammar:"", type:"binary",
+    sent:"The boy ran into the classroom with his bag ___ on his back.\n(그 소년은 가방을 등에 메고 교실로 뛰어들었다.)",
+    options:["carrying","carried"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">가방(bag)이 등에 "메어진" 상태 → 수동 → carried<br>가방이 스스로 들고 다니는 것이 아니므로 p.p.를 씁니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. She came in with a letter <b>sealed</b> in her hand. (편지가 봉해진 → 수동)</div><div class="wi-exp-ex">2. He left with his homework <b>unfinished</b>. (숙제가 미완성된 → 수동)</div><div class="wi-exp-ex">3. She fell asleep with her laptop <b>turned on</b>. (노트북이 켜진 → 수동)</div><div class="wi-exp-ex">4. He walked out with his tie <b>loosened</b>. (넥타이가 풀린 → 수동)</div><div class="wi-exp-ex">5. She appeared with her hair <b>tied up</b>. (머리가 묶인 → 수동)</div></div>` },
+  { topic:"with + 분사구", grammar:"", type:"binary",
+    sent:"She walked away with tears ___ down her face.\n(그녀는 눈물을 흘리며 걸어갔다.)",
+    options:["running","run"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">눈물(tears)이 능동적으로 "흘러내리는" 것 → -ing<br>눈물이 스스로 흘러내리는 동작이므로 현재분사(-ing)를 씁니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. with water <b>dripping</b> from the roof (물이 지붕에서 뚝뚝 떨어지며 → 능동)</div><div class="wi-exp-ex">2. with music <b>playing</b> in the background (음악이 배경에서 흘러나오며 → 능동)</div><div class="wi-exp-ex">3. with the clock <b>ticking</b> loudly (시계가 크게 똑딱거리며 → 능동)</div><div class="wi-exp-ex">4. with the engine <b>running</b> (엔진이 돌아가며 → 능동)</div><div class="wi-exp-ex">5. with the wind <b>blowing</b> through her hair (바람이 그녀의 머리카락 사이로 불며 → 능동)</div></div>` },
+  { topic:"with + 분사구", grammar:"", type:"binary",
+    sent:"The thief left the house in a hurry with everything ___ up.\n(도둑은 모든 것을 엉망으로 만들어 놓고 서둘러 집을 떠났다.)",
+    options:["messing","messed"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">everything이 "엉망이 된" 상태 → 수동 → messed<br>사물이 동작을 당한(수동) 결과 상태를 나타낼 때 p.p.를 씁니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. with the room <b>cleaned</b> (방이 청소된 상태로 → 수동)</div><div class="wi-exp-ex">2. with all the dishes <b>washed</b> (설거지가 다 된 상태로 → 수동)</div><div class="wi-exp-ex">3. with the door <b>locked</b> (문이 잠긴 상태로 → 수동)</div><div class="wi-exp-ex">4. with his phone <b>broken</b> (핸드폰이 부서진 상태로 → 수동)</div><div class="wi-exp-ex">5. with his heart <b>shattered</b> (마음이 산산조각 난 상태로 → 수동)</div></div>` },
+  { topic:"with + 분사구", grammar:"", type:"binary",
+    sent:"He talked for a long time with chili flakes ___ between his teeth.\n(그는 이빨 사이에 고추 조각이 끼인 채 오랫동안 이야기했다.)",
+    options:["sticking","stuck"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">고추 조각(flakes)이 이빨 사이에 "끼어있는" 상태 → 수동 → stuck (stick의 불규칙 p.p.)<br>stick-stuck-stuck 불규칙 변화</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. with food <b>stuck</b> in his throat (음식이 목에 걸린 → 수동 p.p.)</div><div class="wi-exp-ex">2. with mud <b>caked</b> on her boots (진흙이 부츠에 말라붙은 → 수동)</div><div class="wi-exp-ex">3. with paint <b>smeared</b> on his face (페인트가 얼굴에 묻은 → 수동)</div><div class="wi-exp-ex">4. with a bandage <b>wrapped</b> around his hand (붕대가 손에 감긴 → 수동)</div><div class="wi-exp-ex">5. with sand <b>stuck</b> between his toes (모래가 발가락 사이에 낀 → 수동)</div></div>` },
+  // 분사의 명사 수식
+  { topic:"분사의 명사 수식", grammar:"", type:"binary",
+    sent:"The ___ baby kept everyone awake all night.\n(우는 아기가 밤새 모두를 깨어있게 했다.)",
+    options:["crying","cried"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">아기가 능동적으로 "울고 있는" 것 → -ing<br>명사 앞에서 "~하고 있는"의 능동 의미로 꾸밀 때 현재분사(-ing)를 씁니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. a <b>sleeping</b> dog (자는 개 → 개가 능동적으로 자다)</div><div class="wi-exp-ex">2. a <b>laughing</b> child (웃는 아이 → 아이가 능동적으로 웃다)</div><div class="wi-exp-ex">3. a <b>flying</b> bird (나는 새 → 새가 능동적으로 날다)</div><div class="wi-exp-ex">4. a <b>walking</b> stick (지팡이 → 걷는 데 쓰이는)</div><div class="wi-exp-ex">5. a <b>burning</b> candle (타는 양초 → 양초가 능동적으로 타다)</div></div>` },
+  { topic:"분사의 명사 수식", grammar:"", type:"binary",
+    sent:"She picked up the ___ leaves from the ground.\n(그녀는 땅에서 떨어진 낙엽들을 주웠다.)",
+    options:["falling","fallen"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">falling = 지금 떨어지고 있는 / fallen = 이미 떨어져 있는(완료·수동)<br>낙엽은 이미 땅에 떨어진 상태이므로 fallen을 씁니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. <b>fallen</b> leaves (낙엽 → 이미 떨어진 잎들)</div><div class="wi-exp-ex">2. a <b>fallen</b> tree (쓰러진 나무 → 이미 쓰러진 나무)</div><div class="wi-exp-ex">3. a <b>fallen</b> soldier (전사한 군인 → 이미 쓰러진)</div><div class="wi-exp-ex">4. a <b>falling</b> star (유성 → 지금 떨어지고 있는 별)</div><div class="wi-exp-ex">5. <b>fallen</b> snow (이미 내려쌓인 눈) vs <b>falling</b> snow (지금 내리고 있는 눈)</div></div>` },
+  { topic:"분사의 명사 수식", grammar:"", type:"binary",
+    sent:"The ___ store will open again tomorrow.\n(문을 닫은 가게가 내일 다시 문을 열 것이다.)",
+    options:["closed","closing"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">가게가 "닫혀있는" 상태 → 수동 → p.p.(closed)<br>closing = "닫히는 중인"(능동 진행)이므로 의미가 다릅니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. a <b>closed</b> door (닫혀있는 문 → 수동 p.p.)</div><div class="wi-exp-ex">2. a <b>locked</b> gate (잠긴 대문 → 수동 p.p.)</div><div class="wi-exp-ex">3. a <b>sealed</b> envelope (봉해진 봉투 → 수동 p.p.)</div><div class="wi-exp-ex">4. a <b>finished</b> project (완성된 프로젝트 → 수동 p.p.)</div><div class="wi-exp-ex">5. a <b>closing</b> time (마감 시간 → "닫는" 시간, 능동 -ing)</div></div>` },
+  { topic:"분사의 명사 수식", grammar:"", type:"binary",
+    sent:"The ___ cake looked beautiful.\n(장식된 케이크는 아름다워 보였다.)",
+    options:["decorated","decorating"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">케이크가 "장식된" 상태 → 수동 → decorated(p.p.)<br>decorating은 "장식하고 있는"(능동)이므로 의미가 완전히 다릅니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. a <b>decorated</b> cake (장식된 케이크 → 케이크가 장식을 당함)</div><div class="wi-exp-ex">2. a <b>painted</b> wall (칠해진 벽 → 벽이 칠해짐)</div><div class="wi-exp-ex">3. a <b>beautifully wrapped</b> gift (예쁘게 포장된 선물 → 선물이 포장됨)</div><div class="wi-exp-ex">4. an <b>illustrated</b> book (삽화가 들어간 책 → 책에 그림이 그려짐)</div><div class="wi-exp-ex">5. a <b>carved</b> pumpkin (조각된 호박 → 호박이 조각됨, 할로윈)</div></div>` },
+  { topic:"감정 분사", grammar:"", type:"binary",
+    sent:"The ___ audience cheered loudly.\n(흥분한 관객들이 크게 환호했다.)",
+    options:["exciting","excited"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">관객(사람)이 흥분된 감정을 "느끼는" 것 → p.p.(excited)<br>exciting은 사물/상황이 흥분을 "일으킬 때" 씁니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. an <b>excited</b> crowd (흥분한 군중 → 사람들이 흥분을 느낌)</div><div class="wi-exp-ex">2. an <b>exciting</b> match (흥미진진한 경기 → 경기가 흥분을 유발)</div><div class="wi-exp-ex">3. a <b>satisfied</b> customer (만족한 고객 → 고객이 만족을 느낌)</div><div class="wi-exp-ex">4. a <b>satisfying</b> meal (만족스러운 식사 → 식사가 만족을 유발)</div><div class="wi-exp-ex">5. a <b>disappointed</b> fan (실망한 팬 → 팬이 실망을 느낌)</div></div>` },
+  // 관계대명사
+  { topic:"관계대명사", grammar:"", type:"binary",
+    sent:"공부를 열심히 한 학생들은 시험에 통과했다.\n→ The students ___ studied hard passed the test.",
+    options:["who",", who"], answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">제한적 용법(쉼표 없음): 선행사를 특정 집단으로 한정합니다.<br>"공부를 열심히 한 학생들만" 시험에 통과했다는 의미입니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. Students <b>who</b> study hard get good grades. (열심히 하는 학생들이 좋은 성적을 받는다 → 한정)</div><div class="wi-exp-ex">2. People <b>who</b> exercise regularly stay healthy. (운동하는 사람들이 건강하다 → 한정)</div><div class="wi-exp-ex">3. The boy <b>who</b> sits next to me is very smart. (내 옆에 앉은 그 남자아이 → 한정)</div><div class="wi-exp-ex">4. The dog <b>that</b> barks all night is my neighbor's. (밤새 짖는 그 개 → 한정)</div><div class="wi-exp-ex">5. I like teachers <b>who</b> make learning fun. (수업을 재미있게 만드는 선생님들 → 한정)</div></div>` },
+  { topic:"관계대명사", grammar:"", type:"binary",
+    sent:"학생들은 열심히 공부했고, 그들은 시험에 합격했다.\n→ The students ___ studied hard passed the test.",
+    options:["who",", who"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">계속적 용법(쉼표 있음): 선행사 전체에 추가 설명을 덧붙입니다. "그리고 그들은~"의 의미로 해석합니다.<br>, who = and they / , which = and it</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. My mom, <b>who</b> is a teacher, loves reading. (우리 엄마는 선생님인데, 독서를 좋아한다 → 추가 설명)</div><div class="wi-exp-ex">2. Tom, <b>who</b> lives next door, helped me. (옆집의 Tom이 나를 도와줬다 → 추가 설명)</div><div class="wi-exp-ex">3. The movie, <b>which</b> was released last year, won an award. (그 영화는 작년에 개봉했는데, 상을 받았다)</div><div class="wi-exp-ex">4. She called her dad, <b>who</b> arrived in ten minutes. (그녀는 아빠에게 전화했고, 아빠는 10분 만에 왔다)</div><div class="wi-exp-ex">5. I visited Paris, <b>which</b> is the capital of France. (파리는 프랑스의 수도인데, 나는 거기를 방문했다)</div></div>` },
+  { topic:"관계대명사", grammar:"", type:"ox",
+    sent:"The houses, which were damaged in the storm, were repaired quickly.\n= All the houses were damaged in the storm.",
+    note:"위 두 문장이 같은 뜻이면 O, 다르면 X", answer:0, cf:null,
+    exp:`<div class="wi-exp-rule">계속적 용법(, which)은 선행사 전체를 가리킵니다. 즉 "모든 집"이 폭풍에 피해를 입었다는 뜻입니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. The students, <b>who</b> worked hard, passed. = All the students worked hard and passed.</div><div class="wi-exp-ex">2. The books, <b>which</b> were old, were donated. = All the books were old and donated.</div><div class="wi-exp-ex">3. (비교) Students <b>who</b> work hard pass. ≠ All students work hard. (일부만 열심히 함)</div><div class="wi-exp-ex">4. The cookies, <b>which</b> she baked, were delicious. = She baked cookies and they were all delicious.</div><div class="wi-exp-ex">5. The cars, <b>which</b> were recalled, were fixed for free. = All the cars were recalled and fixed.</div></div>` },
+  // 본문 어법
+  { topic:"대동사", grammar:"", type:"binary",
+    sent:"We laugh even in our writings, such as emails or texts,\nas we ___ in our conversations.",
+    options:["are","do"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">대동사는 앞에 나온 동사를 반복하지 않고 대신하는 말입니다.<br>일반동사(laugh)를 대신할 때 → do / be동사를 대신할 때 → are/is 등</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. She sings better than I <b>do</b>. (do = sing → 일반동사 대신)</div><div class="wi-exp-ex">2. He works as hard as she <b>does</b>. (does = works → 일반동사 대신)</div><div class="wi-exp-ex">3. I like coffee and so <b>does</b> she. (does = likes → 일반동사 대신)</div><div class="wi-exp-ex">4. She is tall and so <b>is</b> her brother. (is = is → be동사 대신)</div><div class="wi-exp-ex">5. I laugh a lot, and so <b>do</b> my friends. (do = laugh → 일반동사 대신)</div></div>` },
+  { topic:"과거분사 수식", grammar:"", type:"binary",
+    sent:'"Ha-ha" is a form of ___ laughter.\n("하하"는 문자로 쓰여진 웃음의 한 형태이다.)',
+    options:["writing","written"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">laughter(웃음)가 "쓰여진" 것 → 수동 → written(p.p.)<br>writing은 "쓰는 행위"(동명사/현재분사)이므로 의미가 다릅니다.</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. a <b>written</b> agreement (서면 합의 → 문서로 쓰여진)</div><div class="wi-exp-ex">2. a <b>spoken</b> language (구어 → 말로 말해진 언어)</div><div class="wi-exp-ex">3. a <b>printed</b> copy (인쇄된 복사본 → 수동 p.p.)</div><div class="wi-exp-ex">4. a <b>handwritten</b> letter (손으로 쓴 편지 → 수동 p.p.)</div><div class="wi-exp-ex">5. <b>written</b> laughter vs. <b>spoken</b> laughter (문자 웃음 vs. 음성 웃음)</div></div>` },
+  { topic:"현재완료 수동태", grammar:"", type:"binary",
+    sent:"Actually, it has been used ___ long ago.\n(실제로 그것은 오래전부터 사용되어 왔다.)",
+    options:["before","since"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">since: 과거의 특정 시점부터 현재까지 계속됨 (현재완료와 함께 사용)<br>before: 단순히 "이전에"를 의미하며 현재완료와 "long ago" 조합에 어울리지 않음</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. I have known her <b>since</b> 2010. (2010년부터 알아왔다)</div><div class="wi-exp-ex">2. He has lived here <b>since</b> childhood. (어릴 때부터 여기 살아왔다)</div><div class="wi-exp-ex">3. She has been a teacher <b>since</b> she was 25. (25살부터 선생님이었다)</div><div class="wi-exp-ex">4. This tradition has existed <b>since</b> ancient times. (고대부터 이 전통이 존재해왔다)</div><div class="wi-exp-ex">5. They have been friends <b>since</b> middle school. (중학교 때부터 친구였다)</div></div>` },
+  { topic:"과거분사 수식", grammar:"", type:"binary",
+    sent:'This is a small picture ___ an "emoji."\n(이것은 "이모지"라고 불리는 작은 그림이다.)',
+    options:["calling","called"], answer:1, cf:null,
+    exp:`<div class="wi-exp-rule">picture(그림)가 "불리는" 것 → 수동 → called(p.p.)<br>명사 뒤에서 수동 의미로 꾸밀 때 과거분사를 씁니다. (명사 + p.p. + 나머지)</div><div class="wi-exp-examples"><div class="wi-exp-ex">1. a language <b>spoken</b> by millions (수백만이 사용하는 언어 → 수동)</div><div class="wi-exp-ex">2. a book <b>written</b> by Hemingway (헤밍웨이가 쓴 책 → 수동)</div><div class="wi-exp-ex">3. a town <b>known</b> for its food (음식으로 유명한 도시 → 수동)</div><div class="wi-exp-ex">4. a system <b>used</b> worldwide (전 세계적으로 사용되는 시스템 → 수동)</div><div class="wi-exp-ex">5. a symbol <b>called</b> XD (XD라고 불리는 기호 → 수동)</div></div>` }
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+let questions=[], curQ=0, userAnswers={}, startTime=null, timerID=null, playerName="";
+
+function show(id) {
+  ['s-home','s-quiz','s-result'].forEach(s =>
+    document.getElementById(s).classList.toggle('hidden', s !== id));
+}
+
+function startQuiz() {
+  playerName = document.getElementById('inp-name').value.trim();
+  questions = shuffle(Q);
+  curQ = 0; userAnswers = {};
+  clearInterval(timerID);
+  startTime = Date.now();
+  timerID = setInterval(updateMeta, 1000);
+  document.getElementById('total-count').textContent = questions.length;
+  show('s-quiz'); renderQ();
+}
+
+function renderQ() {
+  const q = questions[curQ], total = questions.length;
+  document.getElementById('qz-qnum').textContent = `${curQ+1} / ${total}`;
+  document.getElementById('q-tag').textContent = `Q${curQ+1}`;
+  document.getElementById('q-topic').textContent = q.topic;
+  document.getElementById('q-grammar').textContent = q.grammar;
+  document.getElementById('q-sentence').textContent = q.sent;
+  const ne = document.getElementById('q-note');
+  if (q.note) { ne.textContent = q.note; ne.classList.remove('hidden'); }
+  else ne.classList.add('hidden');
+
+  const container = document.getElementById('opts-container');
+  container.innerHTML = '';
+  const wrap = document.createElement('div');
+
+  if (q.type === 'ox') {
+    wrap.className = 'opts-wrap cols2';
+    [['O','ox-o',0],['X','ox-x',1]].forEach(([lbl,cls,idx]) => {
+      const btn = document.createElement('button');
+      btn.className = `opt-btn ${cls}${userAnswers[curQ]===idx?' sel':''}`;
+      btn.textContent = lbl;
+      btn.onclick = () => selectAnswer(idx);
+      wrap.appendChild(btn);
+    });
+  } else {
+    const long = q.options.some(o => o.length > 10);
+    wrap.className = `opts-wrap ${long ? 'cols1' : 'cols2'}`;
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = `opt-btn${userAnswers[curQ]===idx?' sel':''}`;
+      btn.textContent = opt;
+      btn.onclick = () => selectAnswer(idx);
+      wrap.appendChild(btn);
+    });
+  }
+  container.appendChild(wrap);
+
+  const answered = Object.keys(userAnswers).length;
+  document.getElementById('prog-fill').style.width = `${answered/total*100}%`;
+  document.getElementById('btn-prev').disabled = curQ === 0;
+  document.getElementById('btn-next').textContent = curQ < total-1 ? '다음' : '마지막 문제';
+  document.getElementById('ans-count').textContent = answered;
+  window.scrollTo(0,0);
+}
+
+function selectAnswer(idx) { userAnswers[curQ] = idx; renderQ(); }
+function goNext() { if (curQ < questions.length-1) { curQ++; renderQ(); } }
+function goPrev() { if (curQ > 0) { curQ--; renderQ(); } }
+
+function updateMeta() {
+  const s = Math.floor((Date.now()-startTime)/1000);
+  const mm = Math.floor(s/60), ss = String(s%60).padStart(2,'0');
+  document.getElementById('qz-meta').textContent =
+    `${mm}:${ss} · ${Object.keys(userAnswers).length}개 응답`;
+}
+
+function openConfirm() {
+  const un = questions.length - Object.keys(userAnswers).length;
+  const we = document.getElementById('modal-warn');
+  if (un > 0) { we.textContent=`아직 ${un}문제를 풀지 않았습니다.`; we.classList.remove('hidden'); }
+  else we.classList.add('hidden');
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeConfirm() { document.getElementById('modal').classList.add('hidden'); }
+
+function getLabel(q, idx) {
+  if (idx===undefined) return '미응답';
+  if (q.type==='ox') return idx===0 ? 'O' : 'X';
+  return q.options[idx];
+}
+
+function finishQuiz() {
+  clearInterval(timerID); closeConfirm();
+  const timeSec = Math.floor((Date.now()-startTime)/1000);
+  const timeStr = `${Math.floor(timeSec/60)}분 ${timeSec%60}초`;
+  let correct=0; const wrongs=[], topicStats={};
+
+  questions.forEach((q,i) => {
+    if (!topicStats[q.topic]) topicStats[q.topic]={total:0,correct:0};
+    topicStats[q.topic].total++;
+    const ua = userAnswers[i];
+    if (ua!==undefined && ua===q.answer) { correct++; topicStats[q.topic].correct++; }
+    else wrongs.push({q, userAns:ua});
+  });
+
+  const total=questions.length, pct=Math.round(correct/total*100);
+  let grade,gc;
+  if (pct>=95){grade='A+';gc='#22c55e';}else if(pct>=90){grade='A';gc='#4ade80';}
+  else if(pct>=85){grade='B+';gc='#3b82f6';}else if(pct>=80){grade='B';gc='#60a5fa';}
+  else if(pct>=70){grade='C';gc='#f97316';}else{grade='D';gc='#ef4444';}
+
+  const ne=document.getElementById('sc-name');
+  if(playerName){ne.textContent=playerName;ne.classList.remove('hidden');}else ne.classList.add('hidden');
+  const ge=document.getElementById('sc-grade'); ge.textContent=grade; ge.style.color=gc;
+  document.getElementById('sc-correct').textContent=correct;
+  document.getElementById('sc-denom').textContent=`/${total}`;
+  document.getElementById('sc-pct').textContent=`${pct}% · ${timeStr}`;
+  const bf=document.getElementById('sc-bar-fill'); bf.style.width=`${pct}%`; bf.style.background=gc;
+
+  // Topic summary
+  const ts=document.getElementById('topic-summary');
+  ts.innerHTML='<div class="ts-title">📊 영역별 결과</div>';
+  Object.entries(topicStats).forEach(([topic,s]) => {
+    const p=Math.round(s.correct/s.total*100);
+    const c=p>=80?'#4ade80':p>=60?'#f97316':'#f87171';
+    const row=document.createElement('div'); row.className='ts-row';
+    row.innerHTML=`<span class="ts-topic">${topic}</span><span class="ts-score" style="color:${c}">${s.correct}/${s.total} (${p}%)</span>`;
+    ts.appendChild(row);
+  });
+
+  // Copy text
+  const date=new Date().toLocaleDateString('ko-KR');
+  let txt=`[Lesson 1 문법 시험]\n`;
+  txt+=`${playerName?playerName+' | ':''}${date}\n`;
+  txt+=`${correct}/${total} (${pct}%) | ${timeStr}\n\n[영역별]\n`;
+  Object.entries(topicStats).forEach(([t,s])=>{txt+=`· ${t}: ${s.correct}/${s.total}\n`;});
+  if(wrongs.length>0){
+    txt+=`\n[오답 ${wrongs.length}개]\n`;
+    wrongs.forEach((w,i)=>{
+      txt+=`${i+1}. [${w.q.topic}] ${getLabel(w.q,w.userAns)} → 정답: ${getLabel(w.q,w.q.answer)}\n`;
+    });
+  } else txt+=`\n만점! 전부 정답! 🎉`;
+  document.getElementById('copy-ta').value=txt;
+
+  // Wrong list
+  const wc=document.getElementById('wrong-card');
+  if(wrongs.length>0){
+    wc.classList.remove('hidden');
+    document.getElementById('wc-title').textContent=`오답 목록 (${wrongs.length}개)`;
+    const wl=document.getElementById('wrong-list'); wl.innerHTML='';
+    wrongs.forEach(w=>{
+      const div=document.createElement('div'); div.className='wi';
+      const cf=w.q.cf?`<div class="wi-corrform">${w.q.cf}</div>`:'';
+      div.innerHTML=`<div class="wi-topic">${w.q.topic}</div>
+        <div class="wi-sent">${w.q.sent}</div>
+        <div class="wi-ans-row">
+          <span class="wi-yours">✗ ${getLabel(w.q,w.userAns)}</span>
+          <span class="wi-arr">→</span>
+          <span class="wi-correct">✓ ${getLabel(w.q,w.q.answer)}</span>
+        </div>${cf}<div class="wi-exp">${w.q.exp}</div>`;
+      wl.appendChild(div);
+    });
+  } else wc.classList.add('hidden');
+
+  document.getElementById('copy-area').classList.add('hidden');
+  document.getElementById('btn-copy').classList.remove('hidden');
+  show('s-result'); window.scrollTo(0,0);
+}
+
+function showCopy() {
+  document.getElementById('btn-copy').classList.add('hidden');
+  document.getElementById('copy-area').classList.remove('hidden');
+  setTimeout(()=>{const ta=document.getElementById('copy-ta');ta.focus();ta.select();},100);
+}
+
+function goHome() { show('s-home'); }
+document.getElementById('home-sub').textContent=`문법 ${Q.length}문항 · 선택형`;
+document.getElementById('inp-name').addEventListener('keydown',e=>{if(e.key==='Enter')startQuiz();});
+</script>
+</body>
+</html>
