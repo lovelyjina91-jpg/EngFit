@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>영어I Lesson 2 — 어법 선택</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg0:#0d1117;
+  --bg1:#161b22;
+  --bg2:#21262d;
+  --bg3:#30363d;
+  --text1:#e6edf3;
+  --text2:#8b949e;
+  --text3:#484f58;
+  --green:#3fb950;
+  --green-dim:#1a3a20;
+  --red:#f85149;
+  --red-dim:#3a1a1a;
+  --blue:#58a6ff;
+  --blue-dim:#0d2a4a;
+  --amber:#d29922;
+  --border:#30363d;
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg0);color:var(--text1);font-size:16px;}
+
+/* ── HOME ── */
+#s-home{position:fixed;inset:0;background:var(--bg0);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;transition:opacity .3s,transform .3s;}
+.home-pill{font-size:11px;letter-spacing:3px;color:var(--text3);text-transform:uppercase;border:1px solid var(--border);border-radius:20px;padding:4px 12px;margin-bottom:20px;}
+.home-title{font-size:26px;font-weight:700;color:var(--text1);text-align:center;line-height:1.35;margin-bottom:6px;}
+.home-sub{font-size:14px;color:var(--text2);text-align:center;margin-bottom:40px;}
+.home-card{width:100%;max-width:360px;background:var(--bg1);border:1px solid var(--border);border-radius:16px;padding:24px;}
+.input-label{font-size:12px;color:var(--text2);margin-bottom:6px;display:block;}
+.name-input{width:100%;padding:12px 14px;font-size:16px;font-family:inherit;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text1);outline:none;transition:border-color .2s;}
+.name-input:focus{border-color:var(--blue);}
+.info-row{display:flex;gap:8px;margin:14px 0 20px;}
+.info-chip{flex:1;background:var(--bg2);border-radius:8px;padding:10px 8px;text-align:center;}
+.info-chip .n{font-size:18px;font-weight:700;color:var(--text1);}
+.info-chip .l{font-size:11px;color:var(--text2);margin-top:2px;}
+.start-btn{width:100%;padding:15px;border-radius:12px;background:var(--green);color:#0d1117;font-size:16px;font-weight:700;font-family:inherit;border:none;cursor:pointer;transition:opacity .15s;}
+.start-btn:active{opacity:.8;}
+
+/* ── QUIZ ── */
+#s-quiz{position:fixed;inset:0;background:var(--bg0);display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .25s;}
+#s-quiz.active{opacity:1;pointer-events:all;}
+
+.topbar{padding:12px 16px 0;flex-shrink:0;}
+.topbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.tb-left{font-size:12px;color:var(--text2);}
+.tb-right{font-size:12px;color:var(--text3);}
+.prog-track{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--green);border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1);}
+
+.quiz-body{flex:1;display:flex;flex-direction:column;padding:0 16px;overflow:hidden;position:relative;}
+
+/* card slide container */
+.card-wrap{flex:1;position:relative;overflow:hidden;margin-top:12px;}
+.q-card{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg1);border:1px solid var(--border);border-radius:18px;padding:22px 20px;transition:transform .32s cubic-bezier(.4,0,.2,1),opacity .32s;}
+.q-card.slide-in-right{transform:translateX(100%);opacity:0;}
+.q-card.slide-in-left{transform:translateX(-100%);opacity:0;}
+.q-card.center{transform:translateX(0);opacity:1;}
+.q-card.slide-out-left{transform:translateX(-100%);opacity:0;}
+.q-card.slide-out-right{transform:translateX(100%);opacity:0;}
+
+.q-meta{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.q-num{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;}
+.q-tag{font-size:11px;font-weight:500;padding:3px 9px;border-radius:8px;background:var(--blue-dim);color:var(--blue);}
+.q-sent{font-size:15px;line-height:1.9;color:var(--text1);flex:1;}
+.blank{font-weight:700;color:var(--text1);border-bottom:2px solid var(--blue);padding-bottom:1px;}
+.q-hint{font-size:12px;color:var(--text3);margin-top:10px;line-height:1.5;}
+
+.opts{display:flex;flex-direction:column;gap:9px;margin-top:14px;flex-shrink:0;}
+.opt{width:100%;padding:15px 18px;border-radius:13px;background:var(--bg2);border:1.5px solid var(--border);font-size:15px;font-weight:500;font-family:inherit;color:var(--text1);text-align:left;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:12px;}
+.opt:active{transform:scale(.98);}
+.opt.selected{background:var(--blue-dim);border-color:var(--blue);color:var(--text1);}
+.opt.correct{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+.opt.wrong{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+.opt.reveal{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+.opt:disabled{cursor:default;}
+.opt-icon{width:22px;height:22px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text2);flex-shrink:0;transition:all .15s;}
+.opt.selected .opt-icon{background:var(--blue);color:#fff;}
+.opt.correct .opt-icon{background:var(--green);color:#0d1117;}
+.opt.wrong .opt-icon{background:var(--red);color:#fff;}
+.opt.reveal .opt-icon{background:var(--green);color:#0d1117;}
+
+.exp-box{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--bg0);border-left:3px solid var(--green);font-size:12px;line-height:1.65;color:var(--text2);display:none;}
+.exp-box.show{display:block;}
+.exp-box b{color:var(--text1);}
+
+/* bottom nav */
+.bottom-nav{padding:12px 16px 28px;display:flex;gap:8px;flex-shrink:0;}
+.nav-btn{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;border:none;cursor:pointer;transition:all .15s;}
+.nav-prev{background:var(--bg2);color:var(--text2);}
+.nav-prev:disabled{color:var(--text3);cursor:default;}
+.nav-next{background:var(--green);color:#0d1117;}
+.nav-next:disabled{background:var(--bg3);color:var(--text3);cursor:default;}
+
+/* ── RESULT ── */
+#s-result{position:fixed;inset:0;background:var(--bg0);overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .3s;}
+#s-result.active{opacity:1;pointer-events:all;}
+.result-wrap{max-width:400px;margin:0 auto;padding:24px 16px 48px;}
+
+.score-hero{background:var(--bg1);border:1px solid var(--border);border-radius:20px;padding:32px 24px;text-align:center;margin-bottom:16px;}
+.sh-pill{font-size:11px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:6px;}
+.sh-name{font-size:16px;color:var(--text2);margin-bottom:16px;min-height:24px;}
+.circle-wrap{width:130px;height:130px;margin:0 auto 16px;position:relative;}
+.circle-wrap svg{width:130px;height:130px;}
+.circ-bg{fill:none;stroke:var(--bg3);stroke-width:10;}
+.circ-arc{fill:none;stroke-width:10;stroke-linecap:round;transform:rotate(-90deg);transform-origin:65px 65px;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1);}
+.circ-score{font-size:26px;font-weight:700;fill:var(--text1);text-anchor:middle;dominant-baseline:middle;}
+.circ-of{font-size:12px;fill:var(--text3);text-anchor:middle;dominant-baseline:middle;}
+.sh-grade{font-size:38px;font-weight:700;margin-bottom:4px;}
+.sh-msg{font-size:13px;color:var(--text2);}
+
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat-box{background:var(--bg1);border:1px solid var(--border);border-radius:14px;padding:14px 8px;text-align:center;}
+.stat-n{font-size:22px;font-weight:700;}
+.stat-l{font-size:11px;color:var(--text2);margin-top:3px;}
+
+.section-head{font-size:12px;color:var(--text2);font-weight:500;margin-bottom:8px;padding-left:2px;}
+
+.bklist{background:var(--bg1);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px;}
+.bk-item{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+.bk-item:last-child{border-bottom:none;}
+.bk-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.bk-dot.ok{background:var(--green);}
+.bk-dot.ng{background:var(--red);}
+.bk-info{flex:1;min-width:0;}
+.bk-num{font-size:11px;color:var(--text3);margin-bottom:2px;}
+.bk-tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:6px;background:var(--blue-dim);color:var(--blue);margin-bottom:4px;}
+.bk-tag.ng{background:var(--red-dim);color:var(--red);}
+.bk-ans{font-size:12px;color:var(--text2);}
+.bk-ans .ok{color:var(--green);}
+.bk-ans .ng{color:var(--red);}
+
+/* kakao section */
+.kakao-card{background:var(--bg1);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px;}
+.kakao-card h3{font-size:13px;font-weight:500;color:var(--text1);margin-bottom:12px;}
+.name-row2{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.name-row2 label{font-size:12px;color:var(--text2);white-space:nowrap;}
+.name-row2 input{flex:1;padding:8px 10px;font-size:14px;font-family:inherit;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);outline:none;}
+.name-row2 input:focus{border-color:var(--blue);}
+.msg-pre{font-size:12px;line-height:1.75;color:var(--text2);background:var(--bg0);border-radius:10px;padding:12px 13px;margin-bottom:10px;white-space:pre-wrap;word-break:break-all;border:1px solid var(--border);}
+.btn-kakao{width:100%;padding:13px;border-radius:11px;background:#FEE500;color:#181600;font-size:14px;font-weight:700;font-family:inherit;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:opacity .15s;}
+.btn-kakao:active{opacity:.8;}
+.btn-copy{width:100%;padding:12px;border-radius:11px;background:var(--bg2);color:var(--text1);font-size:13px;font-weight:500;font-family:inherit;border:1px solid var(--border);cursor:pointer;transition:all .15s;}
+.btn-copy:active{background:var(--bg3);}
+.toast{font-size:12px;color:var(--green);text-align:center;margin-top:8px;height:16px;transition:opacity .3s;}
+
+.result-btns{display:flex;gap:8px;margin-top:4px;}
+.btn-home{flex:1;padding:13px;border-radius:11px;background:var(--bg2);color:var(--text2);font-size:14px;font-weight:600;font-family:inherit;border:1px solid var(--border);cursor:pointer;}
+.btn-retry{flex:1;padding:13px;border-radius:11px;background:var(--green);color:#0d1117;font-size:14px;font-weight:700;font-family:inherit;border:none;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- ══ HOME ══ -->
+<div id="s-home">
+  <div class="home-pill">숭덕여고 · 영어I · Lesson 2</div>
+  <div class="home-title">어법 선택</div>
+  <div class="home-sub">Seeing Through the Generation Gap</div>
+  <div class="home-card">
+    <label class="input-label">이름을 입력하세요</label>
+    <input id="name-input" class="name-input" type="text" placeholder="홍길동">
+    <div class="info-row">
+      <div class="info-chip"><div class="n" id="total-count">21</div><div class="l">문제</div></div>
+      <div class="info-chip"><div class="n">2택</div><div class="l">선택형</div></div>
+      <div class="info-chip"><div class="n">다크</div><div class="l">눈 보호</div></div>
+    </div>
+    <button class="start-btn" onclick="startQuiz()">시작하기</button>
+  </div>
+</div>
+
+<!-- ══ QUIZ ══ -->
+<div id="s-quiz">
+  <div class="topbar">
+    <div class="topbar-row">
+      <span class="tb-left" id="tb-left">1 / 21</span>
+      <span class="tb-right" id="tb-right">0개 응답</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+  </div>
+  <div class="quiz-body">
+    <div class="card-wrap" id="card-wrap"></div>
+    <div class="opts" id="opts-wrap"></div>
+    <div class="exp-box" id="exp-box"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn nav-prev" id="btn-prev" onclick="move(-1)" disabled>이전</button>
+    <button class="nav-btn nav-next" id="btn-next" onclick="move(1)">다음</button>
+  </div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="s-result">
+  <div class="result-wrap">
+    <div class="score-hero">
+      <div class="sh-pill">Lesson 2 어법 선택</div>
+      <div class="sh-name" id="r-name"></div>
+      <div class="circle-wrap">
+        <svg viewBox="0 0 130 130">
+          <circle class="circ-bg" cx="65" cy="65" r="55"/>
+          <circle class="circ-arc" id="r-arc" cx="65" cy="65" r="55" stroke="#3fb950" stroke-dasharray="345.4" stroke-dashoffset="345.4"/>
+          <text class="circ-score" id="r-score-txt" x="65" y="60">-</text>
+          <text class="circ-of" x="65" y="78">/ 21</text>
+        </svg>
+      </div>
+      <div class="sh-grade" id="r-grade"></div>
+      <div class="sh-msg" id="r-msg"></div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-n" id="s-ok" style="color:var(--green)">-</div><div class="stat-l">정답</div></div>
+      <div class="stat-box"><div class="stat-n" id="s-ng" style="color:var(--red)">-</div><div class="stat-l">오답</div></div>
+      <div class="stat-box"><div class="stat-n" id="s-pct">-</div><div class="stat-l">정답률</div></div>
+    </div>
+
+    <div class="section-head">문제별 결과</div>
+    <div class="bklist" id="bklist"></div>
+
+    <div class="kakao-card">
+      <h3>선생님께 결과 전송</h3>
+      <div class="name-row2">
+        <label>이름</label>
+        <input id="r-name-input" type="text" placeholder="이름 입력" oninput="updateMsg()">
+      </div>
+      <div class="msg-pre" id="msg-pre"></div>
+      <button class="btn-kakao" onclick="openKakao()">
+        <svg width="18" height="18" viewBox="0 0 40 40"><path d="M20 4C10.06 4 2 10.27 2 18c0 5.1 3.3 9.57 8.3 12.2L8.5 36l6.8-3.57C16.7 32.8 18.33 33 20 33c9.94 0 18-6.27 18-14S29.94 4 20 4z" fill="#181600"/></svg>
+        카카오톡으로 공유하기
+      </button>
+      <button class="btn-copy" onclick="copyMsg()">메시지 복사</button>
+      <div class="toast" id="toast"></div>
+    </div>
+
+    <div class="result-btns">
+      <button class="btn-home" onclick="goHome()">처음으로</button>
+      <button class="btn-retry" onclick="startQuiz()">다시 풀기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const QS = [
+  // ─── Section 2 ───
+  {
+    n: 1,
+    sent: ["Baby boomers are ", "named|naming", " so because the birth rate was ", "significantly|significant", " higher when they were born."],
+    answers: [0, 0],
+    tags: ["수동태", "부사"],
+    exps: [
+      "<b>named</b> — 수동태(be + p.p.). 베이비붐 세대가 '이름 지어지는' 대상이므로 수동태 named. naming은 능동.",
+      "<b>significantly</b> — 부사. 형용사 higher를 수식하므로 부사 significantly. significant는 형용사라 불가."
+    ]
+  },
+  {
+    n: 2,
+    sent: ["But since Korea and the U.S. experienced ", "dramatic|dramatically", " population increases during different periods, their classifications of baby boomers ", "differ|differs", " accordingly."],
+    answers: [0, 0],
+    tags: ["형용사", "수 일치"],
+    exps: [
+      "<b>dramatic</b> — 형용사. 명사 population increases를 수식하므로 형용사 dramatic. dramatically는 부사.",
+      "<b>differ</b> — 수 일치. 주어 their classifications가 복수이므로 복수 동사 differ. differs는 단수."
+    ]
+  },
+  {
+    n: 3,
+    sent: ["In the U.S., baby boomers are people ", "born|bearing", " between 1946 and 1964."],
+    answers: [0],
+    tags: ["과거분사"],
+    exps: [
+      "<b>born</b> — 과거분사. people과 bear의 관계가 수동(태어나는)이므로 과거분사 born. bearing은 능동."
+    ]
+  },
+  {
+    n: 4,
+    sent: ["Generation X (1965–1980) ", "earned|has earned", " its name from the title of a book ", "written|writing", " by Douglas Coupland in 1991."],
+    answers: [0, 0],
+    tags: ["과거시제", "과거분사"],
+    exps: [
+      "<b>earned</b> — 과거시제. '1991년에'라는 명확한 과거 시점 표현이 있으므로 단순 과거 earned. has earned(현재완료)는 과거 시점 부사와 함께 쓰지 않음.",
+      "<b>written</b> — 과거분사. a book과 write 관계가 수동(쓰여진)이므로 과거분사 written. writing은 능동."
+    ]
+  },
+  {
+    n: 5,
+    sent: ["people in their twenties in that era had a ", "relaxed|relaxing", " and laid-back lifestyle."],
+    answers: [0],
+    tags: ["감정 형용사"],
+    exps: [
+      "<b>relaxed</b> — 과거분사형 형용사. 사람(lifestyle의 주체)이 느끼는 상태이므로 relaxed(여유로운). relaxing은 '긴장을 풀게 만드는'의 능동 의미."
+    ]
+  },
+  {
+    n: 6,
+    sent: ["The ", "following|followed", " generations, born after Generation X, were later called Y and Z."],
+    answers: [0],
+    tags: ["현재분사"],
+    exps: [
+      "<b>following</b> — 현재분사(능동). '다음에 오는 세대들'이라는 능동 의미. followed는 '따라지는' 수동 의미로 문맥에 부적절."
+    ]
+  },
+  {
+    n: 7,
+    sent: ["Members of Generation Y are also called millennials because they became adults ", "with|on", " the beginning of the new millennium."],
+    answers: [0],
+    tags: ["전치사"],
+    exps: [
+      "<b>with</b> — 전치사. 'with the beginning of'는 '~가 시작되면서'의 의미. on은 특정 날짜/요일과 함께 쓰이며 이 맥락에 부적절."
+    ]
+  },
+  // ─── Section 3 ───
+  {
+    n: 8,
+    sent: ["The cohort effect and the traditional notion of a generation are ", "closely|close", " related."],
+    answers: [0],
+    tags: ["부사"],
+    exps: [
+      "<b>closely</b> — 부사. 과거분사 related를 수식하므로 부사 closely. close는 이 문맥에서 형용사로만 쓰임."
+    ]
+  },
+  {
+    n: 9,
+    sent: ["each generation is ", "defined|defining", " by the birth years of its members."],
+    answers: [0],
+    tags: ["수동태"],
+    exps: [
+      "<b>defined</b> — 수동태(be + p.p.). 세대가 '정의되는' 것이므로 수동태 defined. defining은 능동으로 의미 불일치."
+    ]
+  },
+  {
+    n: 10,
+    sent: ["individuals who belong to a particular generation are socialized in ", "distinct|distinctly", " conditions ", "compared|comparing", " to other generations."],
+    answers: [0, 0],
+    tags: ["형용사", "분사구문(수동)"],
+    exps: [
+      "<b>distinct</b> — 형용사. 명사 conditions를 수식하므로 형용사 distinct. distinctly는 부사라 명사 직접 수식 불가.",
+      "<b>compared</b> — 수동 분사구문. '다른 세대와 비교하여'의 의미. compared to는 관용적 수동 분사구문. comparing은 능동 의미라 부적절."
+    ]
+  },
+  {
+    n: 11,
+    sent: ["They experience similar political, economic, and social events during their early stages of life, ", "which|what", " ", "shape|shapes", " their beliefs, values, and behaviors in similar ways."],
+    answers: [0, 0],
+    tags: ["관계대명사(계속적 용법)", "수 일치"],
+    exps: [
+      "<b>which</b> — 관계대명사 계속적 용법. 앞 절 전체를 선행사로 받을 때 which 사용. what은 선행사를 포함하므로 계속적 용법 불가.",
+      "<b>shape</b> — 수 일치. 선행사 events가 복수이므로 복수 동사 shape. shapes는 단수 동사."
+    ]
+  },
+  {
+    n: 12,
+    sent: ["Koreans went through the 1997 financial crisis, also ", "known|knowing", " as the International Monetary Fund (IMF) crisis."],
+    answers: [0],
+    tags: ["과거분사"],
+    exps: [
+      "<b>known</b> — 과거분사. '~로 알려진'의 수동 의미 분사구문. knowing은 능동 의미 '알고 있는'으로 부적절."
+    ]
+  },
+  {
+    n: 13,
+    sent: ["Gen Xers were in their 20s at that time, and ", "thus|though", " experienced great employment instability."],
+    answers: [0],
+    tags: ["접속부사"],
+    exps: [
+      "<b>thus</b> — 접속부사 '따라서'. 앞 내용(20대였다)과 뒷 내용(고용 불안정 경험)이 인과관계이므로 thus. though는 '비록 ~이지만'의 양보 의미."
+    ]
+  },
+  {
+    n: 14,
+    sent: ["This may have led them to ", "prioritize|prioritizing", " ", "secure|securely", " employment for their children."],
+    answers: [0, 0],
+    tags: ["to부정사", "형용사"],
+    exps: [
+      "<b>prioritize</b> — 동사원형. 'lead + 목적어 + to + 동사원형' 5형식 구조. to는 부정사의 to이므로 동사원형 사용. prioritizing 불가.",
+      "<b>secure</b> — 형용사. 명사 employment를 수식하므로 형용사 secure. securely는 부사."
+    ]
+  },
+  {
+    n: 15,
+    sent: ["In contrast, Gen Zers grew up with smartphones, and this earned them the \"digital natives\" ", "label|labeled", "."],
+    answers: [0],
+    tags: ["명사"],
+    exps: [
+      "<b>label</b> — 명사. earn + 간접목적어 + 직접목적어 구조에서 직접목적어 자리에 명사 label. labeled는 과거분사/동사."
+    ]
+  },
+  {
+    n: 16,
+    sent: ["They ", "are accustomed to|accustom to", " getting their news, information, and advice from social media."],
+    answers: [0],
+    tags: ["be accustomed to"],
+    exps: [
+      "<b>are accustomed to</b> — 'be accustomed to + -ing' 관용표현. '~에 익숙하다'의 의미. accustom to는 형태가 불완전."
+    ]
+  },
+  {
+    n: 17,
+    sent: ["They are accustomed to ", "getting|get", " their news, information, and advice from social media."],
+    answers: [0],
+    tags: ["전치사 + 동명사"],
+    exps: [
+      "<b>getting</b> — 동명사. be accustomed to에서 to는 전치사이므로 뒤에 동명사(-ing). to부정사의 to와 혼동 주의."
+    ]
+  },
+  {
+    n: 18,
+    sent: ["Their strength in ", "using|use", " digital media, however, often leads them to ", "lack|lacking", " social skills."],
+    answers: [0, 0],
+    tags: ["전치사 + 동명사", "to부정사"],
+    exps: [
+      "<b>using</b> — 동명사. 전치사 in 뒤에는 동명사(-ing). use는 동사원형으로 전치사 뒤에 불가.",
+      "<b>lack</b> — 동사원형. 'lead + 목적어 + to + 동사원형' 구조. lacking은 분사로 이 구조에 맞지 않음."
+    ]
+  },
+  // ─── Section 6 ───
+  {
+    n: 19,
+    sent: ["These different perspectives suggest that we should be ", "careful|carefully", " not to make ", "hasty|hastily", " judgments about people according to their generation labels."],
+    answers: [0, 0],
+    tags: ["be + 형용사", "형용사"],
+    exps: [
+      "<b>careful</b> — 형용사. be동사 뒤 보어 자리는 형용사. carefully는 부사.",
+      "<b>hasty</b> — 형용사. 명사 judgments를 수식하므로 형용사 hasty. hastily는 부사."
+    ]
+  },
+  {
+    n: 20,
+    sent: ["This can lead to overgeneralizations that ", "don't|doesn't", " capture all aspects of a person's ", "unique|uniquely", " individual identity."],
+    answers: [0, 0],
+    tags: ["수 일치", "형용사"],
+    exps: [
+      "<b>don't</b> — 수 일치. 관계대명사 that의 선행사 overgeneralizations가 복수이므로 복수 동사 don't.",
+      "<b>unique</b> — 형용사. 명사 identity를 수식하므로 형용사 unique. uniquely는 부사."
+    ]
+  },
+  {
+    n: 21,
+    sent: ["We should consider various perspectives, which will help us ", "achieve|achieving", " a better understanding of people ", "regardless of|regardless", " their generation."],
+    answers: [0, 0],
+    tags: ["help + O + 동사원형", "전치사구"],
+    exps: [
+      "<b>achieve</b> — 동사원형. 'help + 목적어 + 동사원형' 구조. achieving 불가.",
+      "<b>regardless of</b> — 전치사구. '~에 상관없이'는 'regardless of + 명사'. regardless 단독으로는 전치사 역할 불가."
+    ]
+  }
+];
+
+// flatten blanks into individual question cards
+const CARDS = [];
+QS.forEach(q => {
+  q.answers.forEach((ans, bi) => {
+    const blankParts = q.sent.filter(p => p.includes('|'));
+    CARDS.push({
+      qn: q.n,
+      bi,
+      totalBlanks: q.answers.length,
+      sent: q.sent,
+      blankIdx: bi,
+      opts: blankParts[bi].split('|'),
+      answer: ans,
+      tag: q.tags[bi],
+      exp: q.exps[bi]
+    });
+  });
+});
+
+const TOTAL = CARDS.length;
+document.getElementById('total-count').textContent = TOTAL;
+
+let cur = 0;
+let userAns = new Array(TOTAL).fill(null);
+let resultLog = [];
+
+// ── helpers ──
+function sentHTML(card, chosenIdx) {
+  let blankCount = 0;
+  return card.sent.map(p => {
+    if (!p.includes('|')) return p;
+    const isTarget = blankCount === card.blankIdx;
+    const idx = blankCount++;
+    if (isTarget) return `<span class="blank">(${p.split('|')[0]} / ${p.split('|')[1]})</span>`;
+    const other = CARDS.find(c => c.qn === card.qn && c.blankIdx === idx);
+    const ans = other ? userAns[CARDS.indexOf(other)] : null;
+    const word = ans !== null ? p.split('|')[ans] : p.replace('|', ' / ');
+    return `<u>${word}</u>`;
+  }).join('');
+}
+
+function updateTopbar() {
+  const done = userAns.filter(a => a !== null).length;
+  document.getElementById('tb-left').textContent = `${cur + 1} / ${TOTAL}`;
+  document.getElementById('tb-right').textContent = `${done}개 응답`;
+  document.getElementById('prog').style.width = (done / TOTAL * 100) + '%';
+  document.getElementById('btn-prev').disabled = cur === 0;
+  const nextBtn = document.getElementById('btn-next');
+  if (cur === TOTAL - 1) {
+    nextBtn.textContent = '결과 보기';
+    nextBtn.style.background = done === TOTAL ? 'var(--green)' : 'var(--amber)';
+    nextBtn.disabled = false;
+  } else {
+    nextBtn.textContent = '다음';
+    nextBtn.style.background = 'var(--green)';
+    nextBtn.disabled = false;
+  }
+}
+
+function renderCard(dir) {
+  const card = CARDS[cur];
+  const wrap = document.getElementById('card-wrap');
+  const optsWrap = document.getElementById('opts-wrap');
+  const expBox = document.getElementById('exp-box');
+
+  // slide old card out
+  const old = wrap.querySelector('.q-card');
+  if (old) {
+    old.classList.remove('center');
+    old.classList.add(dir > 0 ? 'slide-out-left' : 'slide-out-right');
+    setTimeout(() => old.remove(), 320);
+  }
+
+  // new card
+  const div = document.createElement('div');
+  div.className = `q-card ${dir > 0 ? 'slide-in-right' : 'slide-in-left'}`;
+  div.innerHTML = `
+    <div class="q-meta">
+      <span class="q-num">문제 ${card.qn}${card.totalBlanks > 1 ? ' — 빈칸 ' + (card.blankIdx + 1) : ''}</span>
+      <span class="q-tag">${card.tag}</span>
+    </div>
+    <div class="q-sent">${sentHTML(card, userAns[cur])}</div>
+  `;
+  wrap.appendChild(div);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => div.classList.replace(
+      dir > 0 ? 'slide-in-right' : 'slide-in-left', 'center'
+    ));
+  });
+
+  // options
+  optsWrap.innerHTML = '';
+  const answered = userAns[cur] !== null;
+  card.opts.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    const sel = userAns[cur];
+    if (sel !== null) {
+      if (idx === card.answer) btn.classList.add('correct');
+      else if (idx === sel) btn.classList.add('wrong');
+      btn.disabled = true;
+    } else if (sel === idx) btn.classList.add('selected');
+    btn.innerHTML = `<span class="opt-icon">${idx === 0 ? '①' : '②'}</span>${opt}`;
+    btn.onclick = () => pick(idx);
+    optsWrap.appendChild(btn);
+  });
+
+  // explanation
+  if (answered) {
+    expBox.innerHTML = card.exp;
+    expBox.classList.add('show');
+  } else {
+    expBox.classList.remove('show');
+    expBox.innerHTML = '';
+  }
+
+  updateTopbar();
+}
+
+function pick(choice) {
+  if (userAns[cur] !== null) return;
+  userAns[cur] = choice;
+  const card = CARDS[cur];
+  const btns = document.getElementById('opts-wrap').querySelectorAll('.opt');
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === card.answer) b.classList.add('correct');
+    else if (i === choice) b.classList.add('wrong');
+  });
+  const expBox = document.getElementById('exp-box');
+  expBox.innerHTML = card.exp;
+  expBox.classList.add('show');
+  // update sentence in card
+  const sentEl = document.querySelector('.q-card .q-sent');
+  if (sentEl) sentEl.innerHTML = sentHTML(card, choice);
+  updateTopbar();
+}
+
+function move(dir) {
+  const next = cur + dir;
+  if (next < 0) return;
+  if (next >= TOTAL) { showResult(); return; }
+  cur = next;
+  renderCard(dir);
+}
+
+// ── screens ──
+function startQuiz() {
+  cur = 0;
+  userAns = new Array(TOTAL).fill(null);
+  document.getElementById('s-home').style.opacity = '0';
+  document.getElementById('s-home').style.pointerEvents = 'none';
+  setTimeout(() => { document.getElementById('s-home').style.display = 'none'; }, 300);
+  document.getElementById('s-result').classList.remove('active');
+  document.getElementById('s-quiz').classList.add('active');
+  renderCard(1);
+}
+
+function goHome() {
+  document.getElementById('s-result').classList.remove('active');
+  document.getElementById('s-quiz').classList.remove('active');
+  document.getElementById('s-home').style.display = 'flex';
+  requestAnimationFrame(() => {
+    document.getElementById('s-home').style.opacity = '1';
+    document.getElementById('s-home').style.pointerEvents = 'all';
+  });
+}
+
+function showResult() {
+  // compute results
+  let correct = 0;
+  resultLog = [];
+  CARDS.forEach((card, i) => {
+    const ok = userAns[i] === card.answer;
+    if (ok) correct++;
+    resultLog.push({ n: card.qn, bi: card.blankIdx, tag: card.tag, ok, chosen: card.opts[userAns[i] ?? 1 - card.answer], correctWord: card.opts[card.answer] });
+  });
+  const pct = Math.round(correct / TOTAL * 100);
+  const wrong = TOTAL - correct;
+  let grade, gc;
+  if (pct >= 95) { grade = 'A+'; gc = 'var(--green)'; }
+  else if (pct >= 85) { grade = 'A'; gc = '#4ade80'; }
+  else if (pct >= 75) { grade = 'B+'; gc = 'var(--blue)'; }
+  else if (pct >= 65) { grade = 'B'; gc = '#60a5fa'; }
+  else if (pct >= 50) { grade = 'C'; gc = 'var(--amber)'; }
+  else { grade = 'D'; gc = 'var(--red)'; }
+
+  const msgs = ['포기하지 말고 다시 도전!', '조금 더 연습이 필요해요', '절반 이상! 좋은 출발이에요', '잘 했어요!', '거의 다 맞았어요!', '완벽한 만점이에요 🎉'];
+  const mi = pct < 20 ? 0 : pct < 45 ? 1 : pct < 65 ? 2 : pct < 80 ? 3 : pct < 100 ? 4 : 5;
+
+  const nm = document.getElementById('name-input').value.trim();
+  document.getElementById('r-name').textContent = nm || '';
+  document.getElementById('r-score-txt').textContent = correct;
+  document.getElementById('r-grade').textContent = grade;
+  document.getElementById('r-grade').style.color = gc;
+  document.getElementById('r-msg').textContent = msgs[mi];
+  document.getElementById('s-ok').textContent = correct;
+  document.getElementById('s-ng').textContent = wrong;
+  document.getElementById('s-pct').textContent = pct + '%';
+
+  // arc animation
+  const circ = 2 * Math.PI * 55;
+  const offset = circ * (1 - pct / 100);
+  const arc = document.getElementById('r-arc');
+  arc.style.stroke = gc;
+  arc.style.strokeDashoffset = circ;
+  setTimeout(() => { arc.style.strokeDashoffset = offset; }, 100);
+
+  // breakdown list
+  const bklist = document.getElementById('bklist');
+  bklist.innerHTML = '';
+  resultLog.forEach(r => {
+    const d = document.createElement('div');
+    d.className = 'bk-item';
+    d.innerHTML = `
+      <span class="bk-dot ${r.ok ? 'ok' : 'ng'}"></span>
+      <div class="bk-info">
+        <div class="bk-num">문제 ${r.n}${r.bi > 0 ? ' — 빈칸 ' + (r.bi + 1) : ''}</div>
+        <span class="bk-tag ${r.ok ? '' : 'ng'}">${r.tag}</span>
+        <div class="bk-ans">${r.ok ? '<span class="ok">✓ ' + r.correctWord + '</span>' : '<span class="ng">✗ ' + r.chosen + '</span> → <span class="ok">' + r.correctWord + '</span>'}</div>
+      </div>`;
+    bklist.appendChild(d);
+  });
+
+  // set name input
+  document.getElementById('r-name-input').value = nm;
+  updateMsg();
+
+  document.getElementById('s-quiz').classList.remove('active');
+  document.getElementById('s-result').classList.add('active');
+  document.getElementById('s-result').scrollTop = 0;
+}
+
+function updateMsg() {
+  const name = document.getElementById('r-name-input').value.trim() || '__________';
+  const correct = resultLog.filter(r => r.ok).length;
+  const pct = Math.round(correct / TOTAL * 100);
+  const wrongItems = resultLog.filter(r => !r.ok)
+    .map(r => `  · 문제 ${r.n}${r.bi > 0 ? '-' + (r.bi + 1) : ''} [${r.tag}] ${r.chosen} → ${r.correctWord}`)
+    .join('\n');
+  const msg = `[영어I Lesson 2 어법 선택]\n학생: ${name}\n단원: Seeing Through the Generation Gap\n\n정답: ${correct} / ${TOTAL} (${pct}%)\n오답: ${TOTAL - correct}문제\n${wrongItems ? '\n[오답 목록]\n' + wrongItems + '\n' : ''}\n#숭덕여고 #영어I #Lesson2`;
+  document.getElementById('msg-pre').textContent = msg;
+}
+
+function copyMsg() {
+  const txt = document.getElementById('msg-pre').textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    showToast('✓ 복사 완료! 카카오톡에 붙여넣기 하세요.');
+  }).catch(() => showToast('직접 선택해서 복사해 주세요.'));
+}
+
+function openKakao() {
+  copyMsg();
+  window.open('kakaotalk://', '_blank');
+  showToast('✓ 메시지 복사 완료! 카카오톡에 붙여넣기 하세요.');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; t.textContent = ''; }, 3500);
+}
+</script>
+</body>
+</html>
