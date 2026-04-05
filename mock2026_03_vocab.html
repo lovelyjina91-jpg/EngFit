@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>2026년 3월 모의고사 고1 단어 시험</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  button { font-family: inherit; border: none; cursor: pointer; -webkit-appearance: none; }
+  input, textarea { font-family: inherit; -webkit-appearance: none; }
+
+  /* HOME */
+  .home { min-height: 100vh; background: linear-gradient(135deg, #0f172a, #1e293b); padding: 20px; }
+  .home-inner { max-width: 440px; margin: 0 auto; padding-top: 48px; }
+  .home-sub { font-size: 13px; letter-spacing: 4px; color: #64748b; text-transform: uppercase; text-align: center; margin-bottom: 8px; }
+  .home-title { font-size: 32px; font-weight: 800; color: #f8fafc; text-align: center; line-height: 1.3; }
+  .home-desc { font-size: 15px; color: #94a3b8; text-align: center; margin-top: 10px; }
+  .name-label { font-size: 13px; color: #94a3b8; display: block; margin-bottom: 6px; margin-top: 40px; }
+  .name-input { width: 100%; padding: 14px 16px; font-size: 16px; border-radius: 12px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; outline: none; }
+  .start-btn { width: 100%; padding: 18px; border-radius: 14px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: 18px; font-weight: 700; margin-top: 28px; }
+  .home-info { margin-top: 24px; padding: 16px 20px; border-radius: 12px; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); font-size: 13px; color: #94a3b8; line-height: 1.8; }
+
+  /* QUIZ */
+  .quiz { min-height: 100vh; background: #0f172a; }
+  .topbar { position: sticky; top: 0; z-index: 10; background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 16px; }
+  .topbar-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
+  .topbar-left { color: #94a3b8; }
+  .topbar-right { color: #64748b; font-variant-numeric: tabular-nums; }
+  .progress-bg { height: 4px; background: #334155; border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 2px; transition: width 0.3s; }
+  .quiz-body { max-width: 440px; margin: 0 auto; padding: 20px 16px 100px; }
+  .q-card { background: #1e293b; border-radius: 16px; padding: 24px 20px; margin-bottom: 16px; border: 1px solid #334155; }
+  .q-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .q-num { font-size: 12px; font-weight: 600; letter-spacing: 1px; }
+  .q-type { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 6px; }
+  .q-text { font-size: 24px; font-weight: 700; color: #f8fafc; line-height: 1.4; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; border-radius: 12px; background: #1e293b; transition: all 0.12s; text-align: left; }
+  .opt-circle { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; color: #94a3b8; }
+  .opt-text { font-size: 16px; line-height: 1.4; color: #cbd5e1; font-weight: 400; }
+  .opt-btn.selected .opt-circle { }
+  .opt-btn.selected .opt-text { color: #f1f5f9; font-weight: 600; }
+
+  /* BOTTOM NAV */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; padding: 12px 16px; display: flex; gap: 8px; justify-content: center; }
+  .nav-btn { flex: 1; max-width: 140px; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: 600; }
+  .nav-prev { border: 1px solid #475569; background: transparent; color: #e2e8f0; }
+  .nav-prev:disabled { color: #475569; cursor: default; }
+  .nav-submit { padding: 12px 18px; border-radius: 10px; background: #22c55e; color: #fff; font-size: 14px; font-weight: 700; }
+
+  /* MODAL */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal { background: #1e293b; border-radius: 20px; padding: 28px 24px; max-width: 360px; width: 100%; border: 1px solid #334155; }
+  .modal-title { font-size: 18px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+  .modal-warn { font-size: 14px; color: #f97316; margin-bottom: 12px; }
+  .modal-desc { font-size: 14px; color: #94a3b8; margin-bottom: 20px; }
+  .modal-btns { display: flex; gap: 8px; }
+  .modal-cancel { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #475569; background: transparent; color: #e2e8f0; font-size: 15px; font-weight: 600; }
+  .modal-ok { flex: 1; padding: 12px; border-radius: 10px; background: #22c55e; color: #fff; font-size: 15px; font-weight: 700; }
+
+  /* RESULT */
+  .result { min-height: 100vh; background: #0f172a; padding: 20px 16px; }
+  .result-inner { max-width: 440px; margin: 0 auto; padding-top: 20px; }
+  .score-card { background: #1e293b; border-radius: 20px; padding: 32px 24px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
+  .score-sub { font-size: 13px; color: #94a3b8; letter-spacing: 2px; margin-bottom: 4px; }
+  .score-name { font-size: 18px; color: #e2e8f0; font-weight: 600; margin-bottom: 16px; }
+  .score-grade { font-size: 64px; font-weight: 800; line-height: 1; }
+  .score-num { font-size: 40px; font-weight: 700; color: #f8fafc; margin-top: 8px; }
+  .score-num span { font-size: 20px; color: #64748b; }
+  .score-detail { font-size: 15px; color: #94a3b8; margin-top: 4px; }
+  .score-bar-bg { margin: 20px auto 0; width: 180px; height: 12px; background: #334155; border-radius: 6px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 6px; }
+  .copy-btn { width: 100%; padding: 16px; border-radius: 14px; background: #fbbf24; color: #1e293b; font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+  .copy-guide { font-size: 13px; color: #fbbf24; font-weight: 600; margin-bottom: 8px; }
+  .copy-textarea { width: 100%; min-height: 200px; padding: 14px 16px; font-size: 13px; border-radius: 12px; border: 1px solid rgba(251,191,36,0.4); background: #0f172a; color: #e2e8f0; font-family: monospace; line-height: 1.6; resize: none; outline: none; }
+  .wrongs-box { background: #1e293b; border-radius: 16px; padding: 20px; border: 1px solid #334155; }
+  .wrongs-title { font-size: 15px; font-weight: 700; color: #f87171; margin-bottom: 12px; }
+  .wrong-row { display: flex; justify-content: space-between; padding: 8px 12px; border-radius: 8px; }
+  .wrong-row:nth-child(odd) { background: #0f172a; }
+  .wrong-eng { font-size: 14px; color: #93c5fd; font-weight: 500; }
+  .wrong-kor { font-size: 14px; color: #cbd5e1; }
+  .result-btns { display: flex; gap: 8px; margin-top: 16px; padding-bottom: 24px; }
+  .btn-home { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #475569; background: transparent; color: #e2e8f0; font-size: 15px; font-weight: 600; }
+  .btn-retry { flex: 1; padding: 14px; border-radius: 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; font-size: 15px; font-weight: 700; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- HOME SCREEN -->
+<div id="screen-home" class="home">
+  <div class="home-inner">
+    <div style="text-align:center;margin-bottom:48px">
+      <div class="home-sub">2026 3월 모의고사 고1</div>
+      <h1 class="home-title">영어 단어 시험</h1>
+      <div class="home-desc" id="word-count"></div>
+    </div>
+    <label class="name-label">이름</label>
+    <input type="text" id="name-input" class="name-input" placeholder="이름을 입력하세요">
+    <button class="start-btn" onclick="startQuiz()">시험 시작</button>
+    <div class="home-info">
+      · 영어→한글, 한글→영어 랜덤 혼합<br>
+      · 제출 전까지 답 자유롭게 변경 가능<br>
+      · 결과 텍스트를 복사해서 카톡 전송
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="screen-quiz" class="quiz hidden">
+  <div class="topbar">
+    <div class="topbar-row">
+      <span class="topbar-left" id="q-counter"></span>
+      <span class="topbar-right" id="q-info"></span>
+    </div>
+    <div class="progress-bg"><div class="progress-fill" id="progress-bar"></div></div>
+  </div>
+  <div class="quiz-body">
+    <div class="q-card">
+      <div class="q-top">
+        <span class="q-num" id="q-num-label"></span>
+        <span class="q-type" id="q-type-label"></span>
+      </div>
+      <div class="q-text" id="q-text"></div>
+    </div>
+    <div class="options" id="options-container"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn nav-prev" id="btn-prev" onclick="goPrev()">이전</button>
+    <button class="nav-submit" id="btn-submit" onclick="showConfirm()">제출</button>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div id="modal-confirm" class="modal-bg hidden">
+  <div class="modal">
+    <div class="modal-title">시험을 제출할까요?</div>
+    <div class="modal-warn" id="modal-warn"></div>
+    <div class="modal-desc">제출하면 답을 수정할 수 없습니다.</div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="hideConfirm()">돌아가기</button>
+      <button class="modal-ok" onclick="finishQuiz()">제출하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="screen-result" class="result hidden">
+  <div class="result-inner">
+    <div class="score-card">
+      <div class="score-sub">2026 3월 모의고사 고1 단어시험</div>
+      <div class="score-name" id="result-name"></div>
+      <div class="score-grade" id="result-grade"></div>
+      <div class="score-num" id="result-score"></div>
+      <div class="score-detail" id="result-detail"></div>
+      <div class="score-bar-bg"><div class="score-bar-fill" id="result-bar"></div></div>
+    </div>
+    <div id="copy-area">
+      <button class="copy-btn" id="copy-btn" onclick="showCopyText()">카톡 전송용 텍스트 보기</button>
+    </div>
+    <div id="copy-text-area" class="hidden" style="margin-bottom:16px">
+      <div class="copy-guide">아래 텍스트를 꾹 눌러서 전체선택 → 복사 → 카톡에 붙여넣기</div>
+      <textarea id="copy-textarea" class="copy-textarea" readonly></textarea>
+    </div>
+    <div id="wrongs-container"></div>
+    <div class="result-btns">
+      <button class="btn-home" onclick="goHome()">처음으로</button>
+      <button class="btn-retry" onclick="startQuiz()">다시 풀기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORDS = [
+  ["influence","영향을 주다"],
+  ["stir","동요시키다"],
+  ["audience","청중"],
+  ["instantly","즉각적으로"],
+  ["powerfully","강력하게"],
+  ["open up","마음을 터놓다"],
+  ["anecdote","일화"],
+  ["biographical","전기(傳記)적인"],
+  ["detail","세부 사항"],
+  ["tried-and-tested","입증된"],
+  ["bond","유대감을 형성하다"],
+  ["groundwork","기틀"],
+  ["persuade","설득하다"],
+  ["harsh","냉혹한, 가혹한"],
+  ["reality","현실"],
+  ["argument","주장"],
+  ["vacuum","진공"],
+  ["revealing","의미심장한"],
+  ["flaw","결점"],
+  ["allow","허용하다"],
+  ["identify","동일시하다"],
+  ["authentically","진정성 있게"],
+  ["self-deprecating","자기 비하의"],
+  ["genetic","유전적인"],
+  ["species","종"],
+  ["be linked to","~와 연결[연관]되다"],
+  ["nearly","거의"],
+  ["embodied","육체를 가진"],
+  ["trap","가두다"],
+  ["limited","제한된"],
+  ["stream","흐름"],
+  ["influencer","영향력 행사자"],
+  ["grand","거대한, 웅장한"],
+  ["humanity","인류"],
+  ["decision","결정"],
+  ["far-reaching","(영향·결과가) 광범위한"],
+  ["impact","영향"],
+  ["place a responsibility on","~에게 책임을 맡기다[지우다]"],
+  ["forward","앞으로"],
+  ["currently","현재"],
+  ["generation","세대"],
+  ["instruct","가르치다"],
+  ["consider","고려하다"],
+  ["precious","소중한"],
+  ["decade","10년"],
+  ["shade","그늘"],
+  ["descendant","후손"],
+  ["unprecedented","전례 없는"],
+  ["ancestor","조상"],
+  ["stewardship","(재산·조직체 등의) 관리"],
+  ["despite","~에도 불구하고"],
+  ["behavior","행동"],
+  ["form","형성하다"],
+  ["early childhood","유아기"],
+  ["inborn","타고난"],
+  ["biological","생물학적인"],
+  ["difference","차이"],
+  ["preference","선호도"],
+  ["throughout","~의 전체에 걸쳐"],
+  ["due to","~ 덕분에, ~ 때문에"],
+  ["adaptability","적응력"],
+  ["flexibility","유연성"],
+  ["terrific","아주 좋은, 멋진"],
+  ["adventurous","모험적인"],
+  ["expand","확장하다"],
+  ["eager to do","~를 열망하는"],
+  ["gradually","점진적으로"],
+  ["readjust","재조정하다"],
+  ["processed","가공된"],
+  ["grain","곡물, 곡류"],
+  ["texture","식감, 질감"],
+  ["exposure","경험, 노출"],
+  ["willingness","의지"],
+  ["neuroplasticity","신경 가소성"],
+  ["nutritious","영양분이 많은"],
+  ["conformity","순응"],
+  ["go against","~에 반대하다, 맞지 않다"],
+  ["fascinating","흥미로운"],
+  ["equally","고르게"],
+  ["go along with","~에 동조[동의]하다"],
+  ["peak","정점"],
+  ["tendency","경향"],
+  ["decrease","감소하다"],
+  ["disagree","반대하다"],
+  ["stand up for","~을 옹호하다"],
+  ["finding","발견"],
+  ["demonstrate","입증하다"],
+  ["peer","또래"],
+  ["mature","성숙해지다"],
+  ["defend","방어하다"],
+  ["opinion","의견"],
+  ["resilient","회복 탄력적인"],
+  ["habit","습관"],
+  ["essential","필수적인"],
+  ["attach","결합하다, 붙이다"],
+  ["bundling","묶기"],
+  ["participant","참가자"],
+  ["have access to","~에 접근하다"],
+  ["device","기기, 장치"],
+  ["awesome","멋진, 굉장한"],
+  ["combine","결합하다"],
+  ["otherwise","그렇지 않았다면"],
+  ["put off","미루다, 연기하다"],
+  ["be likely to do","~할 가능성이 있다, ~할 것 같다"],
+  ["opt to do","~하는 것을 선택하다"],
+  ["temptation","유혹"],
+  ["hostage","볼모"],
+  ["conceptual","개념의, 구상의"],
+  ["explanation","설명"],
+  ["simplified","단순화된"],
+  ["accurate","정확한"],
+  ["as long as","~하기만 하면"],
+  ["useful","유용한"],
+  ["display","표시하다"],
+  ["document","문서, 서류"],
+  ["application","응용 프로그램"],
+  ["effective","효과적인"],
+  ["conceptualization","개념화"],
+  ["confusion","혼란"],
+  ["actual","실제의"],
+  ["distant","멀리 있는"],
+  ["consist of","~로 구성되다"],
+  ["depiction","묘사"],
+  ["coherent","일관된"],
+  ["principal","주요한"],
+  ["transportation mode","교통수단, 운송수단"],
+  ["developing world","개발 도상국"],
+  ["resource","자원"],
+  ["operate","운영하다"],
+  ["extensive","광범위한"],
+  ["distance","거리"],
+  ["on foot","도보로, 걸어서"],
+  ["expend","소비하다, 쓰다"],
+  ["spare","내어 주다"],
+  ["unavoidable","피할 수 없는"],
+  ["burden","부담"],
+  ["consume","소모하다"],
+  ["productive","생산적인"],
+  ["capability","능력"],
+  ["attitude","태도"],
+  ["policy","정책, 방침"],
+  ["efficient","효율적인"],
+  ["current","현재의"],
+  ["trend","추세, 동향"],
+  ["reverse","뒤바꾸다"],
+  ["treadmill","러닝머신"],
+  ["simulate","모방하다"],
+  ["accomplish","달성하다, 이루다"],
+  ["purpose","목적"],
+  ["constraint","제약"],
+  ["transit","운송"],
+  ["cause","유발하다"],
+  ["anxiety","불안감"],
+  ["stuff","물건, 물질"],
+  ["the same is true for","~에도 마찬가지이다"],
+  ["house","보관하다"],
+  ["purchase","구입하다"],
+  ["express","표현하다"],
+  ["remind","상기시키다"],
+  ["closet","옷장"],
+  ["revision","수정, 정정"],
+  ["own","소유하다"],
+  ["input","입력"],
+  ["inspired","영감을 받은"],
+  ["imaginative","상상력이 풍부한"],
+  ["overcome","압도하다"],
+  ["indecision","망설임"],
+  ["overwhelmed","압도된"],
+  ["streamline","간소화하다"],
+  ["familiarity","친숙함"],
+  ["mastery","숙달"],
+  ["competence","능력"],
+  ["recognize","인식하다, 인정하다"],
+  ["genuine","진짜의"],
+  ["struggle","어려움을 겪다"],
+  ["recall","회상하다"],
+  ["apply","적용하다"],
+  ["independently","독립적으로"],
+  ["bias","편향"],
+  ["overestimate","과대평가하다"],
+  ["informally","비공식적으로"],
+  ["actively","적극적으로, 능동적으로"],
+  ["counter","대응하다"],
+  ["organization","조직화, 구성"],
+  ["reveal","드러내다"],
+  ["introduce","도입하다"],
+  ["imaginary","가상의, 상상의"],
+  ["employ","이용하다"],
+  ["ultimately","궁극적으로"],
+  ["adopt","채택하다"],
+  ["mindset","사고방식, 태도"],
+  ["transform","변화시키다"],
+  ["expose","드러내다"],
+  ["ensure","보장하다"],
+  ["solid","견고한"],
+  ["reliable","신뢰할 수 있는"],
+  ["illusion","착각"],
+  ["cognitive","인지의"],
+  ["passive","수동적인"],
+  ["official","관리"],
+  ["clay tablet","(글자를 새긴) 점토판"],
+  ["record","기록하다"],
+  ["intellectual","지적인"],
+  ["leap","도약"],
+  ["separate ~ from …","~을 …로부터 분리하다"],
+  ["represent","표현하다"],
+  ["alongside","~ 옆에"],
+  ["symbol","상징"],
+  ["describe","묘사하다"],
+  ["trade","바꾸다, 교환하다"],
+  ["existing","존재하는, 기존의"],
+  ["independent of","~과 상관없이, ~과 별개로"],
+  ["take ~ for granted","~을 당연하게 여기다"],
+  ["civilization","문명"],
+  ["extremely","매우"],
+  ["numeral","숫자"],
+  ["emancipated","해방된"],
+  ["emphasis","강조"],
+  ["ingroup","내집단"],
+  ["take account of","~을 고려하다"],
+  ["dislike","싫어하다; 반감"],
+  ["context","맥락"],
+  ["outgroup","외집단"],
+  ["minimal","최소한의"],
+  ["color coding","색상 구분"],
+  ["wristband","손목 밴드"],
+  ["antisocial","반사회적인"],
+  ["fashion","방식"],
+  ["prosocial","친사회적인"],
+  ["closely","면밀히"],
+  ["efficiently","효율적으로"],
+  ["proper","타당한"],
+  ["conform","따르다, 순응하다"],
+  ["convention","관습, 관례"],
+  ["appropriately","적절하게"],
+  ["distinguish","식별하다"],
+  ["theory","이론"],
+  ["concept","개념"],
+  ["stable","안정적인"],
+  ["quantity","수량"],
+  ["cell","세포"],
+  ["weight","체중, 무게"],
+  ["childhood","어린 시절"],
+  ["strength","강도"],
+  ["affect","영향을 미치다"],
+  ["release","분비하다, 내보내다"],
+  ["chemical","화학 물질"],
+  ["treat","치료하다"],
+  ["battle with","~와 싸우다"],
+  ["desire","욕구"],
+  ["trigger","방아쇠"],
+  ["initially","처음에"],
+  ["catchphrase","유명 문구"],
+  ["mention","언급하다, 거론하다"],
+  ["suggest","시사하다"],
+  ["complex","복잡한"],
+  ["tangled","뒤엉킨"],
+  ["phrase","구절, 관용구"],
+  ["massive","거대한"],
+  ["receiver","(방송) 수신기"],
+  ["back in the day","옛날에, 예전에"],
+  ["view ~ as …","~을 …로 간주하다"],
+  ["remove","제거하다"],
+  ["reduction","축소, 감소"],
+  ["eventually","결국"],
+  ["scale","크기"],
+  ["function","기능"],
+  ["multilayered","다층화된"],
+  ["extinguish","소멸시키다"],
+  ["industry","산업"],
+  ["deeply","깊이"],
+  ["rooted","뿌리가 내린, 뿌리 깊은"],
+  ["face","직면하다"],
+  ["invention","발명"],
+  ["rapid","빠른"],
+  ["adoption","채택"],
+  ["explosion","폭발적 증가"],
+  ["consumer goods","소비재"],
+  ["everywhere","도처에, 어디에나"],
+  ["symbolize","상징하다"],
+  ["convenience","편리함"],
+  ["price","대가"],
+  ["notice","알아차리다"],
+  ["launch","시작하다"],
+  ["present","제시하다, 제출하다"],
+  ["pollution","오염, 공해"],
+  ["corporation","기업"],
+  ["flood","범람시키다"],
+  ["sustainably","지속 가능하게"],
+  ["prosperity","번영"],
+  ["propose","제안하다, 제의하다"],
+  ["proposition","명제"],
+  ["roughly","대략, 거의"],
+  ["interrelated","상호 연관된"],
+  ["commitment","약속, 헌신"],
+  ["particular","특정한"],
+  ["subject matter","주제, 소재"],
+  ["methodological","방법론적인"],
+  ["practice","관행, 관례"],
+  ["undertake","수행하다"],
+  ["specific","특정한"],
+  ["exacting","엄밀한"],
+  ["sensible","사리에 맞는"],
+  ["nature","성격, 성질"],
+  ["instrument","도구, 기구"],
+  ["be supposed to do","~해야 한다"],
+  ["major","주요한, 중대한"],
+  ["progress","진보, 진전"],
+  ["horizontal","수평적인"],
+  ["shift","전환"],
+  ["embed","깊이 박아 넣다"],
+  ["microscope","현미경"],
+  ["greenhouse","온실"],
+  ["dawn","새벽, 여명"],
+  ["below-zero","영하의"],
+  ["provide","제공하다"],
+  ["striking","인상적인"],
+  ["introduction","소개"],
+  ["harvest","수확"],
+  ["raise","들어올리다"],
+  ["convince","납득시키다"],
+  ["foolish","어리석은"],
+  ["miraculous","기적적인"],
+  ["contrast","대조, 대비"],
+  ["stretch","뻗어 있다"],
+  ["maroon","밤색의"],
+  ["frost-coated","서리가 내려 앉은"],
+  ["bleak","황량한"],
+  ["vigorous","생기가 넘치는"],
+  ["parenting","육아"],
+  ["expert","전문가"],
+  ["independence","독립심"],
+  ["resilience","회복 탄력성"],
+  ["suburb","교외 지역"],
+  ["navigate","~을 이끌다, 인도하다"],
+  ["on one's own","혼자 힘으로"],
+  ["clinical psychologist","임상 심리학자"],
+  ["structural","구조적인"],
+  ["political","정치의"],
+  ["childcare","보육"],
+  ["populate","(~에) 살다, 거주하다"],
+  ["lightly","가볍게, 부드럽게"],
+  ["independent","독립적인"],
+  ["supportive","지원적인, 지지하는"],
+  ["mild","가벼운, 순한"],
+  ["physical","물리적인, 물질적인"],
+  ["tolerance","관용"],
+  ["supervised","감독받는"],
+  ["virtue","미덕"],
+  ["self-effacing","자기를 내세우지 않는"],
+  ["resign","단념하다"],
+];
+
+const CIR = ["\u2460","\u2461","\u2462","\u2463"];
+let questions=[], answers={}, currentQ=0, startTime=0, timerID=null, resultData=null;
+
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+function genQuestions(){
+  return shuffle(WORDS).map(([eng,kor])=>{
+    const e2k=Math.random()<0.5;
+    const q=e2k?eng:kor, ans=e2k?kor:eng;
+    const pool=WORDS.filter(w=>(e2k?w[1]:w[0])!==ans).map(w=>e2k?w[1]:w[0]);
+    const dist=shuffle(pool).slice(0,3);
+    const opts=shuffle([ans,...dist]);
+    return {question:q,answer:ans,options:opts,eng,kor,type:e2k?"A":"B"};
+  });
+}
+
+function show(id){document.querySelectorAll('#screen-home,#screen-quiz,#screen-result').forEach(e=>e.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
+
+function startQuiz(){
+  questions=genQuestions(); answers={}; currentQ=0; resultData=null;
+  startTime=Date.now();
+  if(timerID)clearInterval(timerID);
+  timerID=setInterval(updateTimer,1000);
+  show('screen-quiz'); renderQ();
+}
+
+function updateTimer(){
+  const s=Math.floor((Date.now()-startTime)/1000);
+  const cnt=Object.keys(answers).length;
+  document.getElementById('q-info').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')} · ${cnt}개 응답`;
+}
+
+function renderQ(){
+  const q=questions[currentQ];
+  const isA=q.type==="A";
+  const color=isA?"#3b82f6":"#f97316";
+  const label=isA?"영→한":"한→영";
+  const cnt=Object.keys(answers).length;
+  const pct=questions.length>0?(cnt/questions.length*100):0;
+
+  document.getElementById('q-counter').textContent=`${currentQ+1} / ${questions.length}`;
+  document.getElementById('progress-bar').style.width=pct+'%';
+  document.getElementById('q-num-label').textContent='Q'+(currentQ+1);
+  document.getElementById('q-num-label').style.color=color;
+  document.getElementById('q-type-label').textContent=label;
+  document.getElementById('q-type-label').style.color=color;
+  document.getElementById('q-type-label').style.background=color+'18';
+  document.getElementById('q-text').textContent=q.question;
+
+  const cont=document.getElementById('options-container');
+  cont.innerHTML='';
+  q.options.forEach((opt,idx)=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    const sel=answers[currentQ];
+    if(sel===idx){
+      btn.classList.add('selected');
+      btn.style.border='1.5px solid '+color;
+      btn.style.background=color+'15';
+    } else {
+      btn.style.border='1.5px solid #334155';
+    }
+    btn.innerHTML=`<span class="opt-circle" style="${sel===idx?'color:'+color:''}">${CIR[idx]}</span><span class="opt-text">${opt}</span>`;
+    btn.onclick=()=>{answers[currentQ]=idx;renderQ();if(currentQ<questions.length-1){setTimeout(()=>{currentQ++;renderQ();window.scrollTo({top:0,behavior:'smooth'});},250);}};
+    cont.appendChild(btn);
+  });
+
+  document.getElementById('btn-prev').disabled=currentQ===0;
+  document.getElementById('btn-submit').textContent=`제출 (${cnt}/${questions.length})`;
+  updateTimer();
+}
+
+function goNext(){if(currentQ<questions.length-1){currentQ++;renderQ();window.scrollTo({top:0,behavior:'smooth'});}}
+function goPrev(){if(currentQ>0){currentQ--;renderQ();window.scrollTo({top:0,behavior:'smooth'});}}
+
+function showConfirm(){
+  const un=questions.length-Object.keys(answers).length;
+  document.getElementById('modal-warn').textContent=un>0?`아직 ${un}문제를 풀지 않았습니다.`:'';
+  document.getElementById('modal-confirm').classList.remove('hidden');
+}
+function hideConfirm(){document.getElementById('modal-confirm').classList.add('hidden');}
+
+function finishQuiz(){
+  if(timerID){clearInterval(timerID);timerID=null;}
+  const sec=Math.floor((Date.now()-startTime)/1000);
+  let correct=0; const wrongs=[];
+  questions.forEach((q,i)=>{
+    const s=answers[i];
+    if(s!==undefined&&q.options[s]===q.answer)correct++;
+    else wrongs.push(q);
+  });
+  resultData={correct,total:questions.length,wrongs,time:`${Math.floor(sec/60)}분 ${sec%60}초`};
+  hideConfirm(); showResult();
+}
+
+function showResult(){
+  const r=resultData, pct=Math.round(r.correct/r.total*100);
+  let grade,gc;
+  if(pct>=95){grade='A+';gc='#22c55e';}
+  else if(pct>=90){grade='A';gc='#4ade80';}
+  else if(pct>=85){grade='B+';gc='#3b82f6';}
+  else if(pct>=80){grade='B';gc='#60a5fa';}
+  else if(pct>=70){grade='C';gc='#f97316';}
+  else{grade='D';gc='#ef4444';}
+
+  const nm=document.getElementById('name-input').value;
+  document.getElementById('result-name').textContent=nm||'';
+  document.getElementById('result-name').style.display=nm?'block':'none';
+  document.getElementById('result-grade').textContent=grade;
+  document.getElementById('result-grade').style.color=gc;
+  document.getElementById('result-score').innerHTML=`${r.correct}<span>/${r.total}</span>`;
+  document.getElementById('result-detail').textContent=`${pct}% · ${r.time}`;
+  document.getElementById('result-bar').style.width=pct+'%';
+  document.getElementById('result-bar').style.background=gc;
+
+  // 복사 영역 초기화
+  document.getElementById('copy-btn').style.display='block';
+  document.getElementById('copy-text-area').classList.add('hidden');
+
+  // 오답
+  const wc=document.getElementById('wrongs-container');
+  if(r.wrongs.length>0){
+    let h=`<div class="wrongs-box"><div class="wrongs-title">오답 목록 (${r.wrongs.length}개)</div>`;
+    r.wrongs.forEach((w,i)=>{h+=`<div class="wrong-row"><span class="wrong-eng">${w.eng}</span><span class="wrong-kor">${w.kor}</span></div>`;});
+    h+='</div>';wc.innerHTML=h;
+  } else {wc.innerHTML='';}
+
+  show('screen-result');
+  window.scrollTo(0,0);
+}
+
+function showCopyText(){
+  const r=resultData, nm=document.getElementById('name-input').value;
+  const date=new Date().toLocaleDateString('ko-KR');
+  let t=`[2026 3월 모의고사 고1 단어시험]\n`;
+  t+=`${nm?nm+' | ':''}${date}\n`;
+  t+=`${r.correct}/${r.total} (${Math.round(r.correct/r.total*100)}%) | ${r.time}\n`;
+  if(r.wrongs.length>0){
+    t+=`\n[오답 ${r.wrongs.length}개]\n`;
+    r.wrongs.forEach((w,i)=>{t+=`${i+1}. ${w.eng} = ${w.kor}\n`;});
+  } else {t+=`\n만점! 전부 정답!`;}
+
+  document.getElementById('copy-btn').style.display='none';
+  document.getElementById('copy-text-area').classList.remove('hidden');
+  const ta=document.getElementById('copy-textarea');
+  ta.value=t;
+  setTimeout(()=>{ta.focus();ta.select();},100);
+}
+
+function goHome(){show('screen-home');resultData=null;}
+
+// init
+document.getElementById('word-count').textContent=WORDS.length+'단어 · 영한/한영 혼합 · 4지선다';
+</script>
+</body>
+</html>
