@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>도림고 1학년 수행평가 한→영 4지선다</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: #0f172a; color: #f1f5f9; font-family: 'Apple SD Gothic Neo','Malgun Gothic',sans-serif; min-height: 100vh; }
+    .hidden { display: none !important; }
+
+    #s-home { min-height: 100vh; background: linear-gradient(145deg,#0f172a 0%,#1a1f3a 60%,#0f172a 100%); display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .home-inner { max-width: 420px; width: 100%; }
+    .home-eyebrow { font-size: 11px; letter-spacing: 5px; color: #475569; text-transform: uppercase; text-align: center; margin-bottom: 10px; }
+    .home-title { font-size: 26px; font-weight: 800; color: #f8fafc; text-align: center; line-height: 1.3; margin-bottom: 6px; }
+    .home-sub { font-size: 14px; color: #64748b; text-align: center; margin-bottom: 32px; }
+    .home-label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+    #inp-name { width: 100%; padding: 14px 16px; font-size: 16px; border-radius: 12px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; outline: none; margin-bottom: 14px; transition: border-color .2s; }
+    #inp-name:focus { border-color: #06b6d4; }
+
+    .range-label { font-size: 12px; color: #64748b; margin-bottom: 8px; }
+    .range-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+    .range-btn { padding: 12px 8px; border-radius: 10px; border: 1.5px solid #334155; background: #1e293b; color: #94a3b8; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; transition: all .15s; }
+    .range-btn.active { border-color: #06b6d4; background: rgba(6,182,212,0.12); color: #06b6d4; }
+    .range-btn-all { grid-column: 1/-1; }
+
+    .btn-start { width: 100%; padding: 18px; border-radius: 14px; border: none; background: linear-gradient(135deg,#06b6d4,#6366f1); color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
+    .home-info { margin-top: 20px; padding: 14px 18px; border-radius: 12px; background: rgba(6,182,212,0.07); border: 1px solid rgba(6,182,212,0.15); font-size: 13px; color: #64748b; line-height: 1.9; }
+
+    #s-quiz { min-height: 100vh; background: #0f172a; }
+    .qz-header { position: sticky; top: 0; z-index: 20; background: #1e293b; border-bottom: 1px solid #2d3f55; padding: 10px 16px; }
+    .qz-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .qz-qnum { font-size: 13px; color: #64748b; }
+    .qz-meta { font-size: 13px; color: #475569; font-variant-numeric: tabular-nums; }
+    .prog-track { height: 4px; background: #2d3f55; border-radius: 2px; overflow: hidden; }
+    .prog-fill { height: 100%; background: linear-gradient(90deg,#06b6d4,#6366f1); border-radius: 2px; transition: width .3s; }
+
+    .qz-body { max-width: 440px; margin: 0 auto; padding: 18px 16px 90px; }
+
+    .q-card { background: #1e293b; border-radius: 16px; padding: 28px 20px 22px; margin-bottom: 14px; border: 1px solid #2d3f55; text-align: center; }
+    .q-num-badge { display: inline-block; font-size: 11px; color: #06b6d4; font-weight: 700; letter-spacing: 2px; margin-bottom: 14px; padding: 3px 10px; border-radius: 20px; background: rgba(6,182,212,0.1); }
+    .q-korean { font-size: 32px; font-weight: 800; color: #f8fafc; line-height: 1.35; word-break: keep-all; }
+
+    .opts-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .opt-btn {
+      padding: 16px 10px; border-radius: 12px;
+      border: 1.5px solid #334155; background: #1e293b;
+      color: #cbd5e1; font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: all .12s; text-align: center;
+      line-height: 1.4; word-break: break-all;
+      letter-spacing: 0.3px;
+    }
+    .opt-btn.sel { border-color: #06b6d4; background: rgba(6,182,212,0.13); color: #f8fafc; font-weight: 700; }
+    .opt-btn:disabled { cursor: default; opacity: 0.7; }
+
+    .qz-footer { position: fixed; bottom: 0; left: 0; right: 0; background: #1a2438; border-top: 1px solid #2d3f55; padding: 12px 16px; display: flex; gap: 8px; }
+    .btn-prev { flex: 1; padding: 13px 16px; border-radius: 10px; border: 1px solid #334155; background: transparent; color: #94a3b8; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-prev:disabled { color: #334155; border-color: #253047; cursor: default; }
+    .btn-submit { flex: 1; padding: 13px 14px; border-radius: 10px; border: none; background: #16a34a; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal { background: #1e293b; border-radius: 20px; padding: 28px 24px; max-width: 360px; width: 100%; border: 1px solid #334155; }
+    .modal h3 { font-size: 18px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+    .modal-warn { font-size: 14px; color: #f97316; margin-bottom: 10px; }
+    .modal-desc { font-size: 14px; color: #64748b; margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 8px; }
+    .btn-mc { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #475569; background: transparent; color: #e2e8f0; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-mo { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #16a34a; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+
+    #s-result { min-height: 100vh; background: #0f172a; padding: 20px 16px; }
+    .res-inner { max-width: 440px; margin: 0 auto; padding-top: 16px; padding-bottom: 32px; }
+    .score-card { background: #1e293b; border-radius: 20px; padding: 30px 24px; text-align: center; margin-bottom: 16px; border: 1px solid #2d3f55; }
+    .sc-label { font-size: 12px; color: #475569; letter-spacing: 2px; margin-bottom: 4px; }
+    .sc-name { font-size: 18px; color: #e2e8f0; font-weight: 700; margin-bottom: 14px; }
+    .sc-grade { font-size: 64px; font-weight: 800; line-height: 1; }
+    .sc-score { font-size: 38px; font-weight: 700; color: #f8fafc; margin-top: 8px; }
+    .sc-denom { font-size: 20px; color: #475569; }
+    .sc-pct { font-size: 15px; color: #64748b; margin-top: 4px; }
+    .sc-bar { margin: 18px auto 0; width: 180px; height: 10px; background: #2d3f55; border-radius: 5px; overflow: hidden; }
+    .sc-bar-fill { height: 100%; border-radius: 5px; }
+
+    .btn-copy-toggle { width: 100%; padding: 15px; border-radius: 14px; border: none; background: #d97706; color: #fff; font-size: 17px; font-weight: 700; cursor: pointer; margin-bottom: 14px; }
+    #copy-area { margin-bottom: 14px; }
+    .copy-tip { font-size: 12px; color: #d97706; margin-bottom: 7px; font-weight: 600; }
+    #copy-ta { width: 100%; min-height: 160px; padding: 14px; font-size: 13px; border-radius: 12px; border: 1px solid rgba(217,119,6,.35); background: #0a1628; color: #e2e8f0; font-family: monospace; line-height: 1.65; resize: none; outline: none; }
+
+    .wrong-card { background: #1e293b; border-radius: 16px; padding: 20px; border: 1px solid #2d3f55; margin-bottom: 16px; }
+    .wc-title { font-size: 15px; font-weight: 700; color: #f87171; margin-bottom: 12px; }
+    .wi { padding: 10px 12px; border-radius: 8px; margin-bottom: 4px; }
+    .wi:nth-child(odd) { background: rgba(0,0,0,.25); }
+    .wi-top { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .wi-num { font-size: 12px; color: #475569; flex-shrink: 0; }
+    .wi-kor { font-size: 15px; color: #f8fafc; font-weight: 700; }
+    .wi-ans-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .wi-yours { font-size: 13px; color: #f87171; }
+    .wi-arr { font-size: 13px; color: #475569; }
+    .wi-correct { font-size: 13px; color: #4ade80; font-weight: 700; }
+
+    .res-btns { display: flex; gap: 8px; }
+    .btn-home { flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #475569; background: transparent; color: #e2e8f0; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-retry { flex: 1; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg,#06b6d4,#6366f1); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<div id="s-home">
+  <div class="home-inner">
+    <div class="home-eyebrow">도림고 1학년 · 2025-03 모의고사</div>
+    <div class="home-title">한 → 영 4지선다</div>
+    <div class="home-sub">한글 뜻을 보고 영단어 고르기 · 100단어</div>
+    <div class="home-label">이름</div>
+    <input id="inp-name" type="text" placeholder="이름을 입력하세요" autocomplete="off">
+    <div class="range-label">시험 범위 선택</div>
+    <div class="range-btns">
+      <button class="range-btn" data-s="0" data-e="25" onclick="selectRange(this)">1~25번</button>
+      <button class="range-btn" data-s="25" data-e="50" onclick="selectRange(this)">26~50번</button>
+      <button class="range-btn" data-s="50" data-e="75" onclick="selectRange(this)">51~75번</button>
+      <button class="range-btn" data-s="75" data-e="100" onclick="selectRange(this)">76~100번</button>
+      <button class="range-btn range-btn-all active" data-s="0" data-e="100" onclick="selectRange(this)">전체 100단어</button>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">시험 시작</button>
+    <div class="home-info">
+      · 한글 뜻을 보고 영단어 4개 중 선택<br>
+      · 선택 즉시 0.25초 후 자동으로 다음 문제<br>
+      · 이전 버튼으로 돌아가 수정 가능<br>
+      · 결과 텍스트 복사 → 카톡 전송
+    </div>
+  </div>
+</div>
+
+<div id="s-quiz" class="hidden">
+  <div class="qz-header">
+    <div class="qz-header-row">
+      <span class="qz-qnum" id="qz-qnum">1 / 100</span>
+      <span class="qz-meta" id="qz-meta">0:00 · 0개 응답</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div class="qz-body">
+    <div class="q-card">
+      <div class="q-num-badge" id="q-num-badge">No.1</div>
+      <div class="q-korean" id="q-korean"></div>
+    </div>
+    <div id="opts-container"></div>
+  </div>
+  <div class="qz-footer">
+    <button class="btn-prev" id="btn-prev" onclick="goPrev()" disabled>◀ 이전</button>
+    <button class="btn-submit" onclick="openConfirm()">제출 <span id="ans-count">0</span>/<span id="total-count">100</span></button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="modal">
+  <div class="modal">
+    <h3>시험을 제출할까요?</h3>
+    <div class="modal-warn hidden" id="modal-warn"></div>
+    <div class="modal-desc">제출하면 답을 수정할 수 없습니다.</div>
+    <div class="modal-btns">
+      <button class="btn-mc" onclick="closeConfirm()">돌아가기</button>
+      <button class="btn-mo" onclick="finishQuiz()">제출하기</button>
+    </div>
+  </div>
+</div>
+
+<div id="s-result" class="hidden">
+  <div class="res-inner">
+    <div class="score-card">
+      <div class="sc-label">도림고 1학년 · 한→영 수행평가</div>
+      <div class="sc-name hidden" id="sc-name"></div>
+      <div class="sc-grade" id="sc-grade"></div>
+      <div class="sc-score"><span id="sc-correct"></span><span class="sc-denom" id="sc-denom"></span></div>
+      <div class="sc-pct" id="sc-pct"></div>
+      <div class="sc-bar"><div class="sc-bar-fill" id="sc-bar-fill"></div></div>
+    </div>
+    <button class="btn-copy-toggle" id="btn-copy" onclick="showCopy()">📋 카톡 전송용 텍스트 보기</button>
+    <div id="copy-area" class="hidden">
+      <div class="copy-tip">꾹 눌러서 전체선택 → 복사 → 카톡 붙여넣기</div>
+      <textarea id="copy-ta" readonly onfocus="this.select()"></textarea>
+    </div>
+    <div class="wrong-card hidden" id="wrong-card">
+      <div class="wc-title" id="wc-title"></div>
+      <div id="wrong-list"></div>
+    </div>
+    <div class="res-btns">
+      <button class="btn-home" onclick="goHome()">처음으로</button>
+      <button class="btn-retry" onclick="startQuiz()">다시 풀기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ALL_WORDS = [
+  [1,"몸짓의","gestural"],[2,"의사소통","communication"],[3,"고개를 끄덕이다","nod"],
+  [4,"악수하다","shake hands"],[5,"보완하다","complement"],[6,"분위기","atmosphere"],
+  [7,"개방성","openness"],[8,"협력","collaboration"],[9,"~에 참여하다","engage in"],
+  [10,"주의를 돌리게 하다","distract from"],[11,"강조하다","highlight"],[12,"가리다","overshadow"],
+  [13,"입증하다","prove"],[14,"바람직한, 선호되는","preferable"],[15,"돌연변이","mutation"],
+  [16,"배아","embryo"],[17,"유혹","temptation"],[18,"훌륭한, 뛰어난","superior"],
+  [19,"심장병","heart disease"],[20,"태어나지 않은","unborn"],[21,"특징","feature"],
+  [22,"특징","characteristic"],[23,"추구","pursuit"],[24,"초등학교","grade school"],
+  [25,"확실함","certainty"],[26,"유기체","organism"],[27,"연속","succession"],
+  [28,"추론","inference"],[29,"~에 기반하여","based upon"],[30,"관찰","observation"],
+  [31,"실험","experiment"],[32,"불확실성","uncertainty"],[33,"확실한","certain"],
+  [34,"진보, 진행","progress"],[35,"관리자, 감독관","supervisor"],[36,"관련된, 관여된","involved"],
+  [37,"배려심 있는","caring"],[38,"또래","peer"],[39,"직장 동료","coworker"],
+  [40,"관계성","relatedness"],[41,"동기","motivation"],[42,"내면화","internalization"],
+  [43,"자율성","autonomy"],[44,"유능함","competence"],[45,"중요한","crucial"],
+  [46,"강화하다","enhance"],[47,"유대감","connectedness"],[48,"지속","persistence"],
+  [49,"의사결정","decision-making"],[50,"울림, 공명","resonance"],
+  [51,"밝히다","light up"],[52,"발음","pronunciation"],[53,"강화시키다","strengthen"],
+  [54,"지적 능력","brainpower"],[55,"전반적인","overall"],[56,"대중의","public"],
+  [57,"강요하다","force"],[58,"침묵","silence"],[59,"특히","in particular"],
+  [60,"자극","stimulation"],[61,"평가하다","evaluate"],[62,"경기, 경쟁","competition"],
+  [63,"배구","volleyball"],[64,"바닥","floor"],[65,"미세하게 조정하다","fine-tune"],
+  [66,"적응","adaptation"],[67,"포함하다","involve"],[68,"조정","adjustment"],
+  [69,"온도","temperature"],[70,"경쟁의","competitive"],[71,"구성 요소","component"],
+  [72,"홍보","promotion"],[73,"심리(학)","psychology"],[74,"방식","fashion"],
+  [75,"가능성","possibility"],[76,"속이다","fool"],[77,"장기간의","long-term"],
+  [78,"말하다","relate"],[79,"확인하다","identify"],[80,"진가를 인정하다","appreciate"],
+  [81,"마케팅 담당자","marketer"],[82,"무관심한","uninterested"],[83,"주장하다","argue"],
+  [84,"인상을 주다","strike"],[85,"부분적인","partial"],[86,"반영","reflection"],
+  [87,"포착하다","capture"],[88,"특정한","particular"],[89,"그림","drawing"],
+  [90,"물리적인, 물질적인","physical"],[91,"삼각형","triangle"],[92,"감정적인","emotional"],
+  [93,"굴러가다","roll"],[94,"말다툼, 논쟁","argument"],[95,"극도로 지친","overtired"],
+  [96,"정당화하다","justify"],[97,"상황","circumstance"],[98,"반영하다","reflect"],
+  [99,"얼굴을 찡그리다","frown"],[100,"연주회","recital"]
+];
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+let rangeStart=0, rangeEnd=100;
+let questions=[], curQ=0, userAnswers={}, startTime=null, timerID=null, playerName="";
+let advancing = false;
+
+function selectRange(btn){
+  document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  rangeStart=parseInt(btn.dataset.s); rangeEnd=parseInt(btn.dataset.e);
+}
+
+function show(id){['s-home','s-quiz','s-result'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id));}
+
+function makeOptions(correct, allPool) {
+  const others = allPool.filter(w => w[2] !== correct).map(w => w[2]);
+  const distractors = shuffle(others).slice(0, 3);
+  return shuffle([correct, ...distractors]);
+}
+
+function startQuiz(){
+  playerName = document.getElementById('inp-name').value.trim();
+  const slice = ALL_WORDS.slice(rangeStart, rangeEnd);
+  const pool = shuffle(slice);
+  questions = pool.map(w => ({
+    no: w[0], kor: w[1], ans: w[2],
+    options: makeOptions(w[2], ALL_WORDS.slice(rangeStart, rangeEnd))
+  }));
+  curQ=0; userAnswers={}; advancing=false;
+  clearInterval(timerID); startTime=Date.now();
+  timerID=setInterval(updateMeta,1000);
+  document.getElementById('total-count').textContent=questions.length;
+  show('s-quiz'); renderQ();
+}
+
+function renderQ(){
+  const q=questions[curQ], total=questions.length;
+  document.getElementById('qz-qnum').textContent=`${curQ+1} / ${total}`;
+  document.getElementById('q-num-badge').textContent=`No.${q.no}`;
+  document.getElementById('q-korean').textContent=q.kor;
+
+  const container=document.getElementById('opts-container');
+  container.innerHTML='';
+  const wrap=document.createElement('div'); wrap.className='opts-wrap';
+
+  q.options.forEach((opt,idx)=>{
+    const btn=document.createElement('button');
+    btn.className=`opt-btn${userAnswers[curQ]===idx?' sel':''}`;
+    btn.textContent=opt;
+    btn.onclick=()=>selectAnswer(idx);
+    wrap.appendChild(btn);
+  });
+  container.appendChild(wrap);
+
+  const answered=Object.keys(userAnswers).length;
+  document.getElementById('prog-fill').style.width=`${answered/total*100}%`;
+  document.getElementById('btn-prev').disabled=curQ===0;
+  document.getElementById('ans-count').textContent=answered;
+  window.scrollTo(0,0);
+}
+
+function selectAnswer(idx){
+  if(advancing) return;
+  userAnswers[curQ]=idx;
+  renderQ();
+  if(curQ < questions.length-1){
+    advancing=true;
+    setTimeout(()=>{
+      curQ++; advancing=false; renderQ();
+    }, 250);
+  }
+}
+
+function goPrev(){
+  if(advancing) return;
+  if(curQ>0){curQ--;renderQ();}
+}
+
+function updateMeta(){
+  const s=Math.floor((Date.now()-startTime)/1000);
+  const mm=Math.floor(s/60),ss=String(s%60).padStart(2,'0');
+  document.getElementById('qz-meta').textContent=`${mm}:${ss} · ${Object.keys(userAnswers).length}개 응답`;
+}
+
+function openConfirm(){
+  const un=questions.length-Object.keys(userAnswers).length;
+  const we=document.getElementById('modal-warn');
+  if(un>0){we.textContent=`아직 ${un}문제를 풀지 않았습니다.`;we.classList.remove('hidden');}
+  else we.classList.add('hidden');
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeConfirm(){document.getElementById('modal').classList.add('hidden');}
+
+function finishQuiz(){
+  clearInterval(timerID); closeConfirm();
+  const timeSec=Math.floor((Date.now()-startTime)/1000);
+  const timeStr=`${Math.floor(timeSec/60)}분 ${timeSec%60}초`;
+  let correct=0; const wrongs=[];
+
+  questions.forEach((q,i)=>{
+    const sel=userAnswers[i];
+    if(sel!==undefined && q.options[sel]===q.ans) correct++;
+    else wrongs.push({q, picked: sel!==undefined ? q.options[sel] : null});
+  });
+
+  const total=questions.length, pct=Math.round(correct/total*100);
+  let grade,gc;
+  if(pct>=95){grade='A+';gc='#22c55e';}else if(pct>=90){grade='A';gc='#4ade80';}
+  else if(pct>=85){grade='B+';gc='#3b82f6';}else if(pct>=80){grade='B';gc='#60a5fa';}
+  else if(pct>=70){grade='C';gc='#f97316';}else{grade='D';gc='#ef4444';}
+
+  const ne=document.getElementById('sc-name');
+  if(playerName){ne.textContent=playerName;ne.classList.remove('hidden');}else ne.classList.add('hidden');
+  const ge=document.getElementById('sc-grade');ge.textContent=grade;ge.style.color=gc;
+  document.getElementById('sc-correct').textContent=correct;
+  document.getElementById('sc-denom').textContent=`/${total}`;
+  document.getElementById('sc-pct').textContent=`${pct}% · ${timeStr}`;
+  const bf=document.getElementById('sc-bar-fill');bf.style.width=`${pct}%`;bf.style.background=gc;
+
+  const date=new Date().toLocaleDateString('ko-KR');
+  let txt=`[도림고 1학년 한→영 수행평가]\n`;
+  txt+=`${playerName?playerName+' | ':''}${date}\n`;
+  txt+=`범위: ${rangeStart+1}~${rangeEnd}번\n`;
+  txt+=`${correct}/${total} (${pct}%) | ${timeStr}\n`;
+  if(wrongs.length>0){
+    txt+=`\n[오답 ${wrongs.length}개]\n`;
+    wrongs.forEach((w,i)=>{
+      txt+=`${i+1}. No.${w.q.no} ${w.q.kor} = ${w.q.ans}${w.picked?' (내답: '+w.picked+')':' (미응답)'}\n`;
+    });
+  }else txt+=`\n만점! 전부 정답! 🎉`;
+  document.getElementById('copy-ta').value=txt;
+
+  const wc=document.getElementById('wrong-card');
+  if(wrongs.length>0){
+    wc.classList.remove('hidden');
+    document.getElementById('wc-title').textContent=`오답 목록 (${wrongs.length}개)`;
+    const wl=document.getElementById('wrong-list'); wl.innerHTML='';
+    wrongs.forEach(w=>{
+      const div=document.createElement('div'); div.className='wi';
+      const pickedHtml=w.picked
+        ?`<span class="wi-yours">✗ ${w.picked}</span><span class="wi-arr">→</span>`
+        :`<span class="wi-yours" style="color:#f97316">미응답</span><span class="wi-arr">→</span>`;
+      div.innerHTML=`<div class="wi-top"><span class="wi-num">No.${w.q.no}</span><span class="wi-kor">${w.q.kor}</span></div>
+        <div class="wi-ans-row">${pickedHtml}<span class="wi-correct">✓ ${w.q.ans}</span></div>`;
+      wl.appendChild(div);
+    });
+  }else wc.classList.add('hidden');
+
+  document.getElementById('copy-area').classList.add('hidden');
+  document.getElementById('btn-copy').classList.remove('hidden');
+  show('s-result'); window.scrollTo(0,0);
+}
+
+function showCopy(){
+  document.getElementById('btn-copy').classList.add('hidden');
+  document.getElementById('copy-area').classList.remove('hidden');
+  setTimeout(()=>{const ta=document.getElementById('copy-ta');ta.focus();ta.select();},100);
+}
+function goHome(){show('s-home');}
+document.getElementById('inp-name').addEventListener('keydown',e=>{if(e.key==='Enter')startQuiz();});
+</script>
+</body>
+</html>
