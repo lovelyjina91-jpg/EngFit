@@ -1,0 +1,296 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.wrap{padding:1.25rem 0;}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.top-bar h2{font-size:15px;font-weight:500;color:var(--color-text-primary);}
+.top-bar p{font-size:12px;color:var(--color-text-secondary);}
+.score-pill{font-size:13px;font-weight:500;padding:4px 14px;border-radius:20px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-primary);background:var(--color-background-secondary);white-space:nowrap;}
+.prog-wrap{margin-bottom:1.25rem;}
+.prog-bg{height:3px;background:var(--color-border-tertiary);border-radius:2px;}
+.prog-fill{height:3px;background:#1D9E75;border-radius:2px;transition:width .35s;}
+.prog-label{font-size:11px;color:var(--color-text-tertiary);margin-top:4px;}
+.section-label{font-size:11px;font-weight:500;letter-spacing:.07em;color:var(--color-text-tertiary);text-transform:uppercase;margin:1.5rem 0 .6rem;}
+.q-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:.75rem;}
+.q-card.answered{border-color:var(--color-border-secondary);}
+.q-num{font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;font-weight:500;}
+.q-sent{font-size:14px;line-height:1.95;color:var(--color-text-primary);margin-bottom:.75rem;}
+.blank-tag{font-weight:500;padding:1px 0;border-bottom:1.5px solid #1D9E75;color:var(--color-text-primary);}
+.btn-row{display:flex;gap:7px;}
+.cb{flex:1;padding:8px 4px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;font-size:13px;font-weight:500;color:var(--color-text-primary);cursor:pointer;transition:all .12s;line-height:1.3;}
+.cb:hover:not(:disabled){background:var(--color-background-secondary);}
+.cb.correct{background:#E1F5EE;border-color:#1D9E75;color:#085041;}
+.cb.wrong{background:#FCEBEB;border-color:#A32D2D;color:#791F1F;}
+.cb.reveal{background:#E1F5EE;border-color:#1D9E75;color:#085041;}
+.cb:disabled{cursor:default;}
+.exp{display:none;margin-top:9px;font-size:12px;line-height:1.65;color:var(--color-text-secondary);padding:8px 11px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border-left:2px solid #1D9E75;}
+.exp.show{display:block;}
+.exp b{color:var(--color-text-primary);font-weight:500;}
+.grammar-tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:10px;margin-right:5px;background:#E1F5EE;color:#0F6E56;border:0.5px solid #5DCAA5;font-weight:500;}
+
+/* 결과 페이지 */
+.result-page{display:none;}
+.result-page.show{display:block;}
+.result-hero{text-align:center;padding:2rem 1rem 1.5rem;}
+.circle-wrap{position:relative;width:120px;height:120px;margin:0 auto 1.25rem;}
+.circle-bg{fill:none;stroke:var(--color-border-tertiary);stroke-width:8;}
+.circle-arc{fill:none;stroke-width:8;stroke-linecap:round;transform:rotate(-90deg);transform-origin:60px 60px;transition:stroke-dashoffset .8s ease;}
+.circle-text{font-size:22px;font-weight:500;fill:var(--color-text-primary);dominant-baseline:middle;text-anchor:middle;}
+.circle-sub{font-size:11px;fill:var(--color-text-tertiary);dominant-baseline:middle;text-anchor:middle;}
+.result-title{font-size:17px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;}
+.result-sub-txt{font-size:13px;color:var(--color-text-secondary);}
+.result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:1.25rem 0;}
+.stat-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.9rem .5rem;text-align:center;}
+.stat-num{font-size:22px;font-weight:500;color:var(--color-text-primary);}
+.stat-lbl{font-size:11px;color:var(--color-text-tertiary);margin-top:3px;}
+.breakdown{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;}
+.breakdown h3{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:.75rem;}
+.bk-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;color:var(--color-text-secondary);}
+.bk-row:last-child{border-bottom:none;}
+.bk-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.bk-dot.ok{background:#1D9E75;}
+.bk-dot.ng{background:#E24B4A;}
+.bk-q{color:var(--color-text-tertiary);font-size:11px;min-width:36px;}
+.bk-tag{font-size:10px;padding:1px 6px;border-radius:8px;background:#E1F5EE;color:#0F6E56;white-space:nowrap;}
+.bk-tag.ng{background:#FCEBEB;color:#A32D2D;}
+.kakao-section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;}
+.kakao-section h3{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:.75rem;}
+.name-row{display:flex;gap:8px;margin-bottom:.75rem;align-items:center;}
+.name-row label{font-size:12px;color:var(--color-text-secondary);white-space:nowrap;}
+.name-row input{flex:1;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;background:transparent;color:var(--color-text-primary);}
+.msg-preview{font-size:12px;line-height:1.75;color:var(--color-text-secondary);background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:.75rem;white-space:pre-wrap;word-break:break-all;}
+.btn-kakao{width:100%;padding:11px;border-radius:var(--border-radius-md);border:none;background:#FEE500;color:#191919;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:opacity .15s;}
+.btn-kakao:hover{opacity:.88;}
+.btn-kakao svg{flex-shrink:0;}
+.btn-copy{width:100%;padding:10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-primary);font-size:13px;font-weight:500;cursor:pointer;transition:all .12s;}
+.btn-copy:hover{background:var(--color-background-secondary);}
+.copy-toast{font-size:12px;color:#1D9E75;text-align:center;margin-top:6px;height:16px;}
+.retry-btn{width:100%;margin-top:.75rem;padding:10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;font-size:13px;cursor:pointer;color:var(--color-text-secondary);}
+.retry-btn:hover{background:var(--color-background-secondary);}
+</style>
+
+<div class="wrap">
+<!-- 퀴즈 영역 -->
+<div id="quiz-section">
+  <div class="top-bar">
+    <div><h2>어법 선택 — Lesson 2</h2><p>Seeing Through the Generation Gap</p></div>
+    <div class="score-pill" id="sc">0 / 21</div>
+  </div>
+  <div class="prog-wrap">
+    <div class="prog-bg"><div class="prog-fill" id="pf" style="width:0%"></div></div>
+    <div class="prog-label" id="pl">0 / 21 완료</div>
+  </div>
+  <div id="qa"></div>
+</div>
+
+<!-- 결과 페이지 -->
+<div class="result-page" id="result-page">
+  <div class="result-hero">
+    <div class="circle-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle class="circle-bg" cx="60" cy="60" r="52"/>
+        <circle class="circle-arc" id="arc" cx="60" cy="60" r="52" stroke="#1D9E75"
+          stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+      </svg>
+      <svg style="position:absolute;top:0;left:0;width:120px;height:120px;" viewBox="0 0 120 120">
+        <text class="circle-text" id="arc-score" x="60" y="56">-</text>
+        <text class="circle-sub" x="60" y="72">/ 21</text>
+      </svg>
+    </div>
+    <div class="result-title" id="r-title">결과</div>
+    <div class="result-sub-txt" id="r-msg"></div>
+  </div>
+
+  <div class="result-grid">
+    <div class="stat-card"><div class="stat-num" id="s-correct" style="color:#1D9E75;">-</div><div class="stat-lbl">정답</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-wrong" style="color:#E24B4A;">-</div><div class="stat-lbl">오답</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-pct">-</div><div class="stat-lbl">정답률</div></div>
+  </div>
+
+  <div class="breakdown">
+    <h3>문제별 결과</h3>
+    <div id="bk-list"></div>
+  </div>
+
+  <div class="kakao-section">
+    <h3>선생님께 결과 전송</h3>
+    <div class="name-row">
+      <label>이름</label>
+      <input type="text" id="student-name" placeholder="본인 이름 입력" oninput="updateMsg()"/>
+    </div>
+    <div class="msg-preview" id="msg-preview"></div>
+    <button class="btn-kakao" onclick="openKakao()">
+      <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
+        <path d="M20 4C10.06 4 2 10.27 2 18c0 5.1 3.3 9.57 8.3 12.2L8.5 36l6.8-3.57C16.7 32.8 18.33 33 20 33c9.94 0 18-6.27 18-14S29.94 4 20 4z" fill="#191919"/>
+      </svg>
+      카카오톡으로 공유하기
+    </button>
+    <button class="btn-copy" onclick="copyMsg()">메시지 복사</button>
+    <div class="copy-toast" id="toast"></div>
+  </div>
+
+  <button class="retry-btn" onclick="init()">↺ 다시 풀기</button>
+</div>
+</div>
+
+<script>
+const qs=[
+  {sec:"Section 2 — How Are Generations Classified?",
+   questions:[
+    {n:1,parts:["Baby boomers are ","named|naming"," so because the birth rate was ","significantly|significant"," higher when they were born."],answers:[0,0],tags:["수동태","부사"],exps:["<b>named</b> → 수동태. 주어 Baby boomers가 '이름 지어지는' 대상이므로 be + p.p. 형태의 수동태 named 사용.","<b>significantly</b> → 부사. 뒤에 오는 형용사 higher를 수식하므로 부사 significantly 사용. significant는 형용사."]},
+    {n:2,parts:["their classifications of baby boomers ","differ|differs"," accordingly."],answers:[0],tags:["수 일치"],exps:["<b>differ</b> → 수 일치. 주어 their classifications가 복수이므로 복수 동사 differ 사용. differs는 단수 동사."]},
+    {n:3,parts:["Generation X earned its name from the title of a book ","written|writing"," by Douglas Coupland in 1991."],answers:[0],tags:["과거분사"],exps:["<b>written</b> → 과거분사. a book과 write의 관계가 수동(책이 쓰여진 것)이므로 과거분사 written. writing은 능동 의미라 부적절."]},
+    {n:4,parts:["people in their twenties in that era had a ","relaxed|relaxing"," and laid-back lifestyle."],answers:[0],tags:["감정 형용사"],exps:["<b>relaxed</b> → 감정 형용사. lifestyle이 느끼는 상태를 설명하므로 과거분사형 형용사 relaxed(여유로운) 사용. relaxing은 '긴장을 풀게 만드는'의 능동 의미."]},
+    {n:5,parts:["The ","following|followed"," generations, born after Generation X, were later called Y and Z."],answers:[0],tags:["현재분사"],exps:["<b>following</b> → 현재분사(능동). '다음에 오는 세대들'이라는 능동 의미. followed는 '따라지는'의 수동 의미로 문맥에 부적절."]}
+  ]},
+  {sec:"Section 3 — The Cohort Effect",
+   questions:[
+    {n:6,parts:["The cohort effect and the traditional notion of a generation are ","closely|close"," related."],answers:[0],tags:["부사"],exps:["<b>closely</b> → 부사. 과거분사 related를 수식하므로 부사 closely 사용. close는 형용사/부사 양용이나 이 문맥에서는 closely가 표준."]},
+    {n:7,parts:["each generation is ","defined|defining"," by the birth years of its members."],answers:[0],tags:["수동태"],exps:["<b>defined</b> → 수동태. 세대가 '정의되는' 것이므로 be + p.p. 형태인 defined 사용. defining은 능동으로 의미 불일치."]},
+    {n:8,parts:["individuals who belong to a particular generation are socialized in ","distinct|distinctly"," conditions ","compared|comparing"," to other generations."],answers:[0,0],tags:["형용사","분사구문(수동)"],exps:["<b>distinct</b> → 형용사. 명사 conditions를 수식하므로 형용사 distinct 사용. distinctly는 부사라 명사 직접 수식 불가.","<b>compared</b> → 수동 분사구문. '다른 세대와 비교하여'의 의미로 수동 분사구문. comparing to라고 쓰면 능동이 되어 문맥 불일치."]},
+    {n:9,parts:["similar political, economic, and social events during their early stages of life, ","which|what"," ","shape|shapes"," their beliefs, values, and behaviors in similar ways."],answers:[0,0],tags:["관계대명사(계속적 용법)","수 일치"],exps:["<b>which</b> → 관계대명사 계속적 용법. 앞 절 전체 또는 명사를 선행사로 받을 때 which 사용. what은 선행사를 포함하므로 계속적 용법 불가.","<b>shape</b> → 수 일치. 관계대명사 which의 선행사가 복수명사 events이므로 복수 동사 shape 사용."]},
+    {n:10,parts:["Koreans went through the 1997 financial crisis, also ","known|knowing"," as the IMF crisis."],answers:[0],tags:["과거분사"],exps:["<b>known</b> → 과거분사. '~로 알려진'의 수동 의미 분사구문. knowing은 능동 의미로 '알고 있는'이 되어 부적절."]},
+    {n:11,parts:["This may have led them to ","prioritize|prioritizing"," ","secure|securely"," employment for their children."],answers:[0,0],tags:["to부정사","형용사"],exps:["<b>prioritize</b> → 동사원형. 'lead + 목적어 + to + 동사원형' 5형식 구조. to는 부정사 to이므로 동사원형 사용.","<b>secure</b> → 형용사. 명사 employment를 수식하므로 형용사 secure 사용. securely는 부사."]},
+    {n:12,parts:["They are accustomed to ","getting|get"," their news, information, and advice from social media."],answers:[0],tags:["be accustomed to + 동명사"],exps:["<b>getting</b> → 동명사. 'be accustomed to'의 to는 전치사이므로 뒤에 동명사(-ing) 사용. to부정사의 to와 혼동 주의."]},
+    {n:13,parts:["Their strength in ","using|use"," digital media, however, often leads them to ","lack|lacking"," social skills."],answers:[0,0],tags:["전치사 + 동명사","to부정사"],exps:["<b>using</b> → 동명사. 전치사 in 뒤에는 동명사(-ing)가 와야 함. use는 동사원형으로 불가.","<b>lack</b> → 동사원형. 'lead + 목적어 + to + 동사원형' 구조. lacking은 분사로 이 구조에 맞지 않음."]}
+  ]},
+  {sec:"Section 6 — Different Perspectives",
+   questions:[
+    {n:14,parts:["we should be ","careful|carefully"," not to make ","hasty|hastily"," judgments about people according to their generation labels."],answers:[0,0],tags:["be + 형용사","형용사"],exps:["<b>careful</b> → 형용사. be동사(should be) 뒤 보어 자리에는 형용사 사용. carefully는 부사.","<b>hasty</b> → 형용사. 명사 judgments를 수식하므로 형용사 hasty 사용. hastily는 부사."]},
+    {n:15,parts:["overgeneralizations that ","don't|doesn't"," capture all aspects of a person's ","unique|uniquely"," individual identity."],answers:[0,0],tags:["수 일치","형용사"],exps:["<b>don't</b> → 수 일치. 관계대명사 that의 선행사 overgeneralizations가 복수이므로 복수 동사 don't 사용.","<b>unique</b> → 형용사. 명사 identity를 수식하므로 형용사 unique 사용. uniquely는 부사."]},
+    {n:16,parts:["various perspectives, which will help us ","achieve|achieving"," a better understanding of people ","regardless of|regardless"," their generation."],answers:[0,0],tags:["help + O + 동사원형","전치사구"],exps:["<b>achieve</b> → 동사원형. 'help + 목적어 + 동사원형(또는 to부정사)' 구조에서 동사원형 사용. achieving은 불가.","<b>regardless of</b> → 전치사구. '~에 상관없이'는 'regardless of + 명사'. regardless만 단독으로는 전치사 역할 불가."]}
+  ]}
+];
+
+let state={};
+let correctCount=0;
+let total=0;
+let resultLog=[];
+
+function countTotal(){let t=0;qs.forEach(s=>s.questions.forEach(q=>{t+=q.answers.length;}));return t;}
+
+function init(){
+  total=countTotal();correctCount=0;state={};resultLog=[];
+  document.getElementById('result-page').classList.remove('show');
+  document.getElementById('quiz-section').style.display='block';
+  document.getElementById('toast').textContent='';
+  document.getElementById('student-name').value='';
+  updateProgress();render();
+}
+
+function updateProgress(){
+  let done=Object.keys(state).length;
+  document.getElementById('pf').style.width=(done/total*100)+'%';
+  document.getElementById('pl').textContent=done+' / '+total+' 완료';
+  document.getElementById('sc').textContent=correctCount+' / '+total;
+}
+
+function render(){
+  const area=document.getElementById('qa');area.innerHTML='';
+  qs.forEach((sec,si)=>{
+    const sl=document.createElement('div');sl.className='section-label';sl.textContent=sec.sec;area.appendChild(sl);
+    sec.questions.forEach((q,qi)=>{
+      q.answers.forEach((ans,bi)=>{
+        const key=`${si}_${qi}_${bi}`;
+        const card=document.createElement('div');card.className='q-card';card.id='card_'+key;
+        const opts=getParts(q.parts,bi);const[A,B]=opts.blank.split('|');
+        let sentHtml='';
+        q.parts.forEach((p,pi)=>{
+          if(p.includes('|')){
+            const idx=q.parts.slice(0,pi).filter(x=>x.includes('|')).length;
+            if(idx===bi) sentHtml+=`<span class="blank-tag">(${p.split('|')[0]} / ${p.split('|')[1]})</span>`;
+            else sentHtml+=`<u>${state[`${si}_${qi}_${idx}`]!==undefined?q.parts[pi].split('|')[state[`${si}_${qi}_${idx}`]]:p.split('|')[0]+'/'+p.split('|')[1]}</u>`;
+          } else sentHtml+=p;
+        });
+        card.innerHTML=`
+          <div class="q-num">문제 ${q.n}${q.answers.length>1?' — 빈칸 '+(bi+1):''}&nbsp;<span class="grammar-tag">${q.tags[bi]}</span></div>
+          <div class="q-sent">${sentHtml}</div>
+          <div class="btn-row">
+            <button class="cb" id="btnA_${key}" onclick="pick('${key}',0,'${si}','${qi}','${bi}')">${A}</button>
+            <button class="cb" id="btnB_${key}" onclick="pick('${key}',1,'${si}','${qi}','${bi}')">${B}</button>
+          </div>
+          <div class="exp" id="exp_${key}">${q.exps[bi]}</div>`;
+        area.appendChild(card);
+      });
+    });
+  });
+}
+
+function getParts(parts,blankIdx){let idx=0;for(let p of parts){if(p.includes('|')){if(idx===blankIdx)return{blank:p};idx++;}}return null;}
+
+function pick(key,choice,si,qi,bi){
+  if(state[key]!==undefined)return;
+  state[key]=choice;
+  const q=qs[si].questions[qi];
+  const ca=q.answers[bi];
+  const btnA=document.getElementById('btnA_'+key);
+  const btnB=document.getElementById('btnB_'+key);
+  btnA.disabled=true;btnB.disabled=true;
+  const isOk=(choice===ca);
+  if(isOk){(choice===0?btnA:btnB).classList.add('correct');correctCount++;}
+  else{(choice===0?btnA:btnB).classList.add('wrong');(ca===0?btnA:btnB).classList.add('reveal');}
+  document.getElementById('exp_'+key).classList.add('show');
+  document.getElementById('card_'+key).classList.add('answered');
+  const opts=getParts(q.parts,bi);const[A,B]=opts.blank.split('|');
+  resultLog.push({n:q.n,bi,tag:q.tags[bi],ok:isOk,chosen:choice===0?A:B,correct:ca===0?A:B});
+  updateProgress();
+  if(Object.keys(state).length===total)setTimeout(showResult,700);
+}
+
+function showResult(){
+  document.getElementById('quiz-section').style.display='none';
+  const rp=document.getElementById('result-page');rp.classList.add('show');
+  const pct=Math.round(correctCount/total*100);
+  const wrong=total-correctCount;
+  document.getElementById('arc-score').textContent=correctCount;
+  document.getElementById('s-correct').textContent=correctCount;
+  document.getElementById('s-wrong').textContent=wrong;
+  document.getElementById('s-pct').textContent=pct+'%';
+  const msgs=['포기하지 말고 다시 도전!','조금 더 연습이 필요해요','절반 이상 맞았어요!','잘 했어요!','거의 다 맞았어요!','완벽한 만점이에요!'];
+  const idx=pct<20?0:pct<45?1:pct<65?2:pct<80?3:pct<100?4:5;
+  document.getElementById('r-title').textContent=`${pct}% 달성!`;
+  document.getElementById('r-msg').textContent=msgs[idx];
+  const circ=2*Math.PI*52;
+  const offset=circ*(1-pct/100);
+  document.getElementById('arc').style.strokeDashoffset=offset;
+  const bkList=document.getElementById('bk-list');bkList.innerHTML='';
+  resultLog.forEach(r=>{
+    const row=document.createElement('div');row.className='bk-row';
+    row.innerHTML=`<span class="bk-dot ${r.ok?'ok':'ng'}"></span><span class="bk-q">문제 ${r.n}${r.bi>0?'-'+(r.bi+1):''}</span><span class="grammar-tag ${r.ok?'':'ng'}">${r.tag}</span><span style="flex:1;color:var(--color-text-secondary)">${r.ok?'✓ '+r.correct:'✗ '+r.chosen+' → '+r.correct}</span>`;
+    bkList.appendChild(row);
+  });
+  updateMsg();
+  rp.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function updateMsg(){
+  const name=document.getElementById('student-name').value.trim()||'__________';
+  const pct=Math.round(correctCount/total*100);
+  const wrong=total-correctCount;
+  const wrongItems=resultLog.filter(r=>!r.ok).map(r=>`  · 문제 ${r.n}${r.bi>0?'-'+(r.bi+1):''} [${r.tag}] ${r.chosen} → ${r.correct}`).join('\n');
+  const msg=`[영어I 어법 선택 결과]\n학생: ${name}\n단원: Lesson 2 — Seeing Through the Generation Gap\n\n정답: ${correctCount} / ${total} (${pct}%)\n오답: ${wrong}문제\n\n${wrongItems?'[오답 목록]\n'+wrongItems+'\n':''}\n#숭덕여고 #영어I #Lesson2`;
+  document.getElementById('msg-preview').textContent=msg;
+}
+
+function copyMsg(){
+  const txt=document.getElementById('msg-preview').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const t=document.getElementById('toast');
+    t.textContent='✓ 메시지가 복사되었어요! 카카오톡에 붙여넣기 해주세요.';
+    setTimeout(()=>t.textContent='',3000);
+  }).catch(()=>{
+    const t=document.getElementById('toast');
+    t.textContent='복사에 실패했어요. 메시지를 직접 선택해 복사해주세요.';
+  });
+}
+
+function openKakao(){
+  copyMsg();
+  window.open('kakaotalk://','_blank');
+  const t=document.getElementById('toast');
+  t.textContent='✓ 메시지 복사 완료! 카카오톡 열어서 붙여넣기 해주세요.';
+  setTimeout(()=>t.textContent='',4000);
+}
+
+init();
+</script>
