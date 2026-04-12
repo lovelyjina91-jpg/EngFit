@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영핏 · 구동사 2 점검 퀴즈</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nunito:wght@400;600;700;800;900&family=Jua&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #2E7D32;
+    --lime: #8BC34A;
+    --mint: #B2DFDB;
+    --sky: #81D4FA;
+    --yellow: #FFF176;
+    --gold: #FFD54F;
+    --coral: #FF7043;
+    --navy: #1A2744;
+    --pink: #F48FB1;
+    --purple: #CE93D8;
+    --cream: #FFFDE7;
+    --light: #F1F8E9;
+    --shadow: rgba(46,125,50,.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #FFFEF5;
+    min-height: 100vh;
+    padding-bottom: 60px;
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(139,195,74,.08) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(129,212,250,.1) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(255,241,118,.07) 0%, transparent 60%);
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 60%, #388E3C 100%);
+    padding: 0 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '🍋';
+    position: absolute;
+    font-size: 80px;
+    opacity: .12;
+    right: -10px;
+    top: -10px;
+    transform: rotate(-20deg);
+  }
+  .header::after {
+    content: '📚';
+    position: absolute;
+    font-size: 60px;
+    opacity: .1;
+    left: 10px;
+    bottom: -10px;
+  }
+  .logo-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0 0;
+  }
+  .brand {
+    font-family: 'Jua', sans-serif;
+    font-size: 20px;
+    color: #fff;
+    letter-spacing: 1px;
+  }
+  .week-tag {
+    background: rgba(255,255,255,.2);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: .5px;
+    backdrop-filter: blur(4px);
+  }
+  .hero-content {
+    padding: 16px 0 24px;
+    text-align: center;
+    position: relative;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--gold);
+    color: #1B5E20;
+    font-family: 'Gaegu', cursive;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 3px 16px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .hero-content h1 {
+    font-family: 'Jua', sans-serif;
+    font-size: clamp(1.5rem, 5vw, 2.2rem);
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .hero-content h1 .hl { color: var(--gold); }
+  .hero-content p {
+    font-family: 'Gaegu', cursive;
+    font-size: 16px;
+    color: rgba(255,255,255,.8);
+  }
+
+  /* ── SCORE BAR ── */
+  .score-bar {
+    background: #fff;
+    border-radius: 20px;
+    margin: -16px 14px 0;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-around;
+    box-shadow: 0 4px 20px var(--shadow);
+    position: relative;
+    z-index: 10;
+    border: 2px solid #E8F5E9;
+  }
+  .score-item { text-align: center; }
+  .score-num {
+    font-family: 'Jua', sans-serif;
+    font-size: 26px;
+    line-height: 1;
+    color: var(--navy);
+  }
+  .score-num.c { color: #2E7D32; }
+  .score-num.w { color: var(--coral); }
+  .score-label {
+    font-family: 'Gaegu', cursive;
+    font-size: 12px;
+    color: #888;
+  }
+  .s-div { width: 1px; background: #eee; }
+
+  /* ── PROGRESS ── */
+  .prog-wrap {
+    margin: 12px 14px 0;
+    background: #E8F5E9;
+    border-radius: 20px;
+    height: 10px;
+    overflow: hidden;
+  }
+  .prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #66BB6A, #AED581);
+    border-radius: 20px;
+    width: 0%;
+    transition: width .4s ease;
+  }
+
+  /* ── SECTION TITLE ── */
+  .sec-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 26px 14px 10px;
+  }
+  .sec-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .sec-title h2 {
+    font-family: 'Jua', sans-serif;
+    font-size: 18px;
+    color: var(--navy);
+  }
+  .sec-title p {
+    font-family: 'Gaegu', cursive;
+    font-size: 13px;
+    color: #888;
+  }
+
+  /* ── VOCAB QUIZ CARDS ── */
+  .quiz-wrap {
+    padding: 0 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .q-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 18px;
+    box-shadow: 0 3px 14px var(--shadow);
+    border: 2px solid #E8F5E9;
+    transition: all .25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .q-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 4px;
+    background: linear-gradient(90deg, #66BB6A, #AED581);
+    border-radius: 20px 20px 0 0;
+  }
+  .q-card.answered { border-color: #C8E6C9; }
+  .q-card.answered.wrong { border-color: #FFCCBC; }
+  .q-card.answered.wrong::before { background: linear-gradient(90deg, #FF7043, #FFAB91); }
+
+  .q-num-tag {
+    font-family: 'Gaegu', cursive;
+    font-size: 13px;
+    color: #66BB6A;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .q-phrase {
+    font-family: 'Jua', sans-serif;
+    font-size: 22px;
+    color: #1B5E20;
+    margin-bottom: 4px;
+  }
+  .q-example {
+    font-family: 'Gaegu', cursive;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .q-example b { color: #2E7D32; }
+
+  /* choices */
+  .choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .c-btn {
+    background: var(--light);
+    border: 2px solid #C5E1A5;
+    border-radius: 14px;
+    padding: 10px 8px;
+    font-family: 'Gaegu', cursive;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2E7D32;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .c-btn:hover:not(:disabled) {
+    background: #66BB6A;
+    color: #fff;
+    border-color: #66BB6A;
+    transform: translateY(-2px) scale(1.02);
+  }
+  .c-btn.ok { background: #E8F5E9; border-color: #2E7D32; color: #2E7D32; }
+  .c-btn.ng { background: #FFEBEE; border-color: var(--coral); color: var(--coral); }
+  .c-btn:disabled { cursor: default; }
+
+  /* feedback */
+  .fb {
+    margin-top: 10px;
+    padding: 9px 12px;
+    border-radius: 12px;
+    font-family: 'Gaegu', cursive;
+    font-size: 14px;
+    font-weight: 700;
+    display: none;
+  }
+  .fb.show { display: block; }
+  .fb.ok { background: #E8F5E9; color: #2E7D32; }
+  .fb.ng { background: #FFEBEE; color: #C62828; }
+
+  /* ── PAIR MATCH CARDS ── */
+  .pair-wrap {
+    padding: 0 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .pair-card {
+    background: #fff;
+    border: 2px solid #C5E1A5;
+    border-radius: 16px;
+    padding: 14px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all .2s;
+    user-select: none;
+  }
+  .pair-card .eng {
+    font-family: 'Jua', sans-serif;
+    font-size: 16px;
+    color: #1B5E20;
+  }
+  .pair-card .arrow {
+    font-size: 12px;
+    color: #aaa;
+    margin: 2px 0;
+    font-family: 'Gaegu', cursive;
+  }
+  .pair-card .ko {
+    font-family: 'Gaegu', cursive;
+    font-size: 14px;
+    color: #555;
+  }
+  .pair-card:hover { border-color: #66BB6A; transform: translateY(-2px); }
+  .pair-card.matched { background: #E8F5E9; border-color: #2E7D32; }
+  .pair-card.matched .eng { color: #2E7D32; }
+
+  /* ── SENTENCE SECTION ── */
+  .sent-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 16px;
+    margin: 0 14px 12px;
+    box-shadow: 0 3px 14px var(--shadow);
+    border: 2px solid #E8F5E9;
+    position: relative;
+    overflow: hidden;
+  }
+  .sent-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(180deg, #AED581, #66BB6A);
+    border-radius: 20px 0 0 20px;
+  }
+  .sent-num {
+    font-family: 'Gaegu', cursive;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+  .sent-eng {
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .sent-eng .ph {
+    border-bottom: 2.5px solid #66BB6A;
+    color: #1B5E20;
+  }
+  .reveal-btn {
+    width: 100%;
+    background: var(--light);
+    border: 2px solid #C5E1A5;
+    border-radius: 12px;
+    padding: 9px;
+    font-family: 'Gaegu', cursive;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2E7D32;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .reveal-btn:hover { background: #66BB6A; color: #fff; border-color: #66BB6A; }
+  .ans-box {
+    margin-top: 10px;
+    background: linear-gradient(135deg, #F1F8E9, #FFFDE7);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-family: 'Gaegu', cursive;
+    font-size: 16px;
+    color: var(--navy);
+    display: none;
+    line-height: 1.6;
+    border: 1.5px dashed #AED581;
+  }
+  .ans-box.show { display: block; }
+  .ans-ko { color: #1B5E20; font-size: 17px; }
+  .self-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .s-btn {
+    flex: 1;
+    padding: 8px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    font-family: 'Gaegu', cursive;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .s-btn.got { background: #E8F5E9; border-color: #A5D6A7; color: #2E7D32; }
+  .s-btn.got:hover { background: #2E7D32; color: #fff; }
+  .s-btn.miss { background: #FFEBEE; border-color: #FFCDD2; color: #C62828; }
+  .s-btn.miss:hover { background: #C62828; color: #fff; }
+
+  /* ── DECO STICKER ── */
+  .deco {
+    text-align: center;
+    font-size: 32px;
+    padding: 8px 0;
+    letter-spacing: 8px;
+  }
+
+  /* ── RESET BTN ── */
+  .reset-wrap { text-align: center; padding: 22px 14px 0; }
+  .reset-btn {
+    background: linear-gradient(135deg, #2E7D32, #66BB6A);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 44px;
+    font-family: 'Jua', sans-serif;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(46,125,50,.3);
+    transition: all .2s;
+    letter-spacing: .5px;
+  }
+  .reset-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 8px 24px rgba(46,125,50,.35); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo-bar">
+    <div class="brand">🍋 영핏 EngFit</div>
+    <div class="week-tag">Week 2 · 구동사 2</div>
+  </div>
+  <div class="hero-content">
+    <div class="badge">숙어처럼 외우는</div>
+    <h1>동사+부사 <span class="hl">구동사</span> 점검</h1>
+    <p>의미를 맞히고, 문장도 해석해봐요~ 🌿</p>
+  </div>
+</div>
+
+<!-- SCORE -->
+<div class="score-bar">
+  <div class="score-item">
+    <div class="score-num" id="tot">0</div>
+    <div class="score-label">전체</div>
+  </div>
+  <div class="s-div"></div>
+  <div class="score-item">
+    <div class="score-num c" id="cor">0</div>
+    <div class="score-label">정답 ✅</div>
+  </div>
+  <div class="s-div"></div>
+  <div class="score-item">
+    <div class="score-num w" id="wrg">0</div>
+    <div class="score-label">오답 ❌</div>
+  </div>
+  <div class="s-div"></div>
+  <div class="score-item">
+    <div class="score-num" id="pct">0%</div>
+    <div class="score-label">정답률</div>
+  </div>
+</div>
+
+<div class="prog-wrap">
+  <div class="prog-fill" id="prog"></div>
+</div>
+
+<!-- PART 1 -->
+<div class="sec-title">
+  <div class="sec-icon" style="background:#E8F5E9;">🎯</div>
+  <div>
+    <h2>Part 1. 의미 고르기</h2>
+    <p>구동사의 뜻을 골라보세요!</p>
+  </div>
+</div>
+<div class="quiz-wrap" id="quiz-wrap"></div>
+
+<div class="deco" style="padding:20px 0 0;">🌿 🍃 🌿</div>
+
+<!-- PART 2 -->
+<div class="sec-title">
+  <div class="sec-icon" style="background:#FFF9C4;">📝</div>
+  <div>
+    <h2>Part 2. 문장 해석 확인</h2>
+    <p>밑줄 친 구동사에 유의해서 해석해봐요</p>
+  </div>
+</div>
+<div id="sent-wrap"></div>
+
+<div class="reset-wrap">
+  <button class="reset-btn" onclick="resetAll()">🔄 다시 풀기</button>
+</div>
+
+<script>
+// ── DATA ───────────────────────────────────────────────────
+const vocabData = [
+  {
+    ph: "take off",
+    example: "He sat on the bed and <b>took off</b> his boots.",
+    correct: "벗다; 이륙하다",
+    wrong: ["입다; 쓰다", "켜다", "포기하다"]
+  },
+  {
+    ph: "get off",
+    example: "Where do you <b>get off</b>?",
+    correct: "내리다",
+    wrong: ["타다", "포기하다", "가버리다"]
+  },
+  {
+    ph: "get on",
+    example: "It's time to <b>get on</b> the train.",
+    correct: "타다",
+    wrong: ["내리다", "도망치다", "계속하다"]
+  },
+  {
+    ph: "get along",
+    example: "She <b>gets along</b> well with her classmates.",
+    correct: "잘 지내다",
+    wrong: ["가버리다", "포기하다", "집다"]
+  },
+  {
+    ph: "give up",
+    example: "Let's not <b>give up</b> yet!",
+    correct: "포기하다",
+    wrong: ["계속하다", "잘 지내다", "미루다"]
+  },
+  {
+    ph: "go away",
+    example: "<b>Go away</b> and leave me alone!",
+    correct: "가버리다; 없어지다",
+    wrong: ["계속하다", "도망치다", "켜다"]
+  },
+  {
+    ph: "go on / went on",
+    example: "She <b>went on</b> working until she was 80.",
+    correct: "…을 계속하다",
+    wrong: ["포기하다", "가버리다", "미루다"]
+  },
+  {
+    ph: "pick up",
+    example: "He <b>picked up</b> a postcard and bought it.",
+    correct: "집다",
+    wrong: ["내리다", "입다", "켜다"]
+  },
+  {
+    ph: "put on",
+    example: "I have to <b>put on</b> my glasses.",
+    correct: "입다; 쓰다",
+    wrong: ["벗다", "미루다", "꺼다"]
+  },
+  {
+    ph: "put off",
+    example: "I <b>put off</b> the journey for a week.",
+    correct: "미루다",
+    wrong: ["입다", "켜다", "집다"]
+  },
+  {
+    ph: "try on",
+    example: "Can I <b>try on</b> this skirt?",
+    correct: "입어 보다",
+    wrong: ["포기하다", "미루다", "내리다"]
+  },
+  {
+    ph: "turn on",
+    example: "Please <b>turn on</b> the light.",
+    correct: "켜다",
+    wrong: ["끄다", "입다", "가버리다"]
+  },
+  {
+    ph: "turn off",
+    example: "Please <b>turn off</b> the light before you leave.",
+    correct: "끄다",
+    wrong: ["켜다", "미루다", "집다"]
+  },
+  {
+    ph: "run away",
+    example: "They <b>ran away</b> together to be free.",
+    correct: "도망치다",
+    wrong: ["가버리다", "계속하다", "포기하다"]
+  }
+];
+
+const sentData = [
+  {
+    eng: "The show must <span class='ph'>go on</span>.",
+    ko: "그 공연은 계속되어야 한다."
+  },
+  {
+    eng: "The plane will <span class='ph'>take off</span> in five minutes.",
+    ko: "그 비행기는 5분 안에 이륙할 것이다."
+  },
+  {
+    eng: "Because she was sick, they <span class='ph'>put off</span> the wedding.",
+    ko: "그녀가 아팠기 때문에, 그들은 결혼식을 미뤘다."
+  },
+  {
+    eng: "After three hours, I <span class='ph'>gave up</span> waiting for Liz.",
+    ko: "세 시간 후, 나는 Liz를 기다리는 것을 포기했다."
+  },
+  {
+    eng: "She <span class='ph'>went away</span> without saying goodbye.",
+    ko: "그녀는 작별 인사도 없이 가버렸다."
+  }
+];
+
+// ── STATE ───────────────────────────────────────────────────
+let cor = 0, wrg = 0, ans = 0;
+const total = vocabData.length;
+
+function shuffle(a) { return [...a].sort(() => Math.random() - .5); }
+
+function updateScore() {
+  document.getElementById('tot').textContent = total;
+  document.getElementById('cor').textContent = cor;
+  document.getElementById('wrg').textContent = wrg;
+  document.getElementById('pct').textContent = ans ? Math.round(cor/ans*100)+'%' : '0%';
+  document.getElementById('prog').style.width = Math.round(ans/total*100)+'%';
+}
+
+function esc(s) { return s.replace(/'/g,"\\'"); }
+
+// ── BUILD VOCAB ───────────────────────────────────────────────────
+function buildVocab() {
+  const wrap = document.getElementById('quiz-wrap');
+  wrap.innerHTML = '';
+  vocabData.forEach((item, i) => {
+    const opts = shuffle([item.correct, ...item.wrong]);
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `card-${i}`;
+    card.innerHTML = `
+      <div class="q-num-tag">Q${i+1} of ${total}</div>
+      <div class="q-phrase">${item.ph}</div>
+      <div class="q-example">${item.example}</div>
+      <div class="choices" id="ch-${i}">
+        ${opts.map(o=>`<button class="c-btn" onclick="check(${i},this,'${esc(o)}','${esc(item.correct)}')">${o}</button>`).join('')}
+      </div>
+      <div class="fb" id="fb-${i}"></div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function check(i, btn, chosen, correct) {
+  const card = document.getElementById(`card-${i}`);
+  if (card.classList.contains('answered')) return;
+  card.classList.add('answered');
+  ans++;
+  document.querySelectorAll(`#ch-${i} .c-btn`).forEach(b => {
+    b.disabled = true;
+    if (b.textContent.trim() === correct) b.classList.add('ok');
+  });
+  const fb = document.getElementById(`fb-${i}`);
+  fb.classList.add('show');
+  if (chosen === correct) {
+    btn.classList.add('ok');
+    cor++;
+    fb.className = 'fb show ok';
+    fb.textContent = '🎉 정답! 완벽해요~';
+  } else {
+    btn.classList.add('ng');
+    card.classList.add('wrong');
+    wrg++;
+    fb.className = 'fb show ng';
+    fb.textContent = `💦 오답! 정답 → ${correct}`;
+  }
+  updateScore();
+}
+
+// ── BUILD SENTENCES ───────────────────────────────────────────────────
+function buildSents() {
+  const wrap = document.getElementById('sent-wrap');
+  wrap.innerHTML = '';
+  sentData.forEach((item, i) => {
+    const d = document.createElement('div');
+    d.className = 'sent-card';
+    d.innerHTML = `
+      <div class="sent-num">Sentence ${i+1}</div>
+      <div class="sent-eng">${item.eng}</div>
+      <button class="reveal-btn" id="rb-${i}" onclick="reveal(${i})">👀 해석 확인하기</button>
+      <div class="ans-box" id="ab-${i}">
+        <div class="ans-ko">➜ ${item.ko}</div>
+        <div class="self-btns">
+          <button class="s-btn got" onclick="selfMark(${i},'got')">✅ 맞았어요</button>
+          <button class="s-btn miss" onclick="selfMark(${i},'miss')">❌ 틀렸어요</button>
+        </div>
+      </div>
+    `;
+    wrap.appendChild(d);
+  });
+}
+
+function reveal(i) {
+  const ab = document.getElementById(`ab-${i}`);
+  const rb = document.getElementById(`rb-${i}`);
+  ab.classList.toggle('show');
+  rb.textContent = ab.classList.contains('show') ? '🙈 숨기기' : '👀 해석 확인하기';
+}
+
+function selfMark(i, r) {
+  document.querySelectorAll(`#ab-${i} .s-btn`).forEach(b => b.style.opacity='.4');
+  const t = document.querySelector(`#ab-${i} .s-btn.${r}`);
+  if(t){ t.style.opacity='1'; t.style.fontWeight='900'; }
+}
+
+function resetAll() {
+  cor=0; wrg=0; ans=0;
+  updateScore();
+  buildVocab();
+  buildSents();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+buildVocab();
+buildSents();
+updateScore();
+</script>
+</body>
+</html>
