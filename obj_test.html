@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영핏 | 목적어 개념 테스트 — to부정사 vs 동명사</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:   #0F2137;
+  --amber:  #D4820A;
+  --amber2: #E8A020;
+  --amberlt:#FFF6E0;
+  --sky:    #1B6FA8;
+  --skylt:  #E2F0FA;
+  --sage:   #3A7D6E;
+  --sagelt: #E4F4F0;
+  --rose:   #B53A40;
+  --roselt: #FDEAEA;
+  --purple: #5C3FA0;
+  --purplt: #EEEBFA;
+  --cream:  #F8F5EF;
+  --paper:  #EDE8DF;
+  --white:  #FFFFFF;
+  --text:   #181F2E;
+  --muted:  #5C6878;
+  --line:   #DDD5C8;
+  --correct:#1E7B52;
+  --corrlt: #E4F5EE;
+  --wrong:  #B53A40;
+  --wronglt:#FDEAEA;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: "DM Sans", "Noto Sans KR", sans-serif; background: var(--cream); color: var(--text); }
+
+/* TOPBAR */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--navy); border-bottom: 3px solid var(--amber2);
+  padding: 13px 44px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-brand { font-family: "DM Serif Display", serif; font-size: 20px; color: var(--amber2); }
+.topbar-brand span { font-family: "Space Mono", monospace; font-size: 11px; color: rgba(255,255,255,.4); margin-left: 10px; }
+.topbar-tag { font-family: "Space Mono", monospace; font-size: 10px; font-weight: 700; letter-spacing: .12em; color: var(--navy); background: var(--amber2); padding: 5px 13px; border-radius: 20px; text-transform: uppercase; }
+
+/* HERO */
+.hero {
+  background: var(--navy); padding: 48px 48px 42px;
+  position: relative; overflow: hidden;
+}
+.hero::before { content:""; position:absolute; right:-80px; top:-80px; width:300px; height:300px; border-radius:50%; background:var(--amber); opacity:.07; }
+.hero::after  { content:""; position:absolute; left:44%; bottom:-60px; width:200px; height:200px; border-radius:50%; background:var(--sky); opacity:.07; }
+.hero-eyebrow { font-family:"Space Mono",monospace; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--amber2); opacity:.8; margin-bottom:12px; }
+.hero h1 { font-family:"DM Serif Display",serif; font-size:34px; color:#fff; line-height:1.25; margin-bottom:8px; position:relative; z-index:1; }
+.hero h1 em { color:var(--amber2); font-style:italic; }
+.hero-sub { font-family:"Space Mono",monospace; font-size:11px; color:rgba(255,255,255,.45); letter-spacing:.05em; margin-bottom:20px; }
+.hero-chips { display:flex; flex-wrap:wrap; gap:8px; }
+.hchip { font-family:"Space Mono",monospace; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15); color:rgba(255,255,255,.75); font-size:11px; padding:5px 13px; border-radius:20px; }
+.hchip.sky { background:rgba(27,111,168,.25); border-color:rgba(27,111,168,.4); color:#80c6f0; }
+.hchip.grn { background:rgba(58,125,110,.25); border-color:rgba(58,125,110,.4); color:#80d4c6; }
+
+/* WRAP */
+.wrap { max-width: 860px; margin: 0 auto; padding: 44px 44px 90px; }
+
+/* SECTION HEADER */
+.sec-head { margin-bottom:20px; margin-top:44px; display:flex; align-items:baseline; gap:12px; }
+.sec-head:first-child { margin-top:0; }
+.sec-head h2 { font-family:"DM Serif Display",serif; font-size:22px; color:var(--navy); }
+.sec-head span { font-family:"Space Mono",monospace; font-size:11px; color:var(--muted); letter-spacing:.06em; }
+
+/* DIVIDER */
+.divider { display:flex; align-items:center; gap:14px; margin:42px 0 0; }
+.div-line { flex:1; height:1px; background:var(--line); }
+.div-txt { font-family:"Space Mono",monospace; font-size:10px; color:var(--muted); letter-spacing:.18em; text-transform:uppercase; }
+
+/* SCORE BAR */
+.score-bar {
+  background: var(--white); border-radius:14px; border:1.5px solid var(--line);
+  padding:20px 28px; display:flex; align-items:center; justify-content:space-between;
+  box-shadow:0 4px 18px rgba(15,33,55,.07); margin-bottom:32px;
+}
+.score-label { font-family:"Space Mono",monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; }
+.score-num { font-family:"DM Serif Display",serif; font-size:36px; color:var(--navy); line-height:1; }
+.score-denom { font-size:16px; color:var(--muted); }
+.reset-btn {
+  font-family:"Space Mono",monospace; font-size:11px; font-weight:700; letter-spacing:.1em;
+  background:var(--navy); color:var(--amber2); border:none; cursor:pointer;
+  padding:10px 20px; border-radius:8px; text-transform:uppercase;
+  transition:background .2s;
+}
+.reset-btn:hover { background:var(--amber); color:var(--navy); }
+.progress-wrap { margin-top:10px; }
+.progress-bar-bg { background:var(--paper); border-radius:20px; height:6px; overflow:hidden; width:200px; }
+.progress-bar-fill { background:var(--amber2); height:100%; border-radius:20px; transition:width .4s ease; }
+
+/* PART LABEL */
+.part-banner {
+  background:var(--navy); border-radius:12px; padding:14px 22px;
+  display:flex; align-items:center; gap:16px; margin-bottom:20px;
+}
+.part-badge { font-family:"Space Mono",monospace; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; background:var(--amber2); color:var(--navy); padding:4px 12px; border-radius:20px; }
+.part-title { font-family:"DM Serif Display",serif; font-size:18px; color:#fff; }
+.part-verbs { font-family:"Space Mono",monospace; font-size:11px; color:rgba(255,255,255,.5); margin-top:4px; }
+
+/* QUIZ CARD */
+.quiz-list { display:flex; flex-direction:column; gap:14px; }
+.q-card {
+  background:var(--white); border-radius:14px; border:1.5px solid var(--line);
+  padding:20px 26px; box-shadow:0 2px 12px rgba(15,33,55,.05);
+  transition:border-color .25s, box-shadow .25s;
+}
+.q-card.correct { border-color:var(--correct); background:var(--corrlt); }
+.q-card.wrong   { border-color:var(--wrong);   background:var(--wronglt); }
+
+.q-top { display:flex; align-items:flex-start; gap:16px; margin-bottom:14px; }
+.q-num { font-family:"Space Mono",monospace; font-size:12px; font-weight:700; color:var(--muted); min-width:22px; padding-top:2px; }
+.q-sentence { font-family:"DM Serif Display",serif; font-size:17px; color:var(--navy); line-height:1.6; flex:1; }
+.q-blank { display:inline-block; min-width:90px; border-bottom:2.5px solid var(--amber2); margin:0 4px; vertical-align:bottom; text-align:center; font-style:normal; }
+
+.choices { display:flex; flex-wrap:wrap; gap:8px; }
+.choice-btn {
+  font-family:"Space Mono",monospace; font-size:12px; font-weight:700;
+  padding:8px 16px; border-radius:8px; border:2px solid var(--line);
+  background:var(--paper); color:var(--navy); cursor:pointer;
+  transition:all .18s;
+}
+.choice-btn:hover:not(:disabled) { border-color:var(--amber2); background:var(--amberlt); }
+.choice-btn.selected-correct { background:var(--corrlt); border-color:var(--correct); color:var(--correct); }
+.choice-btn.selected-wrong   { background:var(--wronglt); border-color:var(--wrong); color:var(--wrong); }
+.choice-btn.reveal-correct   { background:var(--corrlt); border-color:var(--correct); color:var(--correct); }
+.choice-btn:disabled { cursor:default; opacity:.7; }
+
+.q-feedback {
+  display:none; margin-top:12px;
+  font-size:13px; line-height:1.75;
+  color:var(--muted); border-top:1px solid var(--line);
+  padding-top:11px;
+}
+.q-feedback.show { display:block; }
+.q-feedback strong { color:var(--text); font-weight:700; }
+.q-feedback .ok { color:var(--correct); font-weight:700; }
+.q-feedback .no { color:var(--wrong); font-weight:700; }
+
+/* SPECIAL SECTION */
+.special-box {
+  background:var(--purplt); border:1.5px solid #c8b8f0; border-radius:14px;
+  padding:22px 26px; margin-bottom:20px;
+}
+.special-box h3 { font-family:"DM Serif Display",serif; font-size:18px; color:var(--purple); margin-bottom:12px; }
+.meaning-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+.mg-card { background:var(--white); border-radius:10px; padding:14px 16px; border:1.5px solid #c8b8f0; }
+.mg-form { font-family:"DM Serif Display",serif; font-size:15px; color:var(--purple); font-weight:400; margin-bottom:4px; }
+.mg-ko { font-size:13px; font-weight:700; color:var(--text); }
+.mg-ex { font-size:12px; color:var(--muted); font-style:italic; margin-top:4px; }
+
+/* RESULT MODAL */
+.result-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(15,33,55,.6); z-index:200;
+  align-items:center; justify-content:center;
+}
+.result-overlay.show { display:flex; }
+.result-modal {
+  background:var(--white); border-radius:20px; padding:40px 48px;
+  text-align:center; max-width:420px; width:90%;
+  box-shadow:0 20px 60px rgba(15,33,55,.3);
+  animation: popIn .3s ease;
+}
+@keyframes popIn { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
+.result-emoji { font-size:52px; margin-bottom:16px; }
+.result-modal h2 { font-family:"DM Serif Display",serif; font-size:28px; color:var(--navy); margin-bottom:8px; }
+.result-score { font-family:"Space Mono",monospace; font-size:40px; font-weight:700; color:var(--amber2); margin:16px 0; }
+.result-msg { font-size:14px; color:var(--muted); line-height:1.7; margin-bottom:24px; }
+.result-close {
+  font-family:"Space Mono",monospace; font-size:11px; font-weight:700; letter-spacing:.1em;
+  background:var(--navy); color:var(--amber2); border:none; cursor:pointer;
+  padding:12px 28px; border-radius:10px; text-transform:uppercase;
+}
+
+/* FOOTER */
+footer { background:var(--navy); border-top:3px solid var(--amber2); padding:22px 44px; display:flex; align-items:center; justify-content:space-between; }
+.footer-brand { font-family:"DM Serif Display",serif; font-size:20px; color:var(--amber2); }
+footer p { font-family:"Space Mono",monospace; font-size:10px; color:rgba(255,255,255,.28); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+.hero { animation:fadeUp .4s ease both; }
+.wrap > * { animation:fadeUp .45s ease both; }
+.wrap > *:nth-child(1){animation-delay:.05s}
+.wrap > *:nth-child(2){animation-delay:.09s}
+.wrap > *:nth-child(3){animation-delay:.13s}
+.wrap > *:nth-child(4){animation-delay:.17s}
+
+@media(max-width:640px){
+  .topbar{padding:12px 18px}
+  .hero{padding:36px 20px 32px}
+  .hero h1{font-size:26px}
+  .wrap{padding:28px 16px 60px}
+  .meaning-grid{grid-template-columns:1fr}
+  .score-bar{flex-direction:column;align-items:flex-start;gap:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">영핏 <span>English Fit</span></div>
+  <div class="topbar-tag">개념 테스트</div>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">영핏 문법 테스트 · Grammar Test</div>
+  <h1>목적어 — <em>to부정사 vs 동명사</em></h1>
+  <p class="hero-sub">Object : to-infinitive · gerund · meaning change</p>
+  <div class="hero-chips">
+    <span class="hchip sky">to-v: want hope decide expect</span>
+    <span class="hchip grn">v-ing: enjoy finish mind avoid</span>
+    <span class="hchip">remember / forget</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- SCORE BAR -->
+  <div class="score-bar">
+    <div>
+      <div class="score-label">현재 점수</div>
+      <div><span class="score-num" id="scoreNum">0</span><span class="score-denom"> / <span id="totalNum">0</span></span></div>
+      <div class="progress-wrap">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <button class="reset-btn" onclick="resetAll()">다시 풀기</button>
+  </div>
+
+  <!-- PART A: to부정사 -->
+  <div class="sec-head" style="margin-top:0">
+    <h2>Part A</h2>
+    <span>목적어로 to부정사를 취하는 동사</span>
+  </div>
+  <div class="part-banner">
+    <div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:4px;">
+        <span class="part-badge">to-v</span>
+        <span class="part-title">want, hope, decide, expect, learn</span>
+      </div>
+      <div class="part-verbs">want · hope · decide · expect · learn · wish · plan · need · refuse · promise</div>
+    </div>
+  </div>
+
+  <div class="quiz-list" id="listA">
+
+    <div class="q-card" data-answer="to go" data-type="toinf">
+      <div class="q-top">
+        <span class="q-num">1</span>
+        <span class="q-sentence">Do you want <em class="q-blank" id="b1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> dancing tonight?</span>
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'to go',1)">to go</button>
+        <button class="choice-btn" onclick="check(this,'to go',1)">going</button>
+      </div>
+      <div class="q-feedback" id="fb1"><span class="ok">✓ to go</span> — <strong>want</strong>은 반드시 <strong>to-v</strong>를 목적어로 취한다. want + to부정사: 미래 지향적 의지·희망.</div>
+    </div>
+
+    <div class="q-card" data-answer="to see" data-type="toinf">
+      <div class="q-top">
+        <span class="q-num">2</span>
+        <span class="q-sentence">I hope <em class="q-blank" id="b2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> you again.</span>
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'to see',2)">to see</button>
+        <button class="choice-btn" onclick="check(this,'to see',2)">seeing</button>
+      </div>
+      <div class="q-feedback" id="fb2"><span class="ok">✓ to see</span> — <strong>hope</strong>은 to-v만 목적어로 취한다. "I hope seeing" 은 틀린 표현.</div>
+    </div>
+
+    <div class="q-card" data-answer="to be" data-type="toinf">
+      <div class="q-top">
+        <span class="q-num">3</span>
+        <span class="q-sentence">I decided <em class="q-blank" id="b3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> a singer when I was ten.</span>
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'to be',3)">to be</button>
+        <button class="choice-btn" onclick="check(this,'to be',3)">being</button>
+      </div>
+      <div class="q-feedback" id="fb3"><span class="ok">✓ to be</span> — <strong>decide</strong>는 to-v만 가능. 결심·결정은 미래 지향이므로 to-v.</div>
+    </div>
+
+    <div class="q-card" data-answer="to win" data-type="toinf">
+      <div class="q-top">
+        <span class="q-num">4</span>
+        <span class="q-sentence">She expects <em class="q-blank" id="b4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> the competition.</span>
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'to win',4)">to win</button>
+        <button class="choice-btn" onclick="check(this,'to win',4)">winning</button>
+      </div>
+      <div class="q-feedback" id="fb4"><span class="ok">✓ to win</span> — <strong>expect</strong>는 to-v 목적어. 기대·예상은 아직 일어나지 않은 미래이므로 to-v.</div>
+    </div>
+
+    <div class="q-card" data-answer="to swim" data-type="toinf">
+      <div class="q-top">
+        <span class="q-num">5</span>
+        <span class="q-sentence">He learned <em class="q-blank" id="b5">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> when he was five.</span>
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'to swim',5)">to swim</button>
+        <button class="choice-btn" onclick="check(this,'to swim',5)">swimming</button>
+      </div>
+      <div class="q-feedback" id="fb5"><span class="ok">✓ to swim</span> — <strong>learn</strong>은 to-v 목적어. "배우다"는 목표 지향적이므로 to-v.</div>
+    </div>
+
+  </div>
+
+  <div class="divider"><div class="div-line"></div><div class="div-txt">Part B — Gerund</div><div class="div-line"></div></div>
+
+  <!-- PART B: 동명사 -->
+  <div class="sec-head">
+    <h2>Part B</h2>
+    <span>목적어로 동명사를 취하는 동사</span>
+  </div>
+  <div class="part-banner">
+    <div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:4px;">
+        <span class="part-badge" style="background:var(--sage);color:#fff;">v-ing</span>
+        <span class="part-title">enjoy, finish, mind, avoid, give up</span>
+      </div>
+      <div class="part-verbs">enjoy · finish · mind · avoid · give up · keep · practice · quit · suggest</div>
+    </div>
+  </div>
+
+  <div class="quiz-list" id="listB">
+
+    <div class="q-card" data-answer="singing" data-type="ger">
+      <div class="q-top">
+        <span class="q-num">6</span>
+        <span class="q-sentence">I enjoy <em class="q-blank" id="b6">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> in the shower.</span>
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'singing',6)">to sing</button>
+        <button class="choice-btn" onclick="check(this,'singing',6)">singing</button>
+      </div>
+      <div class="q-feedback" id="fb6"><span class="ok">✓ singing</span> — <strong>enjoy</strong>는 반드시 <strong>v-ing</strong>를 목적어로 취한다. "enjoy to sing"은 틀린 표현.</div>
+    </div>
+
+    <div class="q-card" data-answer="writing" data-type="ger">
+      <div class="q-top">
+        <span class="q-num">7</span>
+        <span class="q-sentence">I finished <em class="q-blank" id="b7">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> the report.</span>
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'writing',7)">to write</button>
+        <button class="choice-btn" onclick="check(this,'writing',7)">writing</button>
+      </div>
+      <div class="q-feedback" id="fb7"><span class="ok">✓ writing</span> — <strong>finish</strong>는 이미 진행 중인 동작을 마치는 것이므로 v-ing.</div>
+    </div>
+
+    <div class="q-card" data-answer="making" data-type="ger">
+      <div class="q-top">
+        <span class="q-num">8</span>
+        <span class="q-sentence">How can I avoid <em class="q-blank" id="b8">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> a mistake?</span>
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'making',8)">to make</button>
+        <button class="choice-btn" onclick="check(this,'making',8)">making</button>
+      </div>
+      <div class="q-feedback" id="fb8"><span class="ok">✓ making</span> — <strong>avoid</strong>는 v-ing 전용. "피하다"는 현재 상황을 회피하는 것이므로 동명사.</div>
+    </div>
+
+    <div class="q-card" data-answer="watching" data-type="ger">
+      <div class="q-top">
+        <span class="q-num">9</span>
+        <span class="q-sentence">I don't mind <em class="q-blank" id="b9">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> the movie again.</span>
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'watching',9)">to watch</button>
+        <button class="choice-btn" onclick="check(this,'watching',9)">watching</button>
+      </div>
+      <div class="q-feedback" id="fb9"><span class="ok">✓ watching</span> — <strong>mind</strong>는 v-ing 전용. "꺼리다"는 현재적 감정이므로 동명사.</div>
+    </div>
+
+    <div class="q-card" data-answer="smoking" data-type="ger">
+      <div class="q-top">
+        <span class="q-num">10</span>
+        <span class="q-sentence">He gave up <em class="q-blank" id="b10">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> last year.</span>
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'smoking',10)">to smoke</button>
+        <button class="choice-btn" onclick="check(this,'smoking',10)">smoking</button>
+      </div>
+      <div class="q-feedback" id="fb10"><span class="ok">✓ smoking</span> — <strong>give up</strong>은 v-ing 전용 구동사. "그만두다"는 기존 습관의 중단이므로 동명사.</div>
+    </div>
+
+  </div>
+
+  <div class="divider"><div class="div-line"></div><div class="div-txt">Part C — Meaning Change</div><div class="div-line"></div></div>
+
+  <!-- PART C: remember / forget -->
+  <div class="sec-head">
+    <h2>Part C</h2>
+    <span>목적어에 따라 의미가 달라지는 동사</span>
+  </div>
+
+  <div class="special-box">
+    <h3>remember / forget — 의미 변화</h3>
+    <div class="meaning-grid">
+      <div class="mg-card">
+        <div class="mg-form">remember / forget + to-v</div>
+        <div class="mg-ko">미래의 일: ~할 것을 기억하다/잊다</div>
+        <div class="mg-ex">Remember to call me at six.</div>
+      </div>
+      <div class="mg-card">
+        <div class="mg-form">remember / forget + v-ing</div>
+        <div class="mg-ko">과거의 일: ~했던 것을 기억하다/잊다</div>
+        <div class="mg-ex">I remember going skating with you.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="quiz-list" id="listC">
+
+    <div class="q-card" data-answer="to lock" data-type="meaning">
+      <div class="q-top">
+        <span class="q-num">11</span>
+        <span class="q-sentence">Don't forget <em class="q-blank" id="b11">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> the door before you leave.</span>
+      </div>
+      <div style="background:var(--amberlt);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:12px;color:var(--amber);font-family:'Space Mono',monospace;">
+        💡 문 잠그는 것 = 아직 안 한 일 (미래)
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'to lock',11)">to lock</button>
+        <button class="choice-btn" onclick="check(this,'to lock',11)">locking</button>
+      </div>
+      <div class="q-feedback" id="fb11"><span class="ok">✓ to lock</span> — <strong>아직 하지 않은 미래의 일</strong>이므로 <strong>forget + to-v</strong>. 잠그는 것을 잊지 말라는 뜻.</div>
+    </div>
+
+    <div class="q-card" data-answer="meeting" data-type="meaning">
+      <div class="q-top">
+        <span class="q-num">12</span>
+        <span class="q-sentence">I remember <em class="q-blank" id="b12">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> her at the party last year.</span>
+      </div>
+      <div style="background:var(--amberlt);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:12px;color:var(--amber);font-family:'Space Mono',monospace;">
+        💡 작년 파티 = 이미 일어난 과거의 일
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'meeting',12)">to meet</button>
+        <button class="choice-btn" onclick="check(this,'meeting',12)">meeting</button>
+      </div>
+      <div class="q-feedback" id="fb12"><span class="ok">✓ meeting</span> — <strong>이미 일어난 과거의 일</strong>이므로 <strong>remember + v-ing</strong>. 만났던 기억이 있다는 뜻.</div>
+    </div>
+
+    <div class="q-card" data-answer="to vote" data-type="meaning">
+      <div class="q-top">
+        <span class="q-num">13</span>
+        <span class="q-sentence">Don't forget <em class="q-blank" id="b13">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> on Election Day.</span>
+      </div>
+      <div style="background:var(--amberlt);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:12px;color:var(--amber);font-family:'Space Mono',monospace;">
+        💡 선거일에 투표 = 앞으로 해야 할 일
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'to vote',13)">to vote</button>
+        <button class="choice-btn" onclick="check(this,'to vote',13)">voting</button>
+      </div>
+      <div class="q-feedback" id="fb13"><span class="ok">✓ to vote</span> — <strong>앞으로 해야 할 미래 행동</strong>을 잊지 말라는 것이므로 <strong>forget + to-v</strong>.</div>
+    </div>
+
+    <div class="q-card" data-answer="seeing" data-type="meaning">
+      <div class="q-top">
+        <span class="q-num">14</span>
+        <span class="q-sentence">I will never forget <em class="q-blank" id="b14">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em> her perform on stage.</span>
+      </div>
+      <div style="background:var(--amberlt);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:12px;color:var(--amber);font-family:'Space Mono',monospace;">
+        💡 무대 공연을 봤던 기억 = 이미 경험한 과거
+      </div>
+      <div class="choices">
+        <button class="choice-btn" onclick="check(this,'seeing',14)">to see</button>
+        <button class="choice-btn" onclick="check(this,'seeing',14)">seeing</button>
+      </div>
+      <div class="q-feedback" id="fb14"><span class="ok">✓ seeing</span> — <strong>이미 경험한 과거의 기억</strong>이므로 <strong>forget + v-ing</strong>. 그녀의 공연을 봤던 것을 절대 잊지 못할 것이다.</div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- RESULT MODAL -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-modal">
+    <div class="result-emoji" id="resEmoji">🎉</div>
+    <h2 id="resTitle">테스트 완료!</h2>
+    <div class="result-score" id="resScore">0 / 14</div>
+    <p class="result-msg" id="resMsg">잘 했어요!</p>
+    <button class="result-close" onclick="closeResult()">확인</button>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand">영핏</div>
+  <p>영어를 핏하다 · English Fit</p>
+</footer>
+
+<script>
+const TOTAL = 14;
+let score = 0;
+let answered = 0;
+
+function check(btn, answer, num) {
+  const card = btn.closest('.q-card');
+  if (card.classList.contains('correct') || card.classList.contains('wrong')) return;
+
+  const btns = card.querySelectorAll('.choice-btn');
+  btns.forEach(b => b.disabled = true);
+
+  const blank = document.getElementById('b' + num);
+  const fb = document.getElementById('fb' + num);
+  const correct = card.dataset.answer;
+  const isRight = answer === correct;
+
+  blank.textContent = correct;
+  blank.style.color = isRight ? 'var(--correct)' : 'var(--wrong)';
+  blank.style.borderBottomColor = isRight ? 'var(--correct)' : 'var(--wrong)';
+
+  if (isRight) {
+    btn.classList.add('selected-correct');
+    card.classList.add('correct');
+    score++;
+  } else {
+    btn.classList.add('selected-wrong');
+    card.classList.add('wrong');
+    btns.forEach(b => {
+      if (b !== btn && b.textContent.trim() === correct) b.classList.add('reveal-correct');
+    });
+  }
+
+  fb.classList.add('show');
+  answered++;
+
+  updateScore();
+  if (answered === TOTAL) setTimeout(showResult, 600);
+}
+
+function updateScore() {
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('totalNum').textContent = answered;
+  const pct = Math.round((answered / TOTAL) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function showResult() {
+  const pct = Math.round(score / TOTAL * 100);
+  document.getElementById('resScore').textContent = score + ' / ' + TOTAL;
+
+  let emoji, title, msg;
+  if (pct === 100)     { emoji='🏆'; title='Perfect!'; msg='모든 문제를 맞혔습니다! to-v와 v-ing 완벽 마스터!'; }
+  else if (pct >= 80)  { emoji='🎉'; title='훌륭해요!'; msg='거의 다 맞혔어요. 틀린 문제 해설을 한 번 더 확인해 보세요.'; }
+  else if (pct >= 60)  { emoji='💪'; title='잘 하고 있어요!'; msg='조금 더 연습이 필요해요. 특히 의미가 달라지는 동사를 복습해 보세요.'; }
+  else                 { emoji='📚'; title='다시 도전!'; msg='to-v / v-ing 목록을 다시 정리하고 재도전해 보세요!'; }
+
+  document.getElementById('resEmoji').textContent = emoji;
+  document.getElementById('resTitle').textContent = title;
+  document.getElementById('resMsg').textContent = msg;
+  document.getElementById('resultOverlay').classList.add('show');
+}
+
+function closeResult() {
+  document.getElementById('resultOverlay').classList.remove('show');
+}
+
+function resetAll() {
+  score = 0; answered = 0;
+  updateScore();
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('totalNum').textContent = '0';
+
+  document.querySelectorAll('.q-card').forEach(card => {
+    card.classList.remove('correct', 'wrong');
+    const num = card.querySelector('.q-num').textContent.trim();
+    const blank = document.getElementById('b' + num);
+    if (blank) { blank.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'; blank.style.color=''; blank.style.borderBottomColor='var(--amber2)'; }
+    card.querySelectorAll('.choice-btn').forEach(b => {
+      b.disabled = false;
+      b.classList.remove('selected-correct','selected-wrong','reveal-correct');
+    });
+    const fb = document.getElementById('fb' + num);
+    if (fb) fb.classList.remove('show');
+  });
+  closeResult();
+}
+</script>
+</body>
+</html>
