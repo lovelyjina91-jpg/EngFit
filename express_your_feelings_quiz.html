@@ -243,7 +243,7 @@ function initAll(){
 }
 function resetOrder(){OS.idx=0;OS.score=0;OS.done=false;OS.submitted=new Array(OQ.length).fill(null);OS.userIdx=OQ.map(()=>[]);OS.shuffled=OQ.map(q=>shuffle(q.lines.map((l,i)=>({...l,oi:i}))));OS.history=new Array(OQ.length).fill(null);}
 function resetSubj(){SS.idx=0;SS.score=0;SS.done=false;SS.submitted=new Array(SQ.length).fill(null);SS.userAns=new Array(SQ.length).fill('');SS.history=new Array(SQ.length).fill(null);}
-function spkB(s){const m={B:'#1B4332',G:'#1D4ED8',W:'#7C3AED',M:'#C2410C',A:'#374151'};const base=s.replace(/[\d\/]/g,'').trim();const c=m[base]||m.A;return `<span class="spk" style="color:${c};border-color:${c};background:${c}1A">${s}</span>`;}
+function getNM(lines){const m={},l='ABCDEFGH';let i=0;lines.forEach(x=>{if(!(x.spk in m))m[x.spk]=l[i++];});return m;}function spkB(s,n){const lbl=n||s;const cols=['#1B4332','#1D4ED8','#7C3AED','#C2410C','#374151','#B45309'];const idx='ABCDEFGH'.indexOf(lbl);const c=cols[idx>=0?idx:4];return `<span class="spk" style="color:${c};border-color:${c};background:${c}1A">${lbl}</span>`;}
 function updatePills(){
   const op=document.getElementById('pill-order'),sp=document.getElementById('pill-subj');
   const od=OS.submitted.filter(x=>x!==null).length,sd=SS.submitted.filter(x=>x!==null).length;
@@ -261,18 +261,18 @@ function render(){
   if(mode==='subj'&&!SS.done&&SS.submitted[SS.idx]===null){const inp=document.getElementById('sinp');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}}
 }
 function orderHTML(qi){
-  const q=OQ[qi],sub=OS.submitted[qi],placed=OS.userIdx[qi],sh=OS.shuffled[qi];
+  const q=OQ[qi],sub=OS.submitted[qi],placed=OS.userIdx[qi],sh=OS.shuffled[qi],nm=getNM(q.lines);
   const pset=new Set(placed),total=q.lines.length,cnt=placed.length,pct=Math.round(qi/OQ.length*100);
   const uord=placed.map(si=>sh[si].oi).join(','),cord=q.lines.map((_,i)=>i).join(',');
   const isOk=sub!==null&&uord===cord;
   let pool='';
-  sh.forEach((ln,si)=>{if(!pset.has(si)){const dis=sub!==null?' ldis':'';const cl=sub===null?`onclick="oPlace(${qi},${si})"` :'';pool+=`<div class="lc${dis}" ${cl}>${spkB(ln.spk)}<span class="lt">${ln.text}</span></div>`;}});
+  sh.forEach((ln,si)=>{if(!pset.has(si)){const dis=sub!==null?' ldis':'';const cl=sub===null?`onclick="oPlace(${qi},${si})"` :'';pool+=`<div class="lc${dis}" ${cl}><span class="lt">${ln.text}</span></div>`;}});
   if(!pool)pool=`<div class="le">✓ 모든 대화를 배치했습니다</div>`;
   let ans='';
   if(!placed.length){ans=`<div class="le">↑ 대화를 순서대로 클릭하여 배치하세요</div>`;}
-  else{placed.forEach((si,ai)=>{const ln=sh[si];let cls='lc';if(sub!==null)cls+= isOk?' ldis lok':' ldis lng';else cls+=' placed';const cl=sub===null?`onclick="oRemove(${qi},${ai})"` :'';ans+=`<div class="${cls}" ${cl}><span class="onum">${ai+1}</span>${spkB(ln.spk)}<span class="lt">${ln.text}</span></div>`;});}
+  else{placed.forEach((si,ai)=>{const ln=sh[si];let cls='lc';if(sub!==null)cls+= isOk?' ldis lok':' ldis lng';else cls+=' placed';const cl=sub===null?`onclick="oRemove(${qi},${ai})"` :'';ans+=`<div class="${cls}" ${cl}><span class="onum">${ai+1}</span><span class="lt">${ln.text}</span></div>`;});}
   let fb='';
-  if(sub!==null){if(isOk){fb=`<div class="fb fbok show">✓ 정답! 완벽한 대화 순서예요!</div>`;}else{const rows=q.lines.map((l,i)=>`<div style="display:flex;align-items:flex-start;gap:8px;margin-top:6px"><span style="min-width:18px;font-weight:700;color:#7F1D1D;font-family:'JetBrains Mono',monospace">${i+1}.</span>${spkB(l.spk)}<span style="font-size:13px;font-family:'JetBrains Mono',monospace;color:#7F1D1D;line-height:1.5">${l.text}</span></div>`).join('');fb=`<div class="fb fbng show"><div>✗ 오답 — 올바른 순서:</div>${rows}</div>`;}}
+  if(sub!==null){if(isOk){fb=`<div class="fb fbok show">✓ 정답! 완벽한 대화 순서예요!</div>`;}else{const rows=q.lines.map((l,i)=>`<div style="display:flex;align-items:flex-start;gap:8px;margin-top:6px"><span style="min-width:18px;font-weight:700;color:#7F1D1D;font-family:'JetBrains Mono',monospace">${i+1}.</span><span style="font-size:13px;font-family:'JetBrains Mono',monospace;color:#7F1D1D;line-height:1.5">${l.text}</span></div>`).join('');fb=`<div class="fb fbng show"><div>✗ 오답 — 올바른 순서:</div>${rows}</div>`;}}
   let btns='';
   if(sub===null){btns=`<button class="btn btnp" onclick="oSubmit(${qi})" ${cnt<total?'disabled':''}>확인 ✓</button><button class="btn btng" onclick="oClear(${qi})">지우기</button>`;}
   else if(qi<OQ.length-1){btns=`<button class="btn btnp" onclick="oGo(${qi+1})">다음 →</button>`;}
