@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영핏 | Pimple — 독해 & 어휘</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:    #0F2137;
+  --navy2:   #1A3450;
+  --amber:   #C8770A;
+  --amber2:  #E8A020;
+  --amberlt: #FFF6E0;
+  --sage:    #3A7D6E;
+  --sagelt:  #E4F4F0;
+  --rose:    #B53A40;
+  --roselt:  #FDEAEA;
+  --sky:     #1B6FA8;
+  --skylt:   #E2F0FA;
+  --purple:  #5C3FA0;
+  --purplt:  #EEEBFA;
+  --cream:   #F8F5EF;
+  --paper:   #EDE8DF;
+  --white:   #FFFFFF;
+  --text:    #181F2E;
+  --muted:   #5C6878;
+  --line:    #DDD5C8;
+  --warm:    #7A4F28;
+  --warmlt:  #FDF0E2;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: "DM Sans", "Noto Sans KR", sans-serif; background: var(--cream); color: var(--text); }
+
+/* ── TOPBAR ─────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--navy);
+  border-bottom: 3px solid var(--amber2);
+  padding: 13px 44px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-brand {
+  font-family: "DM Serif Display", serif;
+  font-size: 20px; color: var(--amber2); letter-spacing: .01em;
+}
+.topbar-brand span {
+  font-family: "Space Mono", monospace;
+  font-size: 11px; color: rgba(255,255,255,.4);
+  margin-left: 10px; font-weight: 400;
+}
+.topbar-tag {
+  font-family: "Space Mono", monospace;
+  font-size: 10px; font-weight: 700; letter-spacing: .12em;
+  color: var(--navy); background: var(--amber2);
+  padding: 5px 13px; border-radius: 20px; text-transform: uppercase;
+}
+
+/* ── HERO ───────────────────────────────── */
+.hero {
+  background: var(--navy);
+  padding: 54px 48px 46px;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: "";
+  position: absolute; right: -100px; top: -100px;
+  width: 380px; height: 380px; border-radius: 50%;
+  background: var(--amber); opacity: .06;
+}
+.hero::after {
+  content: "";
+  position: absolute; left: 42%; bottom: -80px;
+  width: 240px; height: 240px; border-radius: 50%;
+  background: var(--sage); opacity: .08;
+}
+.hero-eyebrow {
+  font-family: "Space Mono", monospace;
+  font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--amber2); opacity: .8;
+  margin-bottom: 14px;
+}
+.hero h1 {
+  font-family: "DM Serif Display", serif;
+  font-size: 38px; color: #fff; line-height: 1.2;
+  margin-bottom: 10px; position: relative; z-index: 1;
+}
+.hero h1 em { color: var(--amber2); font-style: italic; }
+.hero-sub {
+  font-family: "Space Mono", monospace;
+  font-size: 11px; color: rgba(255,255,255,.45);
+  letter-spacing: .05em; margin-bottom: 22px;
+}
+.hero-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.hchip {
+  font-family: "Space Mono", monospace;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.15);
+  color: rgba(255,255,255,.75);
+  font-size: 11px; padding: 5px 13px; border-radius: 20px;
+}
+.hchip.grn { background: rgba(58,125,110,.25); border-color: rgba(58,125,110,.4); color: #80d4c6; }
+
+/* ── WRAP ──────────────────────────────── */
+.wrap { max-width: 840px; margin: 0 auto; padding: 46px 44px 90px; }
+
+/* ── SECTION HEADER ─────────────────────── */
+.sec-head {
+  margin-bottom: 20px; margin-top: 46px;
+  display: flex; align-items: baseline; gap: 12px;
+}
+.sec-head:first-child { margin-top: 0; }
+.sec-head h2 {
+  font-family: "DM Serif Display", serif;
+  font-size: 22px; color: var(--navy);
+}
+.sec-head span {
+  font-family: "Space Mono", monospace;
+  font-size: 11px; color: var(--muted); letter-spacing: .06em;
+}
+
+/* ── PASSAGE ───────────────────────────── */
+.passage-card {
+  background: var(--white);
+  border-radius: 16px;
+  border: 1.5px solid var(--line);
+  padding: 30px 36px;
+  box-shadow: 0 6px 28px rgba(15,33,55,.08);
+}
+.qtype-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.qtype-badge {
+  font-family: "Space Mono", monospace;
+  background: var(--navy); color: var(--amber2);
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  padding: 5px 13px; border-radius: 6px; text-transform: uppercase;
+}
+.passage-text {
+  font-family: "DM Serif Display", serif;
+  font-size: 16px; line-height: 2.1; color: #1a2030;
+}
+.hi-modal { color: var(--rose); font-weight: 700; border-bottom: 2px solid var(--rose); font-style: normal; }
+.hi-pv { color: var(--sky); font-weight: 800; border-bottom: 2px solid var(--sky); }
+.hi-vocab { color: var(--sage); font-weight: 700; border-bottom: 2px solid var(--sage); }
+.subword { font-size: 12px; vertical-align: super; color: var(--muted); font-family: "Space Mono", monospace; }
+
+/* ── DIVIDER ──────────────────────────── */
+.divider { display: flex; align-items: center; gap: 14px; margin: 42px 0 0; }
+.div-line { flex: 1; height: 1px; background: var(--line); }
+.div-txt {
+  font-family: "Space Mono", monospace;
+  font-size: 10px; color: var(--muted); letter-spacing: .18em; text-transform: uppercase;
+}
+
+/* ── MODAL CARDS ───────────────────────── */
+.modal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.mc {
+  background: var(--white); border-radius: 12px;
+  border: 1.5px solid var(--line); padding: 18px 18px;
+  box-shadow: 0 2px 12px rgba(15,33,55,.05);
+}
+.mc-top { margin-bottom: 8px; }
+.mc-eng {
+  font-family: "DM Serif Display", serif;
+  font-size: 18px; color: var(--navy);
+}
+.mc-tag {
+  display: inline-block; margin-top: 4px;
+  font-family: "Space Mono", monospace;
+  font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 8px;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.t-neg   { background: var(--roselt); color: var(--rose); }
+.t-poss  { background: var(--skylt);  color: var(--sky); }
+.t-weak  { background: var(--amberlt); color: var(--amber); }
+.t-pv    { background: var(--purplt); color: var(--purple); }
+.t-voca  { background: var(--sagelt); color: var(--sage); }
+.t-csat  { background: #FFF0E0; color: var(--warm); }
+.mc-ko   { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+.mc-note { font-size: 12px; color: var(--muted); line-height: 1.7; }
+.mc-note strong { color: var(--text); font-weight: 700; }
+
+/* ── VOCAB TABLE ──────────────────────── */
+.vocab-table {
+  width: 100%; border-collapse: collapse;
+  border-radius: 14px; overflow: hidden;
+  border: 1.5px solid var(--line);
+}
+.vocab-table thead tr { background: var(--navy); }
+.vocab-table thead th {
+  font-family: "Space Mono", monospace;
+  color: rgba(255,255,255,.75); padding: 12px 18px;
+  text-align: left; font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+}
+.vocab-table tbody tr:nth-child(odd)  { background: var(--white); }
+.vocab-table tbody tr:nth-child(even) { background: var(--paper); }
+.vocab-table td {
+  padding: 11px 18px; border-bottom: 1px solid var(--line);
+  line-height: 1.6; vertical-align: middle;
+  font-family: "DM Sans", "Noto Sans KR", sans-serif;
+}
+.ve { font-family: "DM Serif Display", serif; font-size: 15px; font-weight: 400; color: var(--navy); }
+.vk { font-size: 13px; font-weight: 700; }
+.vx { font-size: 12px; color: var(--muted); font-style: italic; }
+.vsyn { font-family: "Space Mono", monospace; font-size: 11px; color: var(--sky); }
+
+/* ── CSAT POINTS ──────────────────────── */
+.csat-wrap { display: flex; flex-direction: column; gap: 12px; }
+.csat-row {
+  background: var(--white); border-radius: 12px;
+  border-left: 4px solid var(--amber2);
+  padding: 16px 22px;
+  box-shadow: 0 2px 10px rgba(15,33,55,.05);
+  display: flex; gap: 16px; align-items: flex-start;
+}
+.csat-row.blue  { border-left-color: var(--sky); }
+.csat-row.green { border-left-color: var(--sage); }
+.csat-row.rose  { border-left-color: var(--rose); }
+.cn {
+  min-width: 26px; height: 26px;
+  background: var(--amber2); color: var(--navy);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-family: "Space Mono", monospace; font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.csat-row.blue  .cn { background: var(--sky); color: #fff; }
+.csat-row.green .cn { background: var(--sage); color: #fff; }
+.csat-row.rose  .cn { background: var(--rose); color: #fff; }
+.cb h4 { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 5px; font-family: "DM Sans", "Noto Sans KR", sans-serif; }
+.cb p  { font-size: 13px; color: var(--muted); line-height: 1.75; }
+.cb p strong { color: var(--text); font-weight: 700; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip {
+  font-family: "Space Mono", monospace;
+  font-size: 10px; padding: 3px 9px; border-radius: 6px;
+  background: var(--paper); color: var(--navy);
+  border: 1px solid var(--line); font-weight: 700;
+}
+
+/* ── BG ───────────────────────────────── */
+.bg-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.bg-card {
+  background: var(--white); border-radius: 12px;
+  border: 1.5px solid var(--line); padding: 20px 22px;
+  box-shadow: 0 2px 10px rgba(15,33,55,.05);
+}
+.bg-card h3 {
+  font-family: "DM Serif Display", serif;
+  font-size: 16px; color: var(--navy);
+  margin-bottom: 10px; padding-bottom: 9px;
+  border-bottom: 1px solid var(--line);
+}
+.bg-card p { font-size: 13px; color: var(--muted); line-height: 1.85; }
+.bg-card p strong { color: var(--text); font-weight: 700; }
+.bg-card p em { color: var(--sage); font-style: normal; font-weight: 700; }
+
+/* ── FOOTER ─────────────────────────── */
+footer {
+  background: var(--navy); border-top: 3px solid var(--amber2);
+  padding: 22px 44px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-brand { font-family: "DM Serif Display", serif; font-size: 20px; color: var(--amber2); }
+footer p { font-family: "Space Mono", monospace; font-size: 10px; color: rgba(255,255,255,.28); }
+
+/* ── ANIM ─────────────────────────────── */
+@keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+.hero { animation: fadeUp .4s ease both; }
+.wrap > * { animation: fadeUp .45s ease both; }
+.wrap > *:nth-child(1) { animation-delay:.05s; }
+.wrap > *:nth-child(2) { animation-delay:.09s; }
+.wrap > *:nth-child(3) { animation-delay:.13s; }
+.wrap > *:nth-child(4) { animation-delay:.17s; }
+.wrap > *:nth-child(5) { animation-delay:.21s; }
+.wrap > *:nth-child(6) { animation-delay:.25s; }
+
+@media (max-width:640px) {
+  .topbar { padding: 12px 18px; }
+  .hero { padding: 36px 20px 32px; }
+  .hero h1 { font-size: 28px; }
+  .wrap { padding: 28px 16px 60px; }
+  .modal-grid { grid-template-columns: 1fr; }
+  .bg-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">영핏 <span>English Fit</span></div>
+  <div class="topbar-tag">독해 · 어휘</div>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">영핏 구문 분석 &nbsp;/&nbsp; Skin Health Passage</div>
+  <h1>Pimple<br><em>여드름, 조동사, 구동사</em></h1>
+  <p class="hero-sub">can't · shouldn't · may · will · go away · looking for</p>
+  <div class="hero-chips">
+    <span class="hchip">shouldn't pop</span>
+    <span class="hchip">go away</span>
+    <span class="hchip">looking for</span>
+    <span class="hchip grn">bacteria</span>
+    <span class="hchip grn">patience</span>
+    <span class="hchip">swollen</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- PASSAGE -->
+  <div class="sec-head" style="margin-top:0">
+    <h2>지문 읽기</h2>
+    <span>조동사 빨강 · 구동사 파랑 · 핵심어휘 초록</span>
+  </div>
+  <div class="passage-card">
+    <div class="qtype-row">
+      <span class="qtype-badge">수능 유형</span>
+      <span style="font-size:14px;font-weight:600;color:var(--navy);font-family:'DM Sans','Noto Sans KR',sans-serif;">다음 글을 읽고, 물음에 답하시오.</span>
+    </div>
+    <p class="passage-text">
+      You wake up and see <span class="subword">ⓐ</span>a small *pimple on your cheek.
+      You <span class="hi-modal">can't</span> see it well, but it's there and growing.
+      At night, it looks perfect for **popping.
+      But you <span class="hi-modal">shouldn't</span>.
+      You <span class="hi-modal">can't</span> make pimples <span class="hi-pv">go away</span> by popping or squeezing.
+      Squeezing <span class="hi-modal">can</span> push <span class="subword">ⓑ</span><span class="hi-vocab">bacteria</span> into the skin.
+      And your skin becomes <span class="hi-vocab">swollen</span> and red.
+      Squeezing <span class="hi-modal">may</span> also leave you with <span class="subword">ⓒ</span>red or black marks.
+      <span class="subword">ⓓ</span><span class="hi-vocab">Patience</span> is the key for dealing with pimples.
+      They <span class="hi-modal">will</span> <span class="hi-pv">go away</span> a few days later.
+      You <span class="hi-modal">shouldn't</span> <span class="subword">ⓔ</span><span class="hi-vocab">touch</span> them.
+      Then they <span class="hi-modal">can</span> <span class="hi-pv">go away</span> completely.
+      If you are <span class="hi-pv">looking for</span> the fastest way to remove pimples, talk to your doctor.
+    </p>
+  </div>
+
+  <div class="divider"><div class="div-line"></div><div class="div-txt">Modal Verbs</div><div class="div-line"></div></div>
+
+  <!-- MODALS -->
+  <div class="sec-head">
+    <h2>조동사 분석</h2>
+    <span>이 지문에 쓰인 조동사 전체 정리</span>
+  </div>
+  <div class="modal-grid">
+    <div class="mc">
+      <div class="mc-top">
+        <div class="mc-eng">can't</div>
+        <span class="mc-tag t-neg">불가능</span>
+      </div>
+      <div class="mc-ko">~할 수 없다</div>
+      <div class="mc-note">= <strong>cannot</strong> / 축약형<br>능력·가능성의 부정<br>수능 어법: <strong>can not</strong>(X)</div>
+    </div>
+    <div class="mc">
+      <div class="mc-top">
+        <div class="mc-eng">shouldn't</div>
+        <span class="mc-tag t-neg">금지·충고</span>
+      </div>
+      <div class="mc-ko">~하면 안 된다</div>
+      <div class="mc-note">= <strong>should not</strong><br>조언·경고의 부정<br>mustn't(절대 금지)보다 약함</div>
+    </div>
+    <div class="mc">
+      <div class="mc-top">
+        <div class="mc-eng">can</div>
+        <span class="mc-tag t-poss">가능성</span>
+      </div>
+      <div class="mc-ko">~할 수 있다</div>
+      <div class="mc-note">능력 / 가능성 두 뜻 모두 사용<br><strong>push bacteria</strong>에선 가능성<br><strong>go away</strong>에선 능력</div>
+    </div>
+    <div class="mc">
+      <div class="mc-top">
+        <div class="mc-eng">may</div>
+        <span class="mc-tag t-weak">약한 추측</span>
+      </div>
+      <div class="mc-ko">~할지도 모른다</div>
+      <div class="mc-note">추측 50% 확률<br>might ≈ may (더 약함)<br>수능: may / might 구별 출제</div>
+    </div>
+    <div class="mc">
+      <div class="mc-top">
+        <div class="mc-eng">will</div>
+        <span class="mc-tag t-poss">확실한 미래</span>
+      </div>
+      <div class="mc-ko">~할 것이다</div>
+      <div class="mc-note">미래 / 강한 예측<br><strong>will go away</strong> = 반드시 사라진다<br>may보다 훨씬 확신 강함</div>
+    </div>
+    <div class="mc">
+      <div class="mc-top">
+        <div class="mc-eng">go away</div>
+        <span class="mc-tag t-pv">구동사 ×3</span>
+      </div>
+      <div class="mc-ko">사라지다, 없어지다</div>
+      <div class="mc-note">지문에서 <strong>3번 반복</strong> 사용<br>= disappear / vanish<br>반의어: <strong>appear / show up</strong></div>
+    </div>
+  </div>
+
+  <div class="divider"><div class="div-line"></div><div class="div-txt">Key Vocabulary</div><div class="div-line"></div></div>
+
+  <!-- VOCAB -->
+  <div class="sec-head">
+    <h2>핵심 어휘</h2>
+    <span>내용 이해 및 수능 어휘 연결</span>
+  </div>
+  <table class="vocab-table">
+    <thead>
+      <tr>
+        <th>단어</th><th>뜻</th><th>지문 속 사용</th><th>연결 표현</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="ve">pimple</span></td>
+        <td><span class="vk">여드름, 뾰루지</span></td>
+        <td><span class="vx">a small pimple on your cheek</span></td>
+        <td><span class="vsyn">= acne, blemish</span></td>
+      </tr>
+      <tr>
+        <td><span class="ve">squeeze</span></td>
+        <td><span class="vk">짜다, 쥐어짜다</span></td>
+        <td><span class="vx">popping or squeezing</span></td>
+        <td><span class="vsyn">= press, pinch</span></td>
+      </tr>
+      <tr>
+        <td><span class="ve">bacteria</span></td>
+        <td><span class="vk">박테리아, 세균</span></td>
+        <td><span class="vx">push bacteria into the skin</span></td>
+        <td><span class="vsyn">단수: bacterium</span></td>
+      </tr>
+      <tr>
+        <td><span class="ve">swollen</span></td>
+        <td><span class="vk">부어오른, 부푼</span></td>
+        <td><span class="vx">skin becomes swollen and red</span></td>
+        <td><span class="vsyn">swell → swollen (불규칙)</span></td>
+      </tr>
+      <tr>
+        <td><span class="ve">patience</span></td>
+        <td><span class="vk">인내, 참을성</span></td>
+        <td><span class="vx">Patience is the key</span></td>
+        <td><span class="vsyn">patient(형) → patience(명)</span></td>
+      </tr>
+      <tr>
+        <td><span class="ve">completely</span></td>
+        <td><span class="vk">완전히, 전적으로</span></td>
+        <td><span class="vx">go away completely</span></td>
+        <td><span class="vsyn">= entirely, fully</span></td>
+      </tr>
+      <tr>
+        <td><span class="ve">remove</span></td>
+        <td><span class="vk">제거하다, 없애다</span></td>
+        <td><span class="vx">the fastest way to remove pimples</span></td>
+        <td><span class="vsyn">= get rid of, eliminate</span></td>
+      </tr>
+      <tr>
+        <td><span class="ve">looking for</span></td>
+        <td><span class="vk">~을 찾다, 구하다</span></td>
+        <td><span class="vx">looking for the fastest way</span></td>
+        <td><span class="vsyn">= searching for</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Grammar note: patience -->
+  <div style="background:var(--purplt);border:1.5px solid #c8b8f0;border-radius:12px;padding:15px 20px;margin-top:12px;">
+    <p style="font-size:13px;color:var(--purple);line-height:1.85;font-family:'DM Sans','Noto Sans KR',sans-serif;">
+      <strong>patient → patience 품사 전환</strong> &nbsp;—&nbsp; <em>patient</em> (형용사: 참을성 있는) → <em>patience</em> (명사: 인내심). 수능 어법·어휘 문제에서 <strong>형용사 ↔ 명사 혼동</strong> 유형으로 자주 출제. <em>Patience is the key</em>에서 주어 자리이므로 <strong>명사형</strong>이 정답.
+    </p>
+  </div>
+
+  <div class="divider"><div class="div-line"></div><div class="div-txt">수능 포인트</div><div class="div-line"></div></div>
+
+  <!-- CSAT -->
+  <div class="sec-head">
+    <h2>수능 핵심 포인트</h2>
+    <span>이 지문에서 반드시 챙길 것</span>
+  </div>
+  <div class="csat-wrap">
+    <div class="csat-row">
+      <div class="cn">1</div>
+      <div class="cb">
+        <h4>조동사의 확신 강도 비교 — 수능 빈칸 핵심</h4>
+        <p>이 지문에는 <strong>can't / shouldn't / can / may / will</strong> 5가지 조동사가 모두 등장한다. 수능 빈칸·어법 문제에서 <strong>확신의 강도</strong>가 핵심: <em>will(확실) > can(가능) > may(추측)</em>. "They will go away"와 "Squeezing may leave marks"의 어감 차이를 정확히 이해해야 한다.</p>
+        <div class="chips">
+          <span class="chip">will &gt; can &gt; may</span>
+          <span class="chip">shouldn't ≠ mustn't</span>
+          <span class="chip">can = 능력·가능성</span>
+        </div>
+      </div>
+    </div>
+    <div class="csat-row rose">
+      <div class="cn">2</div>
+      <div class="cb">
+        <h4>go away 3회 반복 — 글의 핵심 메시지</h4>
+        <p><strong>go away</strong>는 지문에서 3번 등장하며 글 전체의 핵심 주장을 이끈다. <em>"여드름은 짜지 않아도 저절로 사라진다"</em>는 것이 글의 결론. 수능 <strong>주제·제목·빈칸</strong> 유형에서 반복되는 표현이 곧 답의 키워드가 된다.</p>
+        <div class="chips">
+          <span class="chip">핵심어 반복 = 주제</span>
+          <span class="chip">go away = disappear</span>
+        </div>
+      </div>
+    </div>
+    <div class="csat-row blue">
+      <div class="cn">3</div>
+      <div class="cb">
+        <h4>to부정사의 형용사적 용법</h4>
+        <p><em>the fastest way <strong>to remove</strong> pimples</em> — 명사(way) 바로 뒤의 to부정사는 <strong>형용사적 용법</strong>으로 앞 명사를 수식한다. 수능 어법 문제에서 "빈칸에 동사원형 vs to부정사"를 구별하는 포인트.</p>
+        <div class="chips">
+          <span class="chip">the way to V</span>
+          <span class="chip">a chance to V</span>
+          <span class="chip">time to V</span>
+        </div>
+      </div>
+    </div>
+    <div class="csat-row green">
+      <div class="cn">4</div>
+      <div class="cb">
+        <h4>ⓓ Patience — 반의어 문제 출제 포인트</h4>
+        <p>2번 문제(밑줄 친 부분 중 <em>popping or squeezing</em>과 <strong>반대 의미</strong>)에서 핵심은 <em>"짜는 행위"의 반대 = 기다리는 것</em>. <strong>Patience(인내)</strong>가 정답. 수능에서 <strong>반의어·대조 관계</strong>를 파악하는 어휘 문제 유형이다.</p>
+        <div class="chips">
+          <span class="chip">popping ↔ patience</span>
+          <span class="chip">대조 어휘 파악</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"><div class="div-line"></div><div class="div-txt">Background</div><div class="div-line"></div></div>
+
+  <!-- BG -->
+  <div class="sec-head">
+    <h2>배경지식</h2>
+    <span>피부과학 · 읽기 이해 심화</span>
+  </div>
+  <div class="bg-grid">
+    <div class="bg-card">
+      <h3>여드름을 짜면 안 되는 이유</h3>
+      <p>여드름을 손으로 짜면 피부 표면의 <strong>박테리아(bacteria)</strong>가 더 깊은 피부층으로 밀려 들어간다. 이로 인해 <em>염증(inflammation)</em>이 심해지고, 치료 후에도 <strong>흉터(scar)</strong>나 색소침착이 남을 수 있다. 지문의 과학적 근거가 그대로 실생활과 연결된다.</p>
+    </div>
+    <div class="bg-card">
+      <h3>Patience — 건강 정보 지문의 패턴</h3>
+      <p>수능에는 <strong>건강·의학 관련 지문</strong>이 자주 등장하며, 공통적으로 <em>"잘못된 행동 → 부작용 설명 → 올바른 방법 제시"</em> 3단계 구조를 취한다. 이 지문도 <strong>짜는 행위(문제) → 박테리아·흉터(부작용) → 인내심(해결책)</strong>의 흐름을 따른다.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-brand">영핏</div>
+  <p>영어를 핏하다 · English Fit</p>
+</footer>
+
+</body>
+</html>
