@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조대부고 수학1 - 지수로그~삼각함수의 그래프</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Nanum+Myeongjo&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --ink-light: #2d2d5e;
+    --red-ink: #c0392b;
+    --blue-ink: #1a4a8a;
+    --pencil: #555577;
+    --paper: #fdf8f0;
+    --line: #c8d8e8;
+    --grid: #dce8f0;
+    --highlight: #fff3b0;
+    --box-bg: #eef4fb;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #d0d8e0;
+    font-family: 'Nanum Pen Script', cursive;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px;
+    min-height: 100vh;
+  }
+
+  .page {
+    background: var(--paper);
+    width: 860px;
+    max-width: 100%;
+    border-radius: 4px;
+    box-shadow: 4px 4px 20px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 30px;
+  }
+
+  /* Ruled lines background */
+  .page::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(
+        transparent,
+        transparent 31px,
+        var(--line) 31px,
+        var(--line) 32px
+      );
+    background-size: 100% 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Left margin red line */
+  .page::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 68px;
+    width: 2px;
+    background: rgba(192, 57, 43, 0.35);
+    z-index: 1;
+  }
+
+  .page-content {
+    position: relative;
+    z-index: 2;
+    padding: 28px 40px 40px 82px;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px double var(--ink-light);
+    padding-bottom: 14px;
+    margin-bottom: 28px;
+  }
+
+  .header-school {
+    font-size: 2.2rem;
+    color: var(--ink);
+    letter-spacing: 4px;
+  }
+
+  .header-title {
+    font-size: 1.8rem;
+    color: var(--blue-ink);
+    letter-spacing: 2px;
+    text-align: center;
+  }
+
+  .header-brand {
+    font-size: 1.6rem;
+    color: var(--red-ink);
+  }
+
+  .subheader {
+    display: flex;
+    align-items: center;
+    gap: 60px;
+    margin-bottom: 32px;
+  }
+
+  .subheader-left, .subheader-right {
+    font-size: 1.4rem;
+    color: var(--ink);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .blank-line {
+    display: inline-block;
+    width: 120px;
+    border-bottom: 1.5px solid var(--ink);
+  }
+
+  .year-badge {
+    font-size: 2rem;
+    color: var(--red-ink);
+    font-weight: bold;
+    letter-spacing: 2px;
+  }
+
+  /* ── Two column layout ── */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 32px;
+  }
+
+  /* ── Problem block ── */
+  .problem {
+    margin-bottom: 36px;
+  }
+
+  .problem-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .problem-num {
+    font-size: 1.5rem;
+    color: var(--red-ink);
+    font-weight: bold;
+    min-width: 24px;
+  }
+
+  .problem-text {
+    font-size: 1.35rem;
+    color: var(--ink);
+    line-height: 1.9;
+    flex: 1;
+  }
+
+  .point-badge {
+    font-size: 1.1rem;
+    color: var(--blue-ink);
+    border: 1.5px solid var(--blue-ink);
+    border-radius: 10px;
+    padding: 1px 8px;
+    white-space: nowrap;
+    opacity: 0.7;
+  }
+
+  /* Multiple choice options */
+  .choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin: 6px 0 10px 0;
+    font-size: 1.25rem;
+    color: var(--pencil);
+  }
+
+  .choice {
+    position: relative;
+  }
+
+  .choice.correct {
+    color: var(--red-ink);
+  }
+
+  .choice.correct::before {
+    content: '';
+    position: absolute;
+    bottom: 1px;
+    left: -2px; right: -2px;
+    height: 10px;
+    background: rgba(255, 220, 50, 0.5);
+    border-radius: 2px;
+    z-index: -1;
+  }
+
+  /* Solution box */
+  .solution {
+    background: rgba(238, 244, 251, 0.7);
+    border-left: 3px solid var(--blue-ink);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 1.3rem;
+    color: var(--ink-light);
+    line-height: 2.0;
+    position: relative;
+  }
+
+  .solution::before {
+    content: '풀이';
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    font-size: 1rem;
+    color: var(--blue-ink);
+    background: var(--paper);
+    padding: 0 5px;
+    opacity: 0.7;
+  }
+
+  .sol-step {
+    display: block;
+    margin: 2px 0;
+  }
+
+  .sol-em {
+    color: var(--red-ink);
+  }
+
+  .sol-therefore {
+    color: var(--blue-ink);
+    font-size: 1.4rem;
+  }
+
+  /* Math fraction / expression styling */
+  .frac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    font-size: 0.92em;
+    line-height: 1.2;
+    margin: 0 2px;
+  }
+
+  .frac span:first-child {
+    border-bottom: 1.5px solid currentColor;
+    padding: 0 2px;
+  }
+
+  /* Circle for correct answer */
+  .circle-answer {
+    display: inline-block;
+    border: 2px solid var(--red-ink);
+    border-radius: 50%;
+    padding: 1px 6px;
+    color: var(--red-ink);
+    font-size: 1.15rem;
+  }
+
+  /* Graph placeholder */
+  .graph-box {
+    border: 1.5px solid var(--pencil);
+    border-radius: 4px;
+    padding: 8px;
+    margin: 8px 0;
+    background: rgba(255,255,255,0.6);
+    text-align: center;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Page number */
+  .page-num {
+    text-align: center;
+    font-size: 1.2rem;
+    color: var(--pencil);
+    margin-top: 20px;
+    letter-spacing: 2px;
+  }
+
+  /* Divider between problems */
+  .divider {
+    border: none;
+    border-top: 1px dashed var(--line);
+    margin: 6px 0 16px;
+  }
+
+  svg.inline-graph {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Arrow */
+  .arrow { font-size: 1.2rem; }
+
+  /* emphasize box */
+  .emph-box {
+    background: var(--highlight);
+    border-radius: 4px;
+    padding: 3px 8px;
+    display: inline;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="page-content">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-school">조대부고</div>
+      <div class="header-title">지수로그 ～ 삼각함수의 그래프</div>
+      <div class="header-brand">폴리아수학</div>
+    </div>
+
+    <div class="subheader">
+      <div class="subheader-left">수학1 &nbsp; 이름 : <span class="blank-line"></span></div>
+      <div class="subheader-left">점수 : <span class="blank-line"></span></div>
+      <div class="year-badge">2025기출</div>
+    </div>
+
+    <!-- Two columns -->
+    <div class="columns">
+
+      <!-- LEFT COLUMN -->
+      <div class="left-col">
+
+        <!-- Problem 1 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-num">1.</span>
+            <span class="problem-text">
+              <span class="frac"><span>³√54</span><span>³√2</span></span>
+              의 값을 구하시오.
+            </span>
+            <span class="point-badge">[2.0점]</span>
+          </div>
+          <div class="choices">
+            <span class="choice">① 2</span>
+            <span class="choice correct">② <span class="circle-answer">3</span></span>
+            <span class="choice">③ 4</span>
+            <span class="choice">④ 5</span>
+            <span class="choice">⑤ 6</span>
+          </div>
+          <div class="solution">
+            <span class="sol-step">
+              <span class="frac"><span>³√54</span><span>³√2</span></span>
+              = ³√27 = <span class="sol-em">3</span>
+            </span>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Problem 2 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-num">2.</span>
+            <span class="problem-text">
+              log<sub>⅓</sub> 9 의 값을 구하시오.
+            </span>
+            <span class="point-badge">[2.0점]</span>
+          </div>
+          <div class="choices">
+            <span class="choice">① −4</span>
+            <span class="choice">② −3</span>
+            <span class="choice correct">③ <span class="circle-answer">−2</span></span>
+            <span class="choice">④ −1</span>
+            <span class="choice">⑤ 0</span>
+          </div>
+          <div class="solution">
+            <span class="sol-step">
+              log<sub>⅓</sub>9 = log<sub>⅓</sub>(⅓)<sup>−2</sup> = <span class="sol-em">−2</span>
+            </span>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Problem 3 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-num">3.</span>
+            <span class="problem-text">
+              세 실수 x, y, z가
+              <span class="frac"><span>1</span><span>x</span></span>+
+              <span class="frac"><span>1</span><span>y</span></span>+
+              <span class="frac"><span>1</span><span>z</span></span>=
+              <span class="frac"><span>1</span><span>2</span></span>
+              과 2<sup>x</sup>=3<sup>y</sup>=5<sup>z</sup>를 만족시킬 때,
+              <span class="frac"><span>2<sup>x</sup>+3<sup>y</sup>+5<sup>z</sup></span><span>3</span></span>의 값을 구하시오.
+            </span>
+            <span class="point-badge">[3.0점]</span>
+          </div>
+          <div class="choices">
+            <span class="choice">① 780</span>
+            <span class="choice">② 810</span>
+            <span class="choice">③ 840</span>
+            <span class="choice">④ 870</span>
+            <span class="choice correct">⑤ <span class="circle-answer">900</span></span>
+          </div>
+          <div class="solution">
+            <span class="sol-step">2<sup>x</sup> = 3<sup>y</sup> = 5<sup>z</sup> = k 로 놓으면</span>
+            <span class="sol-step">k<sup>1/x</sup>=2, &nbsp; k<sup>1/y</sup>=3, &nbsp; k<sup>1/z</sup>=5</span>
+            <span class="sol-step">k<sup>1/x + 1/y + 1/z</sup> = 2×3×5</span>
+            <span class="sol-step">k<sup>1/2</sup> = 30 &nbsp; <span class="arrow">→</span> &nbsp; <span class="sol-em">k = 900</span></span>
+            <span class="sol-step sol-therefore">∴ (2<sup>x</sup>+3<sup>y</sup>+5<sup>z</sup>)/3 = k = <span class="emph-box">900</span></span>
+          </div>
+        </div>
+
+      </div><!-- /left-col -->
+
+      <!-- RIGHT COLUMN -->
+      <div class="right-col">
+
+        <!-- Problem 4 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-num">4.</span>
+            <span class="problem-text">
+              함수 y = 3<sup>x−a</sup>+b의 그래프가 다음 그림과 같을 때,
+              a+b의 값은? (단, a, b는 상수이고 직선 y=−1은 점근선이다.)
+            </span>
+            <span class="point-badge">[3.0점]</span>
+          </div>
+
+          <!-- Simple inline SVG graph -->
+          <div class="graph-box" style="height:110px;">
+            <svg viewBox="0 0 200 110" xmlns="http://www.w3.org/2000/svg" style="width:200px;height:110px;">
+              <!-- axes -->
+              <line x1="10" y1="55" x2="190" y2="55" stroke="#888" stroke-width="1.2"/>
+              <line x1="90" y1="5" x2="90" y2="105" stroke="#888" stroke-width="1.2"/>
+              <!-- asymptote -->
+              <line x1="10" y1="80" x2="190" y2="80" stroke="#c0392b" stroke-width="1" stroke-dasharray="4,3"/>
+              <!-- curve -->
+              <path d="M 30,78 Q 70,76 90,55 T 155,10" stroke="#1a4a8a" stroke-width="2.2" fill="none"/>
+              <!-- labels -->
+              <text x="88" y="52" font-size="9" fill="#555" font-family="serif">−1</text>
+              <text x="93" y="58" font-size="9" fill="#555" font-family="serif">O</text>
+              <text x="185" y="58" font-size="9" fill="#555" font-family="serif">x</text>
+              <text x="92" y="12" font-size="9" fill="#555" font-family="serif">y</text>
+              <text x="155" y="15" font-size="9" fill="#1a4a8a" font-family="serif">y=3<tspan font-size="7" dy="-3">x−a</tspan><tspan dy="3">+b</tspan></text>
+              <text x="155" y="76" font-size="8" fill="#c0392b" font-family="serif">y=−1</text>
+            </svg>
+          </div>
+
+          <div class="choices">
+            <span class="choice">① −6</span>
+            <span class="choice">② −5</span>
+            <span class="choice">③ −4</span>
+            <span class="choice">④ −3</span>
+            <span class="choice correct">⑤ <span class="circle-answer">−2</span></span>
+          </div>
+          <div class="solution">
+            <span class="sol-step">점근선이 y=−1 이므로 &nbsp; <span class="sol-em">b = −1</span></span>
+            <span class="sol-step">→ &nbsp; y = 3<sup>x−a</sup> − 1</span>
+            <span class="sol-step">점 (−1, 0)을 지나므로:</span>
+            <span class="sol-step">&nbsp;&nbsp; 0 = 3<sup>−1−a</sup> − 1 &nbsp; → &nbsp; −1−a = 0 &nbsp; → &nbsp; <span class="sol-em">a = −1</span></span>
+            <span class="sol-step sol-therefore">∴ a + b = <span class="emph-box">−2</span></span>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Problem 5 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-num">5.</span>
+            <span class="problem-text">
+              2 ≤ n ≤ 10인 자연수 n에 대하여 n²+1의 n제곱근 중 실수인 것의 개수를 f(n),
+              n²−8n+12의 n제곱근 중 실수인 것의 개수를 g(n)이라 하자.
+              f(n) = 2g(n)을 만족시키는 모든 자연수 n의 값의 곱은?
+            </span>
+            <span class="point-badge">[5.0점]</span>
+          </div>
+          <div class="choices">
+            <span class="choice">① 6</span>
+            <span class="choice">② 8</span>
+            <span class="choice">③ 10</span>
+            <span class="choice correct">④ <span class="circle-answer">12</span></span>
+            <span class="choice">⑤ 14</span>
+          </div>
+          <div class="solution">
+            <span class="sol-step">f(n) = <span style="font-size:1.1rem;">{ 1 (n이 홀수),  2 (n이 짝수) }</span></span>
+            <span class="sol-step">f(n)=2g(n) 만족 → f(n)=2, g(n)=1</span>
+            <span class="sol-step">n이 짝수이므로 n²−8n+12 = 0</span>
+            <span class="sol-step">(n−2)(n−6) = 0 &nbsp; → &nbsp; n = 2 또는 n = 6</span>
+            <span class="sol-step sol-therefore">∴ 모든 자연수 n의 곱 = 2×6 = <span class="emph-box">12</span></span>
+          </div>
+        </div>
+
+      </div><!-- /right-col -->
+
+    </div><!-- /columns -->
+
+    <div class="page-num">— 1 —</div>
+  </div>
+</div>
+
+</body>
+</html>
