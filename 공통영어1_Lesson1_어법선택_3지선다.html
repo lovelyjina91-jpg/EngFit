@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>공통영어1 Lesson 1 — 어법 선택</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg0:#0d1117;--bg1:#161b22;--bg2:#21262d;--bg3:#30363d;
+  --t1:#e6edf3;--t2:#8b949e;--t3:#484f58;
+  --green:#3fb950;--gdim:#1a3a20;
+  --red:#f85149;--rdim:#3a1a1a;
+  --blue:#58a6ff;--bdim:#0d2a4a;
+  --amber:#d29922;--adim:#2d2200;
+  --border:#30363d;
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg0);color:var(--t1);font-size:16px;}
+
+/* HOME */
+#s-home{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;transition:opacity .3s;}
+.h-pill{font-size:11px;letter-spacing:3px;color:var(--t3);border:1px solid var(--border);border-radius:20px;padding:4px 14px;margin-bottom:18px;text-transform:uppercase;}
+.h-title{font-size:26px;font-weight:700;text-align:center;line-height:1.35;margin-bottom:4px;}
+.h-sub{font-size:13px;color:var(--t2);text-align:center;margin-bottom:32px;}
+.h-card{width:100%;max-width:360px;background:var(--bg1);border:1px solid var(--border);border-radius:16px;padding:22px;}
+.h-label{font-size:12px;color:var(--t2);display:block;margin-bottom:6px;}
+.h-input{width:100%;padding:12px 14px;font-size:16px;font-family:inherit;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--t1);outline:none;transition:border-color .2s;}
+.h-input:focus{border-color:var(--blue);}
+.h-chips{display:flex;gap:8px;margin:14px 0 20px;}
+.chip{flex:1;background:var(--bg2);border-radius:8px;padding:10px 6px;text-align:center;}
+.chip .n{font-size:18px;font-weight:700;color:var(--t1);}
+.chip .l{font-size:11px;color:var(--t2);margin-top:2px;}
+.h-btn{width:100%;padding:15px;border-radius:12px;background:var(--green);color:#0d1117;font-size:16px;font-weight:700;font-family:inherit;border:none;cursor:pointer;}
+.h-btn:active{opacity:.8;}
+
+/* QUIZ */
+#s-quiz{position:fixed;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .25s;}
+#s-quiz.on{opacity:1;pointer-events:all;}
+.topbar{padding:10px 16px 0;flex-shrink:0;}
+.tb-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.tb-l{font-size:12px;color:var(--t2);}
+.tb-r{font-size:12px;color:var(--t3);}
+.prog-bg{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.prog-fg{height:100%;background:var(--green);border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1);}
+
+.q-body{flex:1;display:flex;flex-direction:column;padding:0 14px 10px;overflow:hidden;}
+.card-stage{flex:1;position:relative;margin-top:10px;overflow:hidden;}
+.q-card{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg1);border:1px solid var(--border);border-radius:18px;padding:18px 16px;transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s;}
+.q-card.in-r{transform:translateX(100%);opacity:0;}
+.q-card.in-l{transform:translateX(-100%);opacity:0;}
+.q-card.mid{transform:none;opacity:1;}
+.q-card.out-l{transform:translateX(-110%);opacity:0;}
+.q-card.out-r{transform:translateX(110%);opacity:0;}
+.q-meta{display:flex;align-items:center;gap:7px;margin-bottom:10px;flex-shrink:0;}
+.q-num{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1px;}
+.q-tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:8px;background:var(--bdim);color:var(--blue);}
+.q-type-c{font-size:11px;font-weight:500;padding:2px 8px;border-radius:8px;background:var(--gdim);color:var(--green);margin-left:auto;}
+.q-type-w{font-size:11px;font-weight:500;padding:2px 8px;border-radius:8px;background:var(--adim);color:var(--amber);margin-left:auto;}
+.q-sent{font-size:14px;line-height:1.9;color:var(--t1);flex:1;overflow-y:auto;}
+.blank{font-weight:700;border-bottom:2px solid var(--blue);color:var(--t1);}
+
+.opts{display:flex;flex-direction:column;gap:7px;margin-top:10px;flex-shrink:0;}
+.opt{width:100%;padding:12px 14px;border-radius:12px;background:var(--bg2);border:1.5px solid var(--border);font-size:14px;font-weight:500;font-family:inherit;color:var(--t1);text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .1s,border-color .1s;}
+.opt:active:not(:disabled){transform:scale(.98);}
+.opt.ok{background:var(--gdim);border-color:var(--green);color:var(--green);}
+.opt.ok-w{background:var(--adim);border-color:var(--amber);color:var(--amber);}
+.opt.ng{background:var(--rdim);border-color:var(--red);color:var(--red);}
+.opt:disabled{cursor:default;}
+.opt-dot{width:20px;height:20px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--t2);flex-shrink:0;}
+.opt.ok .opt-dot{background:var(--green);color:#0d1117;}
+.opt.ok-w .opt-dot{background:var(--amber);color:#0d1117;}
+.opt.ng .opt-dot{background:var(--red);color:#fff;}
+
+.exp-box{margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--bg0);font-size:12px;line-height:1.7;color:var(--t2);display:none;flex-shrink:0;overflow-y:auto;max-height:100px;}
+.exp-box.on{display:block;}
+.exp-box.c-exp{border-left:3px solid var(--green);}
+.exp-box.w-exp{border-left:3px solid var(--amber);}
+.exp-box b{color:var(--t1);}
+.nhint{font-size:11px;color:var(--t3);text-align:center;margin-top:5px;flex-shrink:0;}
+
+/* RESULT */
+#s-result{position:fixed;inset:0;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .3s;}
+#s-result.on{opacity:1;pointer-events:all;}
+.r-wrap{max-width:400px;margin:0 auto;padding:24px 16px 60px;}
+.score-hero{background:var(--bg1);border:1px solid var(--border);border-radius:20px;padding:28px 24px;text-align:center;margin-bottom:14px;}
+.sh-sub{font-size:11px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;margin-bottom:4px;}
+.sh-name{font-size:15px;color:var(--t2);min-height:22px;margin-bottom:14px;}
+.circ{width:120px;height:120px;margin:0 auto 12px;position:relative;}
+.circ svg{width:120px;height:120px;}
+.c-bg{fill:none;stroke:var(--bg3);stroke-width:10;}
+.c-arc{fill:none;stroke-width:10;stroke-linecap:round;transform:rotate(-90deg);transform-origin:60px 60px;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1);}
+.c-n{font-size:24px;font-weight:700;fill:var(--t1);text-anchor:middle;dominant-baseline:middle;}
+.c-of{font-size:11px;fill:var(--t3);text-anchor:middle;dominant-baseline:middle;}
+.sh-grade{font-size:34px;font-weight:700;margin-bottom:4px;}
+.sh-msg{font-size:13px;color:var(--t2);}
+.stat3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
+.sbox{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:13px 6px;text-align:center;}
+.sbox .n{font-size:21px;font-weight:700;}
+.sbox .l{font-size:11px;color:var(--t2);margin-top:2px;}
+.sec-h{font-size:12px;color:var(--t2);font-weight:500;margin-bottom:8px;padding-left:2px;}
+.wrongs-list{background:var(--bg1);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;}
+.witem{padding:13px 14px;border-bottom:1px solid var(--border);}
+.witem:last-child{border-bottom:none;}
+.wi-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.wi-num{font-size:11px;color:var(--t3);}
+.wi-tag{font-size:10px;padding:1px 7px;border-radius:6px;background:var(--rdim);color:var(--red);}
+.wi-type-w{font-size:10px;padding:1px 7px;border-radius:6px;background:var(--adim);color:var(--amber);}
+.wi-sent{font-size:12px;line-height:1.75;color:var(--t2);margin-bottom:6px;}
+.wi-ans{font-size:12px;color:var(--t2);margin-bottom:4px;}
+.wi-ans .ok{color:var(--green);}
+.wi-ans .ok-w{color:var(--amber);}
+.wi-ans .ng{color:var(--red);}
+.wi-exp{font-size:12px;line-height:1.65;color:var(--t3);padding:8px 10px;background:var(--bg0);border-radius:8px;border-left:2px solid var(--green);}
+.wi-exp b{color:var(--t2);}
+.kk-card{background:var(--bg1);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
+.kk-card h3{font-size:13px;font-weight:500;margin-bottom:12px;}
+.kk-nr{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.kk-nr label{font-size:12px;color:var(--t2);white-space:nowrap;}
+.kk-nr input{flex:1;padding:8px 10px;font-size:14px;font-family:inherit;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--t1);outline:none;}
+.kk-pre{font-size:12px;line-height:1.8;color:var(--t2);background:var(--bg0);border-radius:10px;padding:12px;margin-bottom:10px;white-space:pre-wrap;word-break:break-all;border:1px solid var(--border);max-height:180px;overflow-y:auto;}
+.kk-btn{width:100%;padding:13px;border-radius:11px;background:#FEE500;color:#181600;font-size:14px;font-weight:700;font-family:inherit;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px;}
+.kk-btn:active{opacity:.8;}
+.copy-btn{width:100%;padding:11px;border-radius:11px;background:var(--bg2);color:var(--t1);font-size:13px;font-weight:500;font-family:inherit;border:1px solid var(--border);cursor:pointer;}
+.toast-el{font-size:12px;color:var(--green);text-align:center;margin-top:8px;height:16px;transition:opacity .3s;}
+.r-btns{display:flex;gap:8px;margin-top:4px;}
+.btn-home{flex:1;padding:13px;border-radius:11px;background:var(--bg2);color:var(--t2);font-size:14px;font-weight:600;font-family:inherit;border:1px solid var(--border);cursor:pointer;}
+.btn-retry{flex:1;padding:13px;border-radius:11px;background:var(--green);color:#0d1117;font-size:14px;font-weight:700;font-family:inherit;border:none;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div id="s-home">
+  <div class="h-pill">NE능률(오선영) · 공통영어1 · Lesson 1</div>
+  <div class="h-title">어법 선택 — 3지선다</div>
+  <div class="h-sub">Discovering Yourself through Challenges</div>
+  <div class="h-card">
+    <label class="h-label">이름을 입력하세요</label>
+    <input id="name-in" class="h-input" type="text" placeholder="홍길동">
+    <div class="h-chips">
+      <div class="chip"><div class="n">54</div><div class="l">문제</div></div>
+      <div class="chip"><div class="n">3택</div><div class="l">선택형</div></div>
+      <div class="chip"><div class="n">다크</div><div class="l">테마</div></div>
+    </div>
+    <button class="h-btn" onclick="startQuiz()">시작하기</button>
+  </div>
+</div>
+
+<div id="s-quiz">
+  <div class="topbar">
+    <div class="tb-row">
+      <span class="tb-l" id="tb-l">1 / 54</span>
+      <span class="tb-r" id="tb-r">0개 응답</span>
+    </div>
+    <div class="prog-bg"><div class="prog-fg" id="prog" style="width:0%"></div></div>
+  </div>
+  <div class="q-body">
+    <div class="card-stage" id="stage"></div>
+    <div class="opts" id="opts"></div>
+    <div class="exp-box" id="exp"></div>
+    <div class="nhint" id="nhint"></div>
+  </div>
+</div>
+
+<div id="s-result">
+  <div class="r-wrap">
+    <div class="score-hero">
+      <div class="sh-sub">Lesson 1 어법 선택 (3지선다)</div>
+      <div class="sh-name" id="r-name"></div>
+      <div class="circ">
+        <svg viewBox="0 0 120 120">
+          <circle class="c-bg" cx="60" cy="60" r="50"/>
+          <circle class="c-arc" id="r-arc" cx="60" cy="60" r="50" stroke="#3fb950"
+            stroke-dasharray="314.2" stroke-dashoffset="314.2"/>
+          <text class="c-n" id="r-sn" x="60" y="56">-</text>
+          <text class="c-of" x="60" y="72">/ 54</text>
+        </svg>
+      </div>
+      <div class="sh-grade" id="r-grade"></div>
+      <div class="sh-msg" id="r-msg"></div>
+    </div>
+    <div class="stat3">
+      <div class="sbox"><div class="n" id="s-ok" style="color:var(--green)">-</div><div class="l">정답</div></div>
+      <div class="sbox"><div class="n" id="s-ng" style="color:var(--red)">-</div><div class="l">오답</div></div>
+      <div class="sbox"><div class="n" id="s-pct">-</div><div class="l">정답률</div></div>
+    </div>
+    <div class="sec-h" id="wrong-head"></div>
+    <div class="wrongs-list" id="wlist"></div>
+    <div class="kk-card">
+      <h3>선생님께 결과 전송</h3>
+      <div class="kk-nr">
+        <label>이름</label>
+        <input id="r-name-in" type="text" placeholder="이름 입력" oninput="buildMsg()">
+      </div>
+      <div class="kk-pre" id="kk-pre"></div>
+      <button class="kk-btn" onclick="openKakao()">
+        <svg width="18" height="18" viewBox="0 0 40 40"><path d="M20 4C10.06 4 2 10.27 2 18c0 5.1 3.3 9.57 8.3 12.2L8.5 36l6.8-3.57C16.7 32.8 18.33 33 20 33c9.94 0 18-6.27 18-14S29.94 4 20 4z" fill="#181600"/></svg>
+        카카오톡으로 공유하기
+      </button>
+      <button class="copy-btn" onclick="copyMsg()">메시지 복사</button>
+      <div class="toast-el" id="toast"></div>
+    </div>
+    <div class="r-btns">
+      <button class="btn-home" onclick="goHome()">처음으로</button>
+      <button class="btn-retry" onclick="startQuiz()">다시 풀기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// type: "c" = 어법상 옳은 것, "w" = 어법상 틀린 것
+const QS=[
+/* ── 도입 ── */
+{n:1,tag:"to부정사(부사적)",type:"c",
+ sent:"_____ into a better version of ourselves, we should not stay as we are.",
+ opts:["To grow","Growing","Grown"],ans:0,
+ exp:"<b>To grow</b> — to부정사의 <b>부사적 용법(목적)</b>. 문두에서 '성장하기 위해서'라는 목적 표현. Growing(분사구문)은 가능하지만 목적의 의미 없음. Grown(과거분사)은 단독 분사구문으로 의미 불가.",
+ wexp:"<b>정답: ① To grow</b> — to부정사 부사적 용법(목적). '더 나은 모습으로 성장하기 위해서'라는 목적. Growing은 분사구문으로 쓸 수 있지만 목적의 의미를 나타낼 수 없음."},
+
+{n:2,tag:"접속사 vs 전치사",type:"c",
+ sent:"We should not stay _____ we are.",
+ opts:["like","as","though"],ans:1,
+ exp:"<b>as</b> — 뒤에 완전한 절(we are)이 오므로 <b>접속사 as</b>. like는 전치사로 명사(구)만 목적어로 취함. though는 양보접속사('비록 ~이지만')로 의미 불일치.",
+ wexp:"<b>정답: ② as</b> — 접속사 as. 뒤에 주어+동사(we are)가 있으므로 접속사 필요. like는 전치사라 절 불가. though는 '비록 ~이지만'으로 의미 틀림."},
+
+{n:3,tag:"병렬구조(전치사+동명사)",type:"c",
+ sent:"...by pushing ourselves out of our comfort zones and _____ more about ourselves.",
+ opts:["learning","to learn","learned"],ans:0,
+ exp:"<b>learning</b> — <b>병렬구조</b>. 전치사 by의 목적어인 두 동명사를 and로 연결. 'pushing ∥ learning'으로 동명사 병렬. to learn(to부정사)과 learned(과거형)는 앞의 pushing과 형태가 달라 병렬 파괴.",
+ wexp:"<b>정답: ① learning</b> — 병렬구조. 전치사 by의 목적어 'pushing ~ and learning ~'에서 두 동명사가 병렬. to learn은 to부정사, learned는 과거형으로 동명사 pushing과 병렬 불가."},
+
+{n:4,tag:"전치사+동명사",type:"c",
+ sent:"...by _____ ourselves out of our comfort zones and learning more...",
+ opts:["push","pushing","pushed"],ans:1,
+ exp:"<b>pushing</b> — <b>전치사 by + 동명사(-ing)</b>. 'by + -ing'는 '~함으로써'. push(동사원형)와 pushed(과거형)는 전치사 바로 뒤에 쓸 수 없음.",
+ wexp:"<b>정답: ② pushing</b> — 전치사 by + 동명사(-ing). 전치사 뒤에는 명사 또는 동명사(-ing) 필수. push(원형), pushed(과거형)는 전치사 바로 뒤 불가."},
+
+{n:5,tag:"help+O 구문",type:"w",
+ sent:"To help us _____ so, she gave us an assignment to challenge ourselves.",
+ opts:["do","to do","doing"],ans:2,
+ exp:"<b>③ doing</b> — <b>help + O 구문의 틀린 형태</b>. help의 목적격보어는 <b>동사원형(do)과 to부정사(to do) 모두 가능</b>. doing(-ing)은 help 구문의 목적격보어로 절대 불가.",
+ wexp:"<b>정답(틀린 것): ③ doing</b> — help + O + 동사원형 or to부정사. do와 to do는 모두 어법상 맞음. doing(-ing)은 help 구문의 목적격보어로 쓸 수 없음."},
+
+{n:6,tag:"to부정사(형용사적)",type:"c",
+ sent:"She gave us an assignment _____ ourselves in three different ways.",
+ opts:["to challenge","challenged","challenging"],ans:0,
+ exp:"<b>to challenge</b> — <b>to부정사 형용사적 용법</b>. assignment(과제)를 수식하여 '도전할 과제'. challenged(과거분사)는 '도전받은 과제'의 수동 의미. challenging(현재분사)은 '도전적인 과제'로 의미 변화.",
+ wexp:"<b>정답: ① to challenge</b> — 명사 assignment를 수식하는 형용사적 to부정사. '우리 자신에게 도전할 과제'. challenged(수동)와 challenging(능동분사)은 의미가 달라짐."},
+
+{n:7,tag:"동명사 보어",type:"c",
+ sent:"The important part was _____ something new for each one.",
+ opts:["tried","trying","to be tried"],ans:1,
+ exp:"<b>trying</b> — <b>be동사의 보어로 동명사</b>. '중요한 부분은 시도해 보는 것이었다'. tried(과거분사)→수동태(시도되었다). to be tried→수동 to부정사(시도될 것)로 의미 모두 불일치.",
+ wexp:"<b>정답: ② trying</b> — 동명사가 be동사의 주격보어. tried를 쓰면 수동태(was tried = 시험되다), to be tried는 수동 to부정사로 의미 틀림."},
+
+{n:8,tag:"시간 부사절 시제",type:"c",
+ sent:"She told us that we should share our experiences when we _____ the challenges.",
+ opts:["finished","will finish","would finish"],ans:0,
+ exp:"<b>finished</b> — <b>시간 부사절에서 단순 과거</b>. when절(시간절) 안에서는 will/would 사용 불가. 과거 서술 맥락의 시간절에서 단순 과거 사용.",
+ wexp:"<b>정답: ① finished</b> — 시간 부사절(when절)에서 조동사(will/would) 불가. '도전들을 마쳤을 때'. will finish와 would finish는 시간절 안에서 쓸 수 없음."},
+
+/* ── Challenge 1 ── */
+{n:9,tag:"tend+to부정사",type:"c",
+ sent:"These days, I tend _____ movies on streaming services.",
+ opts:["to watch","watching","watched"],ans:0,
+ exp:"<b>to watch</b> — <b>tend + to부정사</b>. tend는 to부정사만 목적어로 취하는 동사. watching(동명사)은 tend 뒤 불가. watched(과거형)는 tend의 목적어 불가.",
+ wexp:"<b>정답: ① to watch</b> — tend to V = '~하는 경향이 있다'. tend는 to부정사만 목적어. watching(동명사), watched(과거형) 모두 불가."},
+
+{n:10,tag:"동명사 주어",type:"c",
+ sent:"_____ to the theater alone was something I had never done before.",
+ opts:["Going","Gone","Went"],ans:0,
+ exp:"<b>Going</b> — <b>동명사(-ing)가 주어</b>. 'Going to the theater alone'은 '혼자 영화관에 가는 것'. Gone(과거분사)은 단독 주어 불가. Went(과거형 동사)는 주어 역할 불가.",
+ wexp:"<b>정답: ① Going</b> — 동명사 주어. 'Going to the theater alone'이 주어. Gone(과거분사), Went(과거형 동사)는 단독 주어 불가."},
+
+{n:11,tag:"과거완료(had+p.p.)",type:"c",
+ sent:"...something I had never _____ before.",
+ opts:["did","done","do"],ans:1,
+ exp:"<b>done</b> — <b>과거완료(had + p.p.)</b>. 'had never done'은 기준 과거 시점까지 경험 전무 표현. have/had 뒤에는 반드시 과거분사(p.p.). did(과거형)와 do(동사원형)는 had 뒤에 절대 불가.",
+ wexp:"<b>정답: ② done</b> — 과거완료 had + p.p. 'had never done before'는 '이전에 한 번도 해본 적 없었다'. had 뒤에는 과거분사(p.p.) 필수. did(과거형), do(원형) 모두 불가."},
+
+{n:12,tag:"decide+to부정사",type:"c",
+ sent:"I decided _____ it a try.",
+ opts:["to give","giving","given"],ans:0,
+ exp:"<b>to give</b> — <b>decide + to부정사</b>. decide는 to부정사만 목적어로 취하는 동사. giving(동명사)과 given(과거분사)은 decide의 목적어로 쓸 수 없음.",
+ wexp:"<b>정답: ① to give</b> — decide to V = '~하기로 결심하다'. decide는 to부정사만 목적어로 취함. giving(동명사), given(과거분사) 불가."},
+
+{n:13,tag:"가주어-진주어",type:"c",
+ sent:"It was nice _____ the movie and the seat on my own.",
+ opts:["chose","to choose","choosing"],ans:1,
+ exp:"<b>to choose</b> — <b>가주어 It ~ 진주어 to부정사</b>. It(가주어), to choose 이하(진주어). chose(과거형)는 진주어 불가. choosing(동명사)은 It~to 구문의 진주어 불가.",
+ wexp:"<b>정답: ② to choose</b> — 가주어 It ~ 진주어 to부정사. chose(과거 동사)와 choosing(동명사)은 이 구조에서 진주어 자리 불가."},
+
+{n:14,tag:"have to+동사원형",type:"c",
+ sent:"I didn't have to _____ about anyone else's preferences.",
+ opts:["worry","worrying","worried"],ans:0,
+ exp:"<b>worry</b> — <b>have to + 동사원형</b>. 'have to'는 조동사적 표현으로 뒤에 동사원형. worrying(-ing)과 worried(과거형/형용사)는 이 구조에서 불가.",
+ wexp:"<b>정답: ① worry</b> — have to + 동사원형. 'didn't have to worry'는 '걱정하지 않아도 되었다'. worrying(-ing), worried(과거형) 모두 have to 뒤 불가."},
+
+{n:15,tag:"to부정사(형용사적)",type:"c",
+ sent:"I saw the experience as a good opportunity _____ something different.",
+ opts:["watched","watching","to watch"],ans:2,
+ exp:"<b>to watch</b> — <b>명사 + to부정사(형용사적 용법)</b>. opportunity(기회)를 수식하여 '관람할 기회'. watched(과거형)는 명사 수식 불가. watching(현재분사)은 '관람하고 있는 기회'로 어색.",
+ wexp:"<b>정답: ③ to watch</b> — 명사 opportunity를 수식하는 형용사적 to부정사. watched(과거형)는 명사 수식 불가. watching(현재분사)은 '관람하고 있는'의 다른 의미."},
+
+{n:16,tag:"과거완료(대과거)",type:"c",
+ sent:"I chose a historical drama that I _____ curious about.",
+ opts:["was","had been","would be"],ans:1,
+ exp:"<b>had been</b> — <b>과거완료(대과거)</b>. 사극을 '고른(chose)' 시점보다 '궁금해하던' 것이 더 이전 → 과거완료. was는 동시처럼 읽혀 선후관계 불명확. would be는 미래/가정으로 의미 불일치.",
+ wexp:"<b>정답: ② had been</b> — 대과거. 기준 과거(chose) 이전부터 궁금해하고 있었던 상태 → had + p.p. was(단순과거)는 선후관계 불명확. would be는 미래/가정 의미."},
+
+{n:17,tag:"감각동사+형용사 보어",type:"c",
+ sent:"At first, it felt a bit _____ and lonely to sit in the theater by myself.",
+ opts:["awkward","awkwardly","awkwardness"],ans:0,
+ exp:"<b>awkward</b> — <b>감각동사 feel + 형용사(보어)</b>. feel 뒤 주격보어 자리에는 형용사. awkwardly(부사)는 보어 불가. awkwardness(명사)는 보어로 의미 부적절.",
+ wexp:"<b>정답: ① awkward</b> — 감각동사 feel + 형용사 보어. 'felt awkward'는 '어색하게 느껴졌다'. awkwardly(부사), awkwardness(명사)는 보어 자리 불가."},
+
+{n:18,tag:"가주어-진주어",type:"c",
+ sent:"It felt awkward and lonely _____ in the theater by myself.",
+ opts:["sitting","sat","to sit"],ans:2,
+ exp:"<b>to sit</b> — <b>가주어 it ~ 진주어 to부정사</b>. It(가주어), to sit 이하(진주어). sitting(동명사)은 It~to 구문에서 진주어 불가. sat(과거형)는 진주어 불가.",
+ wexp:"<b>정답: ③ to sit</b> — It ~ to부정사(진주어) 구문. '혼자 극장 안에 앉아 있는 것이 어색하게 느껴졌다'. sitting(동명사), sat(과거형)은 이 구조의 진주어 불가."},
+
+{n:19,tag:"분사 능동/수동 구별",type:"c",
+ sent:"I became completely _____ in the story.",
+ opts:["absorb","absorbing","absorbed"],ans:2,
+ exp:"<b>absorbed</b> — <b>수동 의미의 과거분사(보어)</b>. 'become absorbed in'은 '~에 몰두하다' 관용표현. absorb(동사원형)는 become의 보어 불가. absorbing(능동: '흥미를 끄는')은 주어 I에 맞지 않음.",
+ wexp:"<b>정답: ③ absorbed</b> — become absorbed in = '~에 몰두하다'. absorb(동사원형)는 보어 불가. absorbing(현재분사)은 능동 의미('흥미를 끄는')라 주어 I와 불일치."},
+
+{n:20,tag:"-ing/-ed 감정 형용사",type:"c",
+ sent:"It was so _____ just to focus on the movie itself.",
+ opts:["satisfied","satisfying","satisfaction"],ans:1,
+ exp:"<b>satisfying</b> — <b>-ing형 감정 형용사</b>. 상황이 감정을 '유발'할 때 -ing 사용. '집중하는 것(상황)이 만족감을 유발' → satisfying. satisfied는 '(사람이) 만족한'. satisfaction(명사)은 형용사 보어 자리 불가.",
+ wexp:"<b>정답: ② satisfying</b> — -ing형 감정 형용사. 상황/사물이 감정 유발 → -ing(satisfying, exciting, boring). 사람이 감정을 느낄 때 → -ed(satisfied, excited, bored). satisfaction은 명사라 보어 불가."},
+
+{n:21,tag:"to부정사(형용사적)",type:"c",
+ sent:"There was nothing _____ me!",
+ opts:["distract","distracted","to distract"],ans:2,
+ exp:"<b>to distract</b> — <b>nothing + to부정사(형용사적 용법)</b>. 'nothing to V'는 '~할 것이 없다'. distract(동사원형)는 명사 수식 불가. distracted(과거분사)는 수동 의미('산만하게 된')로 문맥 불일치.",
+ wexp:"<b>정답: ③ to distract</b> — 'nothing to distract me'는 '나를 산만하게 할 것이 없었다'. distract(동사원형)는 명사 수식 불가. distracted(수동분사)는 '산만하게 된 것'의 의미로 문맥 불일치."},
+
+{n:22,tag:"사역동사 make+O+동사원형",type:"c",
+ sent:"This experience made me _____ that I enjoy doing things alone.",
+ opts:["realize","to realize","realized"],ans:0,
+ exp:"<b>realize</b> — <b>사역동사 make + O + 동사원형</b>. make는 목적격보어로 동사원형만 사용(help와 달리 to부정사 불가). to realize(to부정사)와 realized(과거분사) 모두 사역동사 구문에서 불가.",
+ wexp:"<b>정답: ① realize</b> — 사역동사 make + O + 동사원형. make/let은 목적격보어에 동사원형만 가능(to부정사 불가). 이 점이 help와 구별됨. to realize, realized 모두 불가."},
+
+{n:23,tag:"enjoy+동명사",type:"c",
+ sent:"I sometimes enjoy _____ things alone.",
+ opts:["to do","do","doing"],ans:2,
+ exp:"<b>doing</b> — <b>enjoy + 동명사</b>. enjoy는 동명사만 목적어로 취하는 동사. to do(to부정사)와 do(동사원형)는 enjoy의 목적어로 쓸 수 없음.",
+ wexp:"<b>정답: ③ doing</b> — enjoy + 동명사(-ing). enjoy는 동명사만 목적어(mind, avoid, finish, keep, quit 등 동일). to do(to부정사), do(동사원형) 모두 불가."},
+
+{n:24,tag:"try+to부정사 vs try+동명사",type:"c",
+ sent:"I promised myself that I would try _____ my own choices more often.",
+ opts:["making","to make","made"],ans:1,
+ exp:"<b>to make</b> — <b>try to V = '~하려고 노력하다'</b>. try + 동명사(making)은 '시험 삼아 해보다'의 다른 의미. made(과거형)는 would 뒤에 올 수 없음.",
+ wexp:"<b>정답: ② to make</b> — try to V(~하려 노력하다) vs try V-ing(시험 삼아 해보다). 문맥은 '더 자주 나만의 선택을 하려고 노력하다'. making으로 쓰면 '시험 삼아 선택해 보다'로 의미 변화. made는 would와 불가."},
+
+{n:25,tag:"병렬구조",type:"c",
+ sent:"I would try to make my own choices more often and _____ more activities by myself.",
+ opts:["enjoyed","enjoying","enjoy"],ans:2,
+ exp:"<b>enjoy</b> — <b>병렬구조</b>. 'try to make ~ and (to) enjoy'에서 동사원형 enjoy로 병렬 연결. enjoyed(과거형)는 would와 시제 불일치. enjoying(진행분사)은 앞의 make와 구조가 달라 병렬 파괴.",
+ wexp:"<b>정답: ③ enjoy</b> — 병렬구조. 'would try to make ~ and (to) enjoy ~'. enjoyed(과거형)는 would와 시제 불일치 + 병렬 파괴. enjoying(분사)은 병렬 파괴."},
+
+/* ── Challenge 2 ── */
+{n:26,tag:"현재완료(ever since)",type:"c",
+ sent:"Ever since I was a child, I _____ afraid of water.",
+ opts:["was always","have always been","had always been"],ans:1,
+ exp:"<b>have always been</b> — <b>현재완료</b>. 'ever since + 과거절'은 과거부터 현재까지의 지속 → 현재완료 필수. was always(단순과거)는 현재까지 연결 불가. had always been(과거완료)는 더 이전 기준 시점이 필요하여 부자연스러움.",
+ wexp:"<b>정답: ② have always been</b> — ever since + 현재완료. 과거부터 현재까지 계속 → 현재완료. was always(단순과거)는 현재와 단절. had always been(과거완료)은 과거 기준 시점이 별도로 필요하여 이 문장에 부자연스러움."},
+
+{n:27,tag:"while+분사구문",type:"c",
+ sent:"...or felt comfortable while _____ them.",
+ opts:["do","to do","doing"],ans:2,
+ exp:"<b>doing</b> — <b>while + 동명사(분사구문)</b>. 'while doing'은 'while I was doing'의 축약형. do(동사원형)는 while 바로 뒤 단독으로 불가. to do(to부정사)도 while 뒤에 쓸 수 없음.",
+ wexp:"<b>정답: ③ doing</b> — while + -ing(분사구문). 'while doing'은 'while I was doing'의 축약. do(동사원형), to do(to부정사) 모두 while 뒤 직접 쓸 수 없음."},
+
+{n:28,tag:"간접의문문(의문사+to V)",type:"c",
+ sent:"I wasn't sure _____ at first.",
+ opts:["what to do","what do","what did"],ans:0,
+ exp:"<b>what to do</b> — <b>의문사 + to부정사</b>. 'what to do'는 '무엇을 해야 할지'라는 명사구. what do/what did는 도치된 의문문 형태로 절을 이루지 못해 비문.",
+ wexp:"<b>정답: ① what to do</b> — 의문사 + to부정사. '무엇을 해야 할지'. what do, what did는 직접 의문문 형태라 간접의문문 구조에 사용 불가."},
+
+{n:29,tag:"현재분사(능동 관계)",type:"c",
+ sent:"I came across a video clip of my cousin _____ at an indoor pool on social media.",
+ opts:["surfed","surfing","to surf"],ans:1,
+ exp:"<b>surfing</b> — <b>현재분사(능동 관계)</b>. my cousin이 서핑을 '하는' 능동 관계 → 현재분사. surfed(과거분사)는 수동 의미('서핑 당하는'). to surf(to부정사)는 명사 수식 자리에 어색.",
+ wexp:"<b>정답: ② surfing</b> — 현재분사(능동). cousin이 surf하는 행위의 주체 → 현재분사. surfed는 수동 의미라 불가. to surf는 명사를 이런 방식으로 수식하기엔 어색."},
+
+{n:30,tag:"동격절 접속사 that",type:"c",
+ sent:"I liked the fact _____ it took place in a shallow pool, not in the ocean.",
+ opts:["that","what","which"],ans:0,
+ exp:"<b>that</b> — <b>동격절 접속사 that</b>. 'the fact that + 완전한 절'은 명사(fact)의 내용을 설명. what은 불완전한 절을 이끄는 관계대명사. which도 불완전한 절을 이끄는 관계대명사로 완전한 절 앞에는 부적절.",
+ wexp:"<b>정답: ① that</b> — 동격절 that. 'the fact that it took place'에서 that 뒤에 완전한 절. what과 which는 불완전한 절(주어나 목적어가 빠진 절)을 이끌어야 하므로 불가."},
+
+{n:31,tag:"assure+O+that절",type:"c",
+ sent:"She assured me _____ it wasn't too hard.",
+ opts:["which","that","what"],ans:1,
+ exp:"<b>that</b> — <b>assure + O + that절</b>. '~에게 ...라고 확언하다'. that 이하에 완전한 절이 오므로 that. which와 what은 불완전한 절을 이끄는 관계사/의문사로 완전한 절 앞에 불가.",
+ wexp:"<b>정답: ② that</b> — assure + O + that절. '그것이 너무 어렵지 않다고 장담했다'. that 뒤에 완전한 절. which, what 뒤에는 주어나 목적어가 빠진 불완전한 절이 와야 함."},
+
+{n:32,tag:"가주어-진주어",type:"c",
+ sent:"At the beginning of the lesson, it was hard just _____ up on the board.",
+ opts:["stood","standing","to stand"],ans:2,
+ exp:"<b>to stand</b> — <b>가주어 it ~ 진주어 to부정사</b>. It(가주어), to stand 이하(진주어). stood(과거형)는 진주어 불가. standing(동명사)은 It~to 구문의 진주어 불가.",
+ wexp:"<b>정답: ③ to stand</b> — It ~ to부정사(진주어) 구문. '그저 보드 위에서 일어나는 것이 어려웠다'. stood(과거형), standing(동명사)은 이 구조의 진주어 불가."},
+
+{n:33,tag:"의문사+to부정사",type:"c",
+ sent:"I learned _____ properly.",
+ opts:["how to balance","how balancing","how balanced"],ans:0,
+ exp:"<b>how to balance</b> — <b>의문사 + to부정사</b>. 'how to V'는 '~하는 방법/어떻게 ~하는지'. '제대로 균형을 잡는 법을 배웠다'. how balancing과 how balanced는 문법적으로 존재하지 않는 구조.",
+ wexp:"<b>정답: ① how to balance</b> — 의문사 + to부정사. '제대로 균형을 잡는 법'. how to V, what to V, where to V 모두 명사구로 동사의 목적어 역할. how balancing, how balanced는 비문."},
+
+{n:34,tag:"manage+to부정사",type:"c",
+ sent:"I even managed _____ a few waves!",
+ opts:["surfing","to surf","surfed"],ans:1,
+ exp:"<b>to surf</b> — <b>manage + to부정사</b>. manage는 to부정사만 목적어로 취하는 동사. '용케 ~해내다'. surfing(동명사)과 surfed(과거분사)는 manage의 목적어로 쓸 수 없음.",
+ wexp:"<b>정답: ② to surf</b> — manage to V = '용케 ~해내다'. manage는 to부정사만 목적어. surfing(동명사), surfed(과거분사) 모두 불가."},
+
+{n:35,tag:"동명사 주어",type:"c",
+ sent:"_____ in the water wasn't as bad as I had thought.",
+ opts:["Being","Having been","Been"],ans:0,
+ exp:"<b>Being</b> — <b>단순 동명사 주어</b>. 'Being in the water'는 '물속에 있는 것(현재 상태)'. Having been(완료동명사)은 '이미 끝난 경험'의 의미로 문맥 불일치. Been(과거분사)은 단독 주어 불가.",
+ wexp:"<b>정답: ① Being</b> — 단순 동명사 주어. 'Being in the water'가 주어 = '물속에 있는 것'. Having been은 완료동명사로 이미 끝난 경험을 강조하여 문맥과 다름. Been은 단독 주어 불가."},
+
+{n:36,tag:"과거완료(대과거)",type:"c",
+ sent:"Being in the water wasn't as bad as I _____.",
+ opts:["thought","have thought","had thought"],ans:2,
+ exp:"<b>had thought</b> — <b>과거완료(대과거)</b>. 물속에 있었던 시점(과거, wasn't)보다 '생각했던' 것이 더 이전 → 과거완료. thought만 쓰면 두 사건이 동시처럼 읽힘. have thought(현재완료)는 과거 문맥에 부적절.",
+ wexp:"<b>정답: ③ had thought</b> — 대과거. 기준 과거(wasn't bad)보다 앞서 예상하고 있었던 것 → had thought. thought(단순과거)는 선후관계 불명확. have thought(현재완료)는 과거 문맥 불가."},
+
+{n:37,tag:"help+O 구문",type:"w",
+ sent:"It did help me _____ my sense of adventure.",
+ opts:["discover","to discover","discovering"],ans:2,
+ exp:"<b>③ discovering</b> — <b>help + O 구문의 틀린 형태</b>. help의 목적격보어로 <b>동사원형(discover)과 to부정사(to discover) 모두 가능</b>. discovering(-ing)은 help 구문의 목적격보어로 절대 불가.",
+ wexp:"<b>정답(틀린 것): ③ discovering</b> — help + O + 동사원형 or to부정사. discover와 to discover는 모두 어법상 맞음. discovering(-ing)은 help 구문의 목적격보어로 쓸 수 없음."},
+
+/* ── Challenge 3 ── */
+{n:38,tag:"5형식 make+O+형용사",type:"c",
+ sent:"The third one made me the most _____.",
+ opts:["nervously","nervousness","nervous"],ans:2,
+ exp:"<b>nervous</b> — <b>5형식 make + O + 형용사(목적격보어)</b>. 목적어를 '...하게 만들다'에서 보어 자리에는 형용사. nervously(부사)는 목적격보어 불가. nervousness(명사)는 의미 부적절.",
+ wexp:"<b>정답: ③ nervous</b> — 5형식 make + O + 형용사 보어. 'made me nervous'는 '나를 초조하게 만들었다'. nervously(부사), nervousness(명사)는 목적격보어 자리 불가."},
+
+{n:39,tag:"과거완료(계속)",type:"c",
+ sent:"For many years, I _____ the same hairstyle because I had been worried about my forehead.",
+ opts:["had kept","have kept","kept"],ans:0,
+ exp:"<b>had kept</b> — <b>과거완료(계속)</b>. 'for many years'는 과거완료와 어울리는 기간 표현. 이야기 시점 이전부터 수년간 유지해온 상태. have kept(현재완료)는 과거 문맥 부적절. kept(단순과거)는 계속적 의미 약화.",
+ wexp:"<b>정답: ① had kept</b> — 과거완료(계속). 'for many years'는 과거완료와 자연스러운 기간 표현. 이야기 시점 이전부터 오래 유지 → had kept. have kept(현재완료)는 과거 문맥 불가."},
+
+{n:40,tag:"과거완료(이유·선후관계)",type:"c",
+ sent:"...because I _____ worried about my forehead.",
+ opts:["was","had been","were"],ans:1,
+ exp:"<b>had been</b> — <b>과거완료</b>. 헤어스타일을 '유지해 온(had kept)'보다 이마 걱정이 더 이전 → 과거완료. was(단순과거)는 선후관계 약화. were는 주어 I에 맞지 않는 복수형.",
+ wexp:"<b>정답: ② had been</b> — 과거완료. had kept보다 이전부터 걱정하고 있었던 상태 → had been. was(단순과거)는 선후관계 약화. were는 주어 I에 맞지 않는 복수형."},
+
+{n:41,tag:"want+to부정사",type:"c",
+ sent:"I didn't want _____ attention to it.",
+ opts:["drawn","to draw","drawing"],ans:1,
+ exp:"<b>to draw</b> — <b>want + to부정사</b>. want는 to부정사만 목적어. drawn(과거분사)은 want의 목적어 불가. drawing(동명사)도 want의 목적어로 쓸 수 없음.",
+ wexp:"<b>정답: ② to draw</b> — want to V. 'didn't want to draw attention'은 '주의를 끌고 싶지 않았다'. drawn(과거분사), drawing(동명사) 모두 want 뒤 불가."},
+
+{n:42,tag:"이유 접속사 since",type:"c",
+ sent:"_____ I was feeling confident after the first two challenges, I went to a hair salon.",
+ opts:["Although","While","Since"],ans:2,
+ exp:"<b>Since</b> — <b>이유·원인 접속사 since</b>. '~이기 때문에'. '자신감을 느끼고 있었기 때문에 미용실에 갔다'. Although는 양보('비록 ~이지만'). While은 시간(동안)/대조(반면). 둘 다 원인·이유 표현 불가.",
+ wexp:"<b>정답: ③ Since</b> — 이유 접속사 since. '첫 두 도전 후 자신감을 느끼고 있었기 때문에 미용실에 감'. Although(양보), While(시간/대조)는 원인·이유 의미 불가."},
+
+{n:43,tag:"help+O 구문",type:"w",
+ sent:"He helped me _____ a shorter hairstyle that suited me.",
+ opts:["find","to find","finding"],ans:2,
+ exp:"<b>③ finding</b> — <b>help + O 구문의 틀린 형태</b>. help의 목적격보어로 <b>동사원형(find)과 to부정사(to find) 모두 가능</b>. finding(-ing)은 help 구문의 목적격보어로 절대 불가.",
+ wexp:"<b>정답(틀린 것): ③ finding</b> — help + O + 동사원형 or to부정사. find와 to find는 모두 어법상 맞음. finding(-ing)은 help 구문의 목적격보어로 쓸 수 없음."},
+
+{n:44,tag:"관계대명사(사물 선행사)",type:"c",
+ sent:"He helped me find a shorter hairstyle _____ suited me.",
+ opts:["which","what","whom"],ans:0,
+ exp:"<b>which</b> — <b>관계대명사 which(사물 선행사)</b>. 선행사 'a shorter hairstyle'(사물)을 수식. what은 선행사를 포함하므로 앞에 명사 선행사 불가. whom은 사람 선행사에만 사용.",
+ wexp:"<b>정답: ① which</b> — 관계대명사 which(사물). 'a shorter hairstyle which suited me'는 '나에게 어울리는 더 짧은 헤어스타일'. what은 선행사 포함형 불가. whom은 사람 선행사 전용."},
+
+{n:45,tag:"-ed 감정 형용사",type:"c",
+ sent:"The next day at school, my classmates were a bit _____.",
+ opts:["surprisingly","surprising","surprised"],ans:2,
+ exp:"<b>surprised</b> — <b>-ed형 감정 형용사</b>. 사람(classmates)이 감정을 '느끼는' 경우 -ed. surprisingly(부사)는 be동사 보어 불가. surprising('놀라운')은 사물·상황에 사용.",
+ wexp:"<b>정답: ③ surprised</b> — 감정 형용사 -ed vs -ing. 사람이 감정을 느낄 때 -ed(surprised). 사물/상황이 감정을 유발할 때 -ing(surprising). surprisingly는 부사라 보어 불가."},
+
+{n:46,tag:"원급 비교(as+형용사+as)",type:"c",
+ sent:"Trying a different look wasn't as _____ as I thought it would be.",
+ opts:["difficultly","difficulty","difficult"],ans:2,
+ exp:"<b>difficult</b> — <b>원급비교 as + 형용사 + as</b>. be동사 보어 자리이므로 형용사. difficultly(부사)는 be동사 보어 불가. difficulty(명사)는 as ~ as 사이에 쓸 수 없음.",
+ wexp:"<b>정답: ③ difficult</b> — as + 형용사 + as. 'wasn't as difficult as ~'는 '~만큼 어렵지 않았다'. difficultly(부사), difficulty(명사)는 be동사 보어 자리 불가."},
+
+{n:47,tag:"5형식 make+O+형용사",type:"c",
+ sent:"In fact, it made me feel more _____ about myself.",
+ opts:["confide","confident","confidently"],ans:1,
+ exp:"<b>confident</b> — <b>5형식 make + O + 형용사(목적격보어)</b>. feel의 보어 자리에 형용사 confident. confide(동사원형)는 보어 자리에 동사원형 불가. confidently(부사)는 보어 불가.",
+ wexp:"<b>정답: ② confident</b> — 5형식. 'made me feel confident'는 '나를 자신감 있게 느끼게 했다'. confide(동사원형), confidently(부사) 모두 목적격보어 불가."},
+
+{n:48,tag:"동명사 주어(that절)",type:"c",
+ sent:"I didn't expect that _____ out of my comfort zone would have such a positive effect.",
+ opts:["stepped","stepping","step"],ans:1,
+ exp:"<b>stepping</b> — <b>동명사가 that절의 주어</b>. 'stepping out of my comfort zone'이 that절의 주어 = '안전지대에서 나오는 것'. stepped(과거형)와 step(동사원형)은 단독으로 주어 역할 불가.",
+ wexp:"<b>정답: ② stepping</b> — 동명사 주어. that절 내 'stepping out of my comfort zone'이 주어. stepped(과거형), step(동사원형)은 단독 주어 불가."},
+
+/* ── 결론 ── */
+{n:49,tag:"대조 접속사 while",type:"c",
+ sent:"One of them tried new foods from different countries, _____ another joined a creative writing club.",
+ opts:["when","although","while"],ans:2,
+ exp:"<b>while</b> — <b>대조의 접속사 while</b>. '한 명은 ~ 반면, 다른 친구는 ~'의 대조 표현. when은 시간('~할 때')만. although는 양보('비록 ~이지만')로 대조 의미 불가.",
+ wexp:"<b>정답: ③ while</b> — 대조 접속사 while(반면에). '한 명은 새로운 음식을 먹어본 반면 다른 친구는 동아리에 가입했다'. when(시간), although(양보)는 대조 표현 불가."},
+
+{n:50,tag:"간접의문문 어순",type:"c",
+ sent:"We all realized how _____ to push ourselves to try new things.",
+ opts:["important it is","it is important","important is it"],ans:0,
+ exp:"<b>important it is</b> — <b>간접의문문 어순: how + 형용사 + 주어 + 동사</b>. 'how important it is'가 올바른 어순. 'it is important'는 평서문 어순으로 how절 내 불가. 'important is it'는 의문문 도치 어순으로 불가.",
+ wexp:"<b>정답: ① important it is</b> — 간접의문문 어순. how + 형용사(important) + 주어(it) + 동사(is). 'how important it is'는 '~하는 것이 얼마나 중요한지'. it is important(평서문), important is it(도치) 모두 간접의문문에서 불가."},
+
+{n:51,tag:"전치사+동명사",type:"c",
+ sent:"My classmates and I even talked about _____ more challenges for ourselves.",
+ opts:["set","to set","setting"],ans:2,
+ exp:"<b>setting</b> — <b>전치사 about + 동명사</b>. 전치사 뒤에는 동명사(-ing) 필수. set(동사원형)과 to set(to부정사)는 전치사 뒤에 쓸 수 없음.",
+ wexp:"<b>정답: ③ setting</b> — 전치사 about + 동명사. 'talked about setting more challenges'. 전치사 뒤에는 명사 또는 동명사(-ing) 필수. set(동사원형), to set(to부정사) 모두 전치사 뒤 불가."},
+
+{n:52,tag:"-ing 감정 형용사",type:"c",
+ sent:"It's _____ to keep learning and growing.",
+ opts:["exciting","excited","excite"],ans:0,
+ exp:"<b>exciting</b> — <b>-ing형 감정 형용사</b>. 상황(계속 배우고 성장하는 것)이 흥분 감정을 '유발'하므로 exciting. excited는 '(사람이) 흥분한'으로 주어 it(상황)에 부적절. excite(동사원형)는 be동사 보어 자리 불가.",
+ wexp:"<b>정답: ① exciting</b> — -ing형 감정 형용사. 상황이 감정 유발 → exciting. excited는 사람이 감정을 느낄 때 사용. excite(동사원형)는 be동사 보어 불가."},
+
+{n:53,tag:"keep+동명사",type:"c",
+ sent:"It's exciting to keep _____ and growing.",
+ opts:["to learn","learning","learn"],ans:1,
+ exp:"<b>learning</b> — <b>keep + 동명사</b>. keep은 동명사만 목적어로 취하는 동사. to learn(to부정사)은 keep의 목적어 불가. learn(동사원형)도 keep 뒤에 직접 쓸 수 없음.",
+ wexp:"<b>정답: ② learning</b> — keep + 동명사(-ing). keep은 동명사만 목적어. 'keep learning and growing'은 '계속해서 배우고 성장하다'. to learn(to부정사), learn(동사원형) 모두 불가."},
+
+{n:54,tag:"be capable of",type:"c",
+ sent:"We never know what we're _____ until we try!",
+ opts:["capable to","capable","capable of"],ans:2,
+ exp:"<b>capable of</b> — <b>be capable of + 명사/동명사</b> 관용표현. '~을 할 수 있는'. 전치사는 반드시 of. capable to는 잘못된 전치사 사용. capable만으로는 of 이하가 없어 불완전.",
+ wexp:"<b>정답: ③ capable of</b> — be capable of = '~을 할 수 있다'. 전치사 of 필수. capable to는 잘못된 전치사 사용. capable만 쓰면 of 이하가 없어 의미 불완전."}
+];
+
+const TOTAL=QS.length;
+const DOTS=['①','②','③'];
+let cur=0,userAns=new Array(TOTAL).fill(null),log=[];
+
+function renderCard(dir){
+  const q=QS[cur];
+  const stage=document.getElementById('stage');
+  const optsEl=document.getElementById('opts');
+  const expEl=document.getElementById('exp');
+  const nhint=document.getElementById('nhint');
+  const old=stage.querySelector('.q-card');
+  if(old){old.classList.remove('mid');old.classList.add(dir>0?'out-l':'out-r');setTimeout(()=>old.remove(),300);}
+  const div=document.createElement('div');
+  div.className='q-card '+(dir>0?'in-r':'in-l');
+  const raw=q.sent.replace(/_____/,'<span class="blank">( _____ )</span>');
+  const typeLabel=q.type==='w'
+    ?'<span class="q-type-w">어법상 틀린 것</span>'
+    :'<span class="q-type-c">어법상 옳은 것</span>';
+  div.innerHTML=`<div class="q-meta"><span class="q-num">Q${q.n}</span><span class="q-tag">${q.tag}</span>${typeLabel}</div><div class="q-sent">${raw}</div>`;
+  stage.appendChild(div);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>div.classList.replace(dir>0?'in-r':'in-l','mid')));
+  optsEl.innerHTML='';
+  const done=userAns[cur]!==null;
+  q.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt';
+    if(done){
+      btn.disabled=true;
+      if(i===q.ans) btn.classList.add(q.type==='w'?'ok-w':'ok');
+      else if(i===userAns[cur]) btn.classList.add('ng');
+    }
+    btn.innerHTML=`<span class="opt-dot">${DOTS[i]}</span>${opt}`;
+    btn.onclick=()=>pick(i);
+    optsEl.appendChild(btn);
+  });
+  if(done){
+    expEl.innerHTML=(userAns[cur]===q.ans?'✓ ':'✗ ')+q.exp;
+    expEl.className='exp-box on '+(q.type==='w'?'w-exp':'c-exp');
+    nhint.textContent=cur<TOTAL-1?'화면을 탭하면 다음 문제로 이동':'탭하면 결과 보기';
+  } else {expEl.className='exp-box';expEl.innerHTML='';nhint.textContent='';}
+  updateTop();
+}
+
+function pick(choice){
+  if(userAns[cur]!==null)return;
+  userAns[cur]=choice;
+  const q=QS[cur];
+  const btns=document.getElementById('opts').querySelectorAll('.opt');
+  btns.forEach((b,i)=>{
+    b.disabled=true;
+    if(i===q.ans) b.classList.add(q.type==='w'?'ok-w':'ok');
+    else if(i===choice) b.classList.add('ng');
+  });
+  const expEl=document.getElementById('exp');
+  expEl.innerHTML=(choice===q.ans?'✓ ':'✗ ')+q.exp;
+  expEl.className='exp-box on '+(q.type==='w'?'w-exp':'c-exp');
+  document.getElementById('nhint').textContent=cur<TOTAL-1?'화면을 탭하면 다음 문제로 이동':'탭하면 결과 보기';
+  updateTop();
+  if(choice===q.ans)setTimeout(advance,500);
+}
+
+function advance(){if(cur<TOTAL-1){cur++;renderCard(1);}else showResult();}
+
+document.getElementById('s-quiz').addEventListener('click',function(e){
+  if(userAns[cur]!==null&&!e.target.classList.contains('opt')&&!e.target.classList.contains('opt-dot'))advance();
+});
+
+function updateTop(){
+  const done=userAns.filter(a=>a!==null).length;
+  document.getElementById('tb-l').textContent=`${cur+1} / ${TOTAL}`;
+  document.getElementById('tb-r').textContent=`${done}개 응답`;
+  document.getElementById('prog').style.width=(done/TOTAL*100)+'%';
+}
+
+function startQuiz(){
+  cur=0;userAns=new Array(TOTAL).fill(null);log=[];
+  const home=document.getElementById('s-home');
+  home.style.opacity='0';home.style.pointerEvents='none';
+  setTimeout(()=>home.style.display='none',300);
+  document.getElementById('s-result').classList.remove('on');
+  document.getElementById('s-quiz').classList.add('on');
+  document.getElementById('stage').innerHTML='';
+  renderCard(1);
+}
+
+function goHome(){
+  document.getElementById('s-result').classList.remove('on');
+  document.getElementById('s-quiz').classList.remove('on');
+  const home=document.getElementById('s-home');
+  home.style.display='flex';
+  requestAnimationFrame(()=>{home.style.opacity='1';home.style.pointerEvents='all';});
+}
+
+function showResult(){
+  let correct=0;log=[];
+  QS.forEach((q,i)=>{const ok=userAns[i]===q.ans;if(ok)correct++;log.push({q,ok,chosen:q.opts[userAns[i]??((q.ans+1)%3)],cw:q.opts[q.ans]});});
+  const pct=Math.round(correct/TOTAL*100);
+  let grade,gc;
+  if(pct>=95){grade='A+';gc='var(--green)';}else if(pct>=85){grade='A';gc='#4ade80';}
+  else if(pct>=75){grade='B+';gc='var(--blue)';}else if(pct>=65){grade='B';gc='#60a5fa';}
+  else if(pct>=50){grade='C';gc='var(--amber)';}else{grade='D';gc='var(--red)';}
+  const msgs=['다시 한 번 도전!','더 연습이 필요해요','절반 이상! 계속해요','잘 했어요!','거의 완벽해요!','완벽한 만점! 🎉'];
+  const mi=pct<20?0:pct<45?1:pct<65?2:pct<80?3:pct<100?4:5;
+  const nm=document.getElementById('name-in').value.trim();
+  document.getElementById('r-name').textContent=nm;
+  document.getElementById('r-sn').textContent=correct;
+  document.getElementById('r-grade').textContent=grade;
+  document.getElementById('r-grade').style.color=gc;
+  document.getElementById('r-msg').textContent=msgs[mi];
+  document.getElementById('s-ok').textContent=correct;
+  document.getElementById('s-ng').textContent=TOTAL-correct;
+  document.getElementById('s-pct').textContent=pct+'%';
+  const circ=2*Math.PI*50;
+  const arc=document.getElementById('r-arc');
+  arc.style.stroke=gc;arc.style.strokeDasharray=circ;arc.style.strokeDashoffset=circ;
+  setTimeout(()=>{arc.style.strokeDashoffset=circ*(1-pct/100);},100);
+  const wrongItems=log.filter(r=>!r.ok);
+  document.getElementById('wrong-head').textContent=wrongItems.length>0?`오답 목록 (${wrongItems.length}문제)`:'';
+  const wlist=document.getElementById('wlist');
+  if(wrongItems.length===0){wlist.innerHTML='<div style="padding:20px;text-align:center;color:var(--green);font-size:14px;">🎉 오답이 없어요! 완벽합니다.</div>';}
+  else{wlist.innerHTML=wrongItems.map(r=>{
+    const sd=r.q.sent.replace(/_____/,`<span style="color:var(--t1)">( _____ )</span>`);
+    const tw=r.q.type==='w'?`<span class="wi-type-w">틀린 것 찾기</span>`:'';
+    const okColor=r.q.type==='w'?'ok-w':'ok';
+    return`<div class="witem">
+      <div class="wi-top"><span class="wi-num">Q${r.q.n}</span><span class="wi-tag">${r.q.tag}</span>${tw}</div>
+      <div class="wi-sent">${sd}</div>
+      <div class="wi-ans">내 답: <span class="ng">${r.chosen}</span> → 정답: <span class="${okColor}">${r.cw}</span></div>
+      <div class="wi-exp">${r.q.wexp}</div>
+    </div>`;}).join('');}
+  document.getElementById('r-name-in').value=nm;
+  buildMsg();
+  document.getElementById('s-quiz').classList.remove('on');
+  document.getElementById('s-result').classList.add('on');
+  document.getElementById('s-result').scrollTop=0;
+}
+
+function buildMsg(){
+  const name=document.getElementById('r-name-in').value.trim()||'__________';
+  const correct=log.filter(r=>r.ok).length;
+  const pct=Math.round(correct/TOTAL*100);
+  const wrongItems=log.filter(r=>!r.ok);
+  let txt=`[공통영어1 Lesson 1 어법 선택 (3지선다)]\n학생: ${name}\n단원: Discovering Yourself through Challenges\n\n정답: ${correct} / ${TOTAL} (${pct}%)\n오답: ${wrongItems.length}문제\n`;
+  if(wrongItems.length>0){txt+=`\n[오답 목록]\n`;wrongItems.forEach(r=>{const tw=r.q.type==='w'?'[틀린 것] ':'';txt+=`· Q${r.q.n} ${tw}[${r.q.tag}] ${r.chosen} → ${r.cw}\n`;});}
+  txt+=`\n#공통영어1 #NE능률 #Lesson1`;
+  document.getElementById('kk-pre').textContent=txt;
+}
+
+function copyMsg(){navigator.clipboard.writeText(document.getElementById('kk-pre').textContent).then(()=>showToast('✓ 복사 완료! 카카오톡에 붙여넣기 하세요.')).catch(()=>showToast('직접 선택 후 복사해 주세요.'));}
+function openKakao(){copyMsg();window.open('kakaotalk://','_blank');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';setTimeout(()=>{t.style.opacity='0';},3500);}
+</script>
+</body>
+</html>
