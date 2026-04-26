@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lesson 1~2 종합 테스트 | 영핏 학원</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --navy: #1a2550;
+    --navy-light: #2a3a6e;
+    --gold: #d4a850;
+    --primary: #3b5bdb;
+    --primary-light: #e7ecff;
+    --accent: #ff6b9d;
+    --correct: #22c55e;
+    --correct-bg: #dcfce7;
+    --wrong: #ef4444;
+    --wrong-bg: #fee2e2;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --bg: #f8f9fc;
+    --card: #ffffff;
+    --border: #e5e7eb;
+  }
+  html, body {
+    font-family: 'Noto Sans KR', 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    overscroll-behavior: none;
+  }
+  .app { max-width: 600px; margin: 0 auto; min-height: 100vh; background: var(--bg); position: relative; padding-bottom: 32px; }
+
+  /* 헤더 */
+  .header {
+    background: var(--navy);
+    color: white;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 12px rgba(26,37,80,0.15);
+  }
+  .logo {
+    height: 44px;
+    width: auto;
+    flex-shrink: 0;
+    /* 로고를 흰색으로 변환하여 다크 네이비 배경에 잘 보이도록 */
+    filter: brightness(0) invert(1);
+    object-fit: contain;
+  }
+  .header-text { flex: 1; min-width: 0; }
+  .header-title {
+    font-size: 16px; font-weight: 700;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+  .header-sub {
+    font-size: 11px; font-weight: 400;
+    opacity: 0.75; margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+
+  /* 진행 바 */
+  .progress-wrap {
+    background: var(--card);
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .progress-info {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--text-light);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .progress-info b { color: var(--primary); font-weight: 700; }
+  .progress-bar {
+    height: 6px;
+    background: #eef0f5;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+
+  /* 시작 화면 */
+  .start-screen {
+    padding: 40px 22px;
+    text-align: center;
+  }
+  .start-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    display: inline-block;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .start-title {
+    font-size: 24px; font-weight: 900;
+    color: var(--navy);
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+  .start-desc {
+    color: var(--text-light);
+    font-size: 14px;
+    margin-bottom: 28px;
+    line-height: 1.7;
+  }
+  .info-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+  .info-row {
+    display: flex; justify-content: space-between;
+    padding: 10px 0;
+    font-size: 14px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .info-row:last-child { border-bottom: 0; }
+  .info-label { color: var(--text-light); }
+  .info-value { font-weight: 700; color: var(--navy); }
+  .start-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary), #5b73e6);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(59,91,219,0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .start-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 3px 10px rgba(59,91,219,0.35);
+  }
+
+  /* 문제 영역 */
+  .quiz-screen { padding: 16px 16px 40px; }
+  .question-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    animation: slideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .q-num {
+    display: inline-flex;
+    align-items: center;
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-family: 'Nunito', sans-serif;
+  }
+  .q-passage {
+    background: #f9fafb;
+    border-left: 3px solid var(--primary);
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    line-height: 1.75;
+    margin-bottom: 14px;
+    color: #374151;
+  }
+  .q-passage u { text-decoration: underline; text-underline-offset: 2px; }
+  .q-passage .blank { display: inline-block; min-width: 60px; border-bottom: 2px solid #9ca3af; }
+  .q-passage .marker {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--navy);
+    border-radius: 50%;
+    width: 18px; height: 18px;
+    text-align: center;
+    line-height: 18px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    margin: 0 1px;
+  }
+  .q-passage .marker-num {
+    display: inline-block;
+    background: var(--primary);
+    color: white;
+    border-radius: 4px;
+    padding: 0 4px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    margin: 0 1px;
+    line-height: 16px;
+  }
+  .q-passage .blank-letter {
+    display: inline-block;
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--primary);
+    border-radius: 4px;
+    text-align: center;
+    line-height: 19px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    font-family: 'Nunito', sans-serif;
+    margin: 0 2px;
+    vertical-align: -3px;
+  }
+  .q-text {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.65;
+    margin-bottom: 14px;
+    color: #1f2937;
+  }
+  .q-text b { color: var(--accent); font-weight: 700; }
+  .q-text u { text-decoration: underline; text-underline-offset: 2px; }
+
+  /* 선택지 */
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option {
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 11px;
+    padding: 12px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: all 0.15s;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #374151;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+  }
+  .option:active { transform: scale(0.99); }
+  .option:hover { border-color: var(--primary); background: #fafbff; }
+  .option-num {
+    width: 24px; height: 24px;
+    background: #eef0f5;
+    border-radius: 50%;
+    color: var(--text-light);
+    font-weight: 700;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    font-family: 'Nunito', sans-serif;
+  }
+  .option-text { flex: 1; padding-top: 1px; }
+  .option.correct {
+    background: var(--correct-bg);
+    border-color: var(--correct);
+    color: #166534;
+  }
+  .option.correct .option-num {
+    background: var(--correct);
+    color: white;
+  }
+  .option.wrong {
+    background: var(--wrong-bg);
+    border-color: var(--wrong);
+    color: #991b1b;
+  }
+  .option.wrong .option-num {
+    background: var(--wrong);
+    color: white;
+  }
+  .option:disabled { cursor: default; }
+
+  /* 피드백 */
+  .feedback {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 11px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    animation: fadeUp 0.3s ease-out;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .feedback.correct { background: var(--correct-bg); color: #166534; border: 1px solid #86efac; }
+  .feedback.wrong { background: var(--wrong-bg); color: #991b1b; border: 1px solid #fca5a5; }
+  .feedback-title { font-weight: 700; margin-bottom: 6px; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .feedback-body { color: #374151; font-weight: 400; }
+  .feedback-body b { color: var(--navy); }
+  .next-btn {
+    width: 100%;
+    margin-top: 12px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    padding: 13px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .next-btn:active { transform: scale(0.98); }
+
+  /* 결과 화면 */
+  .result-screen {
+    padding: 30px 20px;
+    text-align: center;
+  }
+  .result-emoji {
+    font-size: 72px;
+    margin-bottom: 16px;
+    display: inline-block;
+    animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+  .result-title {
+    font-size: 22px; font-weight: 900;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .result-grade {
+    font-family: 'Nunito', sans-serif;
+    font-size: 64px; font-weight: 900;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1;
+    margin: 16px 0 8px;
+  }
+  .result-score {
+    font-size: 18px;
+    color: var(--text-light);
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+  .result-score b {
+    color: var(--primary);
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    background: var(--card);
+    padding: 14px 8px;
+    border-radius: 11px;
+    border: 1px solid var(--border);
+  }
+  .stat-num {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+  .stat-num.correct-c { color: var(--correct); }
+  .stat-num.wrong-c { color: var(--wrong); }
+  .stat-num.total-c { color: var(--primary); }
+  .stat-label { font-size: 11px; color: var(--text-light); font-weight: 500; }
+
+  .review-section {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    text-align: left;
+    border: 1px solid var(--border);
+  }
+  .review-title {
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--navy);
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .review-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+  .review-item {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .review-item:active { transform: scale(0.92); }
+  .review-item.correct { background: var(--correct-bg); color: var(--correct); }
+  .review-item.wrong { background: var(--wrong-bg); color: var(--wrong); }
+
+  .retry-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(59,91,219,0.3);
+    transition: transform 0.15s;
+  }
+  .retry-btn:active { transform: scale(0.98); }
+
+  /* 모달 */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+  }
+  .modal-overlay.show { display: flex; animation: fadeIn 0.2s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes slideUp { from { transform: translateY(20px); } to { transform: translateY(0); } }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title { font-weight: 700; color: var(--navy); font-size: 16px; }
+  .modal-close {
+    background: #f3f4f6;
+    border: 0;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-light);
+  }
+
+  /* 결과 화면 너무 길지 않게 */
+  @media (min-width: 640px) {
+    .modal-overlay { align-items: center; }
+  }
+
+  /* 단답형 입력 */
+  .text-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: 11px;
+    font-size: 15px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+    background: white;
+  }
+  .text-input:focus { outline: none; border-color: var(--primary); }
+  .submit-btn {
+    width: 100%;
+    margin-top: 10px;
+    background: var(--primary);
+    color: white;
+    border: 0;
+    padding: 13px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .submit-btn:disabled { opacity: 0.5; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <img class="logo" src="data:image/png;base64,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" alt="영핏 학원">
+    <div class="header-text">
+      <div class="header-title">Lesson 1~2 종합 테스트</div>
+      <div class="header-sub">EngFit English · 영어를 핏하다</div>
+    </div>
+  </header>
+
+  <div id="screen-start" class="start-screen">
+    <div class="start-icon">📝</div>
+    <h1 class="start-title">Lesson 1~2 종합 테스트</h1>
+    <p class="start-desc">웃음의 다양한 표현부터<br>관계대명사, 간접의문문까지<br>지금까지 배운 모든 문법을 점검해 보세요!</p>
+    <div class="info-card">
+      <div class="info-row"><span class="info-label">총 문항 수</span><span class="info-value">36문항</span></div>
+      <div class="info-row"><span class="info-label">예상 소요 시간</span><span class="info-value">약 30~40분</span></div>
+      <div class="info-row"><span class="info-label">출제 범위</span><span class="info-value">Lesson 1 ~ 2</span></div>
+      <div class="info-row"><span class="info-label">문제 유형</span><span class="info-value">객관식 · 영작</span></div>
+    </div>
+    <button class="start-btn" onclick="startQuiz()">테스트 시작하기 →</button>
+  </div>
+
+  <div id="screen-quiz" style="display:none;">
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span><b id="progress-curr">1</b> / 36 문항</span>
+        <span id="progress-percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+    <div class="quiz-screen" id="question-area"></div>
+  </div>
+
+  <div id="screen-result" style="display:none;" class="result-screen"></div>
+</div>
+
+<div class="modal-overlay" id="review-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">문항 리뷰</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ================ 문제 데이터 ================
+const QUIZ_DATA = [
+  {
+    id: 1,
+    passage: `<b>A:</b> Hi, Jiho. How are you feeling?<br><b>B:</b> I'm happier than ever, Nari.<br><b>A:</b> I know why. You did it, right?<br><b>B:</b> Yes. I finally booked four tickets for the VTS concert!<br><b>A:</b> Good job. Did you tell Minsu and Yujin about that?<br><b>B:</b> Sure. Oh, I just got messages from them. They said they are really happy. Look.<br><b>A:</b> How cute! I like their emojis. They will bring light sticks and a nice camera.<br><b>B:</b> I'm glad to hear that. We're going to have lots of fun!`,
+    question: "다음 대화의 내용과 일치하지 <b>않는</b> 것은?",
+    options: [
+      "Jiho is feeling happier than ever.",
+      "Jiho is happy because he booked four tickets for the VTS concert.",
+      "After hearing the news, Minsu and Yujin sent messages with cute emojis to Jiho.",
+      "Jiho and Nari will bring light sticks and a nice camera.",
+      "Jiho believes that he and his friends will have a lot of fun at the concert."
+    ],
+    answer: 3,
+    explanation: "라이트 스틱과 카메라를 가져오는 사람은 <b>Minsu와 Yujin</b>입니다. Jiho와 Nari가 아닙니다. (대화: \"They will bring light sticks and a nice camera.\")"
+  },
+  {
+    id: 2,
+    passage: `<span class="marker-num">①</span><u>Laughter is human.</u> We laugh out loud <span class="marker-num">②</span><u>when we hear a joke, see funny something,</u> <span class="marker-num">③</span><u>or feel happy.</u> We laugh even in our writings, such as emails or texts, <span class="marker">a</span>as we <span class="marker">b</span>do in our conversations. <span class="marker-num">④</span><u>How do we do that?</u>`,
+    question: "위 글의 밑줄 친 ①~④ 중 어법상 <b>틀린</b> 것은?",
+    options: ["①", "②", "③", "④"],
+    answer: 1,
+    explanation: "<b>② funny something → something funny</b><br>-thing, -body, -one으로 끝나는 부정대명사는 형용사가 <b>뒤에서 수식</b>합니다."
+  },
+  {
+    id: 3,
+    question: "위 2번에서 'funny something'이 틀린 <b>이유</b>로 가장 적절한 것은?",
+    options: [
+      "something은 항상 단수 동사와 함께 써야 하기 때문이다.",
+      "-thing으로 끝나는 부정대명사는 형용사가 뒤에서 수식해야 하기 때문이다.",
+      "funny는 명사 앞에서만 쓸 수 있는 한정적 용법이기 때문이다.",
+      "something은 부정문에서만 쓰이기 때문이다.",
+      "복합명사 앞에는 형용사가 올 수 없기 때문이다."
+    ],
+    answer: 1,
+    explanation: "-thing, -body, -one, -where로 끝나는 부정대명사는 형용사가 <b>뒤에서</b> 수식합니다. (something funny / anyone special / nothing new)"
+  },
+  {
+    id: 4,
+    passage: `We laugh even in our writings, such as emails or texts, <u><b>as</b></u> we do in our conversations.<br><br>위 문장에서 밑줄 친 <b>as</b>는 '~처럼/~듯이'(방식)의 의미입니다.`,
+    question: "글의 ⓐ<u>as</u>와 그 뜻이 같은 것은?",
+    options: [
+      "He smiled <u>as</u> he opened the gift.",
+      "She dances <u>as</u> her mother does.",
+      "I listened to the news <u>as</u> I ate breakfast.",
+      "<u>As</u> he was sick, he couldn't go to school.",
+      "The dog barked loudly <u>as</u> the stranger came closer."
+    ],
+    answer: 1,
+    explanation: "ⓐas는 <b>'~처럼/~듯이'(방식)</b>의 의미입니다.<br>② She dances as her mother does. (그녀는 어머니가 하는 것<b>처럼</b> 춤춘다) ← 같은 용법<br>나머지는 모두 시간/이유의 as입니다."
+  },
+  {
+    id: 5,
+    passage: `We laugh even in our writings, such as emails or texts, as we <u><b>do</b></u> in our conversations.<br><br>위 문장에서 ⓑ<b>do</b>는 앞의 일반동사 'laugh'를 대신하는 <b>대동사</b>입니다.`,
+    question: "글의 ⓑ<u>do</u>와 그 쓰임이 같은 것은?",
+    options: [
+      "He should <u>do</u> his best as a leader.",
+      "He plays the piano better than I <u>do</u>.",
+      "As soon as I get home, I <u>do</u> the dishes.",
+      "I <u>do</u> really enjoy reading novels these days.",
+      "<u>Do</u> you usually exercise as regularly as he does?"
+    ],
+    answer: 1,
+    explanation: "ⓑdo는 앞에 나온 일반동사를 대신하는 <b>대동사</b>입니다.<br>② I do = I play (대동사) ← 같은 용법<br>① do one's best (일반동사), ③ do the dishes (일반동사), ④ 강조의 do, ⑤ Do (조동사)"
+  },
+  {
+    id: 6,
+    passage: `<b>Another form</b> of <span class="marker">a</span><u>written</u> laughter is LOL. <span class="marker">b</span><u>It</u> stands for "Laughing Out Loud." People also use ROFL quite often, which <span class="marker">c</span><u>mean</u> "Rolling On the Floor Laughing." These expressions ____ because they can <span class="marker">d</span><u>be typed</u> quite quickly.`,
+    question: "글의 바로 앞에 나왔을 내용으로 가장 적절한 것은?",
+    options: [
+      "웃음이 건강에 미치는 영향",
+      "이모티콘 사용 시의 유의점",
+      "문자로 된 웃음의 형태 예시",
+      "글로 다양한 감정을 표현하는 방법",
+      "동서양에서 사용되는 이모티콘의 차이점"
+    ],
+    answer: 2,
+    explanation: "글이 <b>'Another form of written laughter'(또 다른 형태의 문자 웃음)</b>로 시작하므로, 앞에는 <b>다른 형태의 문자 웃음 예시</b>가 있었음을 알 수 있습니다."
+  },
+  {
+    id: 7,
+    passage: `Another form of written laughter is LOL. ... These expressions ____ because they can be typed quite quickly.`,
+    question: "글의 빈칸에 들어갈 말로 가장 알맞은 것은?",
+    options: [
+      "have been popular",
+      "are no longer used",
+      "have been considered impolite",
+      "are used to show various feelings",
+      "are difficult for elderly people to learn"
+    ],
+    answer: 0,
+    explanation: "빈칸 뒤 'because they can be typed quite quickly(빨리 타이핑할 수 있어서)'는 <b>긍정적 결과</b>를 설명하는 이유입니다. 따라서 ① <b>have been popular(인기 있어왔다)</b>가 자연스럽습니다."
+  },
+  {
+    id: 8,
+    passage: `Another form of <span class="marker">a</span><u>written</u> laughter is LOL. <span class="marker">b</span><u>It</u> stands for "Laughing Out Loud." People also use ROFL quite often, which <span class="marker">c</span><u>mean</u> "Rolling On the Floor Laughing." These expressions ____ because they can <span class="marker">d</span><u>be typed</u> quite quickly.`,
+    question: "ⓐ~ⓓ 중 어법상 <b>틀린</b> 것은?",
+    options: [
+      "ⓐ written",
+      "ⓑ It",
+      "ⓒ mean",
+      "ⓓ be typed"
+    ],
+    answer: 2,
+    explanation: "<b>ⓒ mean → means</b><br>관계대명사 which의 선행사가 <b>ROFL(단수)</b>이므로 동사도 단수형 <b>means</b>가 되어야 합니다."
+  },
+  {
+    id: 9,
+    passage: `These days, people use 😂 - a "face with tears of joy." This is a small picture <span class="marker-num">A</span>[calling/called] an "emoji." Lots of <span class="marker-num">B</span>[laughing/laughed] emojis are available to use online, so people can express their laughter in various ways. Some emojis have grown bigger, and some even move or <span class="marker-num">C</span>[make/made] laughing sounds.`,
+    question: "이모지에 관한 글의 내용과 일치하지 <b>않는</b> 것은?",
+    options: [
+      "예시로는 기쁨의 눈물을 흘리는 얼굴이 있다.",
+      "작은 그림이다.",
+      "어떤 이모지들은 크기가 커졌다.",
+      "어떤 이모지는 입체적이다.",
+      "어떤 이모지는 웃음소리를 낸다."
+    ],
+    answer: 3,
+    explanation: "본문에는 <b>입체적</b>이라는 언급이 없습니다. \"some even move or make laughing sounds\"에서 움직이거나 소리를 낸다고만 했습니다."
+  },
+  {
+    id: 10,
+    passage: `This is a small picture <span class="marker-num">A</span>[calling/called] an "emoji." Lots of <span class="marker-num">B</span>[laughing/laughed] emojis are available to use online... Some emojis have grown bigger, and some even move or <span class="marker-num">C</span>[make/made] laughing sounds.`,
+    question: "위 글의 (A)~(C)에서 어법상 <b>모두 옳게</b> 짝지은 것은?",
+    options: [
+      "calling – laughing – make",
+      "called – laughing – make",
+      "called – laughed – made",
+      "calling – laughed – make",
+      "called – laughing – made"
+    ],
+    answer: 1,
+    explanation: "(A) <b>called</b>: 그림이 emoji로 '불리는' 수동 → 과거분사<br>(B) <b>laughing</b>: 웃고 있는 능동 의미 → 현재분사<br>(C) <b>make</b>: 'move or make'의 병렬 구조 → 동사원형"
+  },
+  {
+    id: 11,
+    passage: `( <span class="marker">a</span> ) XD also represents laughter in text. It shows a laughing face with a mouth open and eyes closed [tight/tightly]. ( <span class="marker">b</span> ) 그것은 이모티콘인데, 글자들이나 상징들의 무리이다 used to represent a facial expression. ( <span class="marker">c</span> ) The emoticon XD expresses our happy feelings more visually than ha-ha [do/does]. ( <span class="marker">d</span> )<br><br><b>주어진 문장:</b> XD is not a word.`,
+    question: "주어진 문장이 들어갈 위치로 가장 적절한 곳은?",
+    options: ["ⓐ", "ⓑ", "ⓒ", "ⓓ"],
+    answer: 0,
+    explanation: "ⓐ 자리에 \"XD is not a word.\"가 들어가야 합니다.<br>이어지는 \"XD <b>also</b> represents laughter\"의 'also'는 앞에서 다른 무언가가 언급되었음을 시사하므로, XD가 단어가 아님을 먼저 밝히는 것이 자연스럽습니다."
+  },
+  {
+    id: 12,
+    passage: `It shows a laughing face with a mouth open and eyes closed (A)[tight/tightly]. ... The emoticon XD expresses our happy feelings more visually than ha-ha (C)[do/does].`,
+    question: "(A), (C)의 괄호 안에서 어법상 옳게 짝지어진 것은?",
+    options: [
+      "(A) tight – (C) do",
+      "(A) tightly – (C) do",
+      "(A) tight – (C) does",
+      "(A) tightly – (C) does",
+      "(A) tightly – (C) doing"
+    ],
+    answer: 3,
+    explanation: "(A) <b>tightly</b>: 동사 closed를 수식 → 부사<br>(C) <b>does</b>: 주어가 ha-ha(단수) → does (단수형 대동사)"
+  },
+  {
+    id: 13,
+    passage: `XD is not a word. XD also represents laughter in text. It shows a laughing face with a mouth open and eyes closed tightly. It's an emoticon, which is a group of letters or symbols used to represent a facial expression. The emoticon XD expresses our happy feelings more visually than ha-ha does.`,
+    question: "글을 읽고 <b>알 수 없는</b> 것은?",
+    options: [
+      "XD는 웃음을 나타낸다.",
+      "XD는 눈을 감고 입을 벌린 얼굴을 보여 준다.",
+      "XD는 단어가 아니다.",
+      "XD는 이모티콘 중 하나이다.",
+      "XD는 하하와 같이 타자 치기 쉽다."
+    ],
+    answer: 4,
+    explanation: "본문에는 XD가 <b>타자 치기 쉬운지</b>에 대한 언급이 없습니다. \"XD가 ha-ha보다 더 시각적으로 표현한다\"고만 했습니다."
+  },
+  {
+    id: 14,
+    passage: `<b>(B) 그것은 이모티콘인데, 글자들이나 상징들의 무리이다.</b><br>(반드시 관계대명사를 사용할 것)`,
+    question: "(B)를 영작한 것으로 가장 알맞은 것은?",
+    options: [
+      "It is an emoticon, that is a group of letters or symbols.",
+      "It's an emoticon which a group of letters or symbols.",
+      "It's an emoticon, which is a group of letters or symbols.",
+      "It's an emoticon who is a group of letters or symbols.",
+      "It's an emoticon, what is a group of letters or symbols."
+    ],
+    answer: 2,
+    explanation: "<b>It's an emoticon, which is a group of letters or symbols.</b><br>• 콤마(,) + which: 관계대명사의 <b>계속적 용법</b> (앞 문장 부연 설명)<br>• that은 계속적 용법으로 쓸 수 없음<br>• 사물 선행사 → who(×), what은 선행사가 없을 때 사용"
+  },
+  {
+    id: 15,
+    passage: `<b>Seho:</b> Yena, how are you feeling?<br><b>Yena:</b> I'm feeling very sad, Seho. My best friend Jihun is moving away.<br><b>Seho:</b> Really? I'm sorry. But don't be so sad. You two can have video chats online.<br><b>Yena:</b> You're right.<br><b>Seho:</b> Why don't we make him a photo book as a goodbye gift?<br><b>Yena:</b> Great idea. I'm glad to give him something meaningful.`,
+    question: "Yena가 슬픈 이유로 가장 알맞은 것은?",
+    options: [
+      "Because she lost her photo book.",
+      "Because her best friend Jihun is moving away.",
+      "Because she had a fight with Seho.",
+      "Because she can't have video chats online.",
+      "Because Jihun didn't give her a goodbye gift."
+    ],
+    answer: 1,
+    explanation: "Yena의 대사: \"My best friend Jihun is <b>moving away</b>.\" → 단짝 친구 Jihun이 <b>이사 가기 때문</b>입니다."
+  },
+  {
+    id: 16,
+    passage: `I want to know <u>where did you go</u> last night.`,
+    question: "위 문장의 밑줄 친 부분을 어법상 바르게 고친 것은?",
+    options: [
+      "where do you go",
+      "where you go",
+      "where did you went",
+      "where you went",
+      "where you have gone"
+    ],
+    answer: 3,
+    explanation: "<b>간접의문문</b>은 평서문 어순(주어+동사)을 따릅니다.<br>where + did you go (의문문) → where + <b>you went</b> (간접의문문)<br>(과거 시제는 그대로 유지)"
+  },
+  {
+    id: 17,
+    passage: `<b>나는 어떻게 그가 그 건물을 설계했는지 궁금하다.</b> (7단어)`,
+    question: "위 우리말과 같은 뜻이 되도록 영작한 것으로 알맞은 것은?",
+    options: [
+      "I wonder how did he design the building.",
+      "I wonder how he designed the building.",
+      "I wonder how he design the building.",
+      "I wonder that he designed the building.",
+      "I wonder how does he design the building."
+    ],
+    answer: 1,
+    explanation: "<b>I wonder how he designed the building.</b><br>• wonder 뒤에 의문사 how로 시작하는 간접의문문<br>• 간접의문문 어순: <b>how + 주어(he) + 동사(designed)</b><br>• 의문문의 do/did 사라지고 동사에 시제 반영"
+  },
+  {
+    id: 18,
+    passage: `<b>이 사람은 내 친구 Andy인데, 그는 요리하는 것을 즐긴다.</b>`,
+    question: "위 우리말을 영어로 가장 정확하게 옮긴 것은?",
+    options: [
+      "This is my friend Andy that enjoys cooking.",
+      "This is my friend Andy who enjoys cooking.",
+      "This is my friend Andy, and enjoys cooking.",
+      "This is my friend Andy, who enjoys cooking.",
+      "This is my friend Andy whom he enjoys cooking."
+    ],
+    answer: 3,
+    explanation: "<b>This is my friend Andy, who enjoys cooking.</b><br>• \"~인데, 그는 ~한다\"는 부연 설명 → <b>계속적 용법</b><br>• 콤마(,) + 관계대명사 who 사용<br>• that은 계속적 용법 불가 / 콤마 없는 ②는 제한적 용법"
+  },
+  {
+    id: 19,
+    passage: `There were twenty of us who were ready to work that day. I didn't think that we could clean up this awful mess and turn it into a garden. We were all wondering where to start. Then Mr. Hernandez said, "The only way to do it is just to start." Then, he divided the lot into four parts with string and assigned five people to each part.`,
+    question: "글을 읽고 <b>답할 수 없는</b> 질문은?",
+    options: [
+      "What did people plan to turn the mess into?",
+      "How many people were there to work that day?",
+      "How many people were assigned to each part?",
+      "How long did it take to clean up the awful mess?",
+      "How many parts did Mr. Hernandez divide the lot into?"
+    ],
+    answer: 3,
+    explanation: "본문에는 <b>청소에 걸린 시간(④)</b>에 대한 언급이 없습니다.<br>① a garden, ② twenty, ③ five, ⑤ four parts → 모두 답할 수 있음"
+  },
+  {
+    id: 20,
+    passage: `There were twenty of us who <span class="marker">a</span><u>were</u> ready to work that day. I didn't think that we could clean up this awful mess and <span class="marker">b</span><u>turned</u> it into a garden. We were all wondering where to start. Then Mr. Hernandez said, "The only way to do it is just <span class="marker">c</span><u>to start</u>." Then, he divided the lot into four parts with string and <span class="marker">d</span><u>assigned</u> five people to each part.`,
+    question: "밑줄 친 ⓐ~ⓓ 중 어법상 옳지 <b>않은</b> 것은?",
+    options: ["ⓐ were", "ⓑ turned", "ⓒ to start", "ⓓ assigned"],
+    answer: 1,
+    explanation: "<b>ⓑ turned → turn</b><br>could clean up ... and <b>(could) turn</b>의 병렬 구조이므로, 조동사 could 뒤에는 <b>동사원형 turn</b>이 와야 합니다."
+  },
+  {
+    id: 21,
+    passage: `I didn't think (A)<u><b>that</b></u> we could clean up this awful mess.<br><br>(A)that은 think의 목적어 역할을 하는 <b>명사절 접속사</b>입니다.`,
+    question: "(A)<u>that</u>과 쓰임이 <b>같은</b> 것은?",
+    options: [
+      "I don't believe <u>that</u> she is telling the truth.",
+      "I didn't expect <u>that</u> to happen so suddenly.",
+      "The book <u>that</u> you gave me was interesting.",
+      "This is the same car <u>that</u> he bought last year.",
+      "The movie <u>that</u> we watched yesterday was exciting."
+    ],
+    answer: 0,
+    explanation: "(A)that은 <b>명사절 접속사</b>(~라는 것)입니다.<br>① believe + that절 (명사절 접속사) ← 같은 용법<br>② 지시대명사 that, ③④⑤ 관계대명사 that"
+  },
+  {
+    id: 22,
+    passage: `We were all wondering <b>(B)우리가 어디에서 시작해야 할지를</b>. (4단어)`,
+    question: "(B)에 들어갈 어법에 맞는 영어 표현은?",
+    options: [
+      "where do we start",
+      "where should we start",
+      "where we should start",
+      "where should start we",
+      "that we should start"
+    ],
+    answer: 2,
+    explanation: "<b>where we should start</b><br>• wondering의 목적어 자리 → <b>간접의문문</b><br>• 어순: <b>의문사(where) + 주어(we) + 동사(should start)</b>"
+  },
+  {
+    id: 23,
+    passage: `I complained the whole day. ( <span class="marker">a</span> ) My parents were making me work on the neighborhood project, but I had far better things to do. ( <span class="marker">b</span> ) It was just the ugly, old, empty lot across from Johnny's Shop. ( <span class="marker">c</span> ) It was filled ____ wild plants, fast food wraps, old newspapers, broken glass, and every other kind of dirty trash you can imagine. ( <span class="marker">d</span> ) As I looked at it that first morning, I thought, "I bet there are snakes in there, too." ( <span class="marker">e</span> )<br><br><b>주어진 문장:</b> I didn't understand why we were working on this place.`,
+    question: "주어진 문장의 가장 적절한 위치는?",
+    options: ["ⓐ", "ⓑ", "ⓒ", "ⓓ", "ⓔ"],
+    answer: 0,
+    explanation: "ⓐ 자리가 가장 적절합니다.<br>\"불평했다\"는 첫 문장 다음에 \"왜 이곳에서 일해야 하는지 이해할 수 없었다\"는 부연 설명이 자연스럽습니다."
+  },
+  {
+    id: 24,
+    passage: `It was filled <b>____</b> wild plants, fast food wraps, old newspapers, broken glass...`,
+    question: "빈칸에 들어갈 가장 적절한 전치사는?",
+    options: ["of", "in", "with", "on", "by"],
+    answer: 2,
+    explanation: "<b>be filled with ~</b>: ~로 가득 차 있다 (수동태 관용 표현)<br>예: The room was filled with smoke."
+  },
+  {
+    id: 25,
+    passage: `<b>"I bet there are snakes in there, too."</b><br><br>(I bet ~: 분명/확실히 ~할 것이다)`,
+    question: "위 문장의 우리말 의미로 가장 알맞은 것은?",
+    options: [
+      "거기서 뱀을 본 적이 있다.",
+      "거기에는 분명 뱀들도 있을 것이다.",
+      "거기에 뱀이 있는지 확인해야 한다.",
+      "거기에 뱀이 없다고 확신한다.",
+      "거기에서 뱀을 잡고 싶다."
+    ],
+    answer: 1,
+    explanation: "<b>I bet ~</b> = '분명히 ~할 것이다, 확신하건대 ~이다'(추측·확신)<br>→ \"거기에는 분명 뱀들도 있을 것이다.\""
+  },
+  {
+    id: 26,
+    passage: `By lunchtime, I was hot, sweaty, and glad my dad <span class="marker">a</span><u>have made</u> me wear gloves. We filled fifty trash bags <span class="marker">b</span><u>with</u> waste and were ready to pull wild plants. <span class="marker">c</span><u>As</u> we pulled and pulled, dust filled the air and made us <span class="marker">d</span><u>sneeze</u>. At the end of the day, I had to admit the lot looked <span class="marker">e</span><u>much better</u>.`,
+    question: "밑줄 친 ⓐ~ⓔ 중 어법상 <b>틀린</b> 것은?",
+    options: ["ⓐ have made", "ⓑ with", "ⓒ As", "ⓓ sneeze", "ⓔ much better"],
+    answer: 0,
+    explanation: "<b>ⓐ have made → had made</b><br>점심 시간(I was) <b>이전에</b> 아빠가 장갑을 끼게 한 것이므로 <b>대과거(had p.p.)</b>를 써야 합니다."
+  },
+  {
+    id: 27,
+    passage: `Tonight, it suddenly hit me - What a good thing we did! I'm proud I <span class="marker-num">①</span><u>have been</u> a part of it. I'm in charge of <span class="marker-num">②</span><u>picking</u> flowers for the nursing home on Fourth Street. The vegetables will go to <span class="marker-num">③</span><u>every kitchen</u> in our town. But <span class="marker-num">④</span><u>even better</u>, an ugly and dirty lot that people didn't like <span class="marker-num">⑤</span><u>have become</u> a pretty garden for everyone.`,
+    question: "밑줄 친 부분이 어법상 <b>틀린</b> 것은?",
+    options: ["①", "②", "③", "④", "⑤"],
+    answer: 4,
+    explanation: "<b>⑤ have become → has become</b><br>주어가 <b>an ugly and dirty lot(단수)</b>이므로 단수 동사 <b>has become</b>이 옳습니다.<br>(that ~ like는 lot을 수식하는 관계절일 뿐, 주어는 lot)"
+  },
+  {
+    id: 28,
+    passage: `Tonight, <b>(A) it suddenly hit me</b> - What a good thing we did!<br><br>'it suddenly hit me' = 갑자기 깨달았다 / 갑자기 떠올랐다`,
+    question: "(A) it suddenly hit me의 의미로 적절치 <b>않은</b> 것은?",
+    options: [
+      "I realized it all at once.",
+      "It came to me all of a sudden.",
+      "It suddenly popped into my head.",
+      "It slipped my mind for a moment.",
+      "It occurred to me all of a sudden."
+    ],
+    answer: 3,
+    explanation: "<b>④ It slipped my mind for a moment.</b> = '잠시 깜빡 잊었다' (반대 의미!)<br>나머지는 모두 '갑자기 떠올랐다/깨달았다'의 의미입니다."
+  },
+  {
+    id: 29,
+    passage: `That first day was the toughest. <span class="marker">a</span><u>On the weekends that followed, we made rows, planted flower and vegetable seeds, and watered them.</u> After about two weeks, I stopped complaining when I found the plants had started popping up! <span class="marker">b</span><u>First, the lettuce and then the beans and the tomatoes.</u> <span class="marker">c</span><u>They grew so fast.</u> <span class="marker">d</span><u>The vegetables are much better to our health than bread or snacks are.</u> I couldn't believe it! <span class="marker">e</span><u>The bean plants grew an inch, and the tomatoes doubled in size in just a few days.</u>`,
+    question: "ⓐ~ⓔ 중 글의 흐름상 <b>어색한</b> 문장은?",
+    options: ["ⓐ", "ⓑ", "ⓒ", "ⓓ", "ⓔ"],
+    answer: 3,
+    explanation: "<b>ⓓ The vegetables are much better to our health than bread or snacks are.</b><br>식물이 자라나는 과정을 묘사하는 흐름에서 <b>채소가 빵·간식보다 건강에 좋다</b>는 일반적 비교 진술은 흐름과 어긋납니다."
+  },
+  {
+    id: 30,
+    passage: `I like to go there every day to see <b>(A) 어떤 새로운 꽃들이 피어날 준비가 되어 있는지</b>. (7~8단어)`,
+    question: "(A)에 들어갈 어법에 맞는 영어 표현은?",
+    options: [
+      "what new flowers are ready to bloom",
+      "what are new flowers ready to bloom",
+      "which new flowers ready to bloom",
+      "that new flowers are ready to bloom",
+      "how new flowers are ready to bloom"
+    ],
+    answer: 0,
+    explanation: "<b>what new flowers are ready to bloom</b><br>• see의 목적어 자리 → <b>간접의문문</b><br>• 어순: <b>what(의문형용사) + 명사(new flowers) + 동사(are)</b><br>• be ready to + 동사원형: ~할 준비가 되다"
+  },
+  {
+    id: 31,
+    passage: `<b>A:</b> Seho, we need something on the wall, too. Don't you think so?<br><b>B:</b> You're right. Let's talk about it together.<br><b>A:</b> I think we need to put the club member list there. It'll be helpful for us to learn the new members' names.<br><b>C:</b> That's a good idea. We also need our plan for this school year on the wall.<br><b>A:</b> Right! That'll really help us remember important school events.<br><b>B:</b> Thank you for suggesting great ideas. We are a good team.`,
+    question: "위 대화의 주제로 가장 알맞은 것은?",
+    options: [
+      "연간 학교 행사",
+      "동아리 행사 일정",
+      "동아리 회원 명단 작성",
+      "동아리 회원 모집 방법",
+      "동아리실의 벽에 둘 물건"
+    ],
+    answer: 4,
+    explanation: "대화는 \"<b>we need something on the wall</b>\"로 시작해 벽에 걸 회원 명단, 학년 계획 등을 논의합니다.<br>→ 주제: <b>동아리실의 벽에 둘 물건</b>"
+  },
+  {
+    id: 32,
+    passage: `<span class="marker-num">①</span><u>When</u> I <span class="marker-num">②</span><u>talked</u> with Brian about the town project, I <span class="marker-num">③</span><u>was</u> surprised that he had <span class="marker-num">④</span><u>participating</u> in far more town projects <span class="marker-num">⑤</span><u>than</u> I expected.`,
+    question: "밑줄 친 ①~⑤ 중 어법상 <b>틀린</b> 것은?",
+    options: ["①", "②", "③", "④", "⑤"],
+    answer: 3,
+    explanation: "<b>④ participating → participated</b><br>had + p.p. (대과거)에서 had 뒤에는 <b>과거분사(p.p.)</b>가 와야 합니다.<br>participate의 과거분사: <b>participated</b>"
+  },
+  {
+    id: 33,
+    passage: `<b>A:</b> Let's talk about the town sports day.<br><b>B:</b> _____________`,
+    question: "B의 빈칸에 들어갈 말로 <b>알맞지 않은</b> 것은?",
+    options: [
+      "Sure. We had a cart race.",
+      "Why don't we play soccer?",
+      "Shall we have a bike race?",
+      "What about pulling the rope?",
+      "How about spinning a hula hoop?"
+    ],
+    answer: 0,
+    explanation: "A는 <b>town sports day(앞으로 있을 행사)</b>에 대해 이야기하자고 제안했습니다.<br>① \"<b>We had</b> a cart race(우리는 카트 경주를 했다)\"는 <b>과거형</b>이라 미래 행사 논의에 부적절합니다.<br>나머지는 모두 미래 활동 제안입니다."
+  },
+  {
+    id: 34,
+    passage: `<b>A:</b> _____________ Who will make posters?<br><b>B:</b> I will. I can do it well.`,
+    question: "A의 빈칸에 들어갈 말로 가장 알맞은 것은?",
+    options: [
+      "How was the club festival?",
+      "How about making cookies?",
+      "Are you having a club festival?",
+      "Let's talk about the club festival.",
+      "What are you going to do this weekend?"
+    ],
+    answer: 3,
+    explanation: "뒤에 \"누가 <b>포스터를 만들</b> 거니?\"라는 질문이 이어지므로, 동아리 축제 등 <b>포스터가 필요한 활동에 대한 논의</b>를 시작하는 ④가 가장 자연스럽습니다."
+  },
+  {
+    id: 35,
+    passage: `<b>상황:</b> 당신은 학급 반장입니다. 학급 친구들과 <b>마을 봉사 활동</b>에 대해 이야기하고 싶습니다.`,
+    question: "이 상황에서 할 말로 가장 적절한 것은?",
+    options: [
+      "Why don't we cook for the elderly?",
+      "Thank you for volunteering, everyone.",
+      "What should I do as the class president?",
+      "Who will participate in the volunteer work?",
+      "Let's talk about the volunteer work for our town."
+    ],
+    answer: 4,
+    explanation: "주제(봉사 활동)에 대한 <b>대화의 시작</b>으로 가장 자연스러운 것은 ⑤입니다.<br>\"<b>Let's talk about ~</b>\"는 주제를 꺼낼 때 쓰는 대표 표현입니다."
+  },
+  {
+    id: 36,
+    passage: `<b>A:</b> Let's talk about the class field trip. Who will take pictures of our activities?<br><b>B:</b> I will. I can do it well.<br><b>A:</b> _____________`,
+    question: "A의 빈칸에 들어갈 마지막 말로 가장 알맞은 것은?",
+    options: [
+      "Don't mention it.",
+      "I'm afraid I can't.",
+      "Don't worry about it.",
+      "Let's talk about it together.",
+      "Thank you for volunteering."
+    ],
+    answer: 4,
+    explanation: "B가 \"<b>제가 할게요(I will)</b>\"라며 자원했으므로, A는 <b>고마움을 표현</b>하는 말이 자연스럽습니다.<br>① 천만에요(부적절), ② 거절(부적절), ③ 걱정 마(부적절), ④ 함께 이야기하자(이미 자원했으므로 부적절)"
+  }
+];
+
+// ================ 상태 관리 ================
+let state = {
+  current: 0,
+  answered: false,
+  answers: [], // {questionId, selected, correct}
+};
+
+// ================ 화면 전환 ================
+function startQuiz() {
+  state = { current: 0, answered: false, answers: [] };
+  document.getElementById('screen-start').style.display = 'none';
+  document.getElementById('screen-quiz').style.display = 'block';
+  document.getElementById('screen-result').style.display = 'none';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = QUIZ_DATA[state.current];
+  const total = QUIZ_DATA.length;
+  const progress = ((state.current) / total) * 100;
+  
+  document.getElementById('progress-curr').textContent = state.current + 1;
+  document.getElementById('progress-fill').style.width = progress + '%';
+  document.getElementById('progress-percent').textContent = Math.round(progress) + '%';
+
+  const area = document.getElementById('question-area');
+  let html = `<div class="question-card">`;
+  html += `<div class="q-num">Q${q.id}</div>`;
+  if (q.passage) {
+    html += `<div class="q-passage">${q.passage}</div>`;
+  }
+  html += `<div class="q-text">${q.question}</div>`;
+  html += `<div class="options" id="options">`;
+  q.options.forEach((opt, idx) => {
+    const num = ['①','②','③','④','⑤'][idx];
+    html += `<button class="option" onclick="selectOption(${idx})" data-idx="${idx}">
+      <span class="option-num">${num}</span>
+      <span class="option-text">${opt}</span>
+    </button>`;
+  });
+  html += `</div>`;
+  html += `<div id="feedback-area"></div>`;
+  html += `</div>`;
+  
+  area.innerHTML = html;
+  state.answered = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectOption(idx) {
+  if (state.answered) return;
+  state.answered = true;
+  
+  const q = QUIZ_DATA[state.current];
+  const isCorrect = idx === q.answer;
+  
+  state.answers.push({
+    questionId: q.id,
+    selected: idx,
+    correct: isCorrect
+  });
+
+  // 옵션 표시
+  document.querySelectorAll('.option').forEach((el, i) => {
+    el.disabled = true;
+    if (i === q.answer) el.classList.add('correct');
+    else if (i === idx) el.classList.add('wrong');
+  });
+
+  // 피드백
+  const fbArea = document.getElementById('feedback-area');
+  const fbClass = isCorrect ? 'correct' : 'wrong';
+  const fbIcon = isCorrect ? '✓' : '✗';
+  const fbTitle = isCorrect ? '정답입니다!' : '오답입니다';
+  
+  fbArea.innerHTML = `
+    <div class="feedback ${fbClass}">
+      <div class="feedback-title">${fbIcon} ${fbTitle}</div>
+      <div class="feedback-body">${q.explanation}</div>
+    </div>
+    <button class="next-btn" onclick="nextQuestion()">
+      ${state.current === QUIZ_DATA.length - 1 ? '결과 보기 →' : '다음 문제 →'}
+    </button>
+  `;
+  
+  // 피드백 영역으로 부드럽게 스크롤
+  setTimeout(() => {
+    fbArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+}
+
+function nextQuestion() {
+  if (state.current < QUIZ_DATA.length - 1) {
+    state.current++;
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  document.getElementById('screen-quiz').style.display = 'none';
+  const screen = document.getElementById('screen-result');
+  screen.style.display = 'block';
+
+  const correctCount = state.answers.filter(a => a.correct).length;
+  const wrongCount = state.answers.length - correctCount;
+  const total = QUIZ_DATA.length;
+  const percent = Math.round((correctCount / total) * 100);
+
+  let grade, emoji, msg;
+  if (percent >= 90) { grade = 'A+'; emoji = '🏆'; msg = '완벽해요! 최고의 실력입니다'; }
+  else if (percent >= 80) { grade = 'A'; emoji = '🎉'; msg = '훌륭해요! 잘 이해하고 있어요'; }
+  else if (percent >= 70) { grade = 'B'; emoji = '👍'; msg = '잘했어요! 조금만 더 복습해요'; }
+  else if (percent >= 60) { grade = 'C'; emoji = '💪'; msg = '괜찮아요! 틀린 부분 다시 봐요'; }
+  else if (percent >= 40) { grade = 'D'; emoji = '📚'; msg = '복습이 필요해요. 다시 도전!'; }
+  else { grade = 'F'; emoji = '🔥'; msg = '꼼꼼히 복습한 후 다시 풀어봐요'; }
+
+  let html = `
+    <div class="result-emoji">${emoji}</div>
+    <h2 class="result-title">${msg}</h2>
+    <div class="result-grade">${grade}</div>
+    <div class="result-score"><b>${correctCount}</b> / ${total} 정답 (${percent}%)</div>
+    
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-num correct-c">${correctCount}</div>
+        <div class="stat-label">정답</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num wrong-c">${wrongCount}</div>
+        <div class="stat-label">오답</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num total-c">${total}</div>
+        <div class="stat-label">전체</div>
+      </div>
+    </div>
+
+    <div class="review-section">
+      <div class="review-title">📋 문항별 결과 (탭하여 다시 보기)</div>
+      <div class="review-grid">`;
+  
+  state.answers.forEach((a, i) => {
+    const cls = a.correct ? 'correct' : 'wrong';
+    html += `<div class="review-item ${cls}" onclick="reviewQuestion(${i})">${a.questionId}</div>`;
+  });
+  
+  html += `</div></div>
+    <button class="retry-btn" onclick="startQuiz()">🔄 다시 도전하기</button>
+  `;
+  
+  screen.innerHTML = html;
+}
+
+function reviewQuestion(idx) {
+  const ans = state.answers[idx];
+  const q = QUIZ_DATA.find(qq => qq.id === ans.questionId);
+  if (!q) return;
+  
+  const numChars = ['①','②','③','④','⑤'];
+  let html = '';
+  if (q.passage) html += `<div class="q-passage" style="margin-bottom:12px;">${q.passage}</div>`;
+  html += `<div class="q-text" style="margin-bottom:12px;">${q.question}</div>`;
+  html += `<div class="options" style="margin-bottom:12px;">`;
+  q.options.forEach((opt, i) => {
+    let cls = 'option';
+    if (i === q.answer) cls += ' correct';
+    else if (i === ans.selected && !ans.correct) cls += ' wrong';
+    html += `<div class="${cls}"><span class="option-num">${numChars[i]}</span><span class="option-text">${opt}</span></div>`;
+  });
+  html += `</div>`;
+  html += `<div class="feedback ${ans.correct ? 'correct' : 'wrong'}">
+    <div class="feedback-title">${ans.correct ? '✓ 정답' : '✗ 오답'} · 해설</div>
+    <div class="feedback-body">${q.explanation}</div>
+  </div>`;
+  
+  document.getElementById('modal-title').textContent = `Q${q.id} 다시 보기`;
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('review-modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('review-modal').classList.remove('show');
+}
+</script>
+</body>
+</html>
