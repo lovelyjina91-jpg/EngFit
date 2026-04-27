@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>감정 어휘 Quiz | 승유</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: #0f172a; color: #e2e8f0; font-family: 'Pretendard','Apple SD Gothic Neo','Malgun Gothic',-apple-system,sans-serif; }
+  body { min-height: 100vh; }
+  button { font-family: inherit; }
+
+  .wrap { max-width: 460px; margin: 0 auto; padding: 0 16px; }
+
+  /* HOME */
+  .home { min-height: 100vh; padding: 48px 0 24px; }
+  .home-tag { font-size: 12px; letter-spacing: 4px; color: #64748b; text-transform: uppercase; text-align: center; margin-bottom: 8px; }
+  .home-title { font-size: 30px; font-weight: 800; color: #f8fafc; text-align: center; line-height: 1.3; margin-bottom: 8px; }
+  .home-emoji { font-size: 56px; text-align: center; margin: 8px 0 4px; }
+  .home-sub { font-size: 14px; color: #94a3b8; text-align: center; margin-bottom: 36px; }
+  .home-greeting { background: linear-gradient(135deg, rgba(56,189,248,0.12), rgba(99,102,241,0.12)); border: 1px solid rgba(99,102,241,0.25); border-radius: 14px; padding: 16px 18px; margin-bottom: 24px; }
+  .home-greeting .who { font-size: 13px; color: #93c5fd; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px; }
+  .home-greeting .msg { font-size: 14px; color: #e2e8f0; line-height: 1.6; }
+  .field-label { font-size: 13px; color: #94a3b8; display: block; margin-bottom: 6px; }
+  .field-input { width: 100%; padding: 14px 16px; font-size: 16px; border-radius: 12px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; outline: none; }
+  .field-input:focus { border-color: #6366f1; }
+  .start-btn { width: 100%; padding: 18px; border-radius: 14px; border: none; cursor: pointer; background: linear-gradient(135deg,#38bdf8,#6366f1); color: #fff; font-size: 18px; font-weight: 700; margin-top: 24px; }
+  .info-box { margin-top: 20px; padding: 16px 18px; border-radius: 12px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.18); font-size: 13px; color: #cbd5e1; line-height: 1.9; }
+  .teacher-tag { text-align: center; margin-top: 24px; font-size: 12px; color: #64748b; }
+
+  /* QUIZ HEADER */
+  .qhead { position: sticky; top: 0; z-index: 10; background: #1e293b; border-bottom: 1px solid #334155; padding: 10px 16px; }
+  .qhead-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
+  .qhead-row .num { color: #cbd5e1; font-weight: 600; }
+  .qhead-row .meta { color: #64748b; font-variant-numeric: tabular-nums; }
+  .qhead-bar { height: 4px; background: #334155; border-radius: 2px; overflow: hidden; }
+  .qhead-bar > div { height: 100%; background: linear-gradient(90deg,#38bdf8,#6366f1); border-radius: 2px; transition: width 0.3s; }
+
+  /* QUIZ BODY */
+  .qbody { max-width: 460px; margin: 0 auto; padding: 18px 16px 110px; }
+  .qcard { background: #1e293b; border-radius: 16px; padding: 22px 20px; margin-bottom: 16px; border: 1px solid #334155; }
+  .qcard-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .qcard-tag { font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 9px; border-radius: 6px; }
+  .qcard-num { font-size: 12px; font-weight: 600; letter-spacing: 1px; }
+  .qcard-q { font-size: 24px; font-weight: 700; color: #f8fafc; line-height: 1.4; }
+  .qcard-prompt { font-size: 13px; color: #94a3b8; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #334155; }
+
+  .opts { display: flex; flex-direction: column; gap: 8px; }
+  .opt { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; border-radius: 12px; border: 1.5px solid #334155; background: #1e293b; cursor: pointer; transition: all 0.12s; text-align: left; color: inherit; }
+  .opt:hover { border-color: #475569; }
+  .opt.selected { border-color: var(--accent); background: var(--accentBg); }
+  .opt .circle { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; color: #94a3b8; }
+  .opt.selected .circle { color: var(--accent); }
+  .opt .text { font-size: 15px; line-height: 1.4; color: #cbd5e1; flex: 1; }
+  .opt.selected .text { color: #f1f5f9; font-weight: 600; }
+
+  /* BOTTOM NAV */
+  .qnav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; padding: 10px 16px; display: flex; gap: 8px; justify-content: center; max-width: 460px; margin: 0 auto; }
+  .qnav-btn { flex: 1; max-width: 140px; padding: 12px; border-radius: 10px; border: 1px solid #475569; background: transparent; color: #e2e8f0; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .qnav-btn:disabled { color: #475569; cursor: default; }
+  .qnav-submit { padding: 12px 18px; border-radius: 10px; border: none; background: #22c55e; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+  /* CONFIRM MODAL */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal { background: #1e293b; border-radius: 20px; padding: 26px 22px; max-width: 360px; width: 100%; border: 1px solid #334155; }
+  .modal-title { font-size: 18px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+  .modal-warn { font-size: 14px; color: #f97316; margin-bottom: 12px; }
+  .modal-msg { font-size: 14px; color: #94a3b8; margin-bottom: 20px; line-height: 1.5; }
+  .modal-row { display: flex; gap: 8px; }
+  .modal-row button { flex: 1; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .modal-cancel { border: 1px solid #475569; background: transparent; color: #e2e8f0; }
+  .modal-confirm { border: none; background: #22c55e; color: #fff; }
+
+  /* RESULT */
+  .result { padding: 20px 0 24px; }
+  .result-card { background: #1e293b; border-radius: 20px; padding: 28px 22px; text-align: center; margin-bottom: 18px; border: 1px solid #334155; }
+  .result-tag { font-size: 12px; color: #94a3b8; letter-spacing: 2px; margin-bottom: 4px; }
+  .result-name { font-size: 17px; color: #e2e8f0; font-weight: 600; margin-bottom: 14px; }
+  .result-grade { font-size: 64px; font-weight: 800; line-height: 1; }
+  .result-score { font-size: 38px; font-weight: 700; color: #f8fafc; margin-top: 8px; }
+  .result-score small { font-size: 18px; color: #64748b; }
+  .result-meta { font-size: 14px; color: #94a3b8; margin-top: 4px; }
+  .result-bar { margin: 20px auto 0; width: 180px; height: 12px; background: #334155; border-radius: 6px; overflow: hidden; }
+  .result-bar > div { height: 100%; border-radius: 6px; }
+
+  .copy-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: #fbbf24; color: #1e293b; font-size: 17px; font-weight: 700; cursor: pointer; margin-bottom: 14px; }
+  .copy-area { margin-bottom: 14px; }
+  .copy-hint { font-size: 13px; color: #fbbf24; font-weight: 600; margin-bottom: 8px; }
+  .copy-text { width: 100%; min-height: 220px; padding: 14px 16px; font-size: 13px; border-radius: 12px; border: 1px solid #fbbf2466; background: #0f172a; color: #e2e8f0; font-family: monospace; line-height: 1.6; resize: none; outline: none; }
+
+  .wrong-card { background: #1e293b; border-radius: 16px; padding: 18px; border: 1px solid #334155; }
+  .wrong-title { font-size: 15px; font-weight: 700; color: #f87171; margin-bottom: 12px; }
+  .wrong-item { padding: 10px 12px; border-radius: 8px; margin-bottom: 4px; }
+  .wrong-item.even { background: #0f172a; }
+  .wrong-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .wrong-eng { font-size: 14px; color: #93c5fd; font-weight: 600; }
+  .wrong-kor { font-size: 14px; color: #cbd5e1; text-align: right; }
+
+  .result-actions { display: flex; gap: 8px; margin-top: 16px; padding-bottom: 8px; }
+  .result-actions button { flex: 1; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn-home { border: 1px solid #475569; background: transparent; color: #e2e8f0; }
+  .btn-retry { border: none; background: linear-gradient(135deg,#38bdf8,#6366f1); color: #fff; }
+
+  .footer-sig { text-align: center; font-size: 11px; color: #475569; margin-top: 18px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+"use strict";
+
+/* ========== DATA ========== */
+const WORDS = [
+  // 유정쌤 지정 21단어
+  ["confident","자신감 있는"],
+  ["passionate","열정적인"],
+  ["relieved","안도하는, 다행으로 여기는"],
+  ["excited","신이 난, 설레는"],
+  ["satisfied","만족하는"],
+  ["optimistic","낙관적인, 긍정적인"],
+  ["outgoing","외향적인, 사교적인"],
+  ["considerate","사려 깊은, 배려하는"],
+  ["responsible","책임감 있는"],
+  ["anxious","불안한, 초조한"],
+  ["frustrated","좌절감을 느끼는, 답답한"],
+  ["embarrassed","당황스러운, 창피한"],
+  ["confused","혼란스러운"],
+  ["worried","걱정하는"],
+  ["nervous","긴장한"],
+  ["reliable","믿음직한, 신뢰할 수 있는"],
+  ["independent","독립적인"],
+  ["accessible","접근하기 쉬운, 이해하기 쉬운"],
+  ["intimacy","친밀함"],
+  ["concern","걱정, 관심사"],
+  ["attitude","태도"],
+  // 기본 감정 어휘 9개 (학생 요청 추가분)
+  ["happy","행복한"],
+  ["glad","기쁜"],
+  ["sad","슬픈"],
+  ["angry","화난"],
+  ["proud","자랑스러운"],
+  ["surprised","놀란"],
+  ["scared","무서워하는, 겁먹은"],
+  ["bored","지루한, 따분한"],
+  ["lonely","외로운"],
+];
+
+/* ========== UTIL ========== */
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function pad(n){ return String(n).padStart(2,"0"); }
+function fmtTimer(ms){ const s=Math.floor(ms/1000); return Math.floor(s/60)+":"+pad(s%60); }
+function escHTML(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+const CIRCLE = ["①","②","③","④"];
+
+/* ========== QUESTION GENERATION ========== */
+function makeVocabE2K(word, allWords){
+  const [eng, kor] = word;
+  const pool = allWords.filter(w => w[1] !== kor).map(w => w[1]);
+  const distractors = shuffle(pool).slice(0,3);
+  const options = shuffle([kor, ...distractors]);
+  return { type:"vocab_e2k", question:eng, prompt:"뜻으로 알맞은 것은?", answer:kor, options, eng, kor };
+}
+
+function makeVocabK2E(word, allWords){
+  const [eng, kor] = word;
+  const pool = allWords.filter(w => w[0] !== eng).map(w => w[0]);
+  const distractors = shuffle(pool).slice(0,3);
+  const options = shuffle([eng, ...distractors]);
+  return { type:"vocab_k2e", question:kor, prompt:"영어로 알맞은 것은?", answer:eng, options, eng, kor };
+}
+
+function buildQuestionSet(){
+  const questions = [];
+  for(const w of WORDS){
+    if(Math.random() < 0.5) questions.push(makeVocabE2K(w, WORDS));
+    else questions.push(makeVocabK2E(w, WORDS));
+  }
+  return shuffle(questions);
+}
+
+/* ========== STATE ========== */
+const state = {
+  screen: "home",
+  name: "",
+  questions: [],
+  currentQ: 0,
+  answers: {},
+  results: null,
+  startTime: null,
+  elapsed: 0,
+  showConfirm: false,
+  showCopy: false,
+  timerId: null,
+};
+
+/* ========== RENDER ========== */
+const $app = document.getElementById("app");
+
+function render(){
+  if(state.screen === "home")        $app.innerHTML = renderHome();
+  else if(state.screen === "quiz")   $app.innerHTML = renderQuiz();
+  else if(state.screen === "result") $app.innerHTML = renderResult();
+  attachListeners();
+  if(state.screen === "quiz"){
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+}
+
+function renderHome(){
+  return `
+    <div class="home">
+      <div class="wrap">
+        <div class="home-tag">Emotion & Personality</div>
+        <div class="home-emoji">👑✨</div>
+        <h1 class="home-title">감정·성격 어휘 Quiz</h1>
+        <div class="home-sub">단어 ${WORDS.length}개 · 영↔한 · 4지선다</div>
+
+        <div class="home-greeting">
+          <div class="who">승유 왕자님께</div>
+          <div class="msg">유정쌤이 콕 집어주신 단어 + happy같은 기본 감정 어휘까지 더 다양하게! 부담 없이 한 번 쭉 풀어보고, 헷갈리는 단어는 오답에서 다시 확인하자 ✨</div>
+        </div>
+
+        <label class="field-label" for="name">이름</label>
+        <input id="name" class="field-input" type="text" placeholder="이름을 입력하세요" value="${escHTML(state.name)}" />
+
+        <button id="startBtn" class="start-btn">시험 시작</button>
+
+        <div class="info-box">
+          · 영어→한글, 한글→영어 랜덤 혼합 4지선다<br/>
+          · 답 선택 후 자동으로 다음 문제로 이동<br/>
+          · 제출 전까지 이전으로 돌아가 답 변경 가능<br/>
+          · 결과 텍스트 복사해서 카톡으로 전송
+        </div>
+
+        <div class="teacher-tag">담당 : 유정쌤이 시킨 지나티처</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderQuiz(){
+  const total = state.questions.length;
+  const q = state.questions[state.currentQ];
+  const answered = Object.keys(state.answers).length;
+  const progress = (answered/total)*100;
+  const sel = state.answers[state.currentQ];
+
+  let accent = "#38bdf8", accentBg = "rgba(56,189,248,0.15)", typeLabel = "영→한";
+  if(q.type === "vocab_k2e"){ accent = "#6366f1"; accentBg = "rgba(99,102,241,0.18)"; typeLabel = "한→영"; }
+
+  const opts = q.options.map((opt,idx) => {
+    const isSel = sel === idx;
+    return `
+      <button class="opt ${isSel?'selected':''}" data-opt="${idx}" style="--accent:${accent};--accentBg:${accentBg}">
+        <span class="circle">${CIRCLE[idx]}</span>
+        <span class="text">${escHTML(opt)}</span>
+      </button>
+    `;
+  }).join("");
+
+  const navBtn = state.currentQ < total - 1
+    ? `<button id="nextBtn" class="qnav-submit" style="background:${accent};">다음</button>`
+    : `<div style="flex:1;max-width:80px;"></div>`;
+
+  const confirm = state.showConfirm ? `
+    <div class="modal-bg" id="modalBg">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-title">시험을 제출할까요?</div>
+        ${(total - answered) > 0 ? `<div class="modal-warn">아직 ${total-answered}문제 풀지 않음</div>` : ""}
+        <div class="modal-msg">제출하면 답을 수정할 수 없어요.</div>
+        <div class="modal-row">
+          <button class="modal-cancel" id="cancelBtn">돌아가기</button>
+          <button class="modal-confirm" id="confirmBtn">제출하기</button>
+        </div>
+      </div>
+    </div>
+  ` : "";
+
+  return `
+    <div class="qhead">
+      <div class="qhead-row">
+        <span class="num">${state.currentQ + 1} <span style="color:#64748b;">/ ${total}</span></span>
+        <span class="meta">${fmtTimer(state.elapsed)} · ${answered}/${total} 응답</span>
+      </div>
+      <div class="qhead-bar"><div style="width:${progress}%"></div></div>
+    </div>
+
+    <div class="qbody">
+      <div class="qcard">
+        <div class="qcard-row">
+          <span class="qcard-num" style="color:${accent}">Q${state.currentQ + 1}</span>
+          <span class="qcard-tag" style="color:${accent};background:${accentBg};">${typeLabel}</span>
+        </div>
+        <div class="qcard-q">${escHTML(q.question)}</div>
+        <div class="qcard-prompt">${escHTML(q.prompt)}</div>
+      </div>
+
+      <div class="opts">${opts}</div>
+    </div>
+
+    <div class="qnav">
+      <button id="prevBtn" class="qnav-btn" ${state.currentQ===0?"disabled":""}>이전</button>
+      ${navBtn}
+      <button id="submitBtn" class="qnav-submit">제출 (${answered}/${total})</button>
+    </div>
+
+    ${confirm}
+  `;
+}
+
+function renderResult(){
+  const r = state.results;
+  const pct = Math.round(r.correct / r.total * 100);
+  let grade, gc;
+  if(pct >= 95){ grade="A+"; gc="#22c55e"; }
+  else if(pct >= 90){ grade="A"; gc="#4ade80"; }
+  else if(pct >= 85){ grade="B+"; gc="#3b82f6"; }
+  else if(pct >= 80){ grade="B"; gc="#60a5fa"; }
+  else if(pct >= 70){ grade="C"; gc="#f97316"; }
+  else { grade="D"; gc="#ef4444"; }
+
+  const txt = buildCopyText();
+
+  const wrongList = r.wrongs.map((w,i) => `
+    <div class="wrong-item ${i%2===0?'even':''}">
+      <div class="wrong-row">
+        <span class="wrong-eng">${escHTML(w.eng)}</span>
+        <span class="wrong-kor">${escHTML(w.kor)}</span>
+      </div>
+    </div>
+  `).join("");
+
+  return `
+    <div class="result">
+      <div class="wrap">
+        <div class="result-card">
+          <div class="result-tag">감정·성격 어휘 시험</div>
+          ${state.name ? `<div class="result-name">${escHTML(state.name)}</div>` : `<div style="height:8px;"></div>`}
+          <div class="result-grade" style="color:${gc}">${grade}</div>
+          <div class="result-score">${r.correct}<small>/${r.total}</small></div>
+          <div class="result-meta">${pct}% · ${r.time}</div>
+          <div class="result-bar"><div style="width:${pct}%;background:${gc};"></div></div>
+        </div>
+
+        ${state.showCopy ? `
+          <div class="copy-area">
+            <div class="copy-hint">아래 텍스트를 꾹 눌러 전체선택 → 복사 → 카톡에 붙여넣기</div>
+            <textarea id="copyText" class="copy-text" readonly>${escHTML(txt)}</textarea>
+          </div>
+        ` : `
+          <button id="showCopyBtn" class="copy-btn">카톡 전송용 텍스트 보기</button>
+        `}
+
+        ${r.wrongs.length > 0 ? `
+          <div class="wrong-card">
+            <div class="wrong-title">오답 노트 (${r.wrongs.length}개)</div>
+            ${wrongList}
+          </div>
+        ` : `
+          <div class="wrong-card" style="text-align:center;">
+            <div style="font-size:18px;font-weight:700;color:#22c55e;margin-bottom:4px;">🎉 만점! 역시 왕자님!</div>
+            <div style="font-size:13px;color:#94a3b8;">전부 정답이야! 정말 잘했어!</div>
+          </div>
+        `}
+
+        <div class="result-actions">
+          <button id="homeBtn" class="btn-home">처음으로</button>
+          <button id="retryBtn" class="btn-retry">다시 풀기</button>
+        </div>
+
+        <div class="footer-sig">EMOTION & PERSONALITY · 담당 유정쌤이 시킨 지나티처</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ========== EVENTS ========== */
+function attachListeners(){
+  if(state.screen === "home"){
+    const inp = document.getElementById("name");
+    if(inp) inp.addEventListener("input", e => { state.name = e.target.value; });
+    const start = document.getElementById("startBtn");
+    if(start) start.addEventListener("click", startQuiz);
+  }
+
+  if(state.screen === "quiz"){
+    document.querySelectorAll(".opt").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.getAttribute("data-opt"), 10);
+        state.answers[state.currentQ] = idx;
+        const isLast = state.currentQ >= state.questions.length - 1;
+        if(!isLast){
+          render();
+          setTimeout(() => { state.currentQ += 1; render(); }, 250);
+        } else {
+          render();
+        }
+      });
+    });
+    const prev = document.getElementById("prevBtn");
+    if(prev) prev.addEventListener("click", () => {
+      if(state.currentQ > 0){ state.currentQ -= 1; render(); }
+    });
+    const next = document.getElementById("nextBtn");
+    if(next) next.addEventListener("click", () => {
+      if(state.currentQ < state.questions.length - 1){ state.currentQ += 1; render(); }
+    });
+    const sub = document.getElementById("submitBtn");
+    if(sub) sub.addEventListener("click", () => { state.showConfirm = true; render(); });
+    const cancel = document.getElementById("cancelBtn");
+    if(cancel) cancel.addEventListener("click", () => { state.showConfirm = false; render(); });
+    const conf = document.getElementById("confirmBtn");
+    if(conf) conf.addEventListener("click", finishQuiz);
+    const bg = document.getElementById("modalBg");
+    if(bg) bg.addEventListener("click", () => { state.showConfirm = false; render(); });
+  }
+
+  if(state.screen === "result"){
+    const showCopy = document.getElementById("showCopyBtn");
+    if(showCopy) showCopy.addEventListener("click", () => { state.showCopy = true; render(); });
+    const ta = document.getElementById("copyText");
+    if(ta){
+      setTimeout(() => { ta.focus(); ta.select(); }, 100);
+      ta.addEventListener("focus", () => ta.select());
+    }
+    const home = document.getElementById("homeBtn");
+    if(home) home.addEventListener("click", () => {
+      state.screen = "home"; state.results = null; state.showCopy = false; state.answers = {}; render();
+    });
+    const retry = document.getElementById("retryBtn");
+    if(retry) retry.addEventListener("click", startQuiz);
+  }
+}
+
+/* ========== ACTIONS ========== */
+function startQuiz(){
+  state.questions = buildQuestionSet();
+  state.currentQ = 0;
+  state.answers = {};
+  state.results = null;
+  state.startTime = Date.now();
+  state.elapsed = 0;
+  state.showConfirm = false;
+  state.showCopy = false;
+  state.screen = "quiz";
+  if(state.timerId) clearInterval(state.timerId);
+  state.timerId = setInterval(() => {
+    state.elapsed = Date.now() - state.startTime;
+    if(state.screen === "quiz"){
+      const meta = document.querySelector(".qhead-row .meta");
+      if(meta){
+        const total = state.questions.length;
+        const answered = Object.keys(state.answers).length;
+        meta.textContent = `${fmtTimer(state.elapsed)} · ${answered}/${total} 응답`;
+      }
+    }
+  }, 1000);
+  render();
+}
+
+function finishQuiz(){
+  const totalSec = Math.floor((Date.now() - state.startTime)/1000);
+  let correct = 0;
+  const wrongs = [];
+  state.questions.forEach((q,i) => {
+    const sel = state.answers[i];
+    if(sel !== undefined && q.options[sel] === q.answer){ correct++; }
+    else { wrongs.push(q); }
+  });
+  state.results = {
+    correct,
+    total: state.questions.length,
+    wrongs,
+    time: `${Math.floor(totalSec/60)}분 ${totalSec%60}초`,
+  };
+  if(state.timerId){ clearInterval(state.timerId); state.timerId = null; }
+  state.showConfirm = false;
+  state.screen = "result";
+  render();
+}
+
+function buildCopyText(){
+  const r = state.results; if(!r) return "";
+  const date = new Date().toLocaleDateString("ko-KR");
+  const pct = Math.round(r.correct/r.total*100);
+  let t = "[감정·성격 어휘 시험]\n";
+  t += `${state.name ? state.name + " | " : ""}${date}\n`;
+  t += `${r.correct}/${r.total} (${pct}%) | ${r.time}\n`;
+  t += "담당: 유정쌤이 시킨 지나티처\n";
+  if(r.wrongs.length === 0){
+    t += "\n🎉 만점! 역시 왕자님!";
+  } else {
+    t += `\n[오답 ${r.wrongs.length}개]\n`;
+    r.wrongs.forEach((w,i) => {
+      t += `${i+1}. ${w.eng} = ${w.kor}\n`;
+    });
+  }
+  return t;
+}
+
+/* ========== INIT ========== */
+render();
+</script>
+</body>
+</html>
