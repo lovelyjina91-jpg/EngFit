@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lesson 1 Express Your Feelings | 영핏 학원</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --navy: #1a2550;
+    --navy-light: #2a3a6e;
+    --gold: #d4a850;
+    --primary: #3b5bdb;
+    --primary-light: #e7ecff;
+    --accent: #ff6b9d;
+    --correct: #22c55e;
+    --correct-bg: #dcfce7;
+    --wrong: #ef4444;
+    --wrong-bg: #fee2e2;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --bg: #f8f9fc;
+    --card: #ffffff;
+    --border: #e5e7eb;
+  }
+  html, body {
+    font-family: 'Noto Sans KR', 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    overscroll-behavior: none;
+  }
+  .app { max-width: 600px; margin: 0 auto; min-height: 100vh; background: var(--bg); position: relative; padding-bottom: 32px; }
+
+  /* 헤더 */
+  .header {
+    background: var(--navy);
+    color: white;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 12px rgba(26,37,80,0.15);
+  }
+  .logo {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--gold), #b8902f);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 13px;
+    color: var(--navy);
+    letter-spacing: -0.3px;
+    box-shadow: inset 0 -2px 0 rgba(0,0,0,0.1);
+  }
+  .header-text { flex: 1; min-width: 0; }
+  .header-title {
+    font-size: 16px; font-weight: 700;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .header-sub {
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 500;
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+
+  /* 진행바 */
+  .progress-wrap {
+    background: var(--card);
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .progress-info {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .q-counter { font-weight: 700; color: var(--navy); }
+  .score-info { color: var(--text-light); font-weight: 500; }
+  .score-info .correct-cnt { color: var(--correct); font-weight: 700; }
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  /* 문제 카드 */
+  .quiz-area { padding: 20px 18px; }
+  .question-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 22px 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .q-tag {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 99px;
+    margin-bottom: 12px;
+    letter-spacing: 0.3px;
+  }
+  .q-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 14px;
+    line-height: 1.5;
+    word-break: keep-all;
+  }
+  .q-sentence {
+    background: #f3f5fb;
+    border-left: 3px solid var(--accent);
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 15px;
+    color: #2a3a6e;
+    line-height: 1.6;
+    font-weight: 500;
+  }
+  .q-sentence em {
+    font-style: normal;
+    background: #fff3cd;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 700;
+    color: #b45309;
+  }
+
+  /* 선택지 */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 15px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    word-break: keep-all;
+  }
+  .option:active { transform: scale(0.99); }
+  .option:hover { border-color: var(--primary); background: #fafbff; }
+  .option-num {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .option.correct {
+    border-color: var(--correct);
+    background: var(--correct-bg);
+    color: #166534;
+  }
+  .option.correct .option-num {
+    background: var(--correct);
+    color: white;
+  }
+  .option.wrong {
+    border-color: var(--wrong);
+    background: var(--wrong-bg);
+    color: #991b1b;
+  }
+  .option.wrong .option-num {
+    background: var(--wrong);
+    color: white;
+  }
+  .option:disabled { cursor: default; }
+
+  /* 피드백 */
+  .feedback {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-top: 14px;
+    display: none;
+    animation: slideUp 0.3s ease;
+    border: 1px solid var(--border);
+  }
+  .feedback.show { display: block; }
+  .feedback.correct { border-left: 4px solid var(--correct); }
+  .feedback.wrong { border-left: 4px solid var(--wrong); }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fb-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .fb-title.correct { color: var(--correct); }
+  .fb-title.wrong { color: var(--wrong); }
+  .fb-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+    word-break: keep-all;
+  }
+  .fb-text strong { color: var(--navy); font-weight: 700; }
+
+  /* 다음 버튼 */
+  .next-btn {
+    display: none;
+    width: 100%;
+    margin-top: 12px;
+    padding: 14px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .next-btn.show { display: block; }
+  .next-btn:active { transform: scale(0.99); background: var(--navy-light); }
+
+  /* 결과 화면 */
+  .result-screen { display: none; padding: 20px 18px; text-align: center; }
+  .result-screen.show { display: block; }
+  .result-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 28px 22px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+  .result-emoji { font-size: 56px; margin-bottom: 8px; }
+  .result-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 4px;
+  }
+  .result-sub {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 20px;
+  }
+  .grade-badge {
+    display: inline-block;
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    font-size: 38px;
+    font-weight: 900;
+    line-height: 84px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 20px rgba(59,91,219,0.3);
+  }
+  .score-display {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 6px;
+    font-family: 'Nunito', sans-serif;
+  }
+  .score-display .total { color: var(--text-light); font-size: 22px; font-weight: 600; }
+  .accuracy {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 20px;
+  }
+
+  /* 문항별 리뷰 */
+  .review-section { margin-top: 24px; text-align: left; }
+  .review-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+  .review-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+  .review-cell {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    font-family: 'Nunito', sans-serif;
+    color: white;
+  }
+  .review-cell.correct { background: var(--correct); }
+  .review-cell.wrong { background: var(--wrong); }
+
+  .retry-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 4px 12px rgba(59,91,219,0.25);
+    transition: all 0.15s;
+  }
+  .retry-btn:active { transform: scale(0.99); }
+
+  @media (max-width: 380px) {
+    .q-text { font-size: 15px; }
+    .q-sentence { font-size: 14px; }
+    .option { font-size: 14px; padding: 12px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="logo">EngFit</div>
+    <div class="header-text">
+      <div class="header-title">Lesson 1 표현과 문법</div>
+      <div class="header-sub">EXPRESS YOUR FEELINGS</div>
+    </div>
+  </header>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-info">
+      <span class="q-counter">문제 <span id="qNum">1</span> / <span id="qTotal">15</span></span>
+      <span class="score-info"><span class="correct-cnt" id="correctCnt">0</span> 정답</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <main class="quiz-area" id="quizArea">
+    <!-- 문제가 여기에 동적으로 들어갑니다 -->
+  </main>
+
+  <section class="result-screen" id="resultScreen">
+    <div class="result-card">
+      <div class="result-emoji" id="resultEmoji">🎉</div>
+      <div class="result-title" id="resultTitle">테스트 완료!</div>
+      <div class="result-sub">수고하셨어요</div>
+      <div class="grade-badge" id="gradeBadge">A</div>
+      <div class="score-display"><span id="finalScore">0</span><span class="total"> / 15</span></div>
+      <div class="accuracy" id="accuracy">정답률 0%</div>
+
+      <div class="review-section">
+        <div class="review-title">📋 문항별 결과</div>
+        <div class="review-grid" id="reviewGrid"></div>
+      </div>
+
+      <button class="retry-btn" onclick="retry()">🔄 다시 도전하기</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const questions = [
+  // ===== Reading 1 [B] - laughter, LOL =====
+  {
+    type: '문법 개념',
+    q: '다음 문장에서 사용된 문법은?',
+    sentence: 'Everyone knows <em>what it means</em>.',
+    options: ['직접의문문 (의문사+동사+주어)', '간접의문문 (의문사+주어+동사)', '관계대명사', '감탄문'],
+    answer: 1,
+    explain: '<strong>간접의문문</strong>은 의문사 + 주어 + 동사 어순으로, 다른 문장에 안겨 들어가면서 간접적인 의미가 됩니다. (what + it + means)'
+  },
+  {
+    type: '형태 고르기',
+    q: '괄호 안에서 옳은 것을 고르세요.',
+    sentence: '"Ha-ha" is a form of [ writing / written ] laughter.',
+    options: ['writing', 'written'],
+    answer: 1,
+    explain: '<strong>written</strong>이 정답. 수동의 의미(문자로 쓰여진)로 명사 laughter를 꾸미는 <strong>과거분사</strong>입니다.'
+  },
+  {
+    type: '빈칸 채우기',
+    q: '빈칸에 들어갈 것은? (실제로 그것은 오래전부터 사용되어 왔다)',
+    sentence: 'Actually, it ___ used since long ago.',
+    options: ['has been', 'has being', 'have been', 'is'],
+    answer: 0,
+    explain: '<strong>has been</strong>이 정답. <strong>현재완료 수동태</strong>는 have(s)+been+과거분사 형태입니다. 주어 it이므로 has been used.'
+  },
+  {
+    type: '해석 / 어법',
+    q: '다음 문장에서 as의 의미는?',
+    sentence: 'These expressions have become popular <em>as</em> they can be typed quite quickly.',
+    options: ['~할 때', '~하면서', '~ 때문에', '~듯이'],
+    answer: 2,
+    explain: '<strong>~ 때문에</strong>의 의미. as는 ① ~할 때 ② ~하면서 ③ ~ 때문에 ④ ~듯이(~대로) 의미가 모두 가능하지만, 이 문장에서는 인기를 얻은 이유를 설명하므로 "때문에".'
+  },
+  {
+    type: '문법 개념',
+    q: '다음 문장에서 콤마(,) which의 용법은?',
+    sentence: 'It\'s an emoticon, <em>which</em> is a group of letters or symbols.',
+    options: ['한정적 용법 (선행사 한정)', '계속적 용법 (추가 설명)', '의문사', '접속사 that'],
+    answer: 1,
+    explain: '<strong>계속적 용법</strong>. 관계대명사 앞에 콤마(,)를 찍어 선행사(emoticon)에 대한 추가 부연 설명을 하는 용법입니다. that은 계속적 용법으로 쓸 수 없어요.'
+  },
+
+  // ===== Reading 2 [A] - XD, 이모티콘 =====
+  {
+    type: '형태 고르기',
+    q: '괄호 안에서 옳은 것은?',
+    sentence: 'It shows a laughing face with a mouth open and eyes [ closing / closed ] tightly.',
+    options: ['closing', 'closed'],
+    answer: 1,
+    explain: '<strong>closed</strong>가 정답. 눈이 "감겨진" 수동의 의미로 명사 eyes를 꾸미는 <strong>과거분사</strong>입니다. (with + 명사 + 분사 구조)'
+  },
+  {
+    type: '문법 개념',
+    q: '다음 문장의 with 구문 구조는?',
+    sentence: 'He was listening to me <em>with his eyes fixed</em> on the phone.',
+    options: ['with + 명사 + 분사(형용사)', 'with + 명사 + 동사', 'with + 명사 + 부사', 'with + 명사 + 명사'],
+    answer: 0,
+    explain: '<strong>with + 명사 + 분사</strong> 구조. "명사가 분사한 채로/명사가 분사하는 가운데" 의미로, 문장의 동사와 동시에 일어나는 일을 간결하게 표현합니다. (그의 눈은 전화기에 고정된 채로)'
+  },
+  {
+    type: '해석',
+    q: '다음 문장의 우리말 해석으로 알맞은 것은?',
+    sentence: 'She left the classroom <em>with everyone watching him</em>.',
+    options: [
+      '모두가 그를 보고 있는 채로 그녀는 교실을 떠났다',
+      '그녀는 모두에게 그를 보라고 하며 떠났다',
+      '그녀는 모두가 그를 본 후 교실을 떠났다',
+      '그녀는 모두가 보지 못하게 떠났다'
+    ],
+    answer: 0,
+    explain: '<strong>with + 명사 + 분사</strong> 구문. everyone(모두)이 watching(보고 있는) 채로의 의미입니다.'
+  },
+  {
+    type: '형태 고르기',
+    q: '괄호 안에서 옳은 것은?',
+    sentence: 'Lots of [ laughing / laughed ] emojis are available to use online.',
+    options: ['laughing', 'laughed'],
+    answer: 0,
+    explain: '<strong>laughing</strong>이 정답. 이모지가 "웃고 있는" 능동의 의미로 명사를 꾸미는 <strong>현재분사</strong>입니다.'
+  },
+  {
+    type: '문법 개념',
+    q: '다음 문장에서 사용된 문법은?',
+    sentence: '<em>By using</em> various laughing marks, we can show our friends...',
+    options: ['전치사 + 동명사 (~함으로써)', 'to부정사', '명사절 접속사', '분사구문'],
+    answer: 0,
+    explain: '<strong>by + 동사ing = ~함으로써</strong>. 수단/방법을 나타내는 표현입니다.'
+  },
+
+  // ===== Practice Grammar - 간접의문문 =====
+  {
+    type: '어법 판단',
+    q: '다음 중 어법상 어색한 문장은?',
+    sentence: '간접의문문의 어순을 잘 보세요!',
+    options: [
+      'Could you tell me where the nearest subway station is?',
+      'I don\'t know why did she leave the meeting early.',
+      'Do you remember what time the movie starts?',
+      'They\'re not sure where we can buy tickets.'
+    ],
+    answer: 1,
+    explain: '두 번째 문장이 어색합니다. 간접의문문은 <strong>의문사 + 주어 + 동사</strong> 어순이어야 하므로 "why she left the meeting early"가 맞아요. 직접의문문에서 쓰인 조동사(do/does/did)는 간접의문문이 될 때 빼고, 본동사를 시제에 맞춰 변형합니다.'
+  },
+
+  // ===== Practice Grammar - 과거분사/현재분사 =====
+  {
+    type: '형태 고르기',
+    q: '괄호 안에서 옳은 것은?',
+    sentence: 'She picked up the [ falling / fallen ] leaves from the ground.',
+    options: ['falling', 'fallen'],
+    answer: 1,
+    explain: '<strong>fallen</strong>이 정답. "이미 떨어진" 잎의 수동·완료 의미로 명사를 꾸미는 <strong>과거분사</strong>입니다. (falling은 "떨어지고 있는")'
+  },
+  {
+    type: '형태 고르기',
+    q: '괄호 안에서 옳은 것은?',
+    sentence: 'The [ exciting / excited ] audience cheered loudly.',
+    options: ['exciting', 'excited'],
+    answer: 1,
+    explain: '<strong>excited</strong>가 정답. 관객이 "신난" 감정을 느낀 상태이므로 수동의 <strong>과거분사</strong>. exciting은 "사람을 신나게 하는" 능동의 의미예요. (사람의 감정 → 과거분사 / 사물의 특성 → 현재분사)'
+  },
+
+  // ===== Practice Grammar - 계속적 용법 관계대명사 =====
+  {
+    type: '해석 비교',
+    q: '두 문장의 의미 차이로 옳은 것은?',
+    sentence: '① He has a son <em>who</em> is a lawyer.<br>② He has a son, <em>who</em> is a lawyer.',
+    options: [
+      '① 그는 변호사인 아들 한 명이 있다 (다른 아들도 있을 수 있음) / ② 그는 아들이 하나 있는데, 그는 변호사이다',
+      '① 그는 아들이 하나 있는데, 그는 변호사이다 / ② 그는 변호사인 아들이 한 명 있다',
+      '둘 다 같은 의미이다',
+      '① 둘 다 변호사인 아들 / ② 변호사가 아닌 아들'
+    ],
+    answer: 0,
+    explain: '<strong>① 한정적 용법</strong>: 선행사 son의 의미를 제한 → 변호사인 아들로 한정 (다른 아들 가능). <strong>② 계속적 용법</strong>: 콤마(,) 뒤에서 선행사에 대한 추가 설명 → 아들이 한 명 있는데, 그가 변호사. 즉 아들이 한 명뿐임을 암시합니다.'
+  },
+  {
+    type: '문법 개념',
+    q: '다음 빈칸에 들어갈 수 없는 것은?',
+    sentence: 'The houses, ___ were damaged in the storm, were repaired quickly.',
+    options: ['which', 'that', 'who'],
+    answer: 1,
+    explain: '<strong>that</strong>은 계속적 용법(콤마 뒤)에 사용할 수 없습니다. 또한 선행사가 사물(houses)이므로 who도 부적절. 정답은 which만 가능해요.'
+  }
+];
+
+let currentQ = 0;
+let correctCount = 0;
+const results = [];
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  const area = document.getElementById('quizArea');
+  area.innerHTML = `
+    <div class="question-card">
+      <span class="q-tag">${q.type}</span>
+      <div class="q-text">${q.q}</div>
+      <div class="q-sentence">${q.sentence}</div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback">
+        <div class="fb-title" id="fbTitle"></div>
+        <div class="fb-text" id="fbText"></div>
+      </div>
+      <button class="next-btn" id="nextBtn" onclick="nextQuestion()">
+        ${currentQ === questions.length - 1 ? '결과 보기 →' : '다음 문제 →'}
+      </button>
+    </div>
+  `;
+
+  const optsDiv = document.getElementById('options');
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="option-num">${idx + 1}</span><span>${opt}</span>`;
+    btn.onclick = () => selectOption(idx);
+    optsDiv.appendChild(btn);
+  });
+
+  document.getElementById('qNum').textContent = currentQ + 1;
+  document.getElementById('qTotal').textContent = questions.length;
+  document.getElementById('progressFill').style.width = ((currentQ) / questions.length * 100) + '%';
+}
+
+function selectOption(idx) {
+  const q = questions[currentQ];
+  const buttons = document.querySelectorAll('.option');
+  const fb = document.getElementById('feedback');
+  const fbTitle = document.getElementById('fbTitle');
+  const fbText = document.getElementById('fbText');
+  const nextBtn = document.getElementById('nextBtn');
+
+  buttons.forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.answer) b.classList.add('correct');
+    if (i === idx && i !== q.answer) b.classList.add('wrong');
+  });
+
+  const isCorrect = idx === q.answer;
+  results.push(isCorrect);
+
+  if (isCorrect) {
+    correctCount++;
+    fb.className = 'feedback show correct';
+    fbTitle.className = 'fb-title correct';
+    fbTitle.innerHTML = '✓ 정답입니다!';
+  } else {
+    fb.className = 'feedback show wrong';
+    fbTitle.className = 'fb-title wrong';
+    fbTitle.innerHTML = '✗ 아쉬워요!';
+  }
+  fbText.innerHTML = q.explain;
+
+  document.getElementById('correctCnt').textContent = correctCount;
+  document.getElementById('progressFill').style.width = ((currentQ + 1) / questions.length * 100) + '%';
+
+  // 정답 시 자동 진행 (1.6초 후)
+  if (isCorrect) {
+    setTimeout(() => {
+      if (currentQ < questions.length - 1) {
+        nextQuestion();
+      } else {
+        nextBtn.classList.add('show');
+      }
+    }, 1600);
+  } else {
+    // 오답 시 다음 버튼 표시
+    setTimeout(() => nextBtn.classList.add('show'), 300);
+  }
+}
+
+function nextQuestion() {
+  if (currentQ < questions.length - 1) {
+    currentQ++;
+    renderQuestion();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  document.getElementById('quizArea').style.display = 'none';
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('resultScreen').classList.add('show');
+
+  const score = correctCount;
+  const total = questions.length;
+  const pct = Math.round(score / total * 100);
+
+  let grade, emoji, title;
+  if (pct >= 90) { grade = 'S'; emoji = '🏆'; title = '완벽해요!'; }
+  else if (pct >= 75) { grade = 'A'; emoji = '🌟'; title = '훌륭해요!'; }
+  else if (pct >= 60) { grade = 'B'; emoji = '😊'; title = '잘했어요!'; }
+  else if (pct >= 45) { grade = 'C'; emoji = '🙂'; title = '조금만 더 노력!'; }
+  else { grade = 'D'; emoji = '💪'; title = '다시 한 번 도전!'; }
+
+  document.getElementById('gradeBadge').textContent = grade;
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('accuracy').textContent = `정답률 ${pct}%`;
+
+  const grid = document.getElementById('reviewGrid');
+  grid.innerHTML = '';
+  results.forEach((ok, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'review-cell ' + (ok ? 'correct' : 'wrong');
+    cell.textContent = i + 1;
+    grid.appendChild(cell);
+  });
+}
+
+function retry() {
+  currentQ = 0;
+  correctCount = 0;
+  results.length = 0;
+  document.getElementById('quizArea').style.display = 'block';
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('resultScreen').classList.remove('show');
+  document.getElementById('correctCnt').textContent = '0';
+  renderQuestion();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 시작
+renderQuestion();
+</script>
+</body>
+</html>
