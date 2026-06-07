@@ -15,6 +15,7 @@ body{font-family:'Pretendard Variable','Pretendard',-apple-system,sans-serif;bac
 .hicon{width:38px;height:38px;background:var(--g);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:15px;letter-spacing:-.5px;flex-shrink:0;font-family:'JetBrains Mono',monospace}
 .htxt h1{font-size:15px;font-weight:800;letter-spacing:-0.02em;color:#fff;text-transform:uppercase}
 .htxt p{font-size:11px;color:#8a8a82;margin-top:1px}
+.htxt p b{color:#6FCF97}
 .hscore{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:99px}
 main{max-width:680px;margin:0 auto;padding:22px 16px 90px}
 .pw{margin-bottom:18px}
@@ -68,7 +69,7 @@ main{max-width:680px;margin:0 auto;padding:22px 16px 90px}
 <body>
 <header class="site-header">
   <div class="hicon">EF</div>
-  <div class="htxt"><h1>EngFit · Dialogue Order</h1><p><b style="color:#6FCF97">중3 · 천재(정사열) · 3단원</b> · Laugh First and Then Think</p></div>
+  <div class="htxt"><h1>EngFit · Dialogue Order</h1><p><b>중3 · 천재(정사열) · 3단원</b> · Laugh First and Then Think</p></div>
   <div class="hscore" id="hscore">0 / 11</div>
 </header>
 <main id="app"></main>
@@ -162,7 +163,7 @@ function render(){
   const el=document.getElementById("app");
   if(S.phase==="start"){
     el.innerHTML=`<div class="start"><div class="unit-tag">중3 · 천재(정사열) · 3단원</div><div class="bigt">Laugh First<br>and <span class="acc">Then Think</span></div>
-    <div class="subt">대화 순서 퀴즈 · 총 ${TOTAL}문제 (대화당 1문제)<br>전체 대화 순서 고르기 + 빈칸 단어 고르기</div>
+    <div class="subt">대화 순서 퀴즈 · 총 ${TOTAL}문제 (대화당 1문제)<br>전체 대화 순서 고르기 + 빈칸 단어 고르기<br><span style="font-size:12px;color:#8a8a82">⌨️ 컴퓨터: 숫자키 1~4로 답 선택 · Enter로 시작/다음</span></div>
     <button class="btn btnp" onclick="startQuiz()">시작하기 →</button></div>`;
     return;
   }
@@ -193,8 +194,7 @@ function render(){
   b.opts.forEach((o,oi)=>{
     let cls="opt",dis=f?" disabled":"";
     if(f){if(o===b.answer)cls+=" ok";else if(oi===f.pickIdx)cls+=" ng";}
-    const inner=`<span class="seq">${esc(o)}</span>`;
-    opts+=`<button class="${cls}"${dis} onclick="pick(${oi})"><span class="onum">${oi+1}</span>${inner}</button>`;
+    opts+=`<button class="${cls}"${dis} onclick="pick(${oi})"><span class="onum">${oi+1}</span><span class="seq">${esc(o)}</span></button>`;
   });
   let fb="";
   if(f){
@@ -203,11 +203,30 @@ function render(){
     }else{
       fb=`<div class="fb fbng">✗ 오답<span class="ans">정답: ${esc(b.answer)}</span></div>
       <div class="fb fbex">💡 <b>해설</b> · ${esc(q.ex)}</div>
-      <div class="btnrow"><button class="btn btnp" onclick="nextQ()">${S.qi<TOTAL-1?"다음 →":"결과 보기 →"}</button></div>`;
+      <div class="btnrow"><button class="btn btnp" onclick="nextQ()">${S.qi<TOTAL-1?"다음 →":"결과 보기 →"} (Enter)</button></div>`;
     }
   }
   el.innerHTML=`<div class="pw"><div class="pr"><span class="pl">Dialogue Order Quiz</span><span class="pn">${S.qi+1} / ${TOTAL}</span></div><div class="pb"><div class="pbi" style="width:${pct}%"></div></div></div>
   <div class="card"><div class="qs">${q.title}</div><div class="qko">${q.ko}</div>
   <span class="badge">${q.type==="order"?"🔀 전체 대화 순서 고르기":"✏️ 빈칸 단어 고르기"}</span>
   <div class="qprompt">${prompt}</div>${body}
-  <div class="slbl">보기</div>${opts}${fb}</div
+  <div class="slbl">보기 <span style="font-weight:500;text-transform:none">(키보드 1~4)</span></div>${opts}${fb}</div>`;
+}
+document.addEventListener("keydown",e=>{
+  if(e.target&&(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA")){
+    return; // 입력창에서는 각 입력창의 Enter 핸들러가 제출을 처리 (주관식)
+  }
+  if(S.phase==="start"&&e.key==="Enter"){startQuiz();return;}
+  if(S.phase==="end"&&e.key==="Enter"){init();startQuiz();return;}
+  if(S.phase!=="play")return;
+  if(!S.fb&&["1","2","3","4"].includes(e.key)){
+    const oi=+e.key-1;
+    if(oi<S.built[S.qi].opts.length)pick(oi);
+    return;
+  }
+  if(S.fb&&!S.fb.ok&&e.key==="Enter"){nextQ();}
+});
+init();
+</script>
+</body>
+</html>
