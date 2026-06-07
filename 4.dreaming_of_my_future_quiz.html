@@ -64,6 +64,12 @@ main{max-width:680px;margin:0 auto;padding:22px 16px 90px}
 .start .btn,.result .btn{margin-top:26px;position:relative;z-index:1;font-size:15px;padding:14px 34px}
 .scorebig{font-family:'JetBrains Mono',monospace;font-size:52px;font-weight:700;margin-top:18px;position:relative;z-index:1}
 .scorebig small{font-size:20px;color:#a8a8a0}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:26px;position:relative;z-index:1}
+.result .btns .btn{margin-top:0}
+.btncopy{background:#FEE500;color:#191919;font-size:15px;padding:14px 28px}
+.btncopy:hover{background:#F1D900}
+.btncopy.copied{background:#6FCF97;color:#103826}
+.copyhint{font-size:12.5px;color:#a8a8a0;margin-top:14px;position:relative;z-index:1}
 </style>
 </head>
 <body>
@@ -135,13 +141,13 @@ function buildQ(q){
     return {opts,answer:q.correct};
   }
 }
-function init(){S={phase:"start",qi:0,score:0,fb:null,built:QUIZ.map(buildQ)};render();}
+function init(){S={phase:"start",qi:0,score:0,fb:null,wrong:[],built:QUIZ.map(buildQ)};render();}
 function startQuiz(){S.phase="play";S.qi=0;S.fb=null;render();}
 function pick(oi){
   if(S.fb)return;
   const b=S.built[S.qi];
   const ok=b.opts[oi]===b.answer;
-  if(ok)S.score++;
+  if(ok)S.score++;else S.wrong.push(QUIZ[S.qi].title);
   S.fb={ok,pickIdx:oi};
   render();
   if(ok)setTimeout(nextQ,250);
@@ -169,7 +175,9 @@ function render(){
     el.innerHTML=`<div class="result"><div class="bigt">Result</div>
     <div class="scorebig">${S.score}<small> / ${TOTAL}</small></div>
     <div class="subt">${pct}% · ${msg}</div>
-    <button class="btn btnp" onclick="init();startQuiz()">다시 풀기 ↻</button></div>`;
+    <div class="btns"><button class="btn btncopy" onclick="copyResult(this)">📋 결과 복사하기</button>
+    <button class="btn btnp" onclick="init();startQuiz()">다시 풀기 ↻</button></div>
+    <div class="copyhint">💬 결과를 복사한 뒤, 선생님께 카카오톡으로 붙여넣어 보내 주세요!</div></div>`;
     return;
   }
   const q=QUIZ[S.qi],b=S.built[S.qi],f=S.fb;
@@ -207,6 +215,22 @@ function render(){
   <span class="badge">${q.type==="order"?"🔀 전체 대화 순서 고르기":"✏️ 빈칸 단어 고르기"}</span>
   <div class="qprompt">${prompt}</div>${body}
   <div class="slbl">보기 <span style="font-weight:500;text-transform:none">(키보드 1~4)</span></div>${opts}${fb}</div>`;
+}
+function copyResult(btn){
+  const info=document.querySelector(".htxt p").textContent.trim();
+  const pct=Math.round(S.score/TOTAL*100);
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  const ds=d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+  const txt="\uD83D\uDCDA \uC601\uD54F \uB300\uD654 \uC21C\uC11C \uD034\uC988 \uACB0\uACFC\n\uD83D\uDCD6 "+info+"\n\u2705 \uC810\uC218: "+S.score+" / "+TOTAL+" ("+pct+"%)\n"+(S.wrong.length?"\u274C \uD2C0\uB9B0 \uBB38\uC81C: "+S.wrong.join(", "):"\uD83C\uDF89 \uD2C0\uB9B0 \uBB38\uC81C \uC5C6\uC74C")+"\n\uD83D\uDD52 "+ds;
+  const done=()=>{btn.textContent="\u2713 \uBCF5\uC0AC \uC644\uB8CC! \uCE74\uD1A1\uC5D0 \uBD99\uC5EC\uB123\uC5B4 \uC8FC\uC138\uC694";btn.classList.add("copied");setTimeout(()=>{btn.textContent="\uD83D\uDCCB \uACB0\uACFC \uBCF5\uC0AC\uD558\uAE30";btn.classList.remove("copied");},2500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));}
+  else fallbackCopy(txt,done);
+}
+function fallbackCopy(t,done){
+  const ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand("copy");done();}catch(e){alert("\uBCF5\uC0AC\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694. \uC810\uC218\uB97C \uC9C1\uC811 \uC785\uB825\uD574 \uC8FC\uC138\uC694.");}
+  document.body.removeChild(ta);
 }
 document.addEventListener("keydown",e=>{
   if(e.target&&(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA")){
