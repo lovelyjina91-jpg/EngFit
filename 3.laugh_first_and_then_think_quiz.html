@@ -32,8 +32,8 @@ main{max-width:680px;margin:0 auto;padding:22px 16px 90px}
 .lt{font-size:14.5px}
 .chip{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--g);background:var(--gl);border:1.5px solid var(--g);min-width:26px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-top:2px;flex-shrink:0}
 .line.given .chip{background:var(--dk);border-color:var(--dk);color:#fff}
-.line.blankline{border-style:dashed;border-color:var(--g);background:var(--gl)}
-.line.blankline .lt{color:var(--g);font-weight:700;letter-spacing:.1em}
+.line.target{border-style:dashed;border-color:var(--g);background:var(--gl)}
+.blank{display:inline-block;min-width:90px;border-bottom:2.5px solid var(--g);color:var(--g);font-weight:800;text-align:center;font-family:'JetBrains Mono',monospace}
 .opt{display:block;width:100%;text-align:left;background:var(--sf);border:1.5px solid var(--br);border-radius:10px;padding:12px 15px;margin-bottom:9px;font-size:14.5px;font-family:inherit;cursor:pointer;transition:border-color .15s,background .15s;line-height:1.55;color:var(--tx)}
 .opt:hover:not(:disabled){border-color:var(--g);background:var(--gl)}
 .opt:disabled{cursor:default}
@@ -70,25 +70,20 @@ main{max-width:680px;margin:0 auto;padding:22px 16px 90px}
 </header>
 <main id="app"></main>
 <script>
+// 유형 2가지: ① 전체 대화 순서 흐름 고르기  ② 빈칸에 들어갈 단어 고르기
 const QUIZ=[
 {type:"order",title:"Dialogue 1",ko:"'Class Brain' 상을 탈 거라고 응원하는 상황",
  first:"You solved a lot of problems in class.",
  items:["I'm sure you'll win the Class Brain award.","Do you really think so?","Of course. I'll keep my fingers crossed for you, Sangjun!"]},
-{type:"gap",title:"Dialogue 2",ko:"'Oh So Sweet' 상 수상을 응원하는 상황",
- before:["The winner of the Oh So Sweet award will get some candies."],
- after:["I'm sure you'll get the prize this time. Good luck Jiu!"],
- correct:"Oh, I want to get the prize.",
- d:["I'm looking forward to watching you dance.","They are a pair of special shoes.","What are you going to do on that day, Minji?"]},
-{type:"gap",title:"Dialogue 3",ko:"'Best Joker' 상을 기대하는 친구",
- before:["I'm looking forward to the Best Joker award this time."],
- after:["Thank you."],
- correct:"Ha-ha. You always make us laugh out loud. So you'll get the prize, Yunki. Good luck.",
- d:["I'm afraid I'll make a mistake.","Are you going to take part in any races on the sports day?","It is not only a cutting board but also a bird feeder."]},
-{type:"gap",title:"Dialogue 4",ko:"'Ms. Cheerful' 상을 탈 거라고 응원하는 상황",
- before:["Minji, you're a happy girl. I think you'll get the Ms. Cheerful award. I'll keep my fingers crossed!"],
- after:[],
- correct:"Oh, thank you, Jiho.",
- d:["Just do your best.","Can you tell me something about your invention?","We're going on a field trip next Tuesday."]},
+{type:"word",title:"Dialogue 2",ko:"'Oh So Sweet' 상 수상을 응원하는 상황",
+ lines:["The winner of the Oh So Sweet award will get some candies.","Oh, I want to get the prize.","I'm ____ you'll get the prize this time. Good luck Jiu!"],
+ bi:2,correct:"sure",d:["afraid","sorry","worried"]},
+{type:"word",title:"Dialogue 3",ko:"'Best Joker' 상을 기대하는 친구",
+ lines:["I'm looking forward to the Best Joker award this time.","Ha-ha. You always make us ____ out loud. So you'll get the prize, Yunki. Good luck.","Thank you."],
+ bi:1,correct:"laugh",d:["laughing","to laugh","laughed"]},
+{type:"word",title:"Dialogue 4",ko:"'Ms. Cheerful' 상을 탈 거라고 응원하는 상황",
+ lines:["Minji, you're a happy girl. I think you'll get the Ms. Cheerful award. I'll keep my fingers ____!","Oh, thank you, Jiho."],
+ bi:0,correct:"crossed",d:["crossing","to cross","cross"]},
 {type:"order",title:"Dialogue 5",ko:"체육 대회에서 농구 경기를 앞둔 상황",
  first:"Mom, I can't wait for the sports day.",
  items:["What are you going to do on that day, Minji?","I'm going to play basketball for my class. We've practiced hard for a few weeks.","Oh, I'm looking forward to your game.","Actually, I'm a little worried. I'm afraid I'll make a mistake.","Don't worry. You'll do a good job. I'll keep my fingers crossed!"]},
@@ -98,24 +93,18 @@ const QUIZ=[
 {type:"order",title:"Dialogue 7",ko:"체육 대회에 참가하는 엄마와의 대화",
  first:"Mom, are you coming to the sports day?",
  items:["Sure. I'm going to play the game kick a Shoe. This will be the first time for me to try it.","Don't worry. I'm sure you'll do great. I'll keep my fingers crossed for you!","Thank you. I'm also going to perform a funny dance with some other mothers.","That sounds fun. I'm looking forward to watching you on the stage."]},
-{type:"gap",title:"Dialogue 8",ko:"다음 주 금요일 춤 대회 이야기",
- before:["We're going to join the dance contest next Friday."],
- after:[],
- correct:"Are you? I'm looking forward to watching you dance.",
- d:["Don't worry. You'll do a good job.","Oh, I want to get the prize.","Ha-ha, you sound like our English teacher."]},
-{type:"gap",title:"Dialogue 9",ko:"특별한 신발 발명품 이야기",
- before:["Can you tell me something about your invention?"],
- after:["Great! I'm sure you'll win a prize. I'll keep my fingers crossed!"],
- correct:"They are a pair of special shoes. You can also clean the floor with them.",
- d:["I can't wait for the sports day.","Will everyone like my show? I'm not sure.","That sounds fun. I'm looking forward to watching you on the stage."]},
+{type:"word",title:"Dialogue 8",ko:"다음 주 금요일 춤 대회 이야기",
+ lines:["We're going to join the dance contest next Friday.","Are you? I'm looking forward to ____ you dance."],
+ bi:1,correct:"watching",d:["watch","watched","to watch"]},
+{type:"word",title:"Dialogue 9",ko:"특별한 신발 발명품 이야기",
+ lines:["Can you ____ me something about your invention?","They are a pair of special shoes. You can also clean the floor with them.","Great! I'm sure you'll win a prize. I'll keep my fingers crossed!"],
+ bi:0,correct:"tell",d:["say","talk","speak"]},
 {type:"order",title:"Dialogue 10",ko:"도마이자 새 모이통인 발명품",
  first:"This looks interesting. Is this a cutting board or a bird feeder?",
  items:["It is not only a cutting board but also a bird feeder. You can do two things at the same time.","That's a great idea!","Do you really think so?","Yes. I'm really looking forward to using it."]},
-{type:"gap",title:"Dialogue 11",ko:"수학여행 장기 자랑을 준비하는 지민",
- before:["We're going on a field trip next Tuesday. What are you going to do in the talent show, Jimin?","I'm going to talk like our teachers do in class and tell some jokes.","Wow! I'm really looking forward to it.","Will everyone like my show? I'm not sure."],
- after:["Thank you, Miso. Let me show you one part of my act. Guess who? \"Goood Jooob!\"","Ha-ha, you sound like our English teacher.","Do I? I'm going to show you more at the show.","Great! You always make us laugh out loud."],
- correct:"Don't worry. I'm sure you'll do great. I'll keep my fingers crossed.",
- d:["It is not only a cutting board but also a bird feeder.","I'm going to run a 100 meter race at the end of the day.","Oh, thank you, Jiho."]}
+{type:"word",title:"Dialogue 11",ko:"수학여행 장기 자랑을 준비하는 지민",
+ lines:["We're going on a field trip next Tuesday. What are you going to do in the talent show, Jimin?","I'm going to talk like our teachers do in class and tell some jokes.","Wow! I'm really looking forward to it.","Will everyone like my show? I'm not sure.","Don't worry. I'm sure you'll do great. I'll keep my fingers crossed.","Thank you, Miso. Let me ____ you one part of my act. Guess who? \"Goood Jooob!\"","Ha-ha, you sound like our English teacher.","Do I? I'm going to show you more at the show.","Great! You always make us laugh out loud."],
+ bi:5,correct:"show",d:["showing","to show","showed"]}
 ];
 const TOTAL=QUIZ.length;
 const LBL="ABCDE";
@@ -125,7 +114,7 @@ function permsOf(n){const idx=[...Array(n).keys()];const out=[];(function go(cur
 function buildQ(q){
   if(q.type==="order"){
     const n=q.items.length;
-    const disp=shuffle([...Array(n).keys()]);            // disp[k] = correct-order index shown at label k
+    const disp=shuffle([...Array(n).keys()]);
     const correctSeq=[...Array(n).keys()].map(ci=>LBL[disp.indexOf(ci)]).join(" → ");
     let pool=permsOf(n).map(p=>p.map(ci=>LBL[disp.indexOf(ci)]).join(" → ")).filter(s=>s!==correctSeq);
     const opts=shuffle([correctSeq,...shuffle(pool).slice(0,3)]);
@@ -151,12 +140,13 @@ function nextQ(){
   render();
 }
 function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+function blankify(s){return esc(s).replace("____",'<span class="blank">&nbsp;?&nbsp;</span>');}
 function render(){
   document.getElementById("hscore").textContent=S.score+" / "+TOTAL;
   const el=document.getElementById("app");
   if(S.phase==="start"){
     el.innerHTML=`<div class="start"><div class="bigt">Laugh First<br>and <span class="acc">Then Think</span></div>
-    <div class="subt">대화 순서 퀴즈 · 총 ${TOTAL}문제 (대화당 1문제)<br>순서 고르기 또는 빈칸에 들어갈 문장 고르기</div>
+    <div class="subt">대화 순서 퀴즈 · 총 ${TOTAL}문제 (대화당 1문제)<br>전체 대화 순서 고르기 + 빈칸 단어 고르기</div>
     <button class="btn btnp" onclick="startQuiz()">시작하기 →</button></div>`;
     return;
   }
@@ -177,27 +167,28 @@ function render(){
     body=`<div class="line given"><span class="chip">시작</span><span class="lt">${esc(q.first)}</span></div>`;
     b.disp.forEach((ci,k)=>{body+=`<div class="line"><span class="chip">${LBL[k]}</span><span class="lt">${esc(q.items[ci])}</span></div>`;});
   }else{
-    prompt=`빈칸에 <span class="mono">들어갈 말</span>로 알맞은 것은?`;
-    q.before.forEach(t=>{body+=`<div class="line"><span class="lt">${esc(t)}</span></div>`;});
-    body+=`<div class="line blankline"><span class="lt">______________________</span></div>`;
-    q.after.forEach(t=>{body+=`<div class="line"><span class="lt">${esc(t)}</span></div>`;});
+    prompt=`빈칸에 <span class="mono">들어갈 단어</span>로 알맞은 것은?`;
+    q.lines.forEach((t,i)=>{
+      if(i===q.bi)body+=`<div class="line target"><span class="lt">${blankify(t)}</span></div>`;
+      else body+=`<div class="line"><span class="lt">${esc(t)}</span></div>`;
+    });
   }
   let opts="";
   b.opts.forEach((o,oi)=>{
     let cls="opt",dis=f?" disabled":"";
     if(f){if(o===b.answer)cls+=" ok";else if(oi===f.pickIdx)cls+=" ng";}
-    const inner=q.type==="order"?`<span class="seq">${o}</span>`:esc(o);
+    const inner=`<span class="seq">${esc(o)}</span>`;
     opts+=`<button class="${cls}"${dis} onclick="pick(${oi})"><span class="onum">${oi+1}</span>${inner}</button>`;
   });
   let fb="";
   if(f){
     fb=f.ok?`<div class="fb fbok">✓ 정답!</div>`
-      :`<div class="fb fbng">✗ 오답<span class="ans">정답: ${q.type==="order"?b.answer:esc(b.answer)}</span></div>`;
+      :`<div class="fb fbng">✗ 오답<span class="ans">정답: ${esc(b.answer)}</span></div>`;
     fb+=`<div class="btnrow"><button class="btn btnp" onclick="nextQ()">${S.qi<TOTAL-1?"다음 →":"결과 보기 →"}</button></div>`;
   }
   el.innerHTML=`<div class="pw"><div class="pr"><span class="pl">Dialogue Order Quiz</span><span class="pn">${S.qi+1} / ${TOTAL}</span></div><div class="pb"><div class="pbi" style="width:${pct}%"></div></div></div>
   <div class="card"><div class="qs">${q.title}</div><div class="qko">${q.ko}</div>
-  <span class="badge">${q.type==="order"?"🔀 순서 고르기":"💬 빈칸 문장 고르기"}</span>
+  <span class="badge">${q.type==="order"?"🔀 전체 대화 순서 고르기":"✏️ 빈칸 단어 고르기"}</span>
   <div class="qprompt">${prompt}</div>${body}
   <div class="slbl">보기</div>${opts}${fb}</div>`;
 }
@@ -205,4 +196,4 @@ init();
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
