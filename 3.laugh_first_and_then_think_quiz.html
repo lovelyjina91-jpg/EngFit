@@ -136,13 +136,13 @@ const QUIZ=[
  {t:"Do I? I'm going to show you more at the show."},
  {t:"Great! You always make us laugh out loud."}]}
 ];
-const TOTAL=QUIZ.reduce((s,q)=>s+q.cards.length,0);
+const TOTAL=QUIZ.reduce((s,q)=>s+q.cards.length-1,0);
 let S;
 function full(c){return c.t!==undefined?c.t:((c.pre?c.pre+" ":"")+c.key+(c.post||""));}
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=0|Math.random()*(i+1);[b[i],b[j]]=[b[j],b[i]];}return b;}
 function init(){S={phase:"start",di:0,p:0,score:0,mcOk:0,mcAll:0,tyOk:0,tyAll:0,steps:0,opts:null,fb:null,lock:false,results:[]};render();}
 function startQuiz(){S.phase="play";S.di=0;newDialogue();render();}
-function newDialogue(){S.p=0;S.results=[];makeStep();}
+function newDialogue(){S.p=1;S.results=[null];makeStep();}
 function makeStep(){
   S.fb=null;S.lock=false;
   const q=QUIZ[S.di];
@@ -194,7 +194,7 @@ function render(){
   const el=document.getElementById("app");
   if(S.phase==="start"){
     el.innerHTML=`<div class="start"><div class="bigt">Laugh First<br>and <span class="acc">Then Think</span></div>
-    <div class="subt">대화 순서 맞추기 · ${QUIZ.length}개 대화 · 총 ${TOTAL}문제<br>다음에 올 말을 고르고, 핵심 문장은 직접 입력하세요</div>
+    <div class="subt">대화 순서 맞추기 · ${QUIZ.length}개 대화 · 총 ${TOTAL}문제<br>첫 문장이 주어져요. 다음에 올 말을 고르고, 핵심 문장은 직접 입력하세요</div>
     <button class="btn btnp" onclick="startQuiz()">시작하기 →</button></div>`;
     return;
   }
@@ -215,7 +215,6 @@ function render(){
     const miss=S.results[i]===false?" miss":"";
     placed+=`<div class="line${miss}"><span class="onum">${i+1}</span><span class="lt">${esc(full(q.cards[i]))}</span></div>`;
   }
-  if(!placed)placed=`<div style="font-size:13px;color:var(--tx3);padding:6px 2px">아직 배치된 대화가 없어요. 첫 문장을 골라 보세요!</div>`;
   let stepArea="";
   if(S.phase==="between"){
     stepArea=`<div class="done">✓ 대화 완성!</div><div class="btnrow"><button class="btn btnp" onclick="nextDialogue()">${S.di<QUIZ.length-1?"다음 대화 →":"결과 보기 →"}</button></div>`;
@@ -226,7 +225,7 @@ function render(){
       let fb="";
       if(f){fb=f.ok?`<div class="fb fbok">✓ 정답! 정확하게 입력했어요.</div>`
         :`<div class="fb fbng">✗ 오답 — 정답 문장:<span class="ans">${esc(f.ans)}</span></div>`;}
-      stepArea=`<div class="qprompt">${S.p===0?"첫 번째":"다음"} 대화의 <span class="mono">핵심 문장을 직접 입력</span>하세요 ✏️</div>
+      stepArea=`<div class="qprompt">다음 대화의 <span class="mono">핵심 문장을 직접 입력</span>하세요 ✏️</div>
       <div class="tbox">
         <div class="ctx">${next.pre?esc(next.pre)+" ":""}<span class="blank">______________</span>${next.post?esc(next.post):""}</div>
         <div class="hint">💡 ${esc(next.hint)}</div>
@@ -244,7 +243,7 @@ function render(){
       });
       let fb="";
       if(f){fb=f.ok?`<div class="fb fbok">✓ 정답!</div>`:`<div class="fb fbng">✗ 오답 — 초록색 표시가 올바른 다음 대화예요.</div>`;}
-      stepArea=`<div class="qprompt">${S.p===0?"대화의 <span class='mono'>첫 번째</span> 문장은?":"<span class='mono'>다음</span>에 올 말은?"}</div>${opts}${fb}`;
+      stepArea=`<div class="qprompt"><span class='mono'>다음</span>에 올 말은?</div>${opts}${fb}`;
     }
   }
   el.innerHTML=`<div class="pw"><div class="pr"><span class="pl">Dialogue Order Quiz</span><span class="pn">${q.title} · ${S.di+1}/${QUIZ.length} · ${S.score}pt</span></div><div class="pb"><div class="pbi" style="width:${stepPct}%"></div></div></div>
@@ -258,4 +257,4 @@ init();
 </script>
 </body>
 </html>
-                    
+                                                                                                                                                                                                                                                     
