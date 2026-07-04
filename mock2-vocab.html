@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>EngFit — 모의고사 단어시험 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { font-size: 16px; }
+  body { font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #f1f5f9; min-height: 100vh; }
+  .en { font-family: 'Patrick Hand', 'Noto Sans KR', cursive; }
+  .wrap { max-width: 440px; margin: 0 auto; padding: 20px 16px 80px; }
+  .brand { display: inline-flex; align-items: baseline; gap: 2px; font-family: 'Patrick Hand', cursive; font-size: 1.5rem; letter-spacing: 0.5px; }
+  .brand .eng { color: #3b82f6; } .brand .fit { color: #f97316; }
+  .brand-sm { font-size: 1.05rem; }
+  .hidden { display: none !important; }
+  .btn { display: block; width: 100%; padding: 17px; border-radius: 14px; border: none; cursor: pointer; background: linear-gradient(135deg,#3b82f6,#8b5cf6); color: #fff; font-size: 1.1rem; font-weight: 700; font-family: inherit; }
+  .btn:disabled { background: #334155; color: #64748b; cursor: default; }
+  .btn.ghost { background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-weight: 500; }
+
+  /* ── start ── */
+  #start-screen { padding-top: 42px; text-align: center; }
+  .badge { font-size: 0.8rem; letter-spacing: 3px; color: #64748b; text-transform: uppercase; margin: 22px 0 8px; }
+  #start-screen h1 { font-size: 1.85rem; font-weight: 900; line-height: 1.35; }
+  .sub { font-size: 0.92rem; color: #94a3b8; margin-top: 10px; }
+  .name-box { margin: 30px 0 16px; text-align: left; }
+  .name-box label { font-size: 0.82rem; color: #94a3b8; display: block; margin-bottom: 6px; }
+  input[type=text] { width: 100%; padding: 14px 16px; font-size: 1.05rem; border-radius: 12px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; outline: none; font-family: inherit; }
+  input[type=text]:focus { border-color: #3b82f6; }
+  .info { margin-top: 22px; padding: 15px 18px; border-radius: 12px; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); font-size: 0.83rem; color: #94a3b8; line-height: 1.9; text-align: left; }
+  .sec-label { font-size: 0.82rem; color: #94a3b8; display: block; margin: 20px 0 8px; text-align: left; }
+  .sec-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sec-btn { padding: 12px 6px; border-radius: 12px; border: 1.5px solid #334155; background: #1e293b; color: #cbd5e1; cursor: pointer; font-family: inherit; font-size: 0.88rem; font-weight: 500; line-height: 1.35; transition: border-color 0.12s, background 0.12s; }
+  .sec-btn .range { display: block; font-size: 0.72rem; color: #64748b; }
+  .sec-btn.on { border-color: #3b82f6; background: rgba(59,130,246,0.14); color: #f8fafc; font-weight: 700; }
+  .sec-btn.on .range { color: #93c5fd; }
+
+  /* ── quiz ── */
+  #topbar { position: sticky; top: 0; z-index: 10; background: rgba(30,41,59,0.96); backdrop-filter: blur(4px); border-bottom: 1px solid #334155; padding: 9px 16px 10px; }
+  .topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; max-width: 440px; margin-left: auto; margin-right: auto; }
+  .topline .meta { font-size: 0.8rem; color: #94a3b8; font-variant-numeric: tabular-nums; }
+  .pbar { height: 4px; background: #334155; border-radius: 2px; overflow: hidden; max-width: 440px; margin: 0 auto; }
+  .pbar > div { height: 100%; width: 0%; background: linear-gradient(90deg,#3b82f6,#8b5cf6); transition: width 0.25s; }
+  .qcard { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 26px 20px; margin-bottom: 16px; }
+  .qhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .qno { font-size: 0.78rem; font-weight: 600; letter-spacing: 1px; }
+  .qtype { font-size: 0.72rem; font-weight: 500; padding: 3px 9px; border-radius: 6px; }
+  .qword { font-weight: 700; line-height: 1.4; word-break: keep-all; }
+  .qword.ek { font-family: 'Patrick Hand', cursive; font-size: 2.1em; font-weight: 400; }
+  .qword.ke { font-size: 1.65em; }
+  .choice { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 16px; margin-bottom: 9px; border-radius: 12px; border: 1.5px solid #334155; background: #1e293b; cursor: pointer; text-align: left; color: #cbd5e1; transition: border-color 0.12s, background 0.12s; font-family: inherit; }
+  .choice .cnum { flex-shrink: 0; width: 24px; text-align: center; font-size: 1.05rem; color: #94a3b8; }
+  .choice .ctext { line-height: 1.45; word-break: keep-all; }
+  .choice .ctext.ko { font-size: 0.96em; font-family: 'Noto Sans KR', sans-serif; }
+  .choice .ctext.en { font-size: 1.44em; font-family: 'Patrick Hand', cursive; }
+  .choice.sel-ek { border-color: #3b82f6; background: rgba(59,130,246,0.14); color: #f8fafc; }
+  .choice.sel-ek .cnum { color: #3b82f6; }
+  .choice.sel-ke { border-color: #f97316; background: rgba(249,115,22,0.14); color: #f8fafc; }
+  .choice.sel-ke .cnum { color: #f97316; }
+  #prev-btn { margin-top: 14px; }
+  .kbd-hint { text-align: center; font-size: 0.72rem; color: #475569; margin-top: 14px; }
+
+  /* ── result ── */
+  #result-screen { padding-top: 30px; }
+  .rcard { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 26px 20px; margin-bottom: 14px; text-align: center; }
+  .score-big { font-size: 2.6rem; font-weight: 900; margin: 8px 0 2px; background: linear-gradient(135deg,#3b82f6,#8b5cf6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .score-sub { font-size: 0.95rem; color: #94a3b8; }
+  #submit-status { font-size: 0.88rem; margin: 14px 0 4px; min-height: 1.3em; }
+  #kakao-btn { margin-top: 10px; background: #fee500; color: #191919; }
+  #kakao-btn.done { background: #22c55e; color: #fff; }
+  .copy-area { width: 100%; margin-top: 10px; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #cbd5e1; font-size: 0.82rem; line-height: 1.6; font-family: inherit; }
+  .wrong-title { font-size: 1rem; font-weight: 700; margin: 24px 0 12px; color: #f8fafc; text-align: left; }
+  .witem { background: #1e293b; border: 1px solid #334155; border-left: 4px solid #ef4444; border-radius: 12px; padding: 14px 16px; margin-bottom: 9px; text-align: left; }
+  .witem .wq { font-weight: 700; margin-bottom: 5px; }
+  .witem .wq .en { font-size: 1.3em; font-weight: 400; }
+  .witem .wrow { font-size: 0.86rem; line-height: 1.7; }
+  .witem .my { color: #f87171; } .witem .ans { color: #4ade80; font-weight: 600; }
+  .witem .wrow .en { font-size: 1.15em; }
+  .allok { padding: 26px; text-align: center; color: #4ade80; font-size: 1.05rem; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- 시작 화면 -->
+<div class="wrap" id="start-screen">
+  <span class="brand"><span class="eng">Eng</span><span class="fit">Fit</span></span>
+  <div class="badge">Mock Test Vocabulary</div>
+  <h1>모의고사 단어시험 2<br><span style="font-size:0.62em;font-weight:700;color:#94a3b8">주제 · 요지 · 제목 · 주장</span></h1>
+  <div class="sub" id="start-sub"></div>
+  <div class="name-box">
+    <label for="name-input">이름</label>
+    <input type="text" id="name-input" placeholder="이름을 입력하세요" maxlength="20" autocomplete="off">
+  </div>
+  <span class="sec-label">영역 선택 (프린트 순서 · 50개씩)</span>
+  <div class="sec-grid" id="sec-grid"></div>
+  <button class="btn" id="start-btn" disabled style="margin-top:18px">시험 시작</button>
+  <div class="info">
+    · 단어 프린트 순서 그대로 50개씩 영역 분할<br>
+    · 영어→한글, 한글→영어 랜덤 혼합 4지선다<br>
+    · 답을 누르면 0.25초 후 자동으로 다음 문제<br>
+    · 이전 버튼으로 돌아가서 답 변경 가능 · 키보드 1~4, ←<br>
+    · 끝나면 결과가 자동 전송되고, 카톡 복사도 가능해요
+  </div>
+</div>
+
+<!-- 문제 화면 -->
+<div id="quiz-screen" class="hidden">
+  <div id="topbar">
+    <div class="topline">
+      <span class="brand brand-sm"><span class="eng">Eng</span><span class="fit">Fit</span></span>
+      <span class="meta" id="prog-text"></span>
+      <span class="meta" id="timer">0:00</span>
+    </div>
+    <div class="pbar"><div id="pfill"></div></div>
+  </div>
+  <div class="wrap">
+    <div class="qcard">
+      <div class="qhead">
+        <span class="qno" id="qno"></span>
+        <span class="qtype" id="qtype"></span>
+      </div>
+      <div class="qword" id="qword"></div>
+    </div>
+    <div id="choices"></div>
+    <button class="btn ghost" id="prev-btn">← 이전 문제</button>
+    <div class="kbd-hint">1 ~ 4 : 답 선택 &nbsp;·&nbsp; ← : 이전 문제</div>
+  </div>
+</div>
+
+<!-- 결과 화면 -->
+<div class="wrap hidden" id="result-screen">
+  <div style="text-align:center"><span class="brand"><span class="eng">Eng</span><span class="fit">Fit</span></span></div>
+  <div class="rcard" style="margin-top:16px">
+    <div style="font-size:0.85rem;color:#94a3b8" id="r-name"></div>
+    <div class="score-big" id="r-score"></div>
+    <div class="score-sub" id="r-sub"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">📋 결과 복사해서 카톡으로 보내기</button>
+    <textarea class="copy-area hidden" id="copy-area" rows="7" readonly></textarea>
+  </div>
+  <div class="wrong-title" id="wrong-title"></div>
+  <div id="wrong-list"></div>
+  <button class="btn ghost" id="retry-btn" style="margin-top:18px">다시 풀기</button>
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#94a3b8";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#4ade80"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#f87171"; }
+}
+
+/* ══════ 단어 데이터 ══════ */
+var WORDS = [{"en":"recent","ko":"최근의"},{"en":"study","ko":"연구"},{"en":"interesting","ko":"흥미로운"},{"en":"finding","ko":"결과"},{"en":"habit","ko":"습관"},{"en":"formation","ko":"형성"},{"en":"successfully","ko":"성공적으로"},{"en":"acquire","ko":"익히다, 얻다"},{"en":"positive","ko":"긍정적인"},{"en":"report","ko":"보고하다, 알리다"},{"en":"impulsive spending","ko":"충동적 소비"},{"en":"dietary","ko":"음식의"},{"en":"decrease","ko":"감소하다"},{"en":"consumption","ko":"소비"},{"en":"work on","ko":"~하려고 노력하다"},{"en":"regularly","ko":"규칙적으로"},{"en":"as a result","ko":"결과적으로"},{"en":"noise","ko":"소음"},{"en":"negative","ko":"부정적인"},{"en":"effect","ko":"영향"},{"en":"ability","ko":"능력"},{"en":"pay attention","ko":"주의를 기울이다"},{"en":"thus","ko":"그러므로"},{"en":"constant","ko":"지속적인, 끊임없는"},{"en":"exposure","ko":"노출"},{"en":"be related to","ko":"~과 관계가 있다"},{"en":"achievement","ko":"성취"},{"en":"researcher","ko":"연구자"},{"en":"preschool","ko":"유치원"},{"en":"reduce","ko":"줄이다"},{"en":"performance","ko":"성적, 성과, 수행"},{"en":"prereading","ko":"읽기 전의"},{"en":"improve","ko":"향상하다"},{"en":"suggest","ko":"보여 주다, 제안하다"},{"en":"consistently","ko":"일관되게"},{"en":"perform","ko":"성취하다, 실행하다"},{"en":"setting","ko":"환경"},{"en":"impact","ko":"영향"},{"en":"life","ko":"생활, 일상, 활기"},{"en":"urban","ko":"도시의"},{"en":"attraction","ko":"매력"},{"en":"face","ko":"직면하다"},{"en":"lively","ko":"활기찬"},{"en":"perform","ko":"공연하다"},{"en":"frequently","ko":"자주"},{"en":"crowded","ko":"붐비는, 혼잡한"},{"en":"ancient","ko":"고대의"},{"en":"tourist attraction","ko":"관광 명소"},{"en":"uncomfortable","ko":"불편한"},{"en":"risk","ko":"위험"},{"en":"be motivated to","ko":"~하도록 동기 부여되다"},{"en":"strategy","ko":"전략"},{"en":"additional","ko":"추가적인, 부가적인"},{"en":"conduct","ko":"(특정한 활동을) 하다"},{"en":"article","ko":"기사"},{"en":"consult","ko":"(전문가에게) 자문을 구하다"},{"en":"uncertainty","ko":"불확실성"},{"en":"satisfactory","ko":"만족스러운"},{"en":"purchase","ko":"구매"},{"en":"employ","ko":"이용하다"},{"en":"decision rule","ko":"판단 규칙"},{"en":"result in","ko":"~을 초래하다, ~라는 결과를 낳다"},{"en":"offering","ko":"제공된 것[물품]"},{"en":"profit","ko":"수익"},{"en":"pursue","ko":"추구하다"},{"en":"eagerly","ko":"간절히, 열망하여"},{"en":"allow","ko":"허용하다"},{"en":"violent","ko":"폭력적인"},{"en":"all the more","ko":"더욱더, 오히려"},{"en":"intercom","ko":"기내 통신, 구내방송"},{"en":"end up","ko":"결국 ~로 끝나다"},{"en":"come true","ko":"실현되다"},{"en":"device","ko":"장치, 고안품"},{"en":"input","ko":"정보, 데이터"},{"en":"process","ko":"처리하다"},{"en":"interpret","ko":"해석하다"},{"en":"correlation","ko":"연관성"},{"en":"on top of","ko":"~뿐만 아니라"},{"en":"promote","ko":"촉진하다"},{"en":"associated with","ko":"~와 관련된"},{"en":"stability","ko":"안정"},{"en":"psychologist","ko":"심리학자"},{"en":"put simply","ko":"간단히 말해서"},{"en":"imaginable","ko":"상상할 수 있는"},{"en":"excel at","ko":"~에서 뛰어나다"},{"en":"valuable","ko":"소중한"},{"en":"in one’s own way","ko":"나름의 방식으로"},{"en":"unique","ko":"독특한"},{"en":"capability","ko":"능력"},{"en":"abstract","ko":"추상적인"},{"en":"soar","ko":"날아오르다, 높이 날다"},{"en":"craving","ko":"갈망, 열망"},{"en":"lower","ko":"낮추다"},{"en":"processed","ko":"가공된"},{"en":"moody","ko":"우울한"},{"en":"depressed","ko":"우울한"},{"en":"repeatedly","ko":"되풀이하여"},{"en":"productive","ko":"생산적인"},{"en":"prestige","ko":"명성, 위신"},{"en":"miserable","ko":"불쌍한, 비참한"},{"en":"primitive","ko":"원시적인"},{"en":"devastating","ko":"지독한, 황폐화시키는"},{"en":"outward","ko":"외부의"},{"en":"when it comes to","ko":"~에 관한 한"},{"en":"lecture","ko":"강의"},{"en":"keep ~ in mind","ko":"~을 명심하다"},{"en":"reinforce","ko":"강화하다"},{"en":"passive","ko":"소극적인"},{"en":"principle","ko":"원리, 원칙"},{"en":"quote","ko":"인용하다"},{"en":"to some extent","ko":"어느 정도까지"},{"en":"sustain","ko":"지탱하다"},{"en":"on one’s own","ko":"혼자 힘으로, 혼자서"},{"en":"cure-all","ko":"만병통치약"},{"en":"misleading","ko":"오도하는"},{"en":"deliberately","ko":"신중하게, 고의로"},{"en":"give out","ko":"발산하다"},{"en":"circumstance","ko":"상황"},{"en":"go around in circles","ko":"제자리를 맴돌다"},{"en":"dramatically","ko":"극적으로"},{"en":"underachievement","ko":"저성취"},{"en":"confusion","ko":"혼란"},{"en":"inability","ko":"할 수 없음, 무능"},{"en":"motivational","ko":"동기가 부여되는, 동기 유발적"},{"en":"wandering","ko":"헤매는, 두서없는"},{"en":"generality","ko":"일반론, 개설"},{"en":"specifics","ko":"세부 사항"},{"en":"specific","ko":"구체적인, 명확한"},{"en":"communication","ko":"의사소통"},{"en":"interrupt","ko":"(말·행동을) 방해하다[가로막다]"},{"en":"pursue","ko":"추구하다"},{"en":"fall on deaf ears","ko":"무시되다, 귀에 들어가지 않다"},{"en":"globally","ko":"전 세계적으로"},{"en":"consume","ko":"소비하다"},{"en":"familiarity","ko":"친숙함, 익숙함"},{"en":"rare","ko":"희귀한, 드문"},{"en":"chimpanzee","ko":"침팬지"},{"en":"attached","ko":"애착을 가진"},{"en":"adolescent","ko":"청년"},{"en":"stare","ko":"응시하다"},{"en":"emotion","ko":"감정"},{"en":"result from","ko":"~이 원인이다"},{"en":"extensive","ko":"광범위한"},{"en":"measure","ko":"정책, 조치"},{"en":"transportation","ko":"운송, 수송"},{"en":"hastily","ko":"서둘러서"},{"en":"adopt","ko":"채택하다"},{"en":"emission","ko":"배기가스"},{"en":"environmentalist","ko":"환경운동가"},{"en":"generate","ko":"만들어내다"},{"en":"toxic","ko":"유독성의, 유해한"},{"en":"conventional","ko":"전통적인"},{"en":"exaggeration","ko":"과장"},{"en":"capability","ko":"능력"},{"en":"please","ko":"기쁘게 하다"},{"en":"phrase","ko":"어구"},{"en":"fluency","ko":"유창함"},{"en":"overestimate","ko":"과대평가하다"},{"en":"intake","ko":"섭취량"},{"en":"container","ko":"상자, 용기"},{"en":"vastly","ko":"굉장히, 매우"},{"en":"psychologically","ko":"심리학적으로"},{"en":"chronically","ko":"만성적으로"},{"en":"outcome","ko":"결과"},{"en":"strategy","ko":"전략"},{"en":"sequence","ko":"순서"},{"en":"seemingly","ko":"겉으로 보기에"},{"en":"endure","ko":"견디다"},{"en":"encounter","ko":"맞닥뜨리다"},{"en":"obstacle","ko":"장애물"},{"en":"rewarding","ko":"보람 있는"},{"en":"movie adaptation","ko":"영화로 각색한 버전"},{"en":"the Holocaust","ko":"홀로코스트(1930~40년대 나치에 의한 유대인 대학살)"},{"en":"take for granted","ko":"~을 당연시하다"},{"en":"fundamentally","ko":"근본적으로"},{"en":"particle","ko":"입자, 작은 조각"},{"en":"transport","ko":"운반하다, 나르다"},{"en":"i.e.","ko":"즉, 다시 말해서"},{"en":"gravel","ko":"자갈"},{"en":"flat","ko":"(땅이) 편평한"},{"en":"tendency","ko":"경향"},{"en":"seasonally","ko":"계절에 따라"},{"en":"upstream","ko":"상류에"},{"en":"end up","ko":"결국 ~하게 되다"},{"en":"coat","ko":"(표면 등을) 덮다"},{"en":"floodplain","ko":"범람원"},{"en":"commuting","ko":"통근"},{"en":"enjoyable","ko":"즐거운"},{"en":"label","ko":"낙인찍다, 라벨을 붙이다"},{"en":"barrier","ko":"장애(물), 장벽"},{"en":"fight","ko":"(진로를) 열다, 개척하다"},{"en":"crowd","ko":"채워 넣다, 몰려들어가다"},{"en":"workday","ko":"일과, 작업일"},{"en":"persistent","ko":"지속적인"},{"en":"associated","ko":"관련된"},{"en":"lengthy","ko":"매우 긴"},{"en":"contribute","ko":"원인이 되다, 기여하다"},{"en":"frustration","ko":"좌절(감)"},{"en":"volcanologist","ko":"화산학자"},{"en":"potential","ko":"잠재적인"},{"en":"eruption","ko":"(화산의) 폭발"},{"en":"relay","ko":"전달하다"},{"en":"erupt","ko":"(화산이) 폭발하다"},{"en":"observatory","ko":"관측소"},{"en":"watch for","ko":"~을 기다리다"},{"en":"accurate","ko":"정확한"},{"en":"track","ko":"추적하다"},{"en":"outcome","ko":"결과"},{"en":"essence","ko":"본질"},{"en":"asset","ko":"자산, 소중한 것"},{"en":"consciousness","ko":"의식"},{"en":"tendency","ko":"경향"},{"en":"off course","ko":"경로 밖으로"},{"en":"profit","ko":"이윤, 이익"},{"en":"unfavorable","ko":"불리한"},{"en":"beneficial","ko":"유익한, 이로운"},{"en":"sharpen","ko":"날카롭게 하다"},{"en":"recall","ko":"기억(력)"},{"en":"strengthen","ko":"강화하다"},{"en":"immune system","ko":"면역 체계"},{"en":"well-being","ko":"안녕"},{"en":"contemporary","ko":"현대의, 당대의"},{"en":"consequence","ko":"결과"},{"en":"familiarity","ko":"친숙함"},{"en":"regret","ko":"후회하다"},{"en":"sense","ko":"감지하다"},{"en":"feeler","ko":"(곤충의) 더듬이"},{"en":"contrary to","ko":"~와는 반대로"},{"en":"species","ko":"종(種)"},{"en":"bite","ko":"무는 행위, (곤충에게) 물린 상처; 물다"},{"en":"threaten","ko":"위협[협박]하다"},{"en":"pest","ko":"해충"},{"en":"when it comes to","ko":"~에 관해서라면"},{"en":"choosy","ko":"음식을 가리는, 까다로운"},{"en":"magic pill","ko":"마법의 약"},{"en":"blueprint","ko":"청사진"},{"en":"principle","ko":"원리, 원칙"},{"en":"potential","ko":"잠재력, 가능성"},{"en":"take a role","ko":"역할을 하다"},{"en":"active","ko":"적극적인"},{"en":"be robbed of","ko":"~을 빼앗기다"},{"en":"the chances are (that)","ko":"아마도 ~할 가능성이 있다"},{"en":"imply","ko":"암시하다"},{"en":"have little to do with","ko":"~와 관계가 거의 없다"},{"en":"external","ko":"외부의"},{"en":"fit in","ko":"어울리다"},{"en":"keep up","ko":"따라가다"},{"en":"impress","ko":"~에 감명을 주다"},{"en":"favorite","ko":"마음에 드는 사람; 총애"},{"en":"frustrating","ko":"좌절감을 주는"},{"en":"pet","ko":"총애를 받는 사람"},{"en":"contribution","ko":"기여"},{"en":"blow one’s own horn","ko":"자화자찬하다"},{"en":"recognition","ko":"인정"},{"en":"deserve","ko":"~을 받을 자격이 있다"},{"en":"favoritism","ko":"편애"},{"en":"have little to lose","ko":"밑져야 본전이다"},{"en":"tropical","ko":"열대의"},{"en":"endangered","ko":"위기에 처한"},{"en":"remarkable","ko":"놀라운, 엄청난"},{"en":"vegetarian","ko":"채식주의자"},{"en":"stray","ko":"길을 잃다, 헤매다"},{"en":"grooming","ko":"털 손질"},{"en":"veterinary","ko":"수의사의"},{"en":"administer","ko":"(약을) 투여하다"},{"en":"booster","ko":"촉진제"},{"en":"a good deal","ko":"많이"},{"en":"lip-service","ko":"입에 발린 말"},{"en":"follow-up","ko":"후속 조치"},{"en":"disguise","ko":"위장"},{"en":"grave","ko":"심각한, 중대한"},{"en":"drive","ko":"추진력"},{"en":"skeptical","ko":"의심 많은, 회의적인"},{"en":"carry-on","ko":"(기내에) 휴대할 수 있는"},{"en":"destination","ko":"목적지"},{"en":"active","ko":"활동적인, 적극적인"},{"en":"add","ko":"추가하다"},{"en":"make for","ko":"~에 도움이 되다, ~에 효력이 있다"},{"en":"sound","ko":"(수면이) 충분한, 건강한, 온전한"},{"en":"in the worst case scenario","ko":"최악의 경우에는"},{"en":"work against","ko":"~에 불리하게 작용하다"},{"en":"downward","ko":"하강의, 하향의"},{"en":"build on","ko":"~을 기반으로 하다"},{"en":"hunger","ko":"배고픔, 기아"},{"en":"transportation system","ko":"교통[수송] 체계"},{"en":"agriculture","ko":"농업"},{"en":"overcome","ko":"극복하다"},{"en":"load","ko":"짐"},{"en":"ridiculously","ko":"터무니없이"},{"en":"ounce","ko":"온스(무게의 단위), 조금, 소량"},{"en":"analyze","ko":"분석하다, 검토하다"},{"en":"leave behind","ko":"~을 두고 가다"},{"en":"equipment","ko":"장비"},{"en":"disposable","ko":"일회용의"},{"en":"effective","ko":"효율적인"},{"en":"correct","ko":"고치다, 수정하다"},{"en":"calculate","ko":"계산하다"},{"en":"duration","ko":"지속 (시간)"},{"en":"specific","ko":"특정한"},{"en":"reserve","ko":"보류하다, 유보하다"},{"en":"eliminate","ko":"제거하다"},{"en":"put ~ into perspective","ko":"~을 통찰하다"},{"en":"rush","ko":"흥분감"},{"en":"temporary","ko":"일시적인"},{"en":"miserable","ko":"불행한, 비참한"},{"en":"accomplish","ko":"이루다, 성취하다"},{"en":"specific","ko":"구체적인"},{"en":"measurable","ko":"측정할 수 있는"},{"en":"quantify","ko":"수량화하다"},{"en":"intended","ko":"의도된"},{"en":"capable","ko":"능력이 있는, 유능한"},{"en":"adaptable","ko":"적응할 수 있는"},{"en":"functionality","ko":"기능성, 상관관계"},{"en":"anti-aging","ko":"노화 방지의"},{"en":"strengthen","ko":"강화하다"},{"en":"when it comes to","ko":"~에 관한 한"},{"en":"environmental","ko":"환경의"},{"en":"construction","ko":"건설"},{"en":"beneficial","ko":"이익이 되는"},{"en":"finance","ko":"자금을 공급하다"},{"en":"mention","ko":"언급하다, 말하다"},{"en":"criticism","ko":"비판"},{"en":"sense","ko":"의미"},{"en":"athlete","ko":"경기자, 운동선수"},{"en":"offensive","ko":"불쾌한"},{"en":"upset","ko":"화나게 하는"},{"en":"sting","ko":"톡 쏘다, 따끔하게 하다"},{"en":"benefit","ko":"유익하다"},{"en":"predictability","ko":"예측 가능성"},{"en":"unalterable","ko":"불변의"},{"en":"appreciate","ko":"감사하다"},{"en":"inhabitable","ko":"살기에 알맞은"},{"en":"reliant","ko":"의존하는"},{"en":"informed","ko":"잘 아는"},{"en":"cover","ko":"포함하다"},{"en":"lease","ko":"임대하다"},{"en":"look to","ko":"~할 것을 검토하다"},{"en":"operation","ko":"사업, 영업"},{"en":"specialize in","ko":"~을 전문으로 하다"},{"en":"up-to-date","ko":"최신식의"},{"en":"inventory","ko":"재고"},{"en":"bilingual","ko":"두 개 언어를 사용하는"},{"en":"upbringing","ko":"양육"},{"en":"psychiatric","ko":"정신병학의"},{"en":"association","ko":"협회"},{"en":"internalize","ko":"내면화하다"},{"en":"externalize","ko":"외면화하다"},{"en":"appreciate","ko":"인식하다"},{"en":"get along with","ko":"~와 잘 어울리다"},{"en":"peer","ko":"또래"},{"en":"take ~ into consideration","ko":"~을 고려하다"},{"en":"travel agency","ko":"여행사"},{"en":"arrange","ko":"정리하다, 마련하다"},{"en":"in bulk","ko":"대량으로"},{"en":"distract","ko":"(관심·주의를) 딴 데로 돌리다"},{"en":"cope with","ko":"~에 대처하다"},{"en":"frustration","ko":"불만, 좌절감"},{"en":"accumulate","ko":"쌓다, 쌓이다"},{"en":"inaccessible","ko":"손에 닿지 않는"},{"en":"every so often","ko":"때때로, 종종"},{"en":"retain","ko":"보유하다"},{"en":"fairy tale","ko":"동화"},{"en":"fantasize","ko":"공상하다"},{"en":"alien","ko":"외계의, 이방인의"},{"en":"engagement","ko":"참여"},{"en":"imply","ko":"의미하다"},{"en":"simultaneously","ko":"동시에"},{"en":"participant","ko":"참여자"},{"en":"fascinated","ko":"매료된"},{"en":"assumption","ko":"전제"},{"en":"alternative","ko":"대안적인"},{"en":"intrinsic","ko":"내적인"},{"en":"insightful","ko":"통찰력 있는"},{"en":"allocate","ko":"할당하다"},{"en":"compute","ko":"계산하다"},{"en":"deceptive","ko":"기만적인"},{"en":"deceitfulness","ko":"속임수"},{"en":"hand in hand","ko":"함께"}];
+
+var QUIZ_ID = "mock2-vocab-0704";
+var QUIZ_TITLE = "모의고사 단어시험 2 (주제·요지·제목·주장)";
+
+/* ══════ 문제 생성 ══════ */
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+/* 영역: 프린트 순서 그대로 50개씩 분할 */
+var SEC_SIZE = 50;
+var SECTIONS = [];
+for (var s = 0; s < WORDS.length; s += SEC_SIZE) {
+  SECTIONS.push({ from: s + 1, to: Math.min(s + SEC_SIZE, WORDS.length), words: WORDS.slice(s, s + SEC_SIZE) });
+}
+var selectedSec = -1;
+
+function buildQuestions(sectionWords) {
+  return sectionWords.map(function (w) {
+    var ek = Math.random() < 0.5; // true: 영→한
+    var answer = ek ? w.ko : w.en;
+    var pool = WORDS.filter(function (o) {
+      return o !== w && (ek ? o.ko !== w.ko : o.en.toLowerCase() !== w.en.toLowerCase());
+    }).map(function (o) { return ek ? o.ko : o.en; });
+    var seen = {}; var uniq = [];
+    shuffle(pool).forEach(function (p) { if (!seen[p]) { seen[p] = 1; uniq.push(p); } });
+    var options = shuffle([answer].concat(uniq.slice(0, 3)));
+    return { ek: ek, q: ek ? w.en : w.ko, answer: answer, options: options, en: w.en, ko: w.ko };
+  });
+}
+
+/* ══════ 상태 ══════ */
+var studentName = "";
+var QS = [];
+var cur = 0;
+var picked = [];      // index of chosen option per question
+var startTime = 0;
+var timerIv = null;
+var locked = false;
+
+var $ = function (id) { return document.getElementById(id); };
+
+$("start-sub").textContent = "전체 " + WORDS.length + "단어 · " + SECTIONS.length + "개 영역 · 영한/한영 혼합 4지선다";
+
+var secGrid = $("sec-grid");
+SECTIONS.forEach(function (sec, i) {
+  var b = document.createElement("button");
+  b.className = "sec-btn";
+  b.innerHTML = (i + 1) + "영역<span class=\"range\">" + sec.from + "~" + sec.to + "</span>";
+  b.addEventListener("click", function () {
+    selectedSec = i;
+    Array.prototype.forEach.call(secGrid.children, function (c, j) {
+      c.className = "sec-btn" + (j === i ? " on" : "");
+    });
+    updateStartBtn();
+  });
+  secGrid.appendChild(b);
+});
+
+function updateStartBtn() {
+  $("start-btn").disabled = $("name-input").value.trim().length === 0 || selectedSec < 0;
+}
+
+$("name-input").addEventListener("input", updateStartBtn);
+$("name-input").addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && this.value.trim() && selectedSec >= 0) startQuiz();
+});
+$("start-btn").addEventListener("click", startQuiz);
+
+function secLabel() {
+  var sec = SECTIONS[selectedSec];
+  return (selectedSec + 1) + "영역 (" + sec.from + "~" + sec.to + ")";
+}
+
+function startQuiz() {
+  studentName = $("name-input").value.trim();
+  if (!studentName || selectedSec < 0) return;
+  QS = buildQuestions(SECTIONS[selectedSec].words);
+  picked = new Array(QS.length);
+  cur = 0;
+  startTime = Date.now();
+  _engfitSent = false;
+  $("start-screen").classList.add("hidden");
+  $("result-screen").classList.add("hidden");
+  $("quiz-screen").classList.remove("hidden");
+  if (timerIv) clearInterval(timerIv);
+  timerIv = setInterval(function () {
+    var s = Math.floor((Date.now() - startTime) / 1000);
+    $("timer").textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }, 1000);
+  render();
+}
+
+var CIRCLED = ["①", "②", "③", "④"];
+var ACC = { ek: "#3b82f6", ke: "#f97316" };
+
+function render() {
+  var q = QS[cur];
+  var acc = q.ek ? ACC.ek : ACC.ke;
+  $("prog-text").textContent = (cur + 1) + " / " + QS.length;
+  $("pfill").style.width = ((cur) / QS.length * 100) + "%";
+  $("qno").textContent = "Q" + (cur + 1);
+  $("qno").style.color = acc;
+  var qt = $("qtype");
+  qt.textContent = q.ek ? "영→한" : "한→영";
+  qt.style.color = acc;
+  qt.style.background = acc + "22";
+  var qw = $("qword");
+  qw.textContent = q.q;
+  qw.className = "qword " + (q.ek ? "ek en" : "ke");
+  var box = $("choices");
+  box.innerHTML = "";
+  q.options.forEach(function (opt, i) {
+    var b = document.createElement("button");
+    b.className = "choice" + (picked[cur] === i ? (q.ek ? " sel-ek" : " sel-ke") : "");
+    var num = document.createElement("span");
+    num.className = "cnum"; num.textContent = CIRCLED[i];
+    var tx = document.createElement("span");
+    tx.className = "ctext " + (q.ek ? "ko" : "en");
+    tx.textContent = opt;
+    b.appendChild(num); b.appendChild(tx);
+    b.addEventListener("click", function () { pick(i); });
+    box.appendChild(b);
+  });
+  $("prev-btn").style.visibility = cur === 0 ? "hidden" : "visible";
+  window.scrollTo(0, 0);
+}
+
+function pick(i) {
+  if (locked) return; locked = true;
+  picked[cur] = i;
+  render(); // show selection highlight
+  setTimeout(function () {
+    locked = false;
+    if (cur < QS.length - 1) { cur++; render(); }
+    else finish();
+  }, 250);
+}
+
+$("prev-btn").addEventListener("click", function () {
+  if (locked || cur === 0) return;
+  cur--; render();
+});
+
+document.addEventListener("keydown", function (e) {
+  if ($("quiz-screen").classList.contains("hidden")) return;
+  if (e.key >= "1" && e.key <= "4") pick(Number(e.key) - 1);
+  else if (e.key === "ArrowLeft" && cur > 0 && !locked) { cur--; render(); }
+});
+
+/* ══════ 결과 ══════ */
+var lastResult = null;
+
+function finish() {
+  clearInterval(timerIv);
+  var sec = Math.round((Date.now() - startTime) / 1000);
+  var correct = 0, wrongNos = [], wrongs = [], detail = [];
+  QS.forEach(function (q, i) {
+    var chosen = picked[i] === undefined ? "" : q.options[picked[i]];
+    var ok = chosen === q.answer;
+    if (ok) correct++;
+    else { wrongNos.push(i + 1); wrongs.push({ no: i + 1, q: q, chosen: chosen }); }
+    detail.push({ no: i + 1, ok: ok, chosen: chosen, answer: q.answer });
+  });
+  lastResult = { correct: correct, total: QS.length, sec: sec, wrongs: wrongs, wrongNos: wrongNos };
+
+  $("quiz-screen").classList.add("hidden");
+  $("result-screen").classList.remove("hidden");
+  $("r-name").textContent = studentName + " · " + secLabel() + " · " + new Date().toLocaleDateString("ko-KR");
+  $("r-score").textContent = correct + " / " + QS.length;
+  $("r-sub").textContent = Math.round(correct / QS.length * 100) + "% · " + fmtTime(sec);
+
+  var wl = $("wrong-list");
+  wl.innerHTML = "";
+  if (wrongs.length === 0) {
+    $("wrong-title").textContent = "";
+    var d = document.createElement("div");
+    d.className = "rcard allok";
+    d.textContent = "🎉 만점! 전부 정답이에요!";
+    wl.appendChild(d);
+  } else {
+    $("wrong-title").textContent = "❌ 오답 확인 (" + wrongs.length + "개)";
+    wrongs.forEach(function (w) {
+      var d = document.createElement("div");
+      d.className = "witem";
+      var qspan = w.q.ek ? '<span class="en">' + esc(w.q.en) + '</span>' : esc(w.q.ko);
+      var mySpan = w.chosen === "" ? "(무응답)" : wrapLang(w.chosen, !w.q.ek);
+      d.innerHTML = '<div class="wq">Q' + w.no + '. ' + qspan + '</div>' +
+        '<div class="wrow">내 답: <span class="my">' + mySpan + '</span><br>' +
+        '정답: <span class="ans">' + wrapLang(w.q.answer, !w.q.ek) + '</span>' +
+        ' &nbsp;<span style="color:#64748b">(' + '<span class="en">' + esc(w.q.en) + '</span> = ' + esc(w.q.ko) + ')</span></div>';
+      wl.appendChild(d);
+    });
+  }
+  window.scrollTo(0, 0);
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE + " — " + secLabel(),
+    student: studentName,
+    score: correct,
+    total: QS.length,
+    wrong: wrongNos,
+    durationSec: sec,
+    detail: detail
+  });
+}
+
+function wrapLang(text, isEn) {
+  return isEn ? '<span class="en">' + esc(text) + '</span>' : esc(text);
+}
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function fmtTime(sec) {
+  return Math.floor(sec / 60) + "분 " + (sec % 60) + "초";
+}
+
+function buildKakaoText() {
+  var r = lastResult;
+  var date = new Date().toLocaleDateString("ko-KR");
+  var t = "[EngFit 모의고사 단어시험 2 — " + secLabel() + "]\n";
+  t += studentName + " | " + date + "\n";
+  t += r.correct + "/" + r.total + " (" + Math.round(r.correct / r.total * 100) + "%) | " + fmtTime(r.sec) + "\n";
+  if (r.wrongs.length) {
+    t += "\n[오답 " + r.wrongs.length + "개]\n";
+    r.wrongs.forEach(function (w, i) { t += (i + 1) + ". " + w.q.en + " = " + w.q.ko + "\n"; });
+  } else {
+    t += "\n만점! 전부 정답!";
+  }
+  return t;
+}
+
+$("kakao-btn").addEventListener("click", function () {
+  var msg = buildKakaoText();
+  var btn = $("kakao-btn");
+  function done() { btn.textContent = "✓ 복사 완료! 카톡에 붙여넣기 하세요"; btn.classList.add("done"); }
+  function fallback() {
+    var ta = $("copy-area");
+    ta.value = msg;
+    ta.classList.remove("hidden");
+    ta.focus(); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) {
+      btn.textContent = "아래 내용을 길게 눌러 복사하세요";
+    }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(msg).then(done).catch(fallback);
+  } else fallback();
+});
+
+$("retry-btn").addEventListener("click", function () {
+  $("result-screen").classList.add("hidden");
+  $("start-screen").classList.remove("hidden");
+  $("kakao-btn").textContent = "📋 결과 복사해서 카톡으로 보내기";
+  $("kakao-btn").classList.remove("done");
+  $("copy-area").classList.add("hidden");
+  window.scrollTo(0, 0);
+});
+</script>
+</body>
+</html>
