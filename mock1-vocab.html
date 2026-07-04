@@ -32,6 +32,12 @@
   input[type=text] { width: 100%; padding: 14px 16px; font-size: 1.05rem; border-radius: 12px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; outline: none; font-family: inherit; }
   input[type=text]:focus { border-color: #3b82f6; }
   .info { margin-top: 22px; padding: 15px 18px; border-radius: 12px; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); font-size: 0.83rem; color: #94a3b8; line-height: 1.9; text-align: left; }
+  .sec-label { font-size: 0.82rem; color: #94a3b8; display: block; margin: 20px 0 8px; text-align: left; }
+  .sec-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sec-btn { padding: 12px 6px; border-radius: 12px; border: 1.5px solid #334155; background: #1e293b; color: #cbd5e1; cursor: pointer; font-family: inherit; font-size: 0.88rem; font-weight: 500; line-height: 1.35; transition: border-color 0.12s, background 0.12s; }
+  .sec-btn .range { display: block; font-size: 0.72rem; color: #64748b; }
+  .sec-btn.on { border-color: #3b82f6; background: rgba(59,130,246,0.14); color: #f8fafc; font-weight: 700; }
+  .sec-btn.on .range { color: #93c5fd; }
 
   /* ── quiz ── */
   #topbar { position: sticky; top: 0; z-index: 10; background: rgba(30,41,59,0.96); backdrop-filter: blur(4px); border-bottom: 1px solid #334155; padding: 9px 16px 10px; }
@@ -89,12 +95,14 @@
     <label for="name-input">이름</label>
     <input type="text" id="name-input" placeholder="이름을 입력하세요" maxlength="20" autocomplete="off">
   </div>
-  <button class="btn" id="start-btn" disabled>시험 시작</button>
+  <span class="sec-label">영역 선택 (프린트 순서 · 50개씩)</span>
+  <div class="sec-grid" id="sec-grid"></div>
+  <button class="btn" id="start-btn" disabled style="margin-top:18px">시험 시작</button>
   <div class="info">
+    · 단어 프린트 순서 그대로 50개씩 영역 분할<br>
     · 영어→한글, 한글→영어 랜덤 혼합 4지선다<br>
     · 답을 누르면 0.25초 후 자동으로 다음 문제<br>
-    · 이전 버튼으로 돌아가서 답 변경 가능<br>
-    · 키보드: 1~4 선택 · ← 이전 문제<br>
+    · 이전 버튼으로 돌아가서 답 변경 가능 · 키보드 1~4, ←<br>
     · 끝나면 결과가 자동 전송되고, 카톡 복사도 가능해요
   </div>
 </div>
@@ -186,8 +194,16 @@ function shuffle(arr) {
   return a;
 }
 
-function buildQuestions() {
-  return shuffle(WORDS).map(function (w) {
+/* 영역: 프린트 순서 그대로 50개씩 분할 */
+var SEC_SIZE = 50;
+var SECTIONS = [];
+for (var s = 0; s < WORDS.length; s += SEC_SIZE) {
+  SECTIONS.push({ from: s + 1, to: Math.min(s + SEC_SIZE, WORDS.length), words: WORDS.slice(s, s + SEC_SIZE) });
+}
+var selectedSec = -1;
+
+function buildQuestions(sectionWords) {
+  return sectionWords.map(function (w) {
     var ek = Math.random() < 0.5; // true: 영→한
     var answer = ek ? w.ko : w.en;
     var pool = WORDS.filter(function (o) {
@@ -211,20 +227,42 @@ var locked = false;
 
 var $ = function (id) { return document.getElementById(id); };
 
-$("start-sub").textContent = WORDS.length + "단어 · 영한/한영 혼합 · 4지선다";
+$("start-sub").textContent = "전체 " + WORDS.length + "단어 · " + SECTIONS.length + "개 영역 · 영한/한영 혼합 4지선다";
 
-$("name-input").addEventListener("input", function () {
-  $("start-btn").disabled = this.value.trim().length === 0;
+var secGrid = $("sec-grid");
+SECTIONS.forEach(function (sec, i) {
+  var b = document.createElement("button");
+  b.className = "sec-btn";
+  b.innerHTML = (i + 1) + "영역<span class=\"range\">" + sec.from + "~" + sec.to + "</span>";
+  b.addEventListener("click", function () {
+    selectedSec = i;
+    Array.prototype.forEach.call(secGrid.children, function (c, j) {
+      c.className = "sec-btn" + (j === i ? " on" : "");
+    });
+    updateStartBtn();
+  });
+  secGrid.appendChild(b);
 });
+
+function updateStartBtn() {
+  $("start-btn").disabled = $("name-input").value.trim().length === 0 || selectedSec < 0;
+}
+
+$("name-input").addEventListener("input", updateStartBtn);
 $("name-input").addEventListener("keydown", function (e) {
-  if (e.key === "Enter" && this.value.trim()) startQuiz();
+  if (e.key === "Enter" && this.value.trim() && selectedSec >= 0) startQuiz();
 });
 $("start-btn").addEventListener("click", startQuiz);
 
+function secLabel() {
+  var sec = SECTIONS[selectedSec];
+  return (selectedSec + 1) + "영역 (" + sec.from + "~" + sec.to + ")";
+}
+
 function startQuiz() {
   studentName = $("name-input").value.trim();
-  if (!studentName) return;
-  QS = buildQuestions();
+  if (!studentName || selectedSec < 0) return;
+  QS = buildQuestions(SECTIONS[selectedSec].words);
   picked = new Array(QS.length);
   cur = 0;
   startTime = Date.now();
@@ -315,7 +353,7 @@ function finish() {
 
   $("quiz-screen").classList.add("hidden");
   $("result-screen").classList.remove("hidden");
-  $("r-name").textContent = studentName + " · " + new Date().toLocaleDateString("ko-KR");
+  $("r-name").textContent = studentName + " · " + secLabel() + " · " + new Date().toLocaleDateString("ko-KR");
   $("r-score").textContent = correct + " / " + QS.length;
   $("r-sub").textContent = Math.round(correct / QS.length * 100) + "% · " + fmtTime(sec);
 
@@ -345,7 +383,7 @@ function finish() {
 
   engfitSubmitWithStatus({
     quizId: QUIZ_ID,
-    quizTitle: QUIZ_TITLE,
+    quizTitle: QUIZ_TITLE + " — " + secLabel(),
     student: studentName,
     score: correct,
     total: QS.length,
@@ -368,7 +406,7 @@ function fmtTime(sec) {
 function buildKakaoText() {
   var r = lastResult;
   var date = new Date().toLocaleDateString("ko-KR");
-  var t = "[EngFit 모의고사 단어시험 1]\n";
+  var t = "[EngFit 모의고사 단어시험 1 — " + secLabel() + "]\n";
   t += studentName + " | " + date + "\n";
   t += r.correct + "/" + r.total + " (" + Math.round(r.correct / r.total * 100) + "%) | " + fmtTime(r.sec) + "\n";
   if (r.wrongs.length) {
