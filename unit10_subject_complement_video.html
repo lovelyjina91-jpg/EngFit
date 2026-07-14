@@ -382,4 +382,46 @@ footer .serif{font-size:16px;color:var(--navy);font-weight:700}
   Unit 10 — 주격 보어, 주어를 설명하는 말
 </footer>
 
-<div id="stepHin
+<div id="stepHint">클릭 = 다음 섹션 ▶</div>
+
+<script>
+/* 영상용: 클릭/스페이스/→ = 다음 섹션 자동 스크롤, ← = 이전 섹션 */
+(function(){
+  const steps = [document.querySelector('.hero'), ...document.querySelectorAll('.wrap > section')];
+  let idx = 0;
+
+  function currentIdx(){
+    // 화면 중앙 기준으로 현재 위치 추정 (수동 스크롤 대비)
+    const mid = window.scrollY + window.innerHeight * 0.35;
+    let cur = 0;
+    steps.forEach((s,i)=>{ if(s.offsetTop <= mid) cur = i; });
+    return cur;
+  }
+  function go(i){
+    idx = Math.max(0, Math.min(steps.length - 1, i));
+    const y = idx === 0 ? 0 : steps[idx].offsetTop - 70; /* 스티키 탑바 보정 */
+    window.scrollTo({top:y, behavior:'smooth'});
+  }
+  function next(){ go(currentIdx() + 1); }
+  function prev(){ go(currentIdx() - 1); }
+
+  document.addEventListener('click', function(e){
+    if(e.target.closest('a, button, input, textarea, select')) return;
+    next();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter' || e.key === 'PageDown'){ e.preventDefault(); next(); }
+    else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); prev(); }
+  });
+
+  // 힌트 배지: 5초 후 자동 숨김
+  const hint = document.getElementById('stepHint');
+  setTimeout(()=>{ hint.style.opacity = '0'; setTimeout(()=>hint.remove(), 600); }, 5000);
+})();
+</script>
+<style>
+#stepHint{position:fixed;bottom:22px;right:22px;z-index:60;background:var(--navy);color:var(--amber2);font-weight:700;font-size:13px;padding:9px 16px;border-radius:999px;box-shadow:var(--shadow);opacity:.92;transition:opacity .6s;pointer-events:none}
+</style>
+
+</body>
+</html>
