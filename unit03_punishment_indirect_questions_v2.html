@@ -39,9 +39,6 @@ body.showall .viewall{background:var(--amber);border-color:var(--amber);color:va
 .float-emo:nth-child(2){top:60%;right:9%;animation-delay:1.6s}
 .float-emo:nth-child(3){bottom:12%;left:16%;animation-delay:3.2s}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
-.hint{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:60;background:var(--navy);color:var(--cream);font-size:14px;padding:10px 22px;border-radius:50px;box-shadow:var(--shadow);animation:pulse 1.8s ease-in-out infinite;transition:opacity .4s}
-.hint.gone{opacity:0;pointer-events:none}
-@keyframes pulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.04)}}
 .counter{position:fixed;bottom:26px;right:22px;z-index:60;font-family:'DM Mono',monospace;font-size:13px;background:var(--white);border:1px solid var(--line);border-radius:50px;padding:7px 16px;box-shadow:var(--shadow);color:var(--navy)}
 
 /* ── layout ── */
@@ -55,6 +52,10 @@ section{margin-bottom:64px}
 .card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 30px}
 
 /* ── passage ── */
+.given-box{background:var(--white);border:2px solid var(--amber);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 24px;margin-bottom:16px}
+.given-box .gv-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--navy);background:var(--amber);display:inline-block;border-radius:6px;padding:2px 10px;margin-bottom:8px;font-weight:500}
+.given-box .gv-en{font-size:16.5px;font-weight:700;color:var(--navy)}
+.given-box .gv-note{font-size:13px;color:var(--muted);margin-top:6px}
 .passage{font-size:17px;line-height:2.05}
 .passage .speaker{font-weight:900;color:var(--navy)}
 .iq{color:var(--core);font-weight:700;border-bottom:2px solid var(--core)}
@@ -137,7 +138,6 @@ body.showall .step{display:block;animation:none}
   <div class="grammar-pill">오늘의 문법 · 간접의문문</div>
 </div>
 
-<div class="hint" id="hint">화면을 클릭하면 다음 내용이 나와요</div>
 <div class="counter" id="counter">0 / 0</div>
 
 <main class="wrap">
@@ -147,6 +147,13 @@ body.showall .step{display:block;animation:none}
   <div class="step">
     <div class="sec-head"><div class="sec-num">1</div><div class="sec-title">지문 읽기</div></div>
     <div class="sec-sub">READ THE PASSAGE</div>
+  </div>
+  <div class="step">
+    <div class="given-box">
+      <div class="gv-label">주어진 문장 — 흐름상 (①)~(⑤) 중 알맞은 곳에 들어갈 문장</div>
+      <div class="gv-en">Finally, I choose the punishment that I think is fair.</div>
+      <div class="gv-note">지문을 읽으며 이 문장이 들어갈 자리를 스스로 찾아보세요.</div>
+    </div>
   </div>
   <div class="step">
     <div class="card passage">
@@ -355,7 +362,6 @@ body.showall .step{display:block;animation:none}
   var total = steps.length;
   var fill = document.getElementById('progressFill');
   var counter = document.getElementById('counter');
-  var hint = document.getElementById('hint');
   var btn = document.getElementById('viewallBtn');
   var showall = /[?&]mode=all/.test(location.search);
 
@@ -369,7 +375,6 @@ body.showall .step{display:block;animation:none}
     var el = steps[idx];
     el.classList.add('on');
     idx++;
-    hint.classList.add('gone');
     paint();
     setTimeout(function(){ el.scrollIntoView({behavior:'smooth', block: idx===1 ? 'start' : 'center'}); }, 60);
   }
@@ -385,7 +390,6 @@ body.showall .step{display:block;animation:none}
     document.body.classList.toggle('showall');
     if(document.body.classList.contains('showall')){
       btn.textContent = '클릭 진행 모드';
-      hint.classList.add('gone');
     } else {
       btn.textContent = '전체 보기';
       steps.forEach(function(s,i){ s.classList.toggle('on', i < idx); });
@@ -403,7 +407,7 @@ body.showall .step{display:block;animation:none}
   });
   btn.addEventListener('click', toggleAll);
 
-  if(showall){ document.body.classList.add('showall'); btn.textContent = '클릭 진행 모드'; hint.classList.add('gone'); }
+  if(showall){ document.body.classList.add('showall'); btn.textContent = '클릭 진행 모드'; }
   paint();
 })();
 </script>
