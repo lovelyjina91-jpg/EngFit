@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>영핏 단어시험</title>
+<style>
+:root{
+  --navy:#1B2970; --gold:#A67C3D; --ivory:#F7F4EC;
+  --ink:#1c1c1e; --grey:#6b6b6b; --line:#E5E0D5;
+  --ok:#2e7d6e; --no:#c0392b;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ivory); color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",-apple-system,sans-serif;
+  line-height:1.5; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:520px;margin:0 auto;padding:20px 18px 40px;min-height:100vh}
+.hide{display:none!important}
+.brand{font-size:12px;letter-spacing:.18em;color:var(--gold);font-weight:700}
+.rule{height:1px;background:var(--gold);opacity:.45;margin:14px 0 22px}
+h1{font-size:25px;margin:8px 0 4px;color:var(--navy);font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--grey);font-size:14px;margin:0}
+.btn{
+  display:block;width:100%;padding:16px;border:0;border-radius:12px;
+  background:var(--navy);color:#fff;font-size:17px;font-weight:700;
+  font-family:inherit;cursor:pointer;margin-top:14px;
+}
+.btn:disabled{opacity:.4}
+.btn.ghost{background:transparent;color:var(--navy);border:1.5px solid var(--line)}
+input[type=text]{
+  width:100%;padding:15px 14px;border:1.5px solid var(--line);border-radius:12px;
+  font-size:17px;font-family:inherit;background:#fff;color:var(--ink);
+}
+input[type=text]:focus{outline:none;border-color:var(--navy)}
+#start .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 20px;margin-top:26px}
+#start .meta{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 20px}
+.chip{background:var(--ivory);border:1px solid var(--line);border-radius:99px;padding:6px 13px;font-size:13px;color:var(--navy);font-weight:600}
+.note{font-size:13px;color:var(--grey);margin-top:16px;line-height:1.7}
+#resume{background:#FFF8E8;border:1px solid var(--gold);border-radius:12px;padding:13px 15px;font-size:14px;margin-top:16px;color:#6b5220}
+.bar{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:6px}
+.bar > i{display:block;height:100%;background:var(--navy);width:0;transition:width .25s}
+.cnt{display:flex;justify-content:space-between;font-size:13px;color:var(--grey);margin-bottom:26px;font-variant-numeric:tabular-nums}
+.dir{font-size:12px;color:var(--gold);font-weight:700;letter-spacing:.06em}
+.qbox{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px 20px;text-align:center;margin:10px 0 20px;min-height:118px;display:flex;flex-direction:column;justify-content:center}
+.q{font-size:27px;font-weight:800;color:var(--navy);word-break:break-word;letter-spacing:-.02em}
+.q.ko{font-size:23px}
+.opt{
+  width:100%;text-align:left;padding:15px 16px;margin-bottom:10px;
+  background:#fff;border:1.5px solid var(--line);border-radius:12px;
+  font-size:17px;font-family:inherit;color:var(--ink);cursor:pointer;
+  display:flex;gap:11px;align-items:flex-start;line-height:1.4;
+}
+.opt b{color:var(--gold);font-weight:700;flex:none}
+.opt.correct{border-color:var(--ok);background:#EAF6F3}
+.opt.correct b{color:var(--ok)}
+.opt.wrong{border-color:var(--no);background:#FDEDEA}
+.opt.wrong b{color:var(--no)}
+.opt:disabled{cursor:default}
+.score{text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 20px;margin:20px 0}
+.score .big{font-size:52px;font-weight:800;color:var(--navy);letter-spacing:-.03em;line-height:1.1}
+.score .big span{font-size:26px;color:var(--grey);font-weight:700}
+.score .pct{font-size:15px;color:var(--gold);font-weight:700;margin-top:6px}
+.score .time{font-size:13px;color:var(--grey);margin-top:10px}
+#submit-status{text-align:center;font-size:14px;margin:14px 0;font-weight:600;min-height:20px}
+h2{font-size:16px;color:var(--navy);margin:26px 0 12px;font-weight:800}
+.wrongitem{background:#fff;border:1px solid var(--line);border-left:3px solid var(--no);border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:15px}
+.wrongitem .w{font-weight:800;color:var(--navy)}
+.wrongitem .m{color:var(--ink)}
+.wrongitem .mine{font-size:13px;color:var(--no);margin-top:4px}
+.allok{background:#EAF6F3;border:1px solid var(--ok);border-radius:12px;padding:20px;text-align:center;color:var(--ok);font-weight:700}
+#kakaobox{margin-top:16px}
+#kakaotext{width:100%;height:170px;padding:13px;border:1.5px solid var(--line);border-radius:12px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);resize:none}
+.err{background:#FDEDEA;border:1px solid var(--no);border-radius:12px;padding:18px;color:var(--no);font-size:15px}
+.foot{text-align:center;font-size:11px;color:var(--grey);margin-top:34px;letter-spacing:.05em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section id="start" class="hide">
+  <div class="brand">영핏영어 · 지나티처</div>
+  <h1 id="s-title">단어 시험</h1>
+  <p class="sub" id="s-sub"></p>
+  <div class="rule"></div>
+  <div class="card">
+    <div class="meta" id="s-meta"></div>
+    <label class="sub" for="name" style="display:block;margin-bottom:8px">이름을 입력하세요</label>
+    <input type="text" id="name" placeholder="예) 김대윤" autocomplete="off" enterkeyhint="go">
+    <div id="resume" class="hide"></div>
+    <button class="btn" id="go">시험 시작</button>
+    <p class="note">
+      · 영어→한글, 한글→영어가 섞여 나옵니다<br>
+      · 답을 고르면 바로 다음 문제로 넘어갑니다<br>
+      · 중간에 껐다 켜도 이어서 풀 수 있어요<br>
+      · 결과는 지나티처에게 자동으로 전송됩니다
+    </p>
+  </div>
+  <div class="foot">ⓒ 영핏영어</div>
+</section>
+
+<section id="quiz" class="hide">
+  <div class="bar"><i id="prog"></i></div>
+  <div class="cnt"><span id="cnt"></span><span id="live"></span></div>
+  <div class="dir" id="dir"></div>
+  <div class="qbox"><div class="q" id="q"></div></div>
+  <div id="opts"></div>
+</section>
+
+<section id="result" class="hide">
+  <div class="brand">영핏영어 · 지나티처</div>
+  <h1 id="r-title">시험 끝!</h1>
+  <p class="sub" id="r-sub"></p>
+  <div class="rule"></div>
+  <div class="score">
+    <div class="big"><span id="r-score"></span><span> / <i id="r-total" style="font-style:normal"></i></span></div>
+    <div class="pct" id="r-pct"></div>
+    <div class="time" id="r-time"></div>
+  </div>
+  <div id="submit-status"></div>
+  <h2 id="r-wrongtitle">틀린 단어</h2>
+  <div id="r-wrong"></div>
+  <button class="btn ghost" id="kakaobtn">카톡 전송용 텍스트 보기</button>
+  <div id="kakaobox" class="hide">
+    <p class="sub" style="font-size:13px;margin-bottom:8px">아래 텍스트를 꾹 눌러 전체선택 → 복사 → 카톡에 붙여넣기</p>
+    <textarea id="kakaotext" readonly></textarea>
+  </div>
+  <button class="btn" id="again" style="margin-top:20px">다시 풀기</button>
+  <div class="foot">ⓒ 영핏영어</div>
+</section>
+
+<section id="fail" class="hide">
+  <div class="brand">영핏영어</div>
+  <div class="rule"></div>
+  <div class="err" id="failmsg"></div>
+</section>
+
+</div>
+
+<script>
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r){
+  var body = JSON.stringify(r);
+  try{
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method:"POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  }catch(e){
+    try{
+      await fetch(ENGFIT_SUBMIT_URL, { method:"POST", mode:"no-cors", body: body });
+      return true;
+    }catch(e2){ return false; }
+  }
+}
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r){
+  if(_engfitSent) return;
+  _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  if(el){ el.textContent = "결과 전송 중..."; el.style.color = "#888"; }
+  var ok = await engfitSubmit(r);
+  if(el){
+    if(ok){ el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+    else  { el.textContent = "전송이 안 됐어요 — 아래 [카톡 전송용 텍스트]로 보내주세요!"; el.style.color = "#c0392b"; }
+  }
+  return ok;
+}
+
+var $ = function(id){ return document.getElementById(id); };
+var CIRC = ["①","②","③","④"];
+
+function segs(m){
+  return m.replace(/\([^)]*\)/g,"")
+          .replace(/[~\s]/g,"")
+          .split(/[,;/·]/)
+          .filter(function(s){ return s.length > 0; });
+}
+function conflict(a,b){
+  var A = segs(a), B = segs(b);
+  for(var i=0;i<A.length;i++){ if(B.indexOf(A[i]) !== -1) return true; }
+  return false;
+}
+function shuffle(a){
+  for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+
+function buildQuestions(items, pool){
+  var cands = items.concat(pool);
+  var qs = [];
+  shuffle(items.slice()).forEach(function(it){
+    var ambiguous = items.some(function(o){
+      return o.w !== it.w && conflict(o.m, it.m);
+    });
+    var dir = (!ambiguous && Math.random() < 0.5) ? "k2e" : "e2k";
+
+    var picked = [];
+    var seen = [it.m];
+    shuffle(cands.slice()).forEach(function(c){
+      if(picked.length >= 3) return;
+      if(c.w === it.w) return;
+      if(conflict(c.m, it.m)) return;
+      if(seen.some(function(s){ return conflict(s, c.m); })) return;
+      if(dir === "k2e" && picked.some(function(p){ return p.w === c.w; })) return;
+      seen.push(c.m);
+      picked.push(c);
+    });
+    if(picked.length < 3) return;
+
+    var correct = (dir === "e2k") ? it.m : it.w;
+    var opts = [correct].concat(picked.map(function(p){ return dir === "e2k" ? p.m : p.w; }));
+    shuffle(opts);
+    qs.push({
+      dir: dir,
+      prompt: (dir === "e2k") ? it.w : it.m,
+      opts: opts,
+      ans: opts.indexOf(correct),
+      w: it.w, m: it.m
+    });
+  });
+  return qs;
+}
+
+var S = { qs:[], i:0, score:0, log:[], t0:0, name:"", quizId:"", quizTitle:"", key:"", locked:false };
+
+function save(){
+  try{ localStorage.setItem(S.key, JSON.stringify({
+    i:S.i, score:S.score, log:S.log, t0:S.t0, qs:S.qs, name:S.name
+  })); }catch(e){}
+}
+function clearSave(){ try{ localStorage.removeItem(S.key); }catch(e){} }
+
+function show(id){
+  ["start","quiz","result","fail"].forEach(function(s){ $(s).classList.add("hide"); });
+  $(id).classList.remove("hide");
+  window.scrollTo(0,0);
+}
+
+function render(){
+  var q = S.qs[S.i];
+  $("prog").style.width = (S.i / S.qs.length * 100) + "%";
+  $("cnt").textContent = (S.i + 1) + " / " + S.qs.length;
+  $("live").textContent = "맞은 개수 " + S.score;
+  $("dir").textContent = (q.dir === "e2k") ? "뜻을 고르세요" : "영어 단어를 고르세요";
+  $("q").textContent = q.prompt;
+  $("q").className = "q" + (q.dir === "e2k" ? "" : " ko");
+
+  var box = $("opts");
+  box.innerHTML = "";
+  q.opts.forEach(function(o, idx){
+    var b = document.createElement("button");
+    b.className = "opt";
+    b.innerHTML = "<b>" + CIRC[idx] + "</b><span></span>";
+    b.querySelector("span").textContent = o;
+    b.onclick = function(){ pick(idx); };
+    box.appendChild(b);
+  });
+  S.locked = false;
+}
+
+function pick(idx){
+  if(S.locked) return;
+  S.locked = true;
+  var q = S.qs[S.i];
+  var ok = (idx === q.ans);
+  var btns = $("opts").querySelectorAll(".opt");
+  btns.forEach(function(b,k){
+    b.disabled = true;
+    if(k === q.ans) b.classList.add("correct");
+    else if(k === idx) b.classList.add("wrong");
+  });
+  if(ok) S.score++;
+  S.log.push({ no:S.i+1, ok:ok, chosen:CIRC[idx], answer:CIRC[q.ans], w:q.w, m:q.m,
+               mine:q.opts[idx] });
+  S.i++;
+  save();
+  setTimeout(function(){
+    if(S.i >= S.qs.length) finish();
+    else render();
+  }, ok ? 320 : 900);
+}
+
+function finish(){
+  var dur = Math.round((Date.now() - S.t0) / 1000);
+  var wrong = S.log.filter(function(l){ return !l.ok; });
+  clearSave();
+
+  $("r-sub").textContent = S.quizTitle + " · " + S.name;
+  $("r-score").textContent = S.score;
+  $("r-total").textContent = S.qs.length;
+  $("r-pct").textContent = Math.round(S.score / S.qs.length * 100) + "점";
+  $("r-time").textContent = "걸린 시간 " + Math.floor(dur/60) + "분 " + (dur%60) + "초";
+
+  var box = $("r-wrong");
+  box.innerHTML = "";
+  if(wrong.length === 0){
+    $("r-wrongtitle").classList.add("hide");
+    box.innerHTML = '<div class="allok">만점입니다! 완벽해요 👏</div>';
+  }else{
+    $("r-wrongtitle").textContent = "틀린 단어 " + wrong.length + "개";
+    wrong.forEach(function(l){
+      var d = document.createElement("div");
+      d.className = "wrongitem";
+      var s1 = document.createElement("div");
+      s1.innerHTML = '<span class="w"></span> <span class="m"></span>';
+      s1.querySelector(".w").textContent = l.w;
+      s1.querySelector(".m").textContent = "— " + l.m;
+      var s2 = document.createElement("div");
+      s2.className = "mine";
+      s2.textContent = "내가 고른 답: " + l.mine;
+      d.appendChild(s1); d.appendChild(s2);
+      box.appendChild(d);
+    });
+  }
+
+  var txt = "[영핏 단어시험]\n" + S.quizTitle + "\n이름: " + S.name +
+            "\n점수: " + S.score + "/" + S.qs.length +
+            " (" + Math.round(S.score/S.qs.length*100) + "점)" +
+            "\n시간: " + Math.floor(dur/60) + "분 " + (dur%60) + "초\n";
+  if(wrong.length){
+    txt += "\n틀린 단어 " + wrong.length + "개\n";
+    wrong.forEach(function(l){ txt += "· " + l.w + " — " + l.m + "\n"; });
+  }else{ txt += "\n만점!\n"; }
+  $("kakaotext").value = txt;
+
+  show("result");
+
+  engfitSubmitWithStatus({
+    quizId: S.quizId,
+    quizTitle: S.quizTitle,
+    student: S.name,
+    score: S.score,
+    total: S.qs.length,
+    wrong: wrong.map(function(l){ return l.no; }),
+    durationSec: dur,
+    detail: S.log.map(function(l){
+      return { no:l.no, ok:l.ok, chosen:l.chosen, answer:l.answer, word:l.w };
+    })
+  });
+}
+
+function param(k, d){
+  var m = new RegExp("[?&]" + k + "=([^&]*)").exec(location.search);
+  return m ? decodeURIComponent(m[1]) : d;
+}
+
+function boot(){
+  var book = param("book", "");
+  var day  = parseInt(param("day", ""), 10);
+  if(!book || !day){
+    show("fail");
+    $("failmsg").textContent = "주소가 올바르지 않습니다. 지나티처에게 받은 링크를 다시 눌러주세요.";
+    return;
+  }
+  if(!/^[a-z0-9]+$/.test(book)){
+    show("fail");
+    $("failmsg").textContent = "주소가 올바르지 않습니다.";
+    return;
+  }
+  var pad = ("00" + day).slice(-3);
+  fetch(book + ".json")
+    .then(function(r){ if(!r.ok) throw new Error("no data"); return r.json(); })
+    .then(function(BOOK){
+      var items = BOOK.days[String(day)];
+      if(!items || !items.length){
+        show("fail");
+        $("failmsg").textContent = BOOK.title + "에는 Day " + day + "이 없습니다. 지나티처에게 알려주세요.";
+        return;
+      }
+      var all = [];
+      for(var k in BOOK.days){ if(k !== String(day)) all = all.concat(BOOK.days[k]); }
+      var pool = shuffle(all).slice(0, 300);
+      var D = { title: BOOK.title, day: day, items: items, pool: pool };
+
+      S.quizId    = "daily-" + book + "-d" + pad;
+      S.quizTitle = D.title + " Day " + D.day;
+      S.key       = "engfit-" + S.quizId;
+
+      $("s-title").textContent = D.title;
+      $("s-sub").textContent   = "Day " + D.day + " 단어 시험";
+      $("s-meta").innerHTML    = '<span class="chip">Day ' + D.day + '</span>' +
+                                 '<span class="chip">' + D.items.length + '단어</span>' +
+                                 '<span class="chip">4지선다</span>';
+
+      var saved = null;
+      try{ saved = JSON.parse(localStorage.getItem(S.key) || "null"); }catch(e){}
+      if(saved && saved.qs && saved.i > 0 && saved.i < saved.qs.length){
+        $("resume").classList.remove("hide");
+        $("resume").textContent = "이어풀기: " + saved.name + " 학생, " +
+                                  saved.i + "번까지 푼 기록이 있어요. 이름을 똑같이 쓰면 이어서 풀 수 있습니다.";
+        $("name").value = saved.name || "";
+      }
+
+      $("go").onclick = function(){
+        var n = $("name").value.trim();
+        if(!n){ $("name").focus(); return; }
+        S.name = n;
+        if(saved && saved.qs && saved.name === n && saved.i > 0 && saved.i < saved.qs.length){
+          S.qs = saved.qs; S.i = saved.i; S.score = saved.score;
+          S.log = saved.log; S.t0 = saved.t0;
+        }else{
+          S.qs = buildQuestions(D.items, D.pool);
+          S.i = 0; S.score = 0; S.log = []; S.t0 = Date.now();
+        }
+        if(S.qs.length === 0){
+          show("fail");
+          $("failmsg").textContent = "문제를 만들지 못했습니다. 지나티처에게 알려주세요.";
+          return;
+        }
+        show("quiz");
+        render();
+      };
+      $("name").addEventListener("keydown", function(e){
+        if(e.key === "Enter"){ e.preventDefault(); $("go").click(); }
+      });
+      $("kakaobtn").onclick = function(){
+        $("kakaobox").classList.toggle("hide");
+        if(!$("kakaobox").classList.contains("hide")) $("kakaotext").select();
+      };
+      $("again").onclick = function(){ clearSave(); location.reload(); };
+
+      show("start");
+    })
+    .catch(function(){
+      show("fail");
+      $("failmsg").textContent = "단어 자료를 불러오지 못했습니다. 잠시 후 다시 시도하거나 지나티처에게 알려주세요.";
+    });
+}
+boot();
+</script>
+</body>
+</html>
