@@ -43,7 +43,7 @@ input[type=text]:focus{outline:none;border-color:var(--navy)}
 #start .meta{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 20px}
 .chip{background:var(--ivory);border:1px solid var(--line);border-radius:99px;padding:6px 13px;font-size:13px;color:var(--navy);font-weight:600}
 .note{font-size:13px;color:var(--grey);margin-top:16px;line-height:1.7}
-#resume{background:#FFF8E8;border:1px solid var(--gold);border-radius:12px;padding:13px 15px;font-size:14px;margin-top:16px;color:#6b5220}
+#nameerr{background:#FDEDEA;border:1px solid var(--no);border-radius:10px;padding:11px 13px;font-size:13.5px;margin-top:10px;color:var(--no);font-weight:600;line-height:1.5}
 
 /* 문제화면 */
 .bar{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:6px}
@@ -98,7 +98,7 @@ h2{font-size:16px;color:var(--navy);margin:26px 0 12px;font-weight:800}
     <div class="meta" id="s-meta"></div>
     <label class="sub" for="name" style="display:block;margin-bottom:8px">이름을 입력하세요</label>
     <input type="text" id="name" placeholder="예) 지나티처" autocomplete="off" enterkeyhint="go">
-    <div id="resume" class="hide"></div>
+    <div id="nameerr" class="hide"></div>
     <button class="btn" id="go">시험 시작</button>
     <p class="note">
       · 영어→한글, 한글→영어가 섞여 나옵니다<br>
@@ -243,12 +243,18 @@ function buildQuestions(items, pool){
 /* --- 상태 --- */
 var S = { qs:[], i:0, score:0, log:[], t0:0, name:"", quizId:"", quizTitle:"", key:"", locked:false };
 
-function save(){
-  try{ localStorage.setItem(S.key, JSON.stringify({
-    i:S.i, score:S.score, log:S.log, t0:S.t0, qs:S.qs, name:S.name
-  })); }catch(e){}
+/* 이어풀기 없음 — 링크 하나를 여러 학생이 함께 쓰므로 항상 새 시험으로 시작한다.
+   예전 버전이 휴대폰에 남긴 저장 기록이 있으면 열 때 지운다. */
+function purgeOldSaves(){
+  try{
+    var ks = [], i, k;
+    for(i = 0; i < localStorage.length; i++){
+      k = localStorage.key(i);
+      if(k && k.indexOf("engfit-") === 0) ks.push(k);
+    }
+    for(i = 0; i < ks.length; i++) localStorage.removeItem(ks[i]);
+  }catch(e){}
 }
-function clearSave(){ try{ localStorage.removeItem(S.key); }catch(e){} }
 
 /* --- 화면 --- */
 function show(id){
@@ -294,7 +300,6 @@ function pick(idx){
   S.log.push({ no:S.i+1, ok:ok, chosen:CIRC[idx], answer:CIRC[q.ans], w:q.w, m:q.m,
                mine:q.opts[idx] });
   S.i++;
-  save();
   setTimeout(function(){
     if(S.i >= S.qs.length) finish();
     else render();
@@ -304,7 +309,6 @@ function pick(idx){
 function finish(){
   var dur = Math.round((Date.now() - S.t0) / 1000);
   var wrong = S.log.filter(function(l){ return !l.ok; });
-  clearSave();
 
   $("r-sub").textContent = S.quizTitle + " · " + S.name;
   $("r-score").textContent = S.score;
@@ -397,7 +401,7 @@ function boot(){
 
       S.quizId    = "daily-" + book + "-d" + pad;
       S.quizTitle = D.title + " Day " + D.day;
-      S.key       = "engfit-" + S.quizId;
+      purgeOldSaves();
 
       $("s-title").textContent = D.title;
       $("s-sub").textContent   = "Day " + D.day + " 단어 시험";
@@ -405,20 +409,19 @@ function boot(){
                                  '<span class="chip">' + D.items.length + '단어</span>' +
                                  '<span class="chip">4지선다</span>';
 
-      var saved = null;
-      try{ saved = JSON.parse(localStorage.getItem(S.key) || "null"); }catch(e){}
-
       $("go").onclick = function(){
-        var n = $("name").value.trim();
-        if(!n){ $("name").focus(); return; }
-        S.name = n;
-        if(saved && saved.qs && saved.name === n && saved.i > 0 && saved.i < saved.qs.length){
-          S.qs = saved.qs; S.i = saved.i; S.score = saved.score;
-          S.log = saved.log; S.t0 = saved.t0;
-        }else{
-          S.qs = buildQuestions(D.items, D.pool);
-          S.i = 0; S.score = 0; S.log = []; S.t0 = Date.now();
+        var n = $("name").value.trim().replace(/\s+/g, "");
+        var err = $("nameerr");
+        if(!/^[가-힣]{2,6}$/.test(n)){
+          err.textContent = "본인 이름을 한글로 정확히 입력해 주세요. (예: 김대윤)";
+          err.classList.remove("hide");
+          $("name").focus();
+          return;
         }
+        err.classList.add("hide");
+        S.name = n;
+        S.qs = buildQuestions(D.items, D.pool);
+        S.i = 0; S.score = 0; S.log = []; S.t0 = Date.now();
         if(S.qs.length === 0){
           show("fail");
           $("failmsg").textContent = "문제를 만들지 못했습니다. 지나티처에게 알려주세요.";
@@ -430,7 +433,7 @@ function boot(){
       $("name").addEventListener("keydown", function(e){
         if(e.key === "Enter"){ e.preventDefault(); $("go").click(); }
       });
-      $("again").onclick = function(){ clearSave(); location.reload(); };
+      $("again").onclick = function(){ location.reload(); };
 
       show("start");
     })
