@@ -36,6 +36,9 @@
   .q-type { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 6px; }
   .q-text { font-size: 24px; font-weight: 700; color: #f8fafc; line-height: 1.4; }
   .options { display: flex; flex-direction: column; gap: 8px; }
+  .sound-btn { font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 8px; background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.35); }
+  .sound-btn.off { background: #334155; color: #94a3b8; border-color: #475569; }
+  .topbar-end { display: flex; align-items: center; gap: 10px; }
   .opt-btn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; border-radius: 12px; background: #1e293b; transition: all 0.12s; text-align: left; }
   .opt-circle { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; color: #94a3b8; }
   .opt-text { font-size: 16px; line-height: 1.4; color: #cbd5e1; font-weight: 400; }
@@ -113,7 +116,10 @@
   <div class="topbar">
     <div class="topbar-row">
       <span class="topbar-left" id="q-counter"></span>
-      <span class="topbar-right" id="q-info"></span>
+      <span class="topbar-end">
+        <button type="button" id="btn-sound" class="sound-btn" onclick="toggleSound()">🔊 발음 ON</button>
+        <span class="topbar-right" id="q-info"></span>
+      </span>
     </div>
     <div class="progress-bg"><div class="progress-fill" id="progress-bar"></div></div>
   </div>
@@ -296,6 +302,79 @@ const WORDS = [
 ];
 
 const CIR = ["\u2460","\u2461","\u2462","\u2463"];
+
+/* ─── 발음 사운드 (브라우저 내장 TTS · 무료 · 별도 음원 파일 불필요) ─── */
+const SOUND_KEY='engfit-wordtest-sound';
+const TTS_OK = typeof window!=='undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance!=='undefined';
+let soundOn=true; try{ soundOn = localStorage.getItem(SOUND_KEY)!=='0'; }catch(e){}
+let enVoice=null, advanceTimer=null;
+
+function loadVoice(){
+  if(!TTS_OK) return;
+  const vs=speechSynthesis.getVoices().filter(v=>/^en([-_]|$)/i.test(v.lang));
+  if(!vs.length) return;
+  const pref=['Samantha','Google US English','Microsoft Aria','Microsoft Jenny','Microsoft Zira','Karen','Alex','Daniel'];
+  for(let i=0;i<pref.length;i++){ const hit=vs.find(v=>v.name.indexOf(pref[i])>=0); if(hit){ enVoice=hit; return; } }
+  enVoice = vs.find(v=>/en[-_]US/i.test(v.lang)) || vs[0];
+}
+if(TTS_OK){ loadVoice(); speechSynthesis.onvoiceschanged=loadVoice; }
+
+/* 모바일(특히 iOS)은 사용자 제스처 안에서 한 번 울려줘야 이후 재생이 허용됨 */
+function warmUpSpeech(){
+  if(!TTS_OK) return;
+  try{ const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); }catch(e){}
+}
+
+/* 영어 단어를 1회 재생하고, 끝나면 done() 호출 */
+function speakWord(text, done){
+  if(!TTS_OK || !soundOn || !text){ if(done) done(); return; }
+  let finished=false, guard=null;
+  const finish=()=>{ if(finished) return; finished=true; if(guard) clearTimeout(guard); if(done) done(); };
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    if(enVoice) u.voice=enVoice;
+    u.lang=(enVoice&&enVoice.lang)||'en-US';
+    u.rate=0.95; u.pitch=1; u.volume=1;
+    u.onend=finish; u.onerror=finish;
+    speechSynthesis.speak(u);
+  }catch(e){ finish(); return; }
+  /* onend가 오지 않는 브라우저 대비 안전장치 */
+  guard=setTimeout(finish, Math.min(4000, 900+String(text).length*90));
+}
+
+function renderSoundBtn(){
+  const b=document.getElementById('btn-sound');
+  if(!b) return;
+  if(!TTS_OK){ b.style.display='none'; return; }
+  b.textContent = soundOn ? '🔊 발음 ON' : '🔈 발음 OFF';
+  b.classList.toggle('off', !soundOn);
+}
+
+function toggleSound(){
+  soundOn=!soundOn;
+  try{ localStorage.setItem(SOUND_KEY, soundOn?'1':'0'); }catch(e){}
+  if(TTS_OK) speechSynthesis.cancel();
+  if(advanceTimer){ clearTimeout(advanceTimer); advanceTimer=null; }
+  if(soundOn) warmUpSpeech();
+  renderSoundBtn();
+}
+
+/* 번호를 찍으면: 선택 표시 → 그 단어 발음 1회 → 자동으로 다음 문제 */
+function onPick(idx){
+  const q=questions[currentQ];
+  const from=currentQ;
+  const isLast = currentQ >= questions.length-1;
+  answers[currentQ]=idx;
+  if(advanceTimer){ clearTimeout(advanceTimer); advanceTimer=null; }
+  renderQ();                       /* 선택 하이라이트를 먼저 보여준다 */
+  if(!soundOn) return;             /* 발음 OFF면 기존처럼 수동으로 '다음' */
+  speakWord(q.eng, ()=>{
+    if(currentQ!==from || isLast) return;   /* 재생 중 사용자가 이동했으면 취소 */
+    advanceTimer=setTimeout(()=>{ advanceTimer=null; goNext(); }, 250);
+  });
+}
+
 let questions=[], answers={}, currentQ=0, startTime=0, timerID=null, resultData=null;
 
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
@@ -318,7 +397,8 @@ function startQuiz(){
   startTime=Date.now();
   if(timerID)clearInterval(timerID);
   timerID=setInterval(updateTimer,1000);
-  show('screen-quiz'); renderQ();
+  warmUpSpeech();
+  show('screen-quiz'); renderSoundBtn(); renderQ();
 }
 
 function updateTimer(){
@@ -358,7 +438,7 @@ function renderQ(){
       btn.style.border='1.5px solid #334155';
     }
     btn.innerHTML=`<span class="opt-circle" style="${sel===idx?'color:'+color:''}">${CIR[idx]}</span><span class="opt-text">${opt}</span>`;
-    btn.onclick=()=>{answers[currentQ]=idx;renderQ();};
+    btn.onclick=()=>{onPick(idx);};
     cont.appendChild(btn);
   });
 

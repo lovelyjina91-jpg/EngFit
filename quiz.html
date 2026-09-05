@@ -91,6 +91,11 @@ h2{font-size:16px;color:var(--navy);margin:26px 0 12px;font-weight:800}
 #kakaotext{width:100%;height:170px;padding:13px;border:1.5px solid var(--line);border-radius:12px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);resize:none}
 .err{background:#FDEDEA;border:1px solid var(--no);border-radius:12px;padding:18px;color:var(--no);font-size:15px}
 .foot{text-align:center;font-size:11px;color:var(--grey);margin-top:34px;letter-spacing:.05em}
+  .cnt-end { display:flex; align-items:center; gap:8px; }
+  .sound-btn { font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px;
+               background:rgba(59,130,246,.14); color:#2563eb;
+               border:1px solid rgba(59,130,246,.35); cursor:pointer; line-height:1.5; }
+  .sound-btn.off { background:#eef1f5; color:#8a94a6; border-color:#d7dce3; }
 </style>
 </head>
 <body>
@@ -121,7 +126,7 @@ h2{font-size:16px;color:var(--navy);margin:26px 0 12px;font-weight:800}
 <!-- ============ 문제 ============ -->
 <section id="quiz" class="hide">
   <div class="bar"><i id="prog"></i></div>
-  <div class="cnt"><span id="cnt"></span><span id="live"></span></div>
+  <div class="cnt"><span id="cnt"></span><span class="cnt-end"><button type="button" id="btn-sound" class="sound-btn" onclick="toggleSound()">🔊 발음</button><span id="live"></span></span></div>
   <div class="dir" id="dir"></div>
   <div class="qbox"><div class="q" id="q"></div></div>
   <div id="opts"></div>
@@ -264,6 +269,65 @@ function buildQuestions(items, pool){
   return qs;
 }
 
+/* --- 발음 사운드 (브라우저 내장 TTS · 음원 파일/외부 API 불필요) --- */
+var SOUND_KEY = "engfit-wordtest-sound";
+var TTS_OK = ("speechSynthesis" in window) && (typeof SpeechSynthesisUtterance !== "undefined");
+var soundOn = true;
+try { soundOn = localStorage.getItem(SOUND_KEY) !== "0"; } catch(e){}
+var enVoice = null;
+
+function loadVoice(){
+  if(!TTS_OK) return;
+  var vs = speechSynthesis.getVoices().filter(function(v){ return /^en([-_]|$)/i.test(v.lang); });
+  if(!vs.length) return;
+  var pref = ["Samantha","Google US English","Microsoft Aria","Microsoft Jenny","Microsoft Zira","Karen","Alex","Daniel"];
+  for(var i=0;i<pref.length;i++){
+    for(var j=0;j<vs.length;j++){ if(vs[j].name.indexOf(pref[i]) >= 0){ enVoice = vs[j]; return; } }
+  }
+  for(var k=0;k<vs.length;k++){ if(/en[-_]US/i.test(vs[k].lang)){ enVoice = vs[k]; return; } }
+  enVoice = vs[0];
+}
+if(TTS_OK){ loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+
+/* iOS는 사용자 제스처 안에서 한 번 울려줘야 이후 재생이 허용된다 */
+function warmUpSpeech(){
+  if(!TTS_OK) return;
+  try { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } catch(e){}
+}
+
+/* 영어 단어를 1회 읽어주고, 끝나면 done() 호출. 사운드 OFF면 즉시 done() */
+function speakWord(text, done){
+  if(!TTS_OK || !soundOn || !text){ if(done) done(); return; }
+  var finished = false, guard = null;
+  function finish(){ if(finished) return; finished = true; if(guard) clearTimeout(guard); if(done) done(); }
+  try {
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    if(enVoice) u.voice = enVoice;
+    u.lang = (enVoice && enVoice.lang) || "en-US";
+    u.rate = 0.95; u.pitch = 1; u.volume = 1;
+    u.onend = finish; u.onerror = finish;
+    speechSynthesis.speak(u);
+  } catch(e){ finish(); return; }
+  guard = setTimeout(finish, Math.min(4000, 900 + String(text).length * 90)); /* onend 미발생 대비 */
+}
+
+function renderSoundBtn(){
+  var b = document.getElementById("btn-sound");
+  if(!b) return;
+  if(!TTS_OK){ b.style.display = "none"; return; }
+  b.textContent = soundOn ? "🔊 발음" : "🔈 발음 끔";
+  if(soundOn) b.classList.remove("off"); else b.classList.add("off");
+}
+
+function toggleSound(){
+  soundOn = !soundOn;
+  try { localStorage.setItem(SOUND_KEY, soundOn ? "1" : "0"); } catch(e){}
+  if(TTS_OK) speechSynthesis.cancel();
+  if(soundOn) warmUpSpeech();
+  renderSoundBtn();
+}
+
 /* --- 상태 --- */
 var S = { qs:[], i:0, score:0, log:[], t0:0, name:"", quizId:"", quizTitle:"", key:"", locked:false };
 
@@ -324,10 +388,16 @@ function pick(idx){
   S.log.push({ no:S.i+1, ok:ok, chosen:CIRC[idx], answer:CIRC[q.ans], w:q.w, m:q.m,
                mine:q.opts[idx] });
   S.i++;
-  setTimeout(function(){
+  var minWait = ok ? 320 : 900;
+  var t0 = Date.now();
+  function advance(){
     if(S.i >= S.qs.length) finish();
     else render();
-  }, ok ? 320 : 900);
+  }
+  /* 번호를 고르면 그 문제의 영단어를 한 번 읽어주고, 재생이 끝난 뒤 다음 문제로 */
+  speakWord(q.w, function(){
+    setTimeout(advance, Math.max(0, minWait - (Date.now() - t0)));
+  });
 }
 
 /* --- 키보드 1~4 로 답 고르기 (컴퓨터로 푸는 학생용) --- */
@@ -470,6 +540,7 @@ function param(k, d){
 }
 
 function boot(){
+  renderSoundBtn();
   var book = param("book", "");
   var day  = parseInt(param("day", ""), 10);
   if(!book || !day){
@@ -509,6 +580,7 @@ function boot(){
                                  '<span class="chip">4지선다</span>';
 
       $("go").onclick = function(){
+        warmUpSpeech();
         var n = $("name").value.trim().replace(/\s+/g, "");
         var err = $("nameerr");
         if(!/^[가-힣]{2,6}$/.test(n)){
