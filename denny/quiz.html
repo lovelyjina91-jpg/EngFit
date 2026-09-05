@@ -96,6 +96,11 @@ h2{font-size:16px;color:var(--navy);margin:26px 0 12px;font-weight:800}
                background:rgba(20,83,45,.12); color:#14532d;
                border:1px solid rgba(20,83,45,.30); cursor:pointer; line-height:1.5; }
   .sound-btn.off { background:#eef1f5; color:#8a94a6; border-color:#d7dce3; }
+.inapp{background:#FFF6E5;border:1px solid #E8C98A;border-radius:12px;
+  padding:13px 14px;margin-top:14px;font-size:13.5px;line-height:1.65;color:#7a5a12}
+.inapp b{color:#5b4209}
+.inapp .btn{margin-top:10px;background:#8a6614;font-size:15px;padding:13px}
+.ttsnote{margin:12px 0 0;font-size:12.5px;color:#b8442a;text-align:center;line-height:1.55}
 </style>
 </head>
 <body>
@@ -119,6 +124,12 @@ h2{font-size:16px;color:var(--navy);margin:26px 0 12px;font-weight:800}
       <span id="s-note-kb" class="hide">· 컴퓨터에서는 키보드 <b>1 · 2 · 3 · 4</b> 로도 고를 수 있어요<br></span>
       · 다 풀면 <b>결과를 복사해 카톡에 붙여넣어</b> 주세요
     </p>
+    <div class="inapp hide" id="inapp">
+      <b>지금 화면에서는 단어 발음이 나오지 않아요.</b><br>
+      카카오톡·인스타그램 안에서 열면 소리가 막힙니다.
+      아래 버튼으로 인터넷 브라우저에서 열어주세요.
+      <button class="btn" type="button" id="openext">브라우저에서 열기</button>
+    </div>
   </div>
   <div class="foot">ⓒ 데니쌤 영어</div>
 </section>
@@ -130,6 +141,7 @@ h2{font-size:16px;color:var(--navy);margin:26px 0 12px;font-weight:800}
   <div class="dir" id="dir"></div>
   <div class="qbox"><div class="q" id="q"></div></div>
   <div id="opts"></div>
+  <p class="ttsnote hide" id="ttsnote">이 브라우저는 발음을 지원하지 않아 소리 없이 진행됩니다.</p>
   <p class="kbhint hide" id="kbhint">키보드 <b>1 · 2 · 3 · 4</b> 로도 답을 고를 수 있어요</p>
 </section>
 
@@ -280,6 +292,28 @@ var soundOn = true;
 try { soundOn = localStorage.getItem(SOUND_KEY) !== "0"; } catch(e){}
 var enVoice = null;
 
+/* 카카오톡 등 인앱 브라우저는 발음(Web Speech API)이 막혀 있는 경우가 많다 */
+var UA = navigator.userAgent || "";
+var IS_KAKAO = /KAKAOTALK/i.test(UA);
+var INAPP = IS_KAKAO ||
+  /NAVER\(inapp|DaumApps|FB_IAB|FBAN|FBAV|Instagram|Line\/|KAKAOSTORY|everytimeApp/i.test(UA);
+var ttsBroken = false;
+
+function openExternal(){
+  var u = location.href;
+  if(IS_KAKAO){ location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(u); return; }
+  window.open(u, "_blank");
+}
+
+/* 발음이 실제로 울리지 않으면 기다리지 않고 조용히 넘어간다 */
+function markTtsBroken(){
+  if(ttsBroken) return;
+  ttsBroken = true;
+  var n = document.getElementById("ttsnote");
+  if(n) n.classList.remove("hide");
+  renderSoundBtn();
+}
+
 function loadVoice(){
   if(!TTS_OK) return;
   var vs = speechSynthesis.getVoices().filter(function(v){ return /^en([-_]|$)/i.test(v.lang); });
@@ -295,13 +329,21 @@ if(TTS_OK){ loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
 
 /* iOS는 사용자 제스처 안에서 한 번 울려줘야 이후 재생이 허용된다 */
 function warmUpSpeech(){
-  if(!TTS_OK) return;
-  try { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } catch(e){}
+  if(!TTS_OK){ markTtsBroken(); return; }
+  try {
+    var u = new SpeechSynthesisUtterance(" ");
+    u.volume = 0;
+    var fired = false;
+    u.onstart = u.onend = function(){ fired = true; };
+    u.onerror = markTtsBroken;
+    speechSynthesis.speak(u);
+    setTimeout(function(){ if(!fired) markTtsBroken(); }, 1500);
+  } catch(e){ markTtsBroken(); }
 }
 
 /* 영어 단어를 1회 읽어주고, 끝나면 done() 호출. 사운드 OFF면 즉시 done() */
 function speakWord(text, done){
-  if(!TTS_OK || !soundOn || !text){ if(done) done(); return; }
+  if(!TTS_OK || ttsBroken || !soundOn || !text){ if(done) done(); return; }
   var finished = false, guard = null;
   function finish(){ if(finished) return; finished = true; if(guard) clearTimeout(guard); if(done) done(); }
   try {
@@ -319,7 +361,7 @@ function speakWord(text, done){
 function renderSoundBtn(){
   var b = document.getElementById("btn-sound");
   if(!b) return;
-  if(!TTS_OK){ b.style.display = "none"; return; }
+  if(!TTS_OK || ttsBroken){ b.style.display = "none"; return; }
   b.textContent = soundOn ? "🔊 발음" : "🔈 발음 끔";
   if(soundOn) b.classList.remove("off"); else b.classList.add("off");
 }
@@ -609,6 +651,10 @@ function boot(){
         if(e.key === "Enter"){ e.preventDefault(); $("go").click(); }
       });
       $("again").onclick = function(){ location.reload(); };
+      if(INAPP){
+        $("inapp").classList.remove("hide");
+        $("openext").onclick = openExternal;
+      }
 
       /* 키보드가 달린 기기(컴퓨터)에서만 1~4 안내를 보여준다 */
       try{
