@@ -167,26 +167,26 @@ h2{font-size:16px;color:var(--navy);margin:26px 0 12px;font-weight:800}
 </div>
 
 <script>
-/* ═══════════════ 영핏 결과 전송 (표준 전송코드 v1 — 변경 금지) ═══════════════ */
-var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+/* ═══════════════ 결과 전송 (표준 전송코드 v1 — 동작·URL 변경 금지) ═══════════════ */
+var SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
 
-async function engfitSubmit(r){
+async function submitResult(r){
   var body = JSON.stringify(r);
   try{
-    var res = await fetch(ENGFIT_SUBMIT_URL, { method:"POST", body: body });
+    var res = await fetch(SUBMIT_URL, { method:"POST", body: body });
     var j = await res.json();
     return j.ok === true;
   }catch(e){
     try{
-      await fetch(ENGFIT_SUBMIT_URL, { method:"POST", mode:"no-cors", body: body });
+      await fetch(SUBMIT_URL, { method:"POST", mode:"no-cors", body: body });
       return true;
     }catch(e2){ return false; }
   }
 }
-var _engfitSent = false;
-async function engfitSubmitWithStatus(r){
-  if(_engfitSent) return;
-  _engfitSent = true;
+var _sent = false;
+async function submitWithStatus(r){
+  if(_sent) return;
+  _sent = true;
   var el = document.getElementById("submit-status");
   if(el){ el.textContent = "결과 전송 중..."; el.style.color = "#888"; }
 
@@ -200,7 +200,7 @@ async function engfitSubmitWithStatus(r){
     }
   }, 2500);
 
-  var ok = await engfitSubmit(r);
+  var ok = await submitResult(r);
   settled = true;
   clearTimeout(slowTimer);
   if(el){
@@ -338,7 +338,7 @@ function purgeOldSaves(){
     var ks = [], i, k;
     for(i = 0; i < localStorage.length; i++){
       k = localStorage.key(i);
-      if(k && k.indexOf("engfit-") === 0) ks.push(k);
+      if(k && k.indexOf("denny-") === 0 && k !== SOUND_KEY) ks.push(k);
     }
     for(i = 0; i < ks.length; i++) localStorage.removeItem(ks[i]);
   }catch(e){}
@@ -461,7 +461,7 @@ function bindShareButtons(){
   };
   $("kakaobtn").onclick = function(){
     if(navigator.share){
-      navigator.share({ title: "영핏 단어시험 결과", text: $("kakaotext").value })
+      navigator.share({ title: "데니쌤 단어시험 결과", text: $("kakaotext").value })
         .then(function(){ flashHint("보내기 창이 열렸어요. 카톡 학습방을 선택해 주세요", true); })
         .catch(function(){ /* 학생이 취소한 경우 — 그대로 둔다 */ });
       return;
@@ -505,7 +505,7 @@ function finish(){
     });
   }
 
-  var txt = "[영핏 단어시험]\n" + S.quizTitle + "\n이름: " + S.name +
+  var txt = "[데니쌤 단어시험]\n" + S.quizTitle + "\n이름: " + S.name +
             "\n점수: " + S.score + "/" + S.qs.length +
             " (" + Math.round(S.score/S.qs.length*100) + "점)" +
             "\n시간: " + Math.floor(dur/60) + "분 " + (dur%60) + "초\n";
@@ -519,7 +519,7 @@ function finish(){
 
   show("result");
 
-  engfitSubmitWithStatus({
+  submitWithStatus({
     quizId: S.quizId,
     quizTitle: S.quizTitle,
     student: S.name,
