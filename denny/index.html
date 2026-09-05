@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>데니쌤 영어단어 시험 · 링크 만들기</title>
+<style>
+:root{
+  --navy:#14532d; --gold:#B08324; --ivory:#F6F4EE;
+  --ink:#1c1c1e; --grey:#6b6b6b; --line:#E5E0D5;
+  --ok:#2e7d6e; --no:#c0392b;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--ivory);color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",-apple-system,sans-serif;
+  line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:560px;margin:0 auto;padding:22px 18px 48px}
+.brand{font-size:12px;letter-spacing:.18em;color:var(--gold);font-weight:700}
+h1{font-size:25px;margin:8px 0 4px;color:var(--navy);font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--grey);font-size:14px;margin:0}
+.rule{height:1px;background:var(--gold);opacity:.45;margin:14px 0 22px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
+h2{font-size:14px;color:var(--navy);margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.step{padding:13px 8px;border:1.5px solid var(--line);border-radius:12px;background:#fff;
+  cursor:pointer;font-family:inherit;text-align:center;color:var(--ink)}
+.step b{display:block;font-size:15px;font-weight:800;color:var(--navy)}
+.step small{display:block;font-size:11.5px;color:var(--grey);margin-top:3px}
+.step.on{border-color:var(--navy);background:#F0F7F2;box-shadow:0 0 0 3px rgba(20,83,45,.10)}
+.step.on small{color:var(--navy)}
+
+.row{display:flex;gap:10px;align-items:center;margin-top:14px}
+.row label{font-size:13.5px;color:var(--grey);flex:none;font-weight:600}
+input[type=number],input[type=text]{width:100%;padding:13px 12px;border:1.5px solid var(--line);
+  border-radius:12px;font-size:16px;font-family:inherit;background:#fff;color:var(--ink)}
+input:focus{outline:none;border-color:var(--navy)}
+.hint{font-size:12.5px;color:var(--grey);margin-top:8px;line-height:1.6}
+.err{color:var(--no);font-weight:700}
+
+.link{margin-top:14px;padding:13px;background:var(--ivory);border:1px solid var(--line);
+  border-radius:12px;font-size:12.5px;word-break:break-all;color:var(--navy);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.6}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{flex:1 1 140px;padding:14px;border:0;border-radius:12px;background:var(--navy);color:#fff;
+  font-size:15px;font-weight:700;font-family:inherit;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--navy);border:1.5px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:default}
+.flash{font-size:13px;margin-top:10px;min-height:18px;font-weight:700;color:var(--ok)}
+
+.preview{margin-top:12px;max-height:300px;overflow:auto;border:1px solid var(--line);
+  border-radius:12px;background:#fff}
+.preview table{width:100%;border-collapse:collapse;font-size:13.5px}
+.preview td{padding:7px 11px;border-bottom:1px solid var(--line)}
+.preview td:first-child{color:var(--grey);width:36px;text-align:right;font-variant-numeric:tabular-nums}
+.preview td.w{font-weight:700;color:var(--navy)}
+.preview tr:last-child td{border-bottom:0}
+.foot{text-align:center;font-size:11px;color:var(--grey);margin-top:30px;letter-spacing:.05em}
+.note{font-size:13px;color:var(--grey);line-height:1.8;margin:0}
+.note b{color:var(--navy)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">데니쌤 영어 · 모의고사 기출어휘</div>
+  <h1>단어시험 링크 만들기</h1>
+  <p class="sub">Step과 Day를 고르면 학생에게 보낼 링크가 만들어집니다.</p>
+  <div class="rule"></div>
+
+  <div class="card">
+    <h2>1. 교재 선택</h2>
+    <div class="steps" id="steps"></div>
+
+    <h2 style="margin-top:22px">2. Day 선택</h2>
+    <div class="row">
+      <label for="day">Day</label>
+      <input type="number" id="day" min="1" value="1" inputmode="numeric">
+    </div>
+    <p class="hint" id="dayhint"></p>
+
+    <div class="link" id="link"></div>
+    <div class="btns">
+      <button class="btn" id="copy">링크 복사</button>
+      <button class="btn ghost" id="open">직접 풀어보기</button>
+      <button class="btn ghost" id="peek">단어 미리보기</button>
+    </div>
+    <div class="flash" id="flash"></div>
+    <div id="preview"></div>
+  </div>
+
+  <div class="card">
+    <h2>안내</h2>
+    <p class="note">
+      · 학생은 <b>이름(한글 2~6자)</b>을 입력하고 바로 시험을 봅니다.<br>
+      · 영어→한글, 한글→영어가 <b>섞여서</b> 4지선다로 출제됩니다.<br>
+      · 번호를 고르면 그 단어의 <b>발음을 한 번 들려주고</b> 다음 문제로 넘어갑니다. (🔊 버튼으로 끄기 가능)<br>
+      · 다 풀면 결과가 <b>구글시트로 자동 전송</b>됩니다. 시트 탭 이름은 <b>denny-hs1-d001</b> 형식입니다.<br>
+      · 학생이 카톡으로 결과를 보낼 수 있는 복사 버튼도 함께 있습니다.
+    </p>
+  </div>
+
+  <div class="foot">ⓒ 데니쌤 영어</div>
+</div>
+
+<script>
+var $ = function(id){ return document.getElementById(id); };
+var BOOKS = null, book = "hs1", cache = {};
+var BASE = location.href.replace(/\/[^\/]*$/, "/");
+
+function render(){
+  var meta = BOOKS[book];
+  $("day").max = meta.days;
+  var d = parseInt($("day").value, 10);
+  var bad = !(d >= 1 && d <= meta.days);
+  $("dayhint").innerHTML = bad
+    ? '<span class="err">' + meta.title + '은 Day 1 ~ ' + meta.days + ' 까지 있습니다.</span>'
+    : meta.title + ' · Day 1 ~ ' + meta.days + ' 중 <b>Day ' + d + '</b>';
+  $("link").textContent = bad ? "—" : BASE + "quiz.html?book=" + book + "&day=" + d;
+  $("copy").disabled = $("open").disabled = $("peek").disabled = bad;
+  $("preview").innerHTML = "";
+  $("flash").textContent = "";
+}
+
+function pickBook(b){
+  book = b;
+  [].forEach.call(document.querySelectorAll(".step"), function(el){
+    el.classList.toggle("on", el.dataset.book === b);
+  });
+  if(parseInt($("day").value,10) > BOOKS[b].days) $("day").value = 1;
+  render();
+}
+
+fetch("books.json").then(function(r){ return r.json(); }).then(function(j){
+  BOOKS = j;
+  var html = "";
+  ["hs1","hs2","hs3"].forEach(function(b){
+    if(!j[b]) return;
+    html += '<button class="step" data-book="' + b + '"><b>' + j[b].title.replace("고등 ","") +
+            '</b><small>Day ' + j[b].days + '개</small></button>';
+  });
+  $("steps").innerHTML = html;
+  [].forEach.call(document.querySelectorAll(".step"), function(el){
+    el.onclick = function(){ pickBook(el.dataset.book); };
+  });
+  pickBook("hs1");
+}).catch(function(){
+  $("steps").innerHTML = '<p class="hint err">교재 목록을 불러오지 못했습니다.</p>';
+});
+
+$("day").addEventListener("input", render);
+
+$("copy").onclick = function(){
+  var t = $("link").textContent;
+  function ok(){ $("flash").textContent = "링크를 복사했어요. 학생에게 보내주세요."; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(ok).catch(fallback);
+  } else fallback();
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); ok(); }
+    catch(e){ $("flash").textContent = "복사가 안 됩니다 — 위 주소를 길게 눌러 복사해 주세요."; }
+    document.body.removeChild(ta);
+  }
+};
+
+$("open").onclick = function(){ window.open($("link").textContent, "_blank"); };
+
+$("peek").onclick = function(){
+  var d = String(parseInt($("day").value, 10));
+  $("flash").textContent = "불러오는 중...";
+  var p = cache[book] ? Promise.resolve(cache[book])
+        : fetch(book + ".json").then(function(r){ return r.json(); })
+            .then(function(j){ cache[book] = j; return j; });
+  p.then(function(j){
+    var items = j.days[d] || [];
+    var rows = items.map(function(it, i){
+      var tr = document.createElement("tr");
+      var a = document.createElement("td"); a.textContent = i + 1;
+      var b = document.createElement("td"); b.className = "w"; b.textContent = it.w;
+      var c = document.createElement("td"); c.textContent = it.m;
+      tr.appendChild(a); tr.appendChild(b); tr.appendChild(c);
+      return tr;
+    });
+    var tbl = document.createElement("table");
+    rows.forEach(function(r){ tbl.appendChild(r); });
+    var box = document.createElement("div");
+    box.className = "preview"; box.appendChild(tbl);
+    $("preview").innerHTML = ""; $("preview").appendChild(box);
+    $("flash").textContent = "Day " + d + " · 단어 " + items.length + "개";
+  }).catch(function(){ $("flash").textContent = "단어 자료를 불러오지 못했습니다."; });
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>데니쌤 영어단어 시험</title>
+<style>
+:root{
+  --navy:#14532d; --gold:#B08324; --ivory:#F6F4EE;
+  --ink:#1c1c1e; --grey:#6b6b6b; --line:#E5E0D5;
+  --ok:#2e7d6e; --no:#c0392b;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ivory); color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",-apple-system,sans-serif;
+  line-height:1.5; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:520px;margin:0 auto;padding:20px 18px 40px;min-height:100vh}
+.hide{display:none!important}
+
+/* 공통 */
+.brand{font-size:12px;letter-spacing:.18em;color:var(--gold);font-weight:700}
+.rule{height:1px;background:var(--gold);opacity:.45;margin:14px 0 22px}
+h1{font-size:25px;margin:8px 0 4px;color:var(--navy);font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--grey);font-size:14px;margin:0}
+.btn{
+  display:block;width:100%;padding:16px;border:0;border-radius:12px;
+  background:var(--navy);color:#fff;font-size:17px;font-weight:700;
+  font-family:inherit;cursor:pointer;margin-top:14px;
+}
+.btn:disabled{opacity:.4}
+.btn.ghost{background:transparent;color:var(--navy);border:1.5px solid var(--line)}
+input[type=text]{
+  width:100%;padding:15px 14px;border:1.5px solid var(--line);border-radius:12px;
+  font-size:17px;font-family:inherit;background:#fff;color:var(--ink);
+}
+input[type=text]:focus{outline:none;border-color:var(--navy)}
+
+/* 시작화면 */
+#start .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 20px;margin-top:26px}
+#start .meta{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 20px}
+.chip{background:var(--ivory);border:1px solid var(--line);border-radius:99px;padding:6px 13px;font-size:13px;color:var(--navy);font-weight:600}
+.note{font-size:13px;color:var(--grey);margin-top:16px;line-height:1.7}
+#nameerr{background:#FDEDEA;border:1px solid var(--no);border-radius:10px;padding:11px 13px;font-size:13.5px;margin-top:10px;color:var(--no);font-weight:600;line-height:1.5}
+
+/* 문제화면 */
+.bar{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:6px}
+.bar > i{display:block;height:100%;background:var(--navy);width:0;transition:width .25s}
+.cnt{display:flex;justify-content:space-between;font-size:13px;color:var(--grey);margin-bottom:26px;font-variant-numeric:tabular-nums}
+.dir{font-size:12px;color:var(--gold);font-weight:700;letter-spacing:.06em}
+.qbox{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px 20px;text-align:center;margin:10px 0 20px;min-height:118px;display:flex;flex-direction:column;justify-content:center}
+.q{font-size:27px;font-weight:800;color:var(--navy);word-break:break-word;letter-spacing:-.02em}
+.q.ko{font-size:23px}
+.opt{
+  width:100%;text-align:left;padding:15px 16px;margin-bottom:10px;
+  background:#fff;border:1.5px solid var(--line);border-radius:12px;
+  font-size:17px;font-family:inherit;color:var(--ink);cursor:pointer;
+  display:flex;gap:11px;align-items:flex-start;line-height:1.4;
+}
+.opt b{color:var(--gold);font-weight:700;flex:none}
+.opt.correct{border-color:var(--ok);background:#EAF6F3}
+.opt.correct b{color:var(--ok)}
+.opt.wrong{border-color:var(--no);background:#FDEDEA}
+.opt.wrong b{color:var(--no)}
+.opt:disabled{cursor:default}
+.opt.picked{box-shadow:0 0 0 3px rgba(20,83,45,.14)}
+.kbhint{text-align:center;font-size:12.5px;color:var(--grey);margin:16px 0 0;letter-spacing:.01em}
+.kbhint b{color:var(--navy);font-weight:800;letter-spacing:.08em}
+
+/* 결과화면 */
+.score{text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 20px;margin:20px 0}
+.score .big{font-size:52px;font-weight:800;color:var(--navy);letter-spacing:-.03em;line-height:1.1}
+.score .big span{font-size:26px;color:var(--grey);font-weight:700}
+.score .pct{font-size:15px;color:var(--gold);font-weight:700;margin-top:6px}
+.score .time{font-size:13px;color:var(--grey);margin-top:10px}
+#submit-status{text-align:center;font-size:13.5px;margin:16px 0 4px;font-weight:600;min-height:20px}
+#kakaobox{margin-top:18px}
+#kakaobox .btn{margin-top:10px}
+#kakaobox .btn:first-child{margin-top:0}
+.sharehint{font-size:13px;color:var(--grey);margin:12px 0 8px;line-height:1.6;text-align:center}
+.sharehint.done{color:var(--ok);font-weight:700}
+h2{font-size:16px;color:var(--navy);margin:26px 0 12px;font-weight:800}
+.wrongitem{background:#fff;border:1px solid var(--line);border-left:3px solid var(--no);border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:15px}
+.wrongitem .w{font-weight:800;color:var(--navy)}
+.wrongitem .m{color:var(--ink)}
+.wrongitem .mine{font-size:13px;color:var(--no);margin-top:4px}
+.allok{background:#EAF6F3;border:1px solid var(--ok);border-radius:12px;padding:20px;text-align:center;color:var(--ok);font-weight:700}
+#kakaobox{margin-top:16px}
+#kakaotext{width:100%;height:170px;padding:13px;border:1.5px solid var(--line);border-radius:12px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);resize:none}
+.err{background:#FDEDEA;border:1px solid var(--no);border-radius:12px;padding:18px;color:var(--no);font-size:15px}
+.foot{text-align:center;font-size:11px;color:var(--grey);margin-top:34px;letter-spacing:.05em}
+  .cnt-end { display:flex; align-items:center; gap:8px; }
+  .sound-btn { font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px;
+               background:rgba(20,83,45,.12); color:#14532d;
+               border:1px solid rgba(20,83,45,.30); cursor:pointer; line-height:1.5; }
+  .sound-btn.off { background:#eef1f5; color:#8a94a6; border-color:#d7dce3; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ============ 시작 ============ -->
+<section id="start" class="hide">
+  <div class="brand">데니쌤 영어 · 모의고사 기출어휘</div>
+  <h1 id="s-title">단어 시험</h1>
+  <p class="sub" id="s-sub"></p>
+  <div class="rule"></div>
+  <div class="card">
+    <div class="meta" id="s-meta"></div>
+    <label class="sub" for="name" style="display:block;margin-bottom:8px">이름을 입력하세요</label>
+    <input type="text" id="name" placeholder="한글 이름" autocomplete="off" enterkeyhint="go">
+    <div id="nameerr" class="hide"></div>
+    <button class="btn" id="go">시험 시작</button>
+    <p class="note">
+      · 영어→한글, 한글→영어가 섞여 나옵니다<br>
+      · 답을 고르면 바로 다음 문제로 넘어갑니다<br>
+      <span id="s-note-kb" class="hide">· 컴퓨터에서는 키보드 <b>1 · 2 · 3 · 4</b> 로도 고를 수 있어요<br></span>
+      · 다 풀면 <b>결과를 복사해 카톡에 붙여넣어</b> 주세요
+    </p>
+  </div>
+  <div class="foot">ⓒ 데니쌤 영어</div>
+</section>
+
+<!-- ============ 문제 ============ -->
+<section id="quiz" class="hide">
+  <div class="bar"><i id="prog"></i></div>
+  <div class="cnt"><span id="cnt"></span><span class="cnt-end"><button type="button" id="btn-sound" class="sound-btn" onclick="toggleSound()">🔊 발음</button><span id="live"></span></span></div>
+  <div class="dir" id="dir"></div>
+  <div class="qbox"><div class="q" id="q"></div></div>
+  <div id="opts"></div>
+  <p class="kbhint hide" id="kbhint">키보드 <b>1 · 2 · 3 · 4</b> 로도 답을 고를 수 있어요</p>
+</section>
+
+<!-- ============ 결과 ============ -->
+<section id="result" class="hide">
+  <div class="brand">데니쌤 영어 · 모의고사 기출어휘</div>
+  <h1 id="r-title">시험 끝!</h1>
+  <p class="sub" id="r-sub"></p>
+  <div class="rule"></div>
+  <div class="score">
+    <div class="big"><span id="r-score"></span><span> / <i id="r-total" style="font-style:normal"></i></span></div>
+    <div class="pct" id="r-pct"></div>
+    <div class="time" id="r-time"></div>
+  </div>
+  <div id="kakaobox">
+    <button class="btn" id="kakaobtn">카톡으로 결과 보내기</button>
+    <button class="btn ghost" id="copybtn">결과 복사하기</button>
+    <p class="sharehint" id="sharehint">복사한 뒤 카톡 학습방에 붙여넣어 주세요.</p>
+    <textarea id="kakaotext" readonly></textarea>
+  </div>
+  <div id="submit-status"></div>
+  <h2 id="r-wrongtitle">틀린 단어</h2>
+  <div id="r-wrong"></div>
+  <button class="btn" id="again" style="margin-top:20px">다시 풀기</button>
+  <div class="foot">ⓒ 데니쌤 영어</div>
+</section>
+
+<!-- ============ 오류 ============ -->
+<section id="fail" class="hide">
+  <div class="brand">데니쌤 영어</div>
+  <div class="rule"></div>
+  <div class="err" id="failmsg"></div>
+</section>
+
+</div>
+
+<script>
+/* ═══════════════ 영핏 결과 전송 (표준 전송코드 v1 — 변경 금지) ═══════════════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r){
+  var body = JSON.stringify(r);
+  try{
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method:"POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  }catch(e){
+    try{
+      await fetch(ENGFIT_SUBMIT_URL, { method:"POST", mode:"no-cors", body: body });
+      return true;
+    }catch(e2){ return false; }
+  }
+}
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r){
+  if(_engfitSent) return;
+  _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  if(el){ el.textContent = "결과 전송 중..."; el.style.color = "#888"; }
+
+  /* 전송은 백그라운드로 계속 진행된다.
+     서버가 느릴 때 화면이 멈춘 것처럼 보이지 않도록 안내만 먼저 바꿔 준다. */
+  var settled = false;
+  var slowTimer = setTimeout(function(){
+    if(!settled && el){
+      el.textContent = "전송이 조금 느려요 — 기다리지 말고 위 [카톡으로 결과 보내기]를 눌러주세요";
+      el.style.color = "#A67C3D";
+    }
+  }, 2500);
+
+  var ok = await engfitSubmit(r);
+  settled = true;
+  clearTimeout(slowTimer);
+  if(el){
+    if(ok){ el.textContent = "✓ 결과가 데니쌤에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+    else  { el.textContent = "전송이 안 됐어요 — 위 [카톡으로 결과 보내기]로 보내주세요!"; el.style.color = "#c0392b"; }
+  }
+  return ok;
+}
+
+/* ═══════════════ 퀴즈 엔진 ═══════════════ */
+var $ = function(id){ return document.getElementById(id); };
+var CIRC = ["①","②","③","④"];
+
+/* --- 뜻 충돌 판정: 동의어가 오답 보기로 섞이는 사고 방지 --- */
+function segs(m){
+  return m.replace(/\([^)]*\)/g,"")
+          .replace(/[~\s]/g,"")
+          .split(/[,;/·]/)
+          .filter(function(s){ return s.length > 0; });
+}
+function conflict(a,b){
+  var A = segs(a), B = segs(b);
+  for(var i=0;i<A.length;i++){ if(B.indexOf(A[i]) !== -1) return true; }
+  return false;
+}
+function shuffle(a){
+  for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+
+/* --- 문제 생성 --- */
+function buildQuestions(items, pool){
+  var cands = items.concat(pool);
+  var qs = [];
+  shuffle(items.slice()).forEach(function(it){
+    // 같은 Day 안에 뜻이 겹치는 다른 단어가 있으면 한→영은 답이 여러 개가 되므로 금지
+    var ambiguous = items.some(function(o){
+      return o.w !== it.w && conflict(o.m, it.m);
+    });
+    var dir = (!ambiguous && Math.random() < 0.5) ? "k2e" : "e2k";
+
+    var picked = [];
+    var seen = [it.m];
+    shuffle(cands.slice()).forEach(function(c){
+      if(picked.length >= 3) return;
+      if(c.w === it.w) return;
+      if(conflict(c.m, it.m)) return;                       // 정답과 뜻이 겹치면 탈락
+      if(seen.some(function(s){ return conflict(s, c.m); })) return; // 보기끼리 겹쳐도 탈락
+      if(dir === "k2e" && picked.some(function(p){ return p.w === c.w; })) return;
+      seen.push(c.m);
+      picked.push(c);
+    });
+    if(picked.length < 3) return; // 보기를 못 채우면 그 문항은 버린다
+
+    var correct = (dir === "e2k") ? it.m : it.w;
+    var opts = [correct].concat(picked.map(function(p){ return dir === "e2k" ? p.m : p.w; }));
+    shuffle(opts);
+    qs.push({
+      dir: dir,
+      prompt: (dir === "e2k") ? it.w : it.m,
+      opts: opts,
+      ans: opts.indexOf(correct),
+      w: it.w, m: it.m
+    });
+  });
+  return qs;
+}
+
+/* --- 발음 사운드 (브라우저 내장 TTS · 음원 파일/외부 API 불필요) --- */
+var SOUND_KEY = "denny-wordtest-sound";
+var TTS_OK = ("speechSynthesis" in window) && (typeof SpeechSynthesisUtterance !== "undefined");
+var soundOn = true;
+try { soundOn = localStorage.getItem(SOUND_KEY) !== "0"; } catch(e){}
+var enVoice = null;
+
+function loadVoice(){
+  if(!TTS_OK) return;
+  var vs = speechSynthesis.getVoices().filter(function(v){ return /^en([-_]|$)/i.test(v.lang); });
+  if(!vs.length) return;
+  var pref = ["Samantha","Google US English","Microsoft Aria","Microsoft Jenny","Microsoft Zira","Karen","Alex","Daniel"];
+  for(var i=0;i<pref.length;i++){
+    for(var j=0;j<vs.length;j++){ if(vs[j].name.indexOf(pref[i]) >= 0){ enVoice = vs[j]; return; } }
+  }
+  for(var k=0;k<vs.length;k++){ if(/en[-_]US/i.test(vs[k].lang)){ enVoice = vs[k]; return; } }
+  enVoice = vs[0];
+}
+if(TTS_OK){ loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+
+/* iOS는 사용자 제스처 안에서 한 번 울려줘야 이후 재생이 허용된다 */
+function warmUpSpeech(){
+  if(!TTS_OK) return;
+  try { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } catch(e){}
+}
+
+/* 영어 단어를 1회 읽어주고, 끝나면 done() 호출. 사운드 OFF면 즉시 done() */
+function speakWord(text, done){
+  if(!TTS_OK || !soundOn || !text){ if(done) done(); return; }
+  var finished = false, guard = null;
+  function finish(){ if(finished) return; finished = true; if(guard) clearTimeout(guard); if(done) done(); }
+  try {
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    if(enVoice) u.voice = enVoice;
+    u.lang = (enVoice && enVoice.lang) || "en-US";
+    u.rate = 0.95; u.pitch = 1; u.volume = 1;
+    u.onend = finish; u.onerror = finish;
+    speechSynthesis.speak(u);
+  } catch(e){ finish(); return; }
+  guard = setTimeout(finish, Math.min(4000, 900 + String(text).length * 90)); /* onend 미발생 대비 */
+}
+
+function renderSoundBtn(){
+  var b = document.getElementById("btn-sound");
+  if(!b) return;
+  if(!TTS_OK){ b.style.display = "none"; return; }
+  b.textContent = soundOn ? "🔊 발음" : "🔈 발음 끔";
+  if(soundOn) b.classList.remove("off"); else b.classList.add("off");
+}
+
+function toggleSound(){
+  soundOn = !soundOn;
+  try { localStorage.setItem(SOUND_KEY, soundOn ? "1" : "0"); } catch(e){}
+  if(TTS_OK) speechSynthesis.cancel();
+  if(soundOn) warmUpSpeech();
+  renderSoundBtn();
+}
+
+/* --- 상태 --- */
+var S = { qs:[], i:0, score:0, log:[], t0:0, name:"", quizId:"", quizTitle:"", key:"", locked:false };
+
+/* 이어풀기 없음 — 링크 하나를 여러 학생이 함께 쓰므로 항상 새 시험으로 시작한다.
+   예전 버전이 휴대폰에 남긴 저장 기록이 있으면 열 때 지운다. */
+function purgeOldSaves(){
+  try{
+    var ks = [], i, k;
+    for(i = 0; i < localStorage.length; i++){
+      k = localStorage.key(i);
+      if(k && k.indexOf("engfit-") === 0) ks.push(k);
+    }
+    for(i = 0; i < ks.length; i++) localStorage.removeItem(ks[i]);
+  }catch(e){}
+}
+
+/* --- 화면 --- */
+function show(id){
+  ["start","quiz","result","fail"].forEach(function(s){ $(s).classList.add("hide"); });
+  $(id).classList.remove("hide");
+  window.scrollTo(0,0);
+}
+
+function render(){
+  var q = S.qs[S.i];
+  $("prog").style.width = (S.i / S.qs.length * 100) + "%";
+  $("cnt").textContent = (S.i + 1) + " / " + S.qs.length;
+  $("live").textContent = "맞은 개수 " + S.score;
+  $("dir").textContent = (q.dir === "e2k") ? "뜻을 고르세요" : "영어 단어를 고르세요";
+  $("q").textContent = q.prompt;
+  $("q").className = "q" + (q.dir === "e2k" ? "" : " ko");
+
+  var box = $("opts");
+  box.innerHTML = "";
+  q.opts.forEach(function(o, idx){
+    var b = document.createElement("button");
+    b.className = "opt";
+    b.innerHTML = "<b>" + CIRC[idx] + "</b><span></span>";
+    b.querySelector("span").textContent = o;
+    b.onclick = function(){ pick(idx); };
+    box.appendChild(b);
+  });
+  S.locked = false;
+}
+
+function pick(idx){
+  if(S.locked) return;
+  S.locked = true;
+  var q = S.qs[S.i];
+  var ok = (idx === q.ans);
+  var btns = $("opts").querySelectorAll(".opt");
+  btns.forEach(function(b,k){
+    b.disabled = true;
+    if(k === q.ans) b.classList.add("correct");
+    else if(k === idx) b.classList.add("wrong");
+  });
+  if(ok) S.score++;
+  S.log.push({ no:S.i+1, ok:ok, chosen:CIRC[idx], answer:CIRC[q.ans], w:q.w, m:q.m,
+               mine:q.opts[idx] });
+  S.i++;
+  var minWait = ok ? 320 : 900;
+  var t0 = Date.now();
+  function advance(){
+    if(S.i >= S.qs.length) finish();
+    else render();
+  }
+  /* 번호를 고르면 그 문제의 영단어를 한 번 읽어주고, 재생이 끝난 뒤 다음 문제로 */
+  speakWord(q.w, function(){
+    setTimeout(advance, Math.max(0, minWait - (Date.now() - t0)));
+  });
+}
+
+/* --- 키보드 1~4 로 답 고르기 (컴퓨터로 푸는 학생용) --- */
+document.addEventListener("keydown", function(e){
+  if($("quiz").classList.contains("hide")) return;
+  if(e.altKey || e.ctrlKey || e.metaKey) return;
+  if(e.isComposing || e.keyCode === 229) return;
+  var n = -1;
+  if(e.key >= "1" && e.key <= "4") n = e.key.charCodeAt(0) - 49;
+  else if(/^(Digit|Numpad)[1-4]$/.test(e.code || "")) n = e.code.charCodeAt(e.code.length - 1) - 49;
+  if(n < 0) return;
+  var btns = $("opts").querySelectorAll(".opt");
+  if(n >= btns.length) return;
+  e.preventDefault();
+  if(S.locked) return;
+  btns[n].classList.add("picked");
+  pick(n);
+});
+
+/* --- 결과 복사 / 카톡 보내기 --- */
+function flashHint(msg, done){
+  var h = $("sharehint");
+  if(!h) return;
+  h.textContent = msg;
+  if(done) h.classList.add("done"); else h.classList.remove("done");
+}
+
+async function copyResultText(){
+  var ta = $("kakaotext");
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(ta.value);
+      return true;
+    }
+  }catch(e){}
+  /* 클립보드 API가 없거나 막힌 인앱 브라우저 대비 */
+  var ok = false;
+  try{
+    ta.removeAttribute("readonly");
+    ta.focus();
+    ta.setSelectionRange(0, ta.value.length);
+    ok = document.execCommand("copy");
+  }catch(e2){ ok = false; }
+  ta.setAttribute("readonly", "readonly");
+  if(ok){
+    if(window.getSelection) window.getSelection().removeAllRanges();
+    ta.blur();
+  }else{
+    /* 자동 복사가 막힌 경우: 글자를 통째로 선택해 둔 채로 남겨
+       학생은 Ctrl+C(컴퓨터) 또는 [복사](휴대폰)만 누르면 되게 한다 */
+    try{ ta.scrollIntoView({ block:"center", behavior:"smooth" }); }catch(e3){}
+  }
+  return ok;
+}
+
+function bindShareButtons(){
+  $("copybtn").onclick = async function(){
+    var ok = await copyResultText();
+    flashHint(ok ? "복사됐어요! 카톡 학습방에 붙여넣어 주세요"
+                 : "아래 글자를 모두 선택해 뒀어요 — 그대로 복사해 주세요", ok);
+  };
+  $("kakaobtn").onclick = function(){
+    if(navigator.share){
+      navigator.share({ title: "영핏 단어시험 결과", text: $("kakaotext").value })
+        .then(function(){ flashHint("보내기 창이 열렸어요. 카톡 학습방을 선택해 주세요", true); })
+        .catch(function(){ /* 학생이 취소한 경우 — 그대로 둔다 */ });
+      return;
+    }
+    copyResultText().then(function(ok){
+      flashHint(ok ? "복사됐어요! 카톡을 열어 학습방에 붙여넣어 주세요"
+                   : "아래 글자를 모두 선택해 뒀어요 — 복사해서 카톡에 붙여넣어 주세요", ok);
+    });
+  };
+}
+
+function finish(){
+  var dur = Math.round((Date.now() - S.t0) / 1000);
+  var wrong = S.log.filter(function(l){ return !l.ok; });
+
+  $("r-sub").textContent = S.quizTitle + " · " + S.name;
+  $("r-score").textContent = S.score;
+  $("r-total").textContent = S.qs.length;
+  $("r-pct").textContent = Math.round(S.score / S.qs.length * 100) + "점";
+  $("r-time").textContent = "걸린 시간 " + Math.floor(dur/60) + "분 " + (dur%60) + "초";
+
+  var box = $("r-wrong");
+  box.innerHTML = "";
+  if(wrong.length === 0){
+    $("r-wrongtitle").classList.add("hide");
+    box.innerHTML = '<div class="allok">만점입니다! 완벽해요 👏</div>';
+  }else{
+    $("r-wrongtitle").textContent = "틀린 단어 " + wrong.length + "개";
+    wrong.forEach(function(l){
+      var d = document.createElement("div");
+      d.className = "wrongitem";
+      var s1 = document.createElement("div");
+      s1.innerHTML = '<span class="w"></span> <span class="m"></span>';
+      s1.querySelector(".w").textContent = l.w;
+      s1.querySelector(".m").textContent = "— " + l.m;
+      var s2 = document.createElement("div");
+      s2.className = "mine";
+      s2.textContent = "내가 고른 답: " + l.mine;
+      d.appendChild(s1); d.appendChild(s2);
+      box.appendChild(d);
+    });
+  }
+
+  var txt = "[영핏 단어시험]\n" + S.quizTitle + "\n이름: " + S.name +
+            "\n점수: " + S.score + "/" + S.qs.length +
+            " (" + Math.round(S.score/S.qs.length*100) + "점)" +
+            "\n시간: " + Math.floor(dur/60) + "분 " + (dur%60) + "초\n";
+  if(wrong.length){
+    txt += "\n틀린 단어 " + wrong.length + "개\n";
+    wrong.forEach(function(l){ txt += "· " + l.w + " — " + l.m + "\n"; });
+  }else{ txt += "\n만점!\n"; }
+  $("kakaotext").value = txt;
+  flashHint("복사한 뒤 카톡 학습방에 붙여넣어 주세요.");
+  bindShareButtons();
+
+  show("result");
+
+  engfitSubmitWithStatus({
+    quizId: S.quizId,
+    quizTitle: S.quizTitle,
+    student: S.name,
+    score: S.score,
+    total: S.qs.length,
+    wrong: wrong.map(function(l){ return l.no; }),
+    durationSec: dur,
+    detail: S.log.map(function(l){
+      return { no:l.no, ok:l.ok, chosen:l.chosen, answer:l.answer, word:l.w };
+    })
+  });
+}
+
+/* --- 부팅 --- */
+function param(k, d){
+  var m = new RegExp("[?&]" + k + "=([^&]*)").exec(location.search);
+  return m ? decodeURIComponent(m[1]) : d;
+}
+
+function boot(){
+  renderSoundBtn();
+  var book = param("book", "");
+  var day  = parseInt(param("day", ""), 10);
+  if(!book || !day){
+    show("fail");
+    $("failmsg").textContent = "주소가 올바르지 않습니다. 데니쌤에게 받은 링크를 다시 눌러주세요.";
+    return;
+  }
+  if(!/^[a-z0-9]+$/.test(book)){
+    show("fail");
+    $("failmsg").textContent = "주소가 올바르지 않습니다.";
+    return;
+  }
+  var pad = ("00" + day).slice(-3);
+  fetch(book + ".json")
+    .then(function(r){ if(!r.ok) throw new Error("no data"); return r.json(); })
+    .then(function(BOOK){
+      var items = BOOK.days[String(day)];
+      if(!items || !items.length){
+        show("fail");
+        $("failmsg").textContent = BOOK.title + "에는 Day " + day + "이 없습니다. 데니쌤에게 알려주세요.";
+        return;
+      }
+      // 오답 보기 후보: 책 전체에서 뽑아 둔다
+      var all = [];
+      for(var k in BOOK.days){ if(k !== String(day)) all = all.concat(BOOK.days[k]); }
+      var pool = shuffle(all).slice(0, 300);
+      var D = { title: BOOK.title, day: day, items: items, pool: pool };
+
+      S.quizId    = "denny-" + book + "-d" + pad;
+      S.quizTitle = D.title + " Day " + D.day;
+      purgeOldSaves();
+
+      $("s-title").textContent = D.title;
+      $("s-sub").textContent   = "Day " + D.day + " 단어 시험";
+      $("s-meta").innerHTML    = '<span class="chip">Day ' + D.day + '</span>' +
+                                 '<span class="chip">' + D.items.length + '단어</span>' +
+                                 '<span class="chip">4지선다</span>';
+
+      $("go").onclick = function(){
+        warmUpSpeech();
+        var n = $("name").value.trim().replace(/\s+/g, "");
+        var err = $("nameerr");
+        if(!/^[가-힣]{2,6}$/.test(n)){
+          err.textContent = "본인 이름을 한글 2~6자로 정확히 입력해 주세요.";
+          err.classList.remove("hide");
+          $("name").focus();
+          return;
+        }
+        err.classList.add("hide");
+        S.name = n;
+        S.qs = buildQuestions(D.items, D.pool);
+        S.i = 0; S.score = 0; S.log = []; S.t0 = Date.now();
+        if(S.qs.length === 0){
+          show("fail");
+          $("failmsg").textContent = "문제를 만들지 못했습니다. 데니쌤에게 알려주세요.";
+          return;
+        }
+        show("quiz");
+        render();
+      };
+      $("name").addEventListener("keydown", function(e){
+        if(e.key === "Enter"){ e.preventDefault(); $("go").click(); }
+      });
+      $("again").onclick = function(){ location.reload(); };
+
+      /* 키보드가 달린 기기(컴퓨터)에서만 1~4 안내를 보여준다 */
+      try{
+        if(window.matchMedia && window.matchMedia("(hover:hover) and (pointer:fine)").matches){
+          $("kbhint").classList.remove("hide");
+          $("s-note-kb").classList.remove("hide");
+        }
+      }catch(e){}
+
+      show("start");
+    })
+    .catch(function(){
+      show("fail");
+      $("failmsg").textContent = "단어 자료를 불러오지 못했습니다. 잠시 후 다시 시도하거나 데니쌤에게 알려주세요.";
+    });
+}
+boot();
+</script>
+</body>
+</html>
