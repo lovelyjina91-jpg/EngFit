@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>데니쌤의 백백영단어 · 인쇄용 단어장</title>
+<style>
+:root{
+  --navy:#14532d; --gold:#B08324; --ivory:#F6F4EE;
+  --ink:#1c1c1e; --grey:#6b6b6b; --line:#DCD6C8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#8b8b86;color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",-apple-system,sans-serif;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact}
+
+/* ───────── 조작 패널 (인쇄 안 됨) ───────── */
+.panel{position:sticky;top:0;z-index:9;background:#fff;border-bottom:1px solid var(--line);
+  padding:14px 16px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.panel .in{max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:11.5px;color:var(--grey);font-weight:700;letter-spacing:.02em}
+select,input[type=number]{padding:9px 10px;border:1.5px solid var(--line);border-radius:9px;
+  font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+select:focus,input:focus{outline:none;border-color:var(--navy)}
+input[type=number]{width:78px}
+.chk{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink);
+  padding-bottom:9px;cursor:pointer;font-weight:600}
+.go{padding:11px 20px;border:0;border-radius:10px;background:var(--navy);color:#fff;
+  font-size:14.5px;font-weight:800;font-family:inherit;cursor:pointer}
+.go.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+.msg{font-size:12.5px;color:var(--grey);max-width:900px;margin:8px auto 0;line-height:1.6}
+.msg b{color:var(--navy)}
+.msg .warn{color:#b8442a;font-weight:700}
+
+/* ───────── 종이 ───────── */
+.sheet{max-width:1000px;margin:0 auto;padding:22px 12px 60px}
+.page{width:210mm;min-height:297mm;background:#fff;margin:0 auto 20px;padding:13mm 12mm 10mm;
+  box-shadow:0 3px 14px rgba(0,0,0,.28);position:relative;display:flex;flex-direction:column}
+
+/* 표지 */
+.cover{justify-content:space-between;text-align:center}
+.cv-top{padding-top:26mm}
+.cv-brand{font-size:11.5pt;letter-spacing:.34em;color:var(--gold);font-weight:800}
+.cv-line{width:34mm;height:2.2pt;background:var(--gold);margin:7mm auto}
+.cv-title{font-size:33pt;font-weight:800;color:var(--navy);letter-spacing:-.02em;line-height:1.25;margin:0}
+.cv-step{display:inline-block;margin-top:9mm;padding:3.4mm 9mm;border:1.6pt solid var(--navy);
+  border-radius:99px;font-size:15pt;font-weight:800;color:var(--navy);letter-spacing:.02em}
+.cv-range{font-size:13pt;color:var(--grey);margin-top:7mm;letter-spacing:.02em}
+.cv-mid{margin:0 auto;width:74%}
+.cv-stat{display:flex;justify-content:center;gap:0;border-top:.8pt solid var(--line);
+  border-bottom:.8pt solid var(--line);padding:6mm 0}
+.cv-stat div{flex:1;border-right:.8pt solid var(--line)}
+.cv-stat div:last-child{border-right:0}
+.cv-stat b{display:block;font-size:19pt;color:var(--navy);font-weight:800;line-height:1.2}
+.cv-stat span{font-size:9.5pt;color:var(--grey);letter-spacing:.04em}
+.cv-form{margin-top:12mm;text-align:left;font-size:12pt;color:var(--ink);line-height:2.6}
+.cv-form i{font-style:normal;color:var(--grey);display:inline-block;width:20mm}
+.cv-form u{text-decoration:none;border-bottom:.9pt solid var(--line);display:inline-block;
+  width:calc(100% - 22mm)}
+.cv-foot{font-size:9pt;color:var(--grey);letter-spacing:.16em;padding-bottom:6mm}
+
+/* 단어 페이지 */
+.hd{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1.6pt solid var(--navy);padding-bottom:2.6mm;margin-bottom:3.4mm}
+.hd .l{font-size:14pt;font-weight:800;color:var(--navy);letter-spacing:-.01em}
+.hd .l em{font-style:normal;color:var(--gold);margin-left:2mm}
+.hd .r{font-size:8.6pt;color:var(--grey);letter-spacing:.04em}
+.cols{flex:1;display:flex;gap:5mm}
+.col{flex:1;min-width:0}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+td{padding:0 1mm;height:5.05mm;font-size:8.6pt;line-height:1.25;
+  border-bottom:.4pt solid #EDE9DE;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+td.n{width:8.2mm;text-align:right;color:#a9a49a;font-size:7.4pt;padding-right:1.6mm;
+     text-overflow:clip}
+td.w{width:41%;font-weight:700;color:var(--navy)}
+td.m{color:#333}
+tr.z td{background:#FBFAF6}
+td.blank{border-bottom:.4pt solid var(--line)}
+.ft{border-top:.8pt solid var(--line);margin-top:3mm;padding-top:2mm;
+  display:flex;justify-content:space-between;font-size:8pt;color:var(--grey);letter-spacing:.04em}
+
+@media print{
+  @page{ size:A4; margin:0; }
+  body{background:#fff}
+  .panel,.sheet>.msg{display:none!important}
+  .sheet{max-width:none;margin:0;padding:0}
+  .page{box-shadow:none;margin:0;page-break-after:always;break-after:page}
+  .page:last-child{page-break-after:auto;break-after:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <div class="in">
+    <div class="fld">
+      <label for="book">교재</label>
+      <select id="book"></select>
+    </div>
+    <div class="fld">
+      <label for="from">시작 Day</label>
+      <input type="number" id="from" min="1" value="1">
+    </div>
+    <div class="fld">
+      <label for="to">끝 Day</label>
+      <input type="number" id="to" min="1" value="5">
+    </div>
+    <div class="fld">
+      <label for="mode">인쇄 형태</label>
+      <select id="mode">
+        <option value="all">단어 + 뜻 (암기용)</option>
+        <option value="hidem">뜻 가리기 (영→한 시험)</option>
+        <option value="hidew">단어 가리기 (한→영 시험)</option>
+      </select>
+    </div>
+    <label class="chk"><input type="checkbox" id="cover" checked> 표지 넣기</label>
+    <button class="go ghost" id="make">미리보기</button>
+    <button class="go" id="print">인쇄</button>
+  </div>
+  <p class="msg" id="msg"></p>
+</div>
+
+<div class="sheet" id="sheet"></div>
+
+<script>
+var $ = function(id){ return document.getElementById(id); };
+var BOOKS = null, cache = {}, MAXDAYS = 30;
+
+function el(tag, cls, txt){
+  var e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(txt !== undefined) e.textContent = txt;
+  return e;
+}
+
+/* ── 표지 ── */
+function coverPage(meta, from, to, words){
+  var p = el("div","page cover");
+
+  var top = el("div","cv-top");
+  top.appendChild(el("div","cv-brand","DENNY ENGLISH"));
+  top.appendChild(el("div","cv-line"));
+  var t = el("h1","cv-title"); t.textContent = "데니쌤의"; 
+  var t2 = el("div"); t2.className="cv-title"; t2.textContent = "백백영단어";
+  top.appendChild(t); top.appendChild(t2);
+  top.appendChild(el("div","cv-step", meta.short));
+  top.appendChild(el("div","cv-range", from === to ? ("Day " + from) : ("Day " + from + " ~ " + to)));
+  p.appendChild(top);
+
+  var mid = el("div","cv-mid");
+  var st = el("div","cv-stat");
+  [[String(to - from + 1), "DAYS"], [words.toLocaleString(), "WORDS"], ["100", "A DAY"]]
+    .forEach(function(pair){
+      var d = el("div");
+      d.appendChild(el("b", null, pair[0]));
+      d.appendChild(el("span", null, pair[1]));
+      st.appendChild(d);
+    });
+  mid.appendChild(st);
+
+  var form = el("div","cv-form");
+  [["이 름"],["학 교"],["기 간"]].forEach(function(r){
+    var line = el("div");
+    line.appendChild(el("i", null, r[0]));
+    line.appendChild(el("u", null, " "));
+    form.appendChild(line);
+  });
+  mid.appendChild(form);
+  p.appendChild(mid);
+
+  p.appendChild(el("div","cv-foot","모의고사 기출어휘 · DENNY ENGLISH"));
+  return p;
+}
+
+/* ── 단어 페이지 ── */
+function dayPage(meta, day, items, mode){
+  var p = el("div","page");
+
+  var hd = el("div","hd");
+  var l = el("div","l");
+  l.appendChild(document.createTextNode(meta.short));
+  var em = el("em", null, "Day " + day);
+  l.appendChild(em);
+  hd.appendChild(l);
+  var label = mode === "hidem" ? "뜻 쓰기" : mode === "hidew" ? "단어 쓰기" : "암기용";
+  hd.appendChild(el("div","r", label + " · 단어 " + items.length + "개\u2003이름 ____________"));
+  p.appendChild(hd);
+
+  var cols = el("div","cols");
+  var half = Math.ceil(items.length / 2);
+  [[0, half], [half, items.length]].forEach(function(rg){
+    var c = el("div","col");
+    var tb = el("table");
+    for(var i = rg[0]; i < rg[1]; i++){
+      var it = items[i];
+      var tr = el("tr", (i % 2) ? "z" : null);
+      tr.appendChild(el("td","n", String(i + 1)));
+      var tdw = el("td", "w" + (mode === "hidew" ? " blank" : ""),
+                   mode === "hidew" ? "" : it.w);
+      var tdm = el("td", "m" + (mode === "hidem" ? " blank" : ""),
+                   mode === "hidem" ? "" : it.m);
+      tr.appendChild(tdw); tr.appendChild(tdm);
+      tb.appendChild(tr);
+    }
+    c.appendChild(tb);
+    cols.appendChild(c);
+  });
+  p.appendChild(cols);
+
+  var ft = el("div","ft");
+  ft.appendChild(el("span", null, "데니쌤의 백백영단어 · " + meta.short));
+  ft.appendChild(el("span", null, "Day " + day));
+  p.appendChild(ft);
+  return p;
+}
+
+/* ── 만들기 ── */
+function build(){
+  var b = $("book").value, meta = BOOKS[b];
+  var from = parseInt($("from").value, 10), to = parseInt($("to").value, 10);
+  var mode = $("mode").value, withCover = $("cover").checked;
+  var m = $("msg");
+
+  if(!(from >= 1) || !(to >= 1)){ m.innerHTML = '<span class="warn">Day를 숫자로 넣어주세요.</span>'; return; }
+  if(from > to){ var t = from; from = to; to = t; $("from").value = from; $("to").value = to; }
+  if(to > meta.days){ m.innerHTML = '<span class="warn">' + meta.short + '은 Day ' + meta.days + '까지 있습니다.</span>'; return; }
+  if(to - from + 1 > MAXDAYS){
+    m.innerHTML = '<span class="warn">한 번에 최대 ' + MAXDAYS + 'Day까지 만듭니다.</span> 나눠서 인쇄해 주세요.';
+    to = from + MAXDAYS - 1; $("to").value = to;
+  }
+
+  m.textContent = "불러오는 중...";
+  var p = cache[b] ? Promise.resolve(cache[b])
+        : fetch(b + ".json").then(function(r){ return r.json(); })
+            .then(function(j){ cache[b] = j; return j; });
+
+  p.then(function(J){
+    var sheet = $("sheet");
+    sheet.innerHTML = "";
+    var total = 0;
+    for(var d = from; d <= to; d++) total += (J.days[String(d)] || []).length;
+    if(withCover) sheet.appendChild(coverPage(meta, from, to, total));
+    for(var d2 = from; d2 <= to; d2++){
+      var items = J.days[String(d2)];
+      if(items && items.length) sheet.appendChild(dayPage(meta, d2, items, mode));
+    }
+    var pages = (withCover ? 1 : 0) + (to - from + 1);
+    m.innerHTML = '<b>' + meta.title + '</b> · Day ' + from + '~' + to +
+                  ' · 단어 ' + total.toLocaleString() + '개 · 인쇄 <b>' + pages + '쪽</b>' +
+                  ' &nbsp;|&nbsp; 인쇄 창에서 <b>용지 A4</b>, <b>여백 없음</b>, ' +
+                  '<b>배경 그래픽 켜기</b>로 맞춰주세요.';
+  }).catch(function(){
+    m.innerHTML = '<span class="warn">단어 자료를 불러오지 못했습니다.</span>';
+  });
+}
+
+fetch("books.json").then(function(r){ return r.json(); }).then(function(j){
+  BOOKS = j;
+  var sel = $("book");
+  Object.keys(j).forEach(function(b){
+    var o = document.createElement("option");
+    o.value = b; o.textContent = j[b].title + " (Day " + j[b].days + ")";
+    sel.appendChild(o);
+  });
+  var q = new RegExp("[?&]book=([^&]*)").exec(location.search);
+  if(q && j[q[1]]) sel.value = q[1];
+  var qd = new RegExp("[?&]day=(\\d+)").exec(location.search);
+  if(qd){ $("from").value = qd[1]; $("to").value = qd[1]; }
+  build();
+}).catch(function(){
+  $("msg").innerHTML = '<span class="warn">교재 목록을 불러오지 못했습니다.</span>';
+});
+
+$("make").onclick = build;
+$("print").onclick = function(){ window.print(); };
+["book","mode"].forEach(function(id){ $(id).addEventListener("change", build); });
+$("book").addEventListener("change", function(){
+  var mx = BOOKS[$("book").value].days;
+  if(parseInt($("to").value,10) > mx) $("to").value = mx;
+});
+</script>
+</body>
+</html>
