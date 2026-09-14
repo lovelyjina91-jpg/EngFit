@@ -48,15 +48,25 @@
   .filter button { flex: 1; padding: 9px; font-size: 0.88rem; font-family: inherit; background: #f6f9f8; border: 1.5px solid #DBE4E5; border-radius: 8px; cursor: pointer; color: #2B3A3D; }
   .filter button.on { background: #2F7C83; border-color: #2F7C83; color: #fff; font-weight: bold; }
   .hidden { display: none; }
+  .btn-say { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; margin-bottom: 14px; font-size: 0.9rem; font-family: inherit; color: #235E64; background: #E6F1F1; border: 1.5px solid #bcd8d8; border-radius: 999px; cursor: pointer; }
+  .btn-say:active { background: #d3e7e7; }
+  .btn-idk { display: block; width: 100%; margin-top: 6px; padding: 13px; font-size: 0.95rem; font-family: inherit; color: #8a6d2f; background: #FFF6E8; border: 1.5px dashed #e3c489; border-radius: 10px; cursor: pointer; }
+  .btn-idk:active { background: #fbeed6; }
+  .retry-note { background: #FFF6E8; border-radius: 10px; padding: 11px 13px; font-size: 0.88rem; line-height: 1.6; color: #7a5a2a; margin-bottom: 12px; }
+  .sound-btn { position: fixed; top: 10px; right: 10px; z-index: 50; padding: 8px 12px; font-size: 0.82rem; font-family: inherit; color: #235E64; background: #fff; border: 1.5px solid #DBE4E5; border-radius: 999px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .exp.unk { border-left-color: #d99a2b; background: #fffaf0; }
+  .exp.unk b { color: #b3771a; }
+  .exp.unk .tip { color: #8a6d2f; }
 </style>
 </head>
 <body>
+<button class="sound-btn" id="sound-btn">🔊 소리 켜짐</button>
 <div class="wrap">
 
   <div class="card" id="start-card">
     <h1>영핏 · Lesson 5 &amp; 6 내신 대비 100제 🌱</h1>
     <p class="sub">주월중 1학년 · 어휘 &middot; 문법 &middot; 듣기말하기 &middot; 본문<br>전체 100문항이지만, <b>영역을 골라서 나눠 풀 수 있어요.</b></p>
-    <div class="notice">⚠️ 중간에 나가면 답이 사라져요. 고른 영역은 <b>한 번에 끝까지</b> 풀어주세요.<br>다 풀면 「결과 복사」 버튼을 눌러 지나티처에게 카톡으로 보내주세요.</div>
+    <div class="notice">⚠️ 중간에 나가면 답이 사라져요. 고른 영역은 <b>한 번에 끝까지</b> 풀어주세요.<br>다 풀면 「결과 복사」 버튼을 눌러 지나티처에게 카톡으로 보내주세요.<br><br>🤔 <b>모르겠으면 찍지 말고 「모르겠어요」를 눌러요.</b> 넘긴 문제는 마지막에 한 번 더 물어봐 줄게요.</div>
 
     <div class="lbl">1. 이름</div>
     <input type="text" id="name-input" placeholder="이름을 써 주세요" maxlength="20" autocomplete="off">
@@ -73,8 +83,11 @@
       <span class="sect" id="section" style="margin:0"></span>
     </div>
     <div class="bar"><div id="bar-fill"></div></div>
+    <div class="retry-note hidden" id="retry-note"></div>
     <div class="qtext" id="qtext"></div>
+    <button class="btn-say hidden" id="say-btn">🔊 발음 듣기</button>
     <div id="choices"></div>
+    <button class="btn-idk" id="idk-btn">🤔 모르겠어요 — 나중에 다시 풀기</button>
   </div>
 
   <div class="card hidden" id="result-card">
@@ -1245,8 +1258,8 @@ var QUESTIONS = [
  },
  {
   "s": "듣기·말하기",
-  "q": "B: Excuse me?",
-  "ko": "위 표현의 뜻으로 알맞은 것은?",
+  "q": "W: Could you please move your bag?<br>B: <u>Excuse me?</u><br>W: I said, could you please move your bag?",
+  "ko": "밑줄 친 B의 말이 뜻하는 것은?",
   "choices": [
    "뭐라고요? (못 알아들어 되물을 때)",
    "실례합니다, 지나갈게요",
@@ -1626,17 +1639,145 @@ SECTIONS.forEach(function (s) {
   makeMode(s, QUESTIONS.filter(function (q) { return q.s === s; }).length, false);
 });
 
+/* ══════ 소리 · 원어민 발음 (Web Speech API) ══════ */
+var soundOn = true;
+var usVoice = null;
+var voicesReady = false;
+
+function pickVoice() {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  var vs = [];
+  try { vs = window.speechSynthesis.getVoices() || []; } catch (e) { return; }
+  if (!vs.length) return;
+  var en = vs.filter(function (v) { return /^en[-_]US/i.test(v.lang || ""); });
+  if (!en.length) en = vs.filter(function (v) { return /^en/i.test(v.lang || ""); });
+  if (!en.length) return;
+  var MALE = /(david|alex|mark|daniel|george|fred|james|guy|ryan|male|aaron|nathan|eric|arthur|oliver|thomas|male)/i;
+  var FEMALE = /(samantha|zira|google us english|ava|allison|susan|karen|moira|tessa|joanna|salli|kendra|aria|jenny|michelle|female|victoria|nicky|serena)/i;
+  var best = null;
+  en.forEach(function (v) { if (!best && FEMALE.test(v.name || "")) best = v; });
+  if (!best) en.forEach(function (v) { if (!best && !MALE.test(v.name || "")) best = v; });
+  usVoice = best || en[0];
+  voicesReady = true;
+}
+
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
+  pickVoice();
+  try { window.speechSynthesis.onvoiceschanged = pickVoice; } catch (e) {}
+  setTimeout(pickVoice, 350);
+  setTimeout(pickVoice, 1200);
+}
+
+function stopSpeak() {
+  try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+}
+
+function speak(text) {
+  if (!soundOn || !text) return;
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  if (!voicesReady || !usVoice) { pickVoice(); }
+  if (!voicesReady || !usVoice) return;   /* 목소리 목록 로딩 전엔 절대 재생하지 않음 */
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.voice = usVoice;
+    u.lang = usVoice.lang || "en-US";
+    u.rate = 0.9;
+    u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+/* 영역 완료 팡파르 (효과음은 이것만) */
+var actx = null;
+function fanfare() {
+  if (!soundOn) return;
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!actx) actx = new AC();
+    if (actx.state === "suspended") actx.resume();
+    var notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach(function (f, i) {
+      var t = actx.currentTime + i * 0.12;
+      var dur = (i === 3) ? 0.5 : 0.2;
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = "triangle";
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.16, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(actx.destination);
+      o.start(t); o.stop(t + dur + 0.05);
+    });
+  } catch (e) {}
+}
+
+var soundBtn = document.getElementById("sound-btn");
+soundBtn.addEventListener("click", function () {
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? "🔊 소리 켜짐" : "🔇 소리 꺼짐";
+  if (!soundOn) stopSpeak();
+});
+
+/* ══════ 읽어줄 문장 만들기 ══════ */
+function stripTags(x) {
+  return String(x == null ? "" : x)
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&middot;/g, " ");
+}
+function dropSpeakers(t) {
+  return t.replace(/(^|[\s.!?])(A|B|M|W|G|Boy|Girl|Man|Woman)\s*:\s*/g, "$1 ");
+}
+function tidy(t) { return t.replace(/\s+/g, " ").trim(); }
+function isNegType(q) {
+  return /어색한|틀린|아닌|알맞지\s*않은|옳지\s*않은/.test(stripTags(q.q) + " " + stripTags(q.ko));
+}
+/* 문제 화면에서 읽어줄 지문 (빈칸은 건너뜀) */
+function stemSpeech(q) {
+  if (isNegType(q)) return "";
+  var t = tidy(dropSpeakers(stripTags(q.q)).replace(/_{2,}/g, " ... "));
+  return /[A-Za-z]{2,}/.test(t.replace(/\.\.\./g, "")) ? t : "";
+}
+/* 답을 고른 직후 읽어줄 정답 영어 문장 */
+function answerSpeech(q) {
+  if (isNegType(q)) return "";
+  if (!/[A-Za-z]{2,}/.test(String(q.answer))) return "";
+  var raw = stripTags(q.q);
+  if (/_{2,}/.test(raw)) {
+    var parts = String(q.answer).split("/").map(function (x) { return x.trim(); });
+    var k = 0;
+    var filled = raw.replace(/_{2,}/g, function () {
+      var p = (parts.length > 1) ? (parts[k] || parts[parts.length - 1]) : q.answer;
+      k++;
+      return p;
+    });
+    return tidy(dropSpeakers(filled));
+  }
+  if (/[A-Za-z]{2,}/.test(tidy(dropSpeakers(raw)).replace(/[?.!]/g, ""))) {
+    return tidy(String(q.answer));
+  }
+  return tidy(String(q.answer));
+}
+
 /* ══════ 진행 로직 ══════ */
 var pool = [];
 var studentName = "";
-var current = 0;
-var correctCount = 0;
-var wrongNumbers = [];
-var answersLog = [];
+var results = [];
+var order = [];
+var oi = 0;
+var phase = "main";
+var pendingIdx = [];
+var unknownFirstCount = 0;
 var startTime = 0;
 
 var nameInput = document.getElementById("name-input");
 var startBtn = document.getElementById("start-btn");
+var sayBtn = document.getElementById("say-btn");
+var idkBtn = document.getElementById("idk-btn");
+var retryNote = document.getElementById("retry-note");
 
 nameInput.addEventListener("input", function () {
   startBtn.disabled = nameInput.value.trim().length === 0;
@@ -1647,8 +1788,12 @@ startBtn.addEventListener("click", function () {
   if (!studentName) return;
   pool = (mode === "전체") ? QUESTIONS.slice()
        : QUESTIONS.filter(function (q) { return q.s === mode; });
-  current = 0; correctCount = 0; wrongNumbers = []; answersLog = [];
+  results = new Array(pool.length);
+  order = pool.map(function (_, i) { return i; });
+  oi = 0; phase = "main"; pendingIdx = []; unknownFirstCount = 0;
   startTime = Date.now();
+  retryNote.classList.add("hidden");
+  idkBtn.textContent = "🤔 모르겠어요 — 나중에 다시 풀기";
   document.getElementById("start-card").classList.add("hidden");
   document.getElementById("result-card").classList.add("hidden");
   document.getElementById("quiz-card").classList.remove("hidden");
@@ -1665,16 +1810,24 @@ function shuffle(arr) {
 }
 
 var CIRCLED = ["①", "②", "③", "④", "⑤"];
+var curStem = "";
 
 function showQuestion() {
-  var q = pool[current];
-  document.getElementById("progress").textContent = (current + 1) + " / " + pool.length;
+  var qi = order[oi];
+  var q = pool[qi];
+  document.getElementById("progress").textContent =
+    (phase === "retry" ? "다시 도전 " : "") + (oi + 1) + " / " + order.length;
   document.getElementById("section").textContent = q.s;
   document.getElementById("bar-fill").style.width =
-    Math.round((current / pool.length) * 100) + "%";
-  var html = "Q" + (current + 1) + ". " + q.q;
+    Math.round((oi / order.length) * 100) + "%";
+  var html = "Q" + (qi + 1) + ". " + q.q;
   if (q.ko) html += '<span class="qko">' + q.ko + "</span>";
   document.getElementById("qtext").innerHTML = html;
+
+  curStem = stemSpeech(q);
+  if (curStem) sayBtn.classList.remove("hidden");
+  else sayBtn.classList.add("hidden");
+
   var box = document.getElementById("choices");
   box.innerHTML = "";
   shuffle(q.choices).forEach(function (c, i) {
@@ -1687,20 +1840,70 @@ function showQuestion() {
   window.scrollTo(0, 0);
 }
 
+sayBtn.addEventListener("click", function () { speak(curStem); });
+
 var locked = false;
+
 function pick(choice) {
   if (locked) return; locked = true;
-  var q = pool[current];
-  var ok = choice === q.answer;
-  if (ok) correctCount++;
-  else wrongNumbers.push(current + 1);
-  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
-  setTimeout(function () {
-    locked = false;
-    current++;
-    if (current < pool.length) showQuestion();
-    else showResult();
-  }, 180);
+  var qi = order[oi];
+  var q = pool[qi];
+  var ok = (choice === q.answer);
+  results[qi] = { ok: ok, chosen: choice, unknown: false, retried: (phase === "retry") };
+  var sp = answerSpeech(q);
+  if (sp) speak(sp);
+  setTimeout(advance, sp ? 650 : 180);
+}
+
+function markUnknown() {
+  if (locked) return; locked = true;
+  var qi = order[oi];
+  if (phase === "main") {
+    results[qi] = { ok: false, chosen: "", unknown: true, retried: false };
+    pendingIdx.push(qi);
+    unknownFirstCount++;
+  } else {
+    results[qi] = { ok: false, chosen: "", unknown: true, retried: true };
+  }
+  setTimeout(advance, 150);
+}
+idkBtn.addEventListener("click", markUnknown);
+
+function advance() {
+  locked = false;
+  var prevSect = pool[order[oi]].s;
+  oi++;
+  if (oi < order.length) {
+    if (phase === "main" && pool[order[oi]].s !== prevSect) fanfare();
+    showQuestion();
+  } else if (phase === "main" && pendingIdx.length) {
+    phase = "retry";
+    order = pendingIdx.slice();
+    pendingIdx = [];
+    oi = 0;
+    fanfare();
+    retryNote.classList.remove("hidden");
+    retryNote.innerHTML = "🔁 <b>다시 도전!</b> 아까 「모르겠어요」로 넘긴 " +
+      order.length + "문제만 한 번 더 물어볼게요. 이번엔 천천히 생각해 봐요.";
+    idkBtn.textContent = "아직도 모르겠어요 (해설 보기)";
+    showQuestion();
+  } else {
+    fanfare();
+    showResult();
+  }
+}
+
+/* ══════ 결과 ══════ */
+function tally() {
+  var c = 0, w = [], u = [];
+  pool.forEach(function (q, i) {
+    var r = results[i];
+    if (!r) return;
+    if (r.unknown) u.push(i + 1);
+    else if (r.ok) c++;
+    else w.push(i + 1);
+  });
+  return { c: c, w: w, u: u };
 }
 
 function renderExplanations(onlyWrong) {
@@ -1708,32 +1911,42 @@ function renderExplanations(onlyWrong) {
   box.innerHTML = "";
   var shown = 0;
   pool.forEach(function (q, i) {
-    var log = answersLog[i];
-    if (onlyWrong && log.ok) return;
+    var r = results[i];
+    if (!r) return;
+    var good = (!r.unknown && r.ok);
+    if (onlyWrong && good) return;
     shown++;
     var d = document.createElement("div");
-    d.className = "exp" + (log.ok ? "" : " wrong");
-    var head = log.ok
-      ? "Q" + (i + 1) + ". 정답!"
-      : "Q" + (i + 1) + ". 오답 — 내 답: " + log.chosen + " / 정답: " + q.answer;
+    d.className = "exp" + (r.unknown ? " unk" : (r.ok ? "" : " wrong"));
+    var head;
+    if (r.unknown) {
+      head = "Q" + (i + 1) + ". 모름 — 정답: " + q.answer;
+    } else if (r.ok) {
+      head = "Q" + (i + 1) + ". 정답!" + (r.retried ? " (다시 풀어서 맞혔어요 👏)" : "");
+    } else {
+      head = "Q" + (i + 1) + ". 오답 — 내 답: " + r.chosen + " / 정답: " + q.answer;
+    }
     d.innerHTML = "<b>" + head + "</b><br>" + q.exp + '<span class="tip">※ ' + q.tip + "</span>";
     box.appendChild(d);
   });
   if (shown === 0) {
-    var d = document.createElement("div");
-    d.className = "exp";
-    d.innerHTML = "<b>틀린 문제가 하나도 없어요! 완벽해요 🎉</b>";
-    box.appendChild(d);
+    var e = document.createElement("div");
+    e.className = "exp";
+    e.innerHTML = "<b>틀린 문제도 모르는 문제도 하나도 없어요! 완벽해요 🎉</b>";
+    box.appendChild(e);
   }
 }
 
 function showResult() {
+  var t = tally();
   document.getElementById("quiz-card").classList.add("hidden");
   document.getElementById("result-card").classList.remove("hidden");
-  document.getElementById("score-line").textContent = correctCount + " / " + pool.length;
+  document.getElementById("score-line").textContent = t.c + " / " + pool.length;
   var mins = Math.max(1, Math.round((Date.now() - startTime) / 60000));
-  document.getElementById("time-line").textContent =
-    studentName + " · " + mode + " · " + mins + "분 걸렸어요";
+  document.getElementById("time-line").innerHTML =
+    studentName + " · " + mode + " · " + mins + "분 걸렸어요" +
+    (t.u.length ? "<br>틀림 " + t.w.length + "개 · 모름 " + t.u.length + "개"
+                : (t.w.length ? "<br>틀림 " + t.w.length + "개" : ""));
   document.getElementById("f-wrong").classList.add("on");
   document.getElementById("f-all").classList.remove("on");
   renderExplanations(true);
@@ -1752,6 +1965,7 @@ document.getElementById("f-all").addEventListener("click", function () {
 });
 
 document.getElementById("again-btn").addEventListener("click", function () {
+  stopSpeak();
   document.getElementById("result-card").classList.add("hidden");
   document.getElementById("start-card").classList.remove("hidden");
   document.getElementById("copy-btn").textContent = "📋 결과 복사하기";
@@ -1761,20 +1975,38 @@ document.getElementById("again-btn").addEventListener("click", function () {
 });
 
 function buildResultText() {
+  var t = tally();
   var mins = Math.max(1, Math.round((Date.now() - startTime) / 60000));
   var lines = [];
   lines.push("[영핏] " + studentName + " · " + QUIZ_TITLE + " [" + mode + "] " + QUIZ_DATE);
-  lines.push("점수 " + correctCount + " / " + pool.length + " · " + mins + "분");
+  lines.push("점수 " + t.c + " / " + pool.length + " · " + mins + "분" +
+             (t.u.length ? " · 모름 " + t.u.length : ""));
   lines.push("");
-  if (wrongNumbers.length === 0) {
+  if (!t.w.length && !t.u.length) {
     lines.push("틀린 문항 없음 — 전부 맞혔어요!");
-  } else {
-    lines.push("틀린 문항 " + wrongNumbers.map(function (n) { return n + "번"; }).join(", "));
-    answersLog.forEach(function (log, i) {
-      if (!log.ok) {
-        lines.push(log.no + "번 [" + pool[i].s + "] · 내 답 " + log.chosen + " / 정답 " + log.answer);
+  }
+  if (t.w.length) {
+    lines.push("틀린 문항 " + t.w.map(function (n) { return n + "번"; }).join(", "));
+    pool.forEach(function (q, i) {
+      var r = results[i];
+      if (r && !r.unknown && !r.ok) {
+        lines.push((i + 1) + "번 [" + q.s + "] · 내 답 " + r.chosen + " / 정답 " + q.answer);
       }
     });
+  }
+  if (t.u.length) {
+    if (t.w.length) lines.push("");
+    lines.push("모름 문항 " + t.u.map(function (n) { return n + "번"; }).join(", "));
+    pool.forEach(function (q, i) {
+      var r = results[i];
+      if (r && r.unknown) {
+        lines.push((i + 1) + "번 [" + q.s + "] · 모름 / 정답 " + q.answer);
+      }
+    });
+  }
+  if (unknownFirstCount && unknownFirstCount > t.u.length) {
+    lines.push("");
+    lines.push("※ 처음엔 모름이었지만 다시 풀어 맞힌 문항 " + (unknownFirstCount - t.u.length) + "개");
   }
   return lines.join("\n");
 }
