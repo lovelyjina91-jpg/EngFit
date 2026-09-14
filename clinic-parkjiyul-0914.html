@@ -151,16 +151,19 @@ if("speechSynthesis" in window){
   setTimeout(initVoices, 400);
   setTimeout(initVoices, 1200);
 }
+function speechOK(){ if(!voice) initVoices(); return !!voice; }
 function say(text){
-  if(!soundOn || !text) return;
-  if(!("speechSynthesis" in window)) return;
-  if(!voicesReady || !voice) { initVoices(); if(!voicesReady || !voice) return; }
+  if(!text) return true;
+  if(!soundOn) return true;
+  if(!("speechSynthesis" in window)) return false;
+  if(!voicesReady || !voice) { initVoices(); if(!voicesReady || !voice) return false; }
   try{
     window.speechSynthesis.cancel();
     var u = new SpeechSynthesisUtterance(text);
     u.voice = voice; u.lang = "en-US"; u.rate = 0.88; u.pitch = 1.05;
     window.speechSynthesis.speak(u);
-  }catch(e){}
+  }catch(e){ return false; }
+  return true;
 }
 function stopSay(){ try{ window.speechSynthesis.cancel(); }catch(e){} }
 
@@ -415,7 +418,7 @@ function renderConcept(sec){
   c.chips.forEach(function(t){
     var b = document.createElement("button");
     b.className = "chip"; b.textContent = "🔈 " + t;
-    b.onclick = function(){ say(t); };
+    b.onclick = function(){ if(!say(t)) b.textContent = "\uD83D\uDD07 이 기기엔 영어 목소리가 없어요"; };
     box.appendChild(b);
   });
   show("concept-card");
@@ -433,7 +436,7 @@ function renderQuestion(qi){
   $("qko").textContent = q.ko;
   $("qtext").innerHTML = q.q;
   var sp = $("q-speak");
-  if(q.say){ sp.classList.remove("hidden"); sp.onclick = function(){ say(q.say); }; }
+  if(q.say && speechOK()){ sp.classList.remove("hidden"); sp.textContent = "\uD83D\uDD08 발음 듣기"; sp.onclick = function(){ if(!say(q.say)) sp.textContent = "\uD83D\uDD07 이 기기엔 영어 목소리가 없어요"; }; }
   else { sp.classList.add("hidden"); }
 
   $("feedback").innerHTML = "";
