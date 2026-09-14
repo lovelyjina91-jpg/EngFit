@@ -69,6 +69,10 @@
   #sound-toggle { position: fixed; top: 10px; right: 10px; z-index: 50; background: #fff; border: 1.5px solid #2F7C83; color: #2F7C83; border-radius: 20px; padding: 7px 13px; font-size: 0.8rem; font-weight: bold; cursor: pointer; box-shadow: 0 1px 5px rgba(0,0,0,0.09); font-family: inherit; }
   #sound-toggle.off { border-color: #DBE4E5; color: #9aa8a5; }
   .hidden { display: none; }
+
+  .saybtn { display: block; width: 100%; margin: 0 0 12px; padding: 11px; font-size: 0.95rem; font-family: inherit; font-weight: bold; color: #235E64; background: #E6F1F1; border: 1.5px solid #cfe0dc; border-radius: 10px; cursor: pointer; }
+  .say { display: inline-block; margin-left: 8px; padding: 1px 6px; font-size: 0.95rem; border-radius: 7px; background: #E6F1F1; cursor: pointer; }
+  .saybtn.hidden, .say.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -122,6 +126,7 @@
     <span class="srctag" id="srctag"></span>
     <details class="tip" id="tipbox"><summary>💡 규칙 카드 다시 보기 (헷갈릴 때만 눌러요)</summary><div class="inner" id="tipinner"></div></details>
     <div class="qtext" id="qtext"></div>
+    <button class="saybtn hidden" id="say-btn" type="button">🔊 발음 듣기 (다시 들으려면 또 눌러요)</button>
     <div id="choices"></div>
     <div id="ord-area" class="hidden">
       <div class="slot" id="ord-slot"></div>
@@ -884,7 +889,7 @@ document.getElementById("sound-toggle").addEventListener("click", function () {
   soundOn = !soundOn;
   try { localStorage.setItem(SOUND_KEY, soundOn ? "on" : "off"); } catch (e) {}
   paintSoundBtn();
-  if (soundOn) playCorrect();
+  if (soundOn) { pickVoice(); speak("Hello", 0.9); } else { stopSpeak(); }
 });
 paintSoundBtn();
 
@@ -894,7 +899,7 @@ function pick(choice) {
   var q = ALL[current];
   var si = secIndex(current);
   var ok = (choice === q.answer);
-  if (ok) playCorrect(); else playWrong();
+  speak(sayTextFor(q));
   answersLog[current] = { no: current + 1, ok: ok, chosen: choice || "(빈칸)", answer: q.answer };
   elapsed[si] += Math.min(180, Math.round((Date.now() - lastTick) / 1000));
   current++;
@@ -1006,6 +1011,137 @@ function showSectionResult(si) {
   }
   show("sec-result-card");
 }
+
+/* ══════ 원어민 발음 (미국 여성 목소리 고정) — 2026-09-14 규칙 ══════ */
+var speechOK = (typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined");
+var enVoice = null, pendingSay = null;
+var FEMALE_US = ["google us english", "zira", "aria", "jenny", "michelle", "ava", "samantha", "allison", "susan", "joanna", "salli", "kimberly", "nanci", "emma", "eva", "female"];
+var MALE_ANY = ["david", "mark", "guy", "alex", "fred", "eric", "christopher", "roger", "steffan", "tony", "brandon", "daniel", "james", "male"];
+function isMaleName(n) { n = (n || "").toLowerCase(); for (var i = 0; i < MALE_ANY.length; i++) { if (n.indexOf(MALE_ANY[i]) !== -1) return true; } return false; }
+function femaleRank(n) { n = (n || "").toLowerCase(); for (var i = 0; i < FEMALE_US.length; i++) { if (n.indexOf(FEMALE_US[i]) !== -1) return i; } return 999; }
+function pickVoice() {
+  try {
+    var vs = window.speechSynthesis.getVoices() || [], us = [], en = [];
+    for (var i = 0; i < vs.length; i++) {
+      var lg = (vs[i].lang || "").replace("_", "-");
+      if (/^en-US/i.test(lg)) us.push(vs[i]); else if (/^en/i.test(lg)) en.push(vs[i]);
+    }
+    function best(list) {
+      var pool = list.filter(function (v) { return !isMaleName(v.name); });
+      if (!pool.length) pool = list;
+      pool = pool.slice().sort(function (a, b) { return femaleRank(a.name) - femaleRank(b.name); });
+      return pool.length ? pool[0] : null;
+    }
+    enVoice = best(us) || best(en) || null;
+  } catch (e) { enVoice = null; }
+}
+function onVoicesReady() { pickVoice(); if (enVoice && pendingSay) { var t = pendingSay; pendingSay = null; speak(t); } }
+if (speechOK) {
+  pickVoice();
+  try { window.speechSynthesis.onvoiceschanged = onVoicesReady; } catch (e) {}
+  var voiceTries = 0;
+  var voiceTimer = setInterval(function () { voiceTries++; if (!enVoice) onVoicesReady(); if (enVoice || voiceTries > 60) clearInterval(voiceTimer); }, 250);
+}
+function stripTags(s) {
+  return String(s == null ? "" : s)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/[\u2190-\u21FF\u2300-\u27BF\u2B00-\u2BFF\uFE0F\u200D]/g, " ")
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, " ")
+    .replace(/\s+-\s+/g, ", ")
+    .replace(/\s+/g, " ").trim();
+}
+function isEnglishText(s) { var t = stripTags(s); return /[A-Za-z]{2}/.test(t) && !/[가-힣]/.test(t); }
+function speak(text, rate) {
+  if (!soundOn || !speechOK) return;
+  var t = stripTags(text);
+  if (!t) return;
+  try {
+    if (!enVoice) pickVoice();
+    if (!enVoice || !/^en/i.test((enVoice.lang || "").replace("_", "-"))) { pendingSay = t; return; }
+    window.speechSynthesis.cancel();
+    var u = new window.SpeechSynthesisUtterance(t);
+    u.lang = "en-US";
+    u.voice = enVoice;
+    u.rate = rate || 0.85;
+    u.pitch = 1;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+function stopSpeak() { try { if (speechOK) window.speechSynthesis.cancel(); } catch (e) {} }
+/* 읽어 줄 영어 고르기 — 확실할 때만 읽는다 */
+function sayTextFor(q) {
+  if (!q) return "";
+  if (q.say) return q.say;
+  var qt = stripTags(q.q || "");
+  /* "틀린 것 고르기" 유형은 정답이 틀린 문장이므로 절대 읽지 않음 */
+  if (/틀린|잘못|어색|올바르지|바르지\s*않|적절하지|알맞지\s*않/.test(qt)) return "";
+  var ans = Array.isArray(q.answer) ? q.answer.join(" ") : q.answer;
+  ans = stripTags(ans);
+  if (isEnglishText(ans) && ans.replace(/[^A-Za-z]/g, "").length >= 3) return ans;
+  /* 정답이 한글 뜻/해석이면, 문제에서 굵게 표시한 영어(첫 <b>…</b>)를 읽어 준다 */
+  var m = /<b>([\s\S]*?)<\/b>/.exec(q.q || "");
+  if (m) {
+    var bt = stripTags(m[1]);
+    if (isEnglishText(bt) && bt.replace(/[^A-Za-z]/g, "").length >= 3) return bt;
+  }
+  return "";
+}
+/* 철자 변형 보기(brum/drum 같은)면 보기별 발음 버튼을 달지 않음 */
+function editDist(a, b) {
+  var m = a.length, n = b.length, d = [], i, j;
+  for (i = 0; i <= m; i++) { d[i] = [i]; }
+  for (j = 0; j <= n; j++) { d[0][j] = j; }
+  for (i = 1; i <= m; i++) for (j = 1; j <= n; j++) {
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a.charAt(i-1) === b.charAt(j-1) ? 0 : 1));
+  }
+  return d[m][n];
+}
+function choicesSpeakable(list) {
+  var norm = [];
+  for (var i = 0; i < list.length; i++) {
+    var t = stripTags(list[i]);
+    if (!isEnglishText(t)) return false;
+    var n = t.toLowerCase().replace(/[^a-z]/g, "");
+    if (n.length < 2) return false;
+    norm.push(n);
+  }
+  for (var a = 0; a < norm.length; a++) for (var b = a + 1; b < norm.length; b++) {
+    if (Math.abs(norm[a].length - norm[b].length) <= 2 && editDist(norm[a], norm[b]) <= 2) return false;
+  }
+  return true;
+}
+function decorateSpeech() {
+  if (!speechOK) return;
+  try {
+    var q = ALL[current];
+    var btn = document.getElementById("say-btn");
+    var txt = sayTextFor(q);
+    if (btn) {
+      btn.classList.toggle("hidden", !txt);
+      btn.onclick = function () { speak(txt); };
+    }
+    if (!txt) return;
+    var nodes = [].slice.call(document.querySelectorAll("#choices .choice"));
+    if (!nodes.length) return;
+    var labels = nodes.map(function (el) { return el.getAttribute("data-choice") || el.textContent.replace(/^[①②③④⑤]\s*/, ""); });
+    if (!choicesSpeakable(labels)) return;
+    nodes.forEach(function (el, i) {
+      if (el.querySelector(".say")) return;
+      var sp = document.createElement("span");
+      sp.className = "say";
+      sp.textContent = "🔊";
+      sp.title = "발음 듣기";
+      sp.addEventListener("click", function (ev) { ev.stopPropagation(); ev.preventDefault(); speak(labels[i]); });
+      el.appendChild(sp);
+    });
+  } catch (e) {}
+}
+(function () {
+  if (typeof showQuestion !== "function") return;
+  var _orig = showQuestion;
+  showQuestion = function () { var r = _orig.apply(this, arguments); decorateSpeech(); return r; };
+})();
 </script>
 </body>
 </html>
