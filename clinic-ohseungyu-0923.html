@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- engfit-inapp-escape v3 : 카톡으로 열면 항상 폰의 인터넷 브라우저(크롬·사파리)로 열고 카톡 안의 창은 닫기 -->
+<script>
+(function () {
+  try {
+    var ua = navigator.userAgent || "";
+    var isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/i.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+    if (!(isIOS || /android/i.test(ua))) return;
+    var here = String(location.href || "");
+    var go = window.__engfitTestNav || function (u) { window.location.href = u; };
+    if (/KAKAOTALK/i.test(ua)) {
+      go("kakaotalk://web/openExternal?url=" + encodeURIComponent(here));
+      setTimeout(function () { go(isIOS ? "kakaoweb://closeBrowser" : "kakaotalk://inappbrowser/close"); }, 500);
+    } else if (/\bLine\//i.test(ua) && !/[?&]openExternalBrowser=1/.test(here)) {
+      go(here + (here.indexOf("?") >= 0 ? "&" : "?") + "openExternalBrowser=1");
+    }
+  } catch (e) {}
+})();
+</script>
+<!-- /engfit-inapp-escape v3 -->
+<meta name="robots" content="noindex">
+<title>[영핏] 오승유 오답 클리닉 · 금당중 3학년</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#eef3f3;color:#2B3A3D;min-height:100vh;display:flex;justify-content:center;padding:18px 12px 60px}
+  .wrap{width:100%;max-width:540px}
+  .card{background:#fff;border-radius:16px;padding:22px 18px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:14px}
+  h1{font-size:1.2rem;color:#2F7C83;margin-bottom:6px;line-height:1.4}
+  h2{font-size:1.05rem;color:#2F7C83;margin-bottom:10px}
+  .sub{font-size:.88rem;color:#6B7B7E;line-height:1.6}
+  .notice{background:#FFF6E8;border-radius:10px;padding:12px 14px;font-size:.85rem;line-height:1.65;margin:14px 0;color:#7a5a20}
+  input[type=text]{width:100%;padding:13px;font-size:1.05rem;border:1.5px solid #DBE4E5;border-radius:10px}
+  .btn{display:block;width:100%;margin-top:12px;padding:14px;font-size:1.03rem;font-weight:bold;color:#fff;background:#2F7C83;border:none;border-radius:10px;cursor:pointer}
+  .btn:disabled{background:#b8c4c2;cursor:default}
+  .btn.ghost{background:#fff;color:#2F7C83;border:1.5px solid #2F7C83}
+  .btn.idk{background:#fff;color:#b07d18;border:1.5px dashed #d99a2b;font-weight:600;font-size:.95rem;padding:12px}
+  .bar{height:7px;background:#e3ebeb;border-radius:99px;overflow:hidden;margin-bottom:10px}
+  .bar > i{display:block;height:100%;background:#2F7C83;width:0;transition:width .25s}
+  .progress{font-size:.82rem;color:#6B7B7E;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+  .tag{display:inline-block;background:#E6F1F1;color:#235E64;font-size:.75rem;font-weight:bold;padding:3px 9px;border-radius:99px}
+  .ko{font-size:.9rem;color:#6B7B7E;margin-bottom:8px;line-height:1.5}
+  .qtext{font-size:1.06rem;line-height:1.65;margin-bottom:6px;font-weight:bold}
+  .speakbtn{display:inline-flex;align-items:center;gap:5px;background:#E6F1F1;color:#235E64;border:none;border-radius:99px;padding:7px 13px;font-size:.83rem;font-weight:bold;cursor:pointer;margin:4px 0 14px}
+  .choice{display:block;width:100%;text-align:left;padding:13px 14px;margin-bottom:9px;font-size:1rem;line-height:1.5;background:#f6f9f8;border:1.5px solid #DBE4E5;border-radius:10px;cursor:pointer}
+  .choice:active{background:#e2efec}
+  .choice:disabled{cursor:default;opacity:.95}
+  .choice.ok{background:#e6f6ee;border-color:#2f9e6a}
+  .choice.no{background:#fdecea;border-color:#c0392b}
+  .num{color:#2F7C83;font-weight:bold;margin-right:7px}
+  .fb{border-radius:10px;padding:13px 15px;font-size:.93rem;line-height:1.65;margin-top:4px}
+  .fb.ok{background:#e9f7f0;border-left:4px solid #2f9e6a}
+  .fb.no{background:#fdeceb;border-left:4px solid #c0392b}
+  .fb .tip{display:block;margin-top:8px;background:#FFF6E8;border-radius:8px;padding:9px 11px;color:#7a5a20;font-weight:bold}
+  .score-big{font-size:2.1rem;font-weight:bold;color:#2F7C83;text-align:center;margin:12px 0 4px}
+  .score-sub{text-align:center;font-size:.92rem;color:#6B7B7E;margin-bottom:16px}
+  .exp{border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:.9rem;line-height:1.6;border-left:4px solid #2F7C83;background:#f6f9f8}
+  .exp.wrong{border-left-color:#c0392b;background:#fdeceb}
+  .exp.idk{border-left-color:#d99a2b;background:#fffaf0}
+  .exp b{color:#235E64}
+  .exp .head{font-weight:bold;margin-bottom:5px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .chip{background:#E6F1F1;color:#235E64;border:none;border-radius:99px;padding:9px 14px;font-size:.95rem;font-weight:bold;cursor:pointer}
+  .rule{background:#f6f9f8;border-left:4px solid #2F7C83;border-radius:8px;padding:12px 14px;margin-bottom:10px;font-size:.94rem;line-height:1.65}
+  .rule b{color:#c0392b}
+  .sound{position:fixed;top:10px;right:10px;z-index:9;background:#fff;border:1.5px solid #DBE4E5;color:#235E64;border-radius:99px;padding:8px 13px;font-size:.8rem;font-weight:bold;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+  .hidden{display:none}
+  .foot{text-align:center;font-size:.76rem;color:#9aa8aa;margin-top:8px}
+</style>
+</head>
+<body>
+
+<button class="sound" id="sound-btn">🔊 소리 켜짐</button>
+
+<div class="wrap">
+
+  <!-- 시작 -->
+  <div class="card" id="start-card">
+    <h1>오승유 오답 클리닉 💪<br>금당중 3학년 · 편지 과 + 책 과</h1>
+    <p class="sub">4코너 · 15문항 · 약 15분<br>A 동사 모양 · B 헷갈리는 짝 · C 문장 짜임·철자 · D 누적 복습</p>
+    <div class="notice">
+      ※ 중간에 나가면 답이 사라져요. <b>한 번에 다 풀어주세요.</b><br>
+      ※ 모르겠으면 찍지 말고 <b>「모르겠어요」</b>를 눌러요. 마지막에 다시 물어볼게요.<br>
+      ※ 영어 문장은 <b>발음 듣기</b> 버튼으로 들을 수 있어요.
+    </div>
+    <input type="text" id="name-input" placeholder="이름을 써주세요" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+  </div>
+
+  <!-- 개념 카드 -->
+  <div class="card hidden" id="concept-card">
+    <span class="tag" id="c-tag"></span>
+    <h2 id="c-title" style="margin-top:10px"></h2>
+    <div id="c-rules"></div>
+    <p class="sub" style="margin-top:14px">👇 눌러서 원어민 발음을 들어보세요</p>
+    <div class="chips" id="c-chips"></div>
+    <button class="btn" id="c-next">문제 풀러 가기</button>
+  </div>
+
+  <!-- 문제 -->
+  <div class="card hidden" id="quiz-card">
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="progress"><span id="prog-left"></span><span class="tag" id="prog-tag"></span></div>
+    <div class="ko" id="qko"></div>
+    <div class="qtext" id="qtext"></div>
+    <button class="speakbtn hidden" id="q-speak">🔈 발음 듣기</button>
+    <div id="choices"></div>
+    <button class="btn idk hidden" id="idk-btn">🤔 모르겠어요 — 나중에 다시 풀기</button>
+    <div id="feedback"></div>
+    <button class="btn hidden" id="next-btn">다음 문제 →</button>
+  </div>
+
+  <!-- 재도전 안내 -->
+  <div class="card hidden" id="retry-card">
+    <h1>🔁 다시 도전!</h1>
+    <p class="sub" id="retry-msg"></p>
+    <button class="btn" id="retry-next">다시 풀어보기</button>
+  </div>
+
+  <!-- 결과 -->
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요, <span id="rname"></span>! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div class="score-sub" id="score-sub"></div>
+    <button class="btn" id="copy-btn">📋 결과 복사</button>
+    <p class="sub" id="copy-msg" style="text-align:center;margin-top:10px">다 풀었으면 위 버튼을 눌러 <b>카톡으로 지나티처에게 붙여넣어 보내주세요!</b></p>
+    <div style="margin-top:22px">
+      <p class="sub" style="margin-bottom:10px"><b>📝 해설</b></p>
+      <button class="btn ghost" id="toggle-exp" style="margin-bottom:12px">전체 해설 보기</button>
+      <div id="explanations"></div>
+    </div>
+    <p class="foot">영핏영어 · 지나티처</p>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ═══════════ 소리 (Web Speech API — 미국인 여성 목소리만) ═══════════ */
+var soundOn = true, voice = null, voicesReady = false;
+var MALE = /david|mark|alex|fred|guy|daniel|thomas|aaron|ralph|eddy|reed|rocko|junior|bruce|male|yuri|oliver|george|james|christopher|eric|roger|steffan|tom\b/i;
+var FEMALE_PREF = ["Samantha","Google US English","Microsoft Zira","Zira","Microsoft Aria","Aria","Microsoft Jenny","Jenny","Microsoft Michelle","Ava","Allison","Susan","Nicky","Joelle","Karen","Serena","Victoria","Female"];
+
+function pickVoice(){
+  if(!("speechSynthesis" in window)) return null;
+  var all = window.speechSynthesis.getVoices() || [];
+  if(!all.length) return null;
+  var us = all.filter(function(v){ return /^en[-_]US/i.test(v.lang); });
+  var pool = us.length ? us : all.filter(function(v){ return /^en/i.test(v.lang); });
+  if(!pool.length) return null;
+  for(var i=0;i<FEMALE_PREF.length;i++){
+    for(var j=0;j<pool.length;j++){
+      if(pool[j].name.indexOf(FEMALE_PREF[i]) !== -1) return pool[j];
+    }
+  }
+  var f = pool.filter(function(v){ return !MALE.test(v.name); });
+  return f.length ? f[0] : null;
+}
+function initVoices(){
+  voice = pickVoice();
+  if(voice){ voicesReady = true; }
+}
+if("speechSynthesis" in window){
+  initVoices();
+  window.speechSynthesis.onvoiceschanged = function(){ initVoices(); };
+  setTimeout(initVoices, 400);
+  setTimeout(initVoices, 1200);
+}
+function speechOK(){ if(!voice) initVoices(); return !!voice; }
+function say(text){
+  if(!text) return true;
+  if(!soundOn) return true;
+  if(!("speechSynthesis" in window)) return false;
+  if(!voicesReady || !voice) { initVoices(); if(!voicesReady || !voice) return false; }
+  try{
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.voice = voice; u.lang = "en-US"; u.rate = 0.88; u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  }catch(e){ return false; }
+  return true;
+}
+function stopSay(){ try{ window.speechSynthesis.cancel(); }catch(e){} }
+
+/* 코너 완료 팡파르 (짧은 상승음) */
+var actx = null;
+function fanfare(){
+  if(!soundOn) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    var notes=[523.25,659.25,783.99,1046.5], t0=actx.currentTime;
+    notes.forEach(function(f,i){
+      var o=actx.createOscillator(), g=actx.createGain();
+      o.type="triangle"; o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t0+i*0.11);
+      g.gain.exponentialRampToValueAtTime(0.16,t0+i*0.11+0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+i*0.11+0.30);
+      o.connect(g); g.connect(actx.destination);
+      o.start(t0+i*0.11); o.stop(t0+i*0.11+0.34);
+    });
+  }catch(e){}
+}
+
+document.getElementById("sound-btn").onclick = function(){
+  soundOn = !soundOn;
+  this.textContent = soundOn ? "🔊 소리 켜짐" : "🔇 소리 꺼짐";
+  if(!soundOn) stopSay();
+};
+
+/* ═══════════ 개념 카드 ═══════════ */
+var CONCEPTS = {
+  A: { tag:"코너 A · 동사 모양", label:"동사모양", title:"동사에 꼭 붙여야 하는 것 — be · s · 현재시제",
+    rules:[
+      "'~되었다(당했다)'는 <b>be동사 + p.p.</b> 두 개가 한 세트! This letter <b>was</b> discovered. — was를 빼면 '편지가 발견했다'가 돼요.",
+      "주어가 한 개(It, He, The book)이고 지금 이야기면 동사에 <b>-s</b>. It <b>provides</b> ~",
+      "while · when · after 뒤(시간을 나타내는 부분)는 앞으로의 일이라도 <b>현재형</b>. while the oldest <b>looks</b> after the youngest (will look ✗)"
+    ],
+    chips:["This letter was discovered by Sicilian writer Gesualdo Bufalino.","It provides both the information and the tools.","while the oldest looks after the youngest"] },
+  B: { tag:"코너 B · 헷갈리는 짝", label:"헷갈리는짝", title:"your↔yours · enough 자리 · seem↔look like",
+    rules:[
+      "뒤에 명사가 있으면 <b>your</b> (your heart), 명사 없이 혼자 끝나면 <b>yours</b> (My heart is <b>yours</b>. = 당신의 것)",
+      "명사 앞: <b>enough + 명사 + to 동사원형</b> (enough oil to fill) / 형용사·혼자일 땐 <b>enough to</b> (was enough to fill). <b>much enough ✗</b>",
+      "<b>seem + 형용사</b> (seems dead) / <b>look like + 명사</b> (looks like a ghost). seem like dead ✗"
+    ],
+    chips:["My heart is yours.","I got enough oil to fill a large pot and a small one.","It almost seems dead."] },
+  C: { tag:"코너 C · 문장 짜임과 철자", label:"문장짜임", title:"문장 속 순서 + 본문 단어 철자",
+    rules:[
+      "물음 문장이 문장 안에 들어가면 <b>의문사 + 주어 + 동사</b>. where is your book → you can check <b>where your book is</b>",
+      "<b>see + 사람/물건 + -ing(또는 동사원형)</b> = ~가 …하는 것을 보다. see new leaves <b>growing</b>",
+      "본문 단어는 철자까지 시험에 나와요. <b>leave</b> · <b>check</b> · <b>actually</b> · <b>really</b> · <b>written</b>"
+    ],
+    chips:["You can check where your book is.","You will see new leaves growing on the book.","leave, check, actually, really"] },
+  D: { tag:"코너 D · 누적 복습", label:"누적복습", title:"두 과의 핵심 문법 한 번 더",
+    rules:[
+      "<b>whose + 명사</b> = '그(선행사)의 ~'. a man <b>whose</b> sons are good workers",
+      "가정법 과거: <b>If + 주어 + 과거동사, 주어 + would/could + 동사원형</b>. If I were you, I would hire one more person.",
+      "강조: <b>It is + 강조할 말 + that + 나머지</b>. It is these tiny seeds that change the book into a tree.",
+      "<b>The 비교급 ~, the 비교급 …</b> = ~할수록 더 …하다. The more books we share, the more we learn."
+    ],
+    chips:["I hired a man whose sons are good workers.","If I were you, I would hire one more person.","The more books we share, the more we learn."] }
+};
+
+var QUESTIONS = [
+  /* ─── A 동사 모양 ─── */
+  { sec:"A", ko:"[기초] 이 편지는 시칠리아의 작가 Gesualdo Bufalino에 의해 발견되었다.",
+    q:"This letter ______ by Sicilian writer Gesualdo Bufalino.",
+    choices:["was discovered","discovered","was discover","is discovering"], answer:"was discovered", say:"",
+    sayAnswer:"This letter was discovered by Sicilian writer Gesualdo Bufalino.",
+    exp:"편지는 스스로 발견하지 못해요. '발견<b>되었다</b>' → <b>was + discovered</b>. discovered만 쓰면 '편지가 발견했다'가 돼요. was discover는 p.p. 모양이 아니라서 ✗.",
+    tip:"'~되었다' + by = be동사 + p.p. 두 개 세트!", why:"편지 과 Reading 1 — was를 빠뜨렸어요 (선생님이 ✓로 추가)" },
+  { sec:"A", ko:"[심화] 그것은 1973년에 남편이 멀리 떨어져 살았던 한 여자에 의해 쓰였다.",
+    q:"It ______ in 1973 by a woman whose husband was far away.",
+    choices:["was written","wrote","was wrote","written"], answer:"was written", say:"",
+    sayAnswer:"It was written in 1973 by a woman whose husband was far away.",
+    exp:"write-wrote-<b>written</b>. '쓰였다'니까 <b>was + written</b>. was wrote는 2번째 모양이라 ✗, written만 쓰면 be동사가 없어서 ✗. 철자는 t가 두 개(writ<b>t</b>en)!",
+    tip:"be동사 뒤 = 3번째 모양(p.p.)", why:"편지 과 Reading 1 — 같은 수동태 모양 + written 철자" },
+  { sec:"A", ko:"[기초] 그것은 깨끗한 식수를 만드는 데 필요한 정보와 도구 둘 다를 제공한다.",
+    q:"It ______ both the information and the tools necessary to make clean drinkable water.",
+    choices:["provides","provide","providing","are provided"], answer:"provides", say:"",
+    sayAnswer:"It provides both the information and the tools necessary to make clean drinkable water.",
+    exp:"주어 <b>It</b>(책 한 권) + 지금 이야기 → 동사에 <b>-s</b>: <b>provides</b>. providing은 동사 자리에 혼자 못 와요. 책이 '제공하는' 쪽이라 are provided(제공된다)도 ✗.",
+    tip:"주어가 It·He·She·책 한 권 → 동사 끝에 s!", why:"책 과 Reading 2 — It provide로 써서 s를 빠뜨렸어요" },
+  { sec:"A", ko:"[심화] 첫째가 막내를 돌보는 동안 나는 둘째 아이와 함께 거기에 갈 거예요.",
+    q:"I'll go there with our middle son while the oldest ______ after the youngest.",
+    choices:["looks","will look","look","looked"], answer:"looks", say:"",
+    sayAnswer:"I'll go there with our middle son while the oldest looks after the youngest.",
+    exp:"while(~하는 동안)은 시간을 나타내요. 시간 부분은 앞으로의 일이어도 <b>현재형</b>. 주어 the oldest(한 명) → <b>looks</b>. will look ✗, look은 s가 빠져서 ✗.",
+    tip:"while·when·after 뒤 → will 대신 현재형!", why:"편지 과 Reading 2 — 선생님 빨간 메모(현재시제가 미래를 대신)" },
+
+  /* ─── B 헷갈리는 짝 ─── */
+  { sec:"B", ko:"[기초] 내 마음은, 우리의 두 반지가 그러하듯 당신과 연결된 채로, 당신의 것입니다.",
+    q:"My heart is ______, joined to you as our two rings are.",
+    choices:["yours","your","you","your's"], answer:"yours", say:"",
+    sayAnswer:"My heart is yours, joined to you as our two rings are.",
+    exp:"is 뒤에 명사가 없어요. '당신의 <b>것</b>' = <b>yours</b>. your는 뒤에 명사가 꼭 필요해요(your heart). your's처럼 '를 붙이는 모양은 없어요.",
+    tip:"뒤에 명사 있으면 your / 혼자 끝나면 yours", why:"편지 과 Reading 3 — Your로 썼어요 (rings도 two Hug로 들었어요)" },
+  { sec:"B", ko:"[기초] 나는 큰 항아리 하나와 작은 항아리 하나를 채울 만큼 충분한 기름을 얻었다.",
+    q:"I got ______ a large pot and a small one.",
+    choices:["enough oil to fill","oil to fill enough","enough to oil fill","enough oil filling"], answer:"enough oil to fill", say:"",
+    sayAnswer:"I got enough oil to fill a large pot and a small one.",
+    exp:"명사(oil) 앞에서는 <b>enough + 명사 + to 동사원형</b>: <b>enough oil to fill</b>. 순서가 바뀌거나 filling을 쓰면 ✗.",
+    tip:"enough 명사 to 동사원형 (~할 만큼 충분한 명사)", why:"편지 과 Reading 3 — enough 순서 주의 메모" },
+  { sec:"B", ko:"[심화] 내가 얻은 기름은 큰 항아리 하나와 작은 항아리 하나를 채울 만큼 충분히 많았다.",
+    q:"The oil I got was ______ a large pot and a small one.",
+    choices:["enough to fill","much enough to fill","enough much to fill","to fill enough"], answer:"enough to fill", say:"",
+    sayAnswer:"The oil I got was enough to fill a large pot and a small one.",
+    exp:"was 뒤에 <b>enough to fill</b>이면 끝! '충분히 많았다'는 enough 하나에 이미 들어 있어요. <b>much enough ✗</b> — 승유가 쓴 모양이에요.",
+    tip:"enough 앞에 much를 붙이지 않기!", why:"편지 과 Reading 3 — was much enough to fill로 썼어요" },
+  { sec:"B", ko:"[심화] PCI는 너무 많은 의석을 잃어서 그 당은 거의 죽은 것처럼 보여요.",
+    q:"The PCI lost so many seats that it almost ______ dead.",
+    choices:["seems","seems like","looks like","is seem"], answer:"seems", say:"",
+    sayAnswer:"The PCI lost so many seats that it almost seems dead.",
+    exp:"dead는 형용사(죽은) → <b>seem + 형용사</b>: <b>seems dead</b>. look like / seem like 뒤에는 명사가 와야 해서 ✗. is seem은 동사가 두 개라 ✗.",
+    tip:"seem + 형용사 / look like + 명사", why:"편지 과 Reading 2 — 선생님 메모(look like + 명사)" },
+
+  /* ─── C 문장 짜임과 철자 ─── */
+  { sec:"C", ko:"[기초] 당신은 당신의 책이 어디에 있는지 확인할 수 있다.",
+    q:"When the next reader finds your book, you can check ______.",
+    choices:["where your book is","where is your book","your book where is","where does your book"], answer:"where your book is", say:"",
+    sayAnswer:"When the next reader finds your book, you can check where your book is.",
+    exp:"물음 문장(Where is your book?)이 문장 안에 들어가면 순서가 바뀌어요 → <b>where + 주어(your book) + 동사(is)</b>.",
+    tip:"문장 속 물음 = 의문사 + 주어 + 동사", why:"책 과 Reading 1 — 선생님 빨간 메모(간접의문문)" },
+  { sec:"C", ko:"[심화] 여러분은 책에서 새잎이 자라나는 것을 보게 될 거예요.",
+    q:"You will see new leaves ______ on the book.",
+    choices:["growing","to grow","grew","grows"], answer:"growing", say:"",
+    sayAnswer:"You will see new leaves growing on the book.",
+    exp:"<b>see + 무엇 + -ing</b> = ~가 …하는 것을 보다. growing ⭕ (grow도 ⭕이지만 보기에 없어요). to grow는 see 뒤에 못 와요. grew·grows는 동사가 두 개가 돼서 ✗.",
+    tip:"see·watch·hear + 무엇 + -ing(또는 동사원형), to ✗", why:"책 과 Reading 3 — 선생님 메모(지각동사 see)" },
+  { sec:"C", ko:"[기초] 발음을 듣고 알맞은 철자를 고르세요. — 다음으로, 그것을 공공장소에 놓아두세요.",
+    q:"Next, ______ it in a public place.",
+    choices:["leave","lave","leav","leeve"], answer:"leave", say:"Next, leave it in a public place.",
+    sayAnswer:"Next, leave it in a public place.",
+    exp:"'놓아두다, 떠나다' = <b>l-e-a-v-e</b>. 소리는 [리-브]지만 e와 a가 같이 들어가고, 끝에 e가 붙어요.",
+    tip:"leave · check · actually · really — 받아쓰기 단골 단어", why:"책 과 Reading 1 — Lave로 썼어요 (cheak, actally, realy도 같이 복습)" },
+
+  /* ─── D 누적 복습 ─── */
+  { sec:"D", ko:"[복습] 나는 아들들이 좋은 일꾼인 한 남자를 고용했다.",
+    q:"I hired a man ______ sons are good workers.",
+    choices:["whose","who","which","whom"], answer:"whose", say:"",
+    sayAnswer:"I hired a man whose sons are good workers.",
+    exp:"'그 남자<b>의</b> 아들들' → <b>whose + sons</b>. who·whom 뒤에는 명사가 바로 붙지 않아요.",
+    tip:"빈칸 뒤에 명사가 바로 오고 '~의'로 해석 → whose", why:"편지 과 누적 — whose (학습지에서 잘 풀었어요)" },
+  { sec:"D", ko:"[복습] 만약 내가 너라면, 나는 한 사람을 더 고용할 텐데.",
+    q:"If I were you, I would ______ one more person.",
+    choices:["hire","hired","hiring","to hire"], answer:"hire", say:"",
+    sayAnswer:"If I were you, I would hire one more person.",
+    exp:"would 뒤는 무조건 <b>동사원형</b>: <b>hire</b>. 과거 모양은 If 쪽(were)에만 써요.",
+    tip:"If 쪽 = 과거동사 / 뒤쪽 = would + 동사원형", why:"편지 과 누적 — 가정법 과거" },
+  { sec:"D", ko:"[복습] These tiny seeds change the book into a tree. 에서 These tiny seeds를 강조한 문장은?",
+    q:"'바로 이 작은 씨앗들이' 책을 나무로 바꿔요.",
+    choices:["It is these tiny seeds that change the book into a tree.","It is these tiny seeds what change the book into a tree.","It is these tiny seeds that changes the book into a tree.","These tiny seeds is it that change the book into a tree."],
+    answer:"It is these tiny seeds that change the book into a tree.", say:"",
+    sayAnswer:"It is these tiny seeds that change the book into a tree.",
+    exp:"<b>It is + 강조할 말 + that + 나머지</b>. what ✗. 나머지 부분의 주인은 seeds(여러 개)라서 change(s 없음)가 그대로 남아요.",
+    tip:"It is ~ that 사이에 넣고, 나머지는 원래 모양 그대로", why:"책 과 누적 — It is ~ that 강조 (문법 란 표시)" },
+  { sec:"D", ko:"[복습] 우리가 더 많은 책을 공유할수록, 우리는 더 많이 배운다.",
+    q:"The more books we share, the ______ we learn.",
+    choices:["more","most","much","many"], answer:"more", say:"",
+    sayAnswer:"The more books we share, the more we learn.",
+    exp:"<b>The 비교급 ~, the 비교급 …</b> — 양쪽 모두 비교급(더 ~)이에요. much·many의 비교급 = <b>more</b>. most는 최상급이라 ✗.",
+    tip:"~할수록 더 … = the 비교급, the 비교급", why:"책 과 누적 — the 비교급, the 비교급" }
+];
+
+
+
+/* ═══════════ 진행 로직 ═══════════ */
+var studentName="", startTime=0;
+var order=[], idx=0, phase="main";
+var state=[];   /* {no, status:'ok'|'no'|'idk', chosen, wasIdk} */
+var retryQueue=[], shownConcept={}, lastPos=[];
+
+QUESTIONS.forEach(function(q,i){
+  state.push({ no:i+1, status:null, chosen:"", wasIdk:false });
+});
+
+function $(id){ return document.getElementById(id); }
+function show(id){ ["start-card","concept-card","quiz-card","retry-card","result-card"].forEach(function(x){ $(x).classList.toggle("hidden", x!==id); }); }
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+$("name-input").addEventListener("input", function(){ $("start-btn").disabled = this.value.trim().length===0; });
+$("start-btn").onclick = function(){
+  studentName = $("name-input").value.trim();
+  startTime = Date.now();
+  order = QUESTIONS.map(function(_,i){ return i; });
+  idx = 0; phase="main";
+  step();
+};
+
+function step(){
+  if(idx >= order.length){
+    if(phase==="main"){
+      retryQueue = state.filter(function(s){ return s.status==="idk"; }).map(function(s){ return s.no-1; });
+      if(retryQueue.length){
+        phase="retry";
+        $("retry-msg").textContent = "아까 「모르겠어요」로 넘긴 " + retryQueue.length + "문제만 한 번 더 물어볼게요. 이번엔 아는 만큼만 골라봐요!";
+        show("retry-card");
+        return;
+      }
+    }
+    finish();
+    return;
+  }
+  var qi = order[idx], q = QUESTIONS[qi];
+  if(phase==="main" && !shownConcept[q.sec]){
+    shownConcept[q.sec] = true;
+    renderConcept(q.sec);
+    return;
+  }
+  renderQuestion(qi);
+}
+
+$("retry-next").onclick = function(){ order = retryQueue; idx = 0; step(); };
+
+function renderConcept(sec){
+  var c = CONCEPTS[sec];
+  $("c-tag").textContent = c.tag;
+  $("c-title").textContent = c.title;
+  $("c-rules").innerHTML = c.rules.map(function(r){ return '<div class="rule">'+r+'</div>'; }).join("");
+  var box = $("c-chips"); box.innerHTML = "";
+  c.chips.forEach(function(t){
+    var b = document.createElement("button");
+    b.className = "chip"; b.textContent = "🔈 " + t;
+    b.onclick = function(){ if(!say(t)) b.textContent = "\uD83D\uDD07 이 기기엔 영어 목소리가 없어요"; };
+    box.appendChild(b);
+  });
+  show("concept-card");
+  window.scrollTo(0,0);
+}
+$("c-next").onclick = function(){ renderQuestion(order[idx]); };
+
+function renderQuestion(qi){
+  var q = QUESTIONS[qi], s = state[qi];
+  show("quiz-card");
+  window.scrollTo(0,0);
+  $("bar-fill").style.width = Math.round((idx/order.length)*100) + "%";
+  $("prog-left").textContent = (phase==="retry" ? "🔁 다시 도전 " : "") + (idx+1) + " / " + order.length;
+  $("prog-tag").textContent = CONCEPTS[q.sec].tag;
+  $("qko").textContent = q.ko;
+  $("qtext").innerHTML = q.q;
+  var sp = $("q-speak");
+  if(q.say && speechOK()){ sp.classList.remove("hidden"); sp.textContent = "\uD83D\uDD08 발음 듣기"; sp.onclick = function(){ if(!say(q.say)) sp.textContent = "\uD83D\uDD07 이 기기엔 영어 목소리가 없어요"; }; }
+  else { sp.classList.add("hidden"); }
+
+  $("feedback").innerHTML = "";
+  $("next-btn").classList.add("hidden");
+  var idk = $("idk-btn");
+  idk.classList.remove("hidden");
+  idk.textContent = (phase==="retry") ? "아직도 모르겠어요 (해설 보기)" : "🤔 모르겠어요 — 나중에 다시 풀기";
+  idk.onclick = function(){ onIdk(qi); };
+
+  var box = $("choices"); box.innerHTML = "";
+  var opts = shuffle(q.choices), tries = 0;
+  while(tries++ < 30 && lastPos.length >= 2 && lastPos[0] === lastPos[1] && opts.indexOf(q.answer) === lastPos[1]) opts = shuffle(q.choices);
+  lastPos.push(opts.indexOf(q.answer)); if(lastPos.length > 2) lastPos.shift();
+  opts.forEach(function(text, i){
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + "①②③④⑤".charAt(i) + '</span>' + text;
+    b.onclick = function(){ onPick(qi, text, box); };
+    box.appendChild(b);
+  });
+}
+
+function lockChoices(box, q, chosen){
+  Array.prototype.forEach.call(box.children, function(b){
+    b.disabled = true;
+    var t = b.textContent.slice(1);
+    if(t === q.answer) b.classList.add("ok");
+    else if(t === chosen) b.classList.add("no");
+  });
+}
+
+function onPick(qi, chosen, box){
+  var q = QUESTIONS[qi], s = state[qi];
+  var ok = (chosen === q.answer);
+  s.chosen = chosen;
+  s.status = ok ? "ok" : "no";
+  lockChoices(box, q, chosen);
+  $("idk-btn").classList.add("hidden");
+  if(q.sayAnswer) say(q.sayAnswer);
+  var html = '<div class="fb ' + (ok?"ok":"no") + '">';
+  html += '<b>' + (ok ? "정답이에요! ✅" : "아쉬워요 ❌") + '</b>  정답 — <b>' + q.answer + '</b><br>' + q.exp;
+  html += '<span class="tip">👉 ' + q.tip + '</span></div>';
+  $("feedback").innerHTML = html;
+  $("next-btn").classList.remove("hidden");
+  $("next-btn").textContent = (idx+1 >= order.length) ? "결과 보기 →" : "다음 문제 →";
+}
+
+function onIdk(qi){
+  var q = QUESTIONS[qi], s = state[qi];
+  if(phase === "main"){
+    s.status = "idk"; s.wasIdk = true; s.chosen = "";
+    idx++; step();
+    return;
+  }
+  s.status = "idk"; s.chosen = "";
+  lockChoices($("choices"), q, "");
+  $("idk-btn").classList.add("hidden");
+  $("feedback").innerHTML = '<div class="fb no"><b>괜찮아요, 여기는 같이 봐요 🙂</b>  정답 — <b>' + q.answer + '</b><br>' + q.exp + '<span class="tip">👉 ' + q.tip + '</span></div>';
+  $("next-btn").classList.remove("hidden");
+  $("next-btn").textContent = (idx+1 >= order.length) ? "결과 보기 →" : "다음 문제 →";
+}
+
+$("next-btn").onclick = function(){
+  var prev = QUESTIONS[order[idx]];
+  idx++;
+  stopSay();
+  if(phase==="main" && idx < order.length && QUESTIONS[order[idx]].sec !== prev.sec) fanfare();
+  if(idx >= order.length) fanfare();
+  step();
+};
+
+/* ═══════════ 결과 ═══════════ */
+function finish(){
+  stopSay();
+  var total = QUESTIONS.length;
+  var correct = state.filter(function(s){ return s.status==="ok"; }).length;
+  var wrong = state.filter(function(s){ return s.status==="no"; });
+  var idks  = state.filter(function(s){ return s.status==="idk"; });
+  var recovered = state.filter(function(s){ return s.wasIdk && s.status==="ok"; }).length;
+  var mins = Math.max(1, Math.round((Date.now()-startTime)/60000));
+
+  show("result-card");
+  $("rname").textContent = studentName;
+  window.scrollTo(0,0);
+  $("score-line").textContent = "점수 " + correct + " / " + total;
+  var sub = "틀림 " + wrong.length + "개 · 모름 " + idks.length + "개 · " + mins + "분";
+  if(recovered) sub += "  |  다시 풀어서 맞힌 문항 " + recovered + "개 👏";
+  $("score-sub").textContent = sub;
+
+  var exps = $("explanations"); exps.innerHTML = "";
+  state.forEach(function(s, i){
+    var q = QUESTIONS[i];
+    var cls = s.status==="ok" ? "" : (s.status==="idk" ? "idk" : "wrong");
+    var head = "Q" + s.no + " [" + CONCEPTS[q.sec].label + "] · " +
+      (s.status==="ok" ? (s.wasIdk ? "다시 풀어서 맞혔어요 👏" : "정답 ✅") : (s.status==="idk" ? "모름" : "틀림 ❌"));
+    var d = document.createElement("div");
+    d.className = "exp " + cls;
+    d.dataset.ok = (s.status==="ok") ? "1" : "0";
+    d.innerHTML = '<div class="head">' + head + '</div>' +
+      (s.chosen ? '내 답 <b>' + s.chosen + '</b> / ' : '') + '정답 <b>' + q.answer + '</b><br>' +
+      q.exp + '<div style="margin-top:7px;color:#6B7B7E;font-size:.85rem">※ ' + q.why + '</div>';
+    exps.appendChild(d);
+  });
+  filterExp(true);
+
+  /* 복사 텍스트 */
+  var d = new Date(), dateStr = (d.getMonth()+1) + "/" + d.getDate();
+  var lines = [];
+  lines.push("[영핏] " + studentName + " · 오답클리닉 " + dateStr);
+  lines.push("점수 " + correct + " / " + total + " · " + mins + "분 · 모름 " + idks.length);
+  lines.push("");
+  if(wrong.length){
+    lines.push("틀린 문항 " + wrong.map(function(s){ return s.no + "번"; }).join(", "));
+    wrong.forEach(function(s){
+      var q = QUESTIONS[s.no-1];
+      lines.push(s.no + "번 [" + CONCEPTS[q.sec].label + "] · 내 답 " + s.chosen + " / 정답 " + q.answer);
+    });
+    lines.push("");
+  }
+  if(idks.length){
+    lines.push("모름 문항 " + idks.map(function(s){ return s.no + "번"; }).join(", "));
+    idks.forEach(function(s){
+      var q = QUESTIONS[s.no-1];
+      lines.push(s.no + "번 [" + CONCEPTS[q.sec].label + "] · 모름 / 정답 " + q.answer);
+    });
+    lines.push("");
+  }
+  if(!wrong.length && !idks.length) lines.push("전부 맞혔어요! 🎉");
+  if(recovered) lines.push("※ 처음엔 모름이었지만 다시 풀어 맞힌 문항 " + recovered + "개");
+  window.__copyText = lines.join("\n").trim();
+}
+
+function filterExp(onlyWrong){
+  Array.prototype.forEach.call($("explanations").children, function(d){
+    d.style.display = (onlyWrong && d.dataset.ok==="1") ? "none" : "block";
+  });
+}
+var expAll = false;
+$("toggle-exp").onclick = function(){
+  expAll = !expAll;
+  filterExp(!expAll);
+  this.textContent = expAll ? "틀린 것만 보기" : "전체 해설 보기";
+};
+
+$("copy-btn").onclick = function(){
+  var t = window.__copyText || "";
+  var btn = this;
+  function done(){
+    btn.textContent = "복사됐어요! 카톡에 붙여넣기 →";
+    btn.style.background = "#2f9e6a";
+    $("copy-msg").innerHTML = "카톡 대화창을 열고 <b>꾹 눌러 '붙여넣기'</b> 하면 돼요 🙂";
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done, function(){ fallback(t, done); });
+  } else { fallback(t, done); }
+};
+function fallback(t, done){
+  var ta = document.createElement("textarea");
+  ta.value = t; ta.style.position="fixed"; ta.style.top="-1000px";
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand("copy"); done(); }catch(e){ alert(t); }
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>
