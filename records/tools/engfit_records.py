@@ -250,18 +250,31 @@ def normalize(sheet_text, roster):
     return out
 
 
-def question_tags(detail):
-    """detail 문항에 "tag"(개념명)가 있으면 {개념: (맞힌 수, 문항 수)}."""
+IDK = "모름"
+
+
+def is_unknown(item):
+    """학생이 🤔 모름 버튼을 누른 문항인지 (찍지 않고 '모른다'고 답한 것)."""
+    return isinstance(item, dict) and (item.get("unknown") is True or item.get("chosen") == IDK)
+
+
+def detail_items(detail):
     try:
         items = json.loads(detail)
     except (TypeError, ValueError):
-        return {}
-    out = defaultdict(lambda: [0, 0])
-    for it in items if isinstance(items, list) else []:
-        tag = isinstance(it, dict) and it.get("tag")
+        return []
+    return [it for it in items if isinstance(it, dict)] if isinstance(items, list) else []
+
+
+def question_tags(detail):
+    """detail 문항에 "tag"(개념명)가 있으면 {개념: (맞힌 수, 문항 수, 모름 수)}."""
+    out = defaultdict(lambda: [0, 0, 0])
+    for it in detail_items(detail):
+        tag = it.get("tag")
         if tag:
             out[tag][0] += 1 if it.get("ok") else 0
             out[tag][1] += 1
+            out[tag][2] += 1 if is_unknown(it) else 0
     return {k: tuple(v) for k, v in out.items()}
 
 
@@ -289,15 +302,25 @@ def analyze(records):
         pcts = [r["pct"] for r in rs]
         # 개념별 정답률 흐름
         concept = defaultdict(list)
+        unknown = defaultdict(int)          # 개념별 '모름' 문항 수
+        unknown_list = []                   # 최근 '모름' 문항 (날짜 퀴즈 번호 → 정답)
         for r in rs:
+            items = detail_items(r["detail"])
+            for it in items:
+                if is_unknown(it):
+                    unknown_list.append(f"{r['time'][:10]} {r['quizId']} {it.get('no')}번"
+                                        f"{' [' + it['tag'] + ']' if it.get('tag') else ''} → {it.get('answer')}")
             tagged = question_tags(r["detail"])
             if tagged:
                 # 문항에 tag가 있으면 문항 단위로 개념 정답률을 계산 (제목보다 정확)
-                for name, (ok, n) in tagged.items():
+                for name, (ok, n, unk) in tagged.items():
                     concept[name].append((r["time"][:10], round(ok * 100 / n, 1), r["quizId"]))
+                    unknown[name] += unk
                 continue
+            unk = sum(1 for it in items if is_unknown(it))
             for name in r["concepts"]:
                 concept[name].append((r["time"][:10], r["pct"], r["quizId"]))
+                unknown[name] += unk
         concept_stats = {}
         for name, hist in concept.items():
             ps = [p for _, p, _ in hist]
@@ -315,6 +338,7 @@ def analyze(records):
             concept_stats[name] = {
                 "n": len(ps), "first": first, "recentAvg": round(recent_avg, 1),
                 "firstDate": hist[0][0], "lastDate": hist[-1][0], "status": status,
+                "unknown": unknown.get(name, 0),
                 "evidence": [f"{d} {q} {p}%" for d, p, q in hist[-5:]],
             }
         # 오답 개선율: 원본 퀴즈 → 클리닉/재도전 점수 비교
@@ -350,6 +374,8 @@ def analyze(records):
                          for k, v in projects.items()},
             "concepts": concept_stats,
             "totalSec": sum(r["sec"] or 0 for r in rs),
+            "unknownTotal": len(unknown_list),
+            "unknownRecent": unknown_list[-15:],
         }
     return result
 
@@ -390,7 +416,8 @@ def notion_record_rows(records, existing_keys):
              "시도": x["attempt"], "원래 입력 이름": x["rawName"],
              "확인 필요": "__YES__" if x["unsure"] or not x["studentId"] else "__NO__",
              "중복 전송": "__YES__" if x.get("dup") else "__NO__",
-             "상세": wrong_summary(x["detail"]), "출처": "구글시트", "고유키": x["key"]}
+             "상세": wrong_summary(x["detail"]), "출처": "구글시트", "고유키": x["key"],
+             "모름 수": sum(1 for it in detail_items(x["detail"]) if is_unknown(it)) or ""}
         for k, n in (("score", "점수"), ("total", "총문항"), ("pct", "정답률"), ("sec", "소요시간(초)")):
             if x[k] is not None:
                 p[n] = x[k]
@@ -409,6 +436,9 @@ def recommendations(v):
         rec.append(f"취약 개념 집중 테스트: {', '.join(weak[:3])}")
     if mid:
         rec.append(f"개선중 개념 한 번 더 확인: {', '.join(mid[:3])}")
+    unk = sorted([k for k, s in cs.items() if s.get("unknown")], key=lambda k: -cs[k]["unknown"])
+    if unk:
+        rec.append(f"'모름'이라고 답한 개념은 개념 설명부터 다시: {', '.join(unk[:3])}")
     if len(v["rushed"]) >= 3:
         rec.append(f"찍기 의심 {len(v['rushed'])}회 — 천천히 읽고 풀도록 지도")
     if v["trend"] == "하락":
@@ -428,7 +458,7 @@ def notion_report_page(sid, name, page_id, v, records, today):
     rs = [r for r in records if r["studentId"] == sid and r["pct"] is not None and not r.get("dup")]
     rs.sort(key=lambda r: r["time"])
     concept_rows = "\n".join(
-        f"| {k} | {AREA_OF.get(k, '')} | {s['status']} | {s['n']} | {s['first']:.0f}% | {s['recentAvg']:.0f}% | {s['firstDate']} ~ {s['lastDate']} |"
+        f"| {k} | {AREA_OF.get(k, '')} | {s['status']} | {s['n']} | {s['first']:.0f}% | {s['recentAvg']:.0f}% | {s.get('unknown', 0) or '-'} | {s['firstDate']} ~ {s['lastDate']} |"
         for k, s in sorted(cs.items(), key=lambda x: x[1]["recentAvg"]))
     area_rows = "\n".join(f"| {k} | {a[0]}/{a[1]} | {a[0] * 100 / a[1]:.0f}% |" for k, a in sorted(v["areas"].items()))
     proj_rows = "\n".join(f"| {k} | {x['n']} | {x['avg']:.0f}% |"
@@ -436,6 +466,7 @@ def notion_report_page(sid, name, page_id, v, records, today):
     timeline = "\n".join(f"- {r['time'][:10]} · {r['title'][:50]} · **{r['pct']:.0f}%** ({r['score']}/{r['total']})"
                          for r in rs[-12:])
     rushed = "\n".join(f"- {x}" for x in v["rushed"]) or "- 없음"
+    unknown = "\n".join(f"- {x}" for x in v.get("unknownRecent", [])) or "- 없음 (모름 버튼이 있는 퀴즈부터 기록돼요)"
     fix = f"{v['fixRate']:.0f}%" if v["fixRate"] is not None else "데이터 부족"
     over_txt = ("\n- 처음엔 약했지만 **극복한 개념**: " + ", ".join(over)) if over else ""
     content = f"""## 한눈에 보기
@@ -449,14 +480,17 @@ def notion_report_page(sid, name, page_id, v, records, today):
 {area_rows}
 
 ## 개념별 발전 과정 (낮은 순)
-| 개념 | 영역 | 상태 | 횟수 | 처음 | 최근 | 기간 |
-|---|---|---|---|---|---|---|
+| 개념 | 영역 | 상태 | 횟수 | 처음 | 최근 | 🤔모름 | 기간 |
+|---|---|---|---|---|---|---|---|
 {concept_rows}
 
 ## 프로젝트별
 | 프로젝트 | 횟수 | 평균 |
 |---|---|---|
 {proj_rows}
+
+## 🤔 '모름'으로 답한 문항 (찍지 않고 모른다고 한 것 — 가장 먼저 가르칠 내용)
+{unknown}
 
 ## 찍기 의심 기록 (문항당 3초 미만 + 50% 미만)
 {rushed}
@@ -485,7 +519,9 @@ def notion_track_rows(sid, name, page_id, v):
             "영역": AREA_OF.get(k, "기타"), "상태": s["status"],
             "date:처음 발견:start": s["firstDate"], "date:최근 확인:start": s["lastDate"],
             "시도 수": s["n"], "최근 정답률": s["recentAvg"],
-            "근거": (f"처음 {s['first']:.0f}% → 최근 {s['recentAvg']:.0f}% | " + " / ".join(s["evidence"]))[:1900]}})
+            "근거": (f"처음 {s['first']:.0f}% → 최근 {s['recentAvg']:.0f}%"
+                   + (f" · 🤔모름 {s['unknown']}문항" if s.get("unknown") else "")
+                   + " | " + " / ".join(s["evidence"]))[:1900]}})
     return rows
 
 

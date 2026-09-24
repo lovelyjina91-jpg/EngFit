@@ -53,6 +53,30 @@
 - 결과 전송 detail 문항마다 `tag`(개념 이름)를 넣는다: `{no, ok, chosen, answer, tag}`.
 - 오답 클리닉 quizId는 원본 quizId 뒤에 `-clinic`.
 
+## 🤔 모름 버튼 (모든 객관식 퀴즈에 **항상** 넣기)
+
+찍어서 맞힌 것과 진짜 아는 것을 구분하기 위해, 모든 객관식 문항 아래에 **「🤔 모름」 버튼**을 둔다.
+
+- 보기 목록 아래에 점선 테두리 버튼 `🤔 모름 (찍지 않고 넘어가기)` — 보기와 헷갈리지 않게 모양을 다르게.
+- 누르면 오답으로 처리하되 `chosen: "모름"`, `unknown: true` 로 기록한다.
+- 키보드: **0** = 모름 (1~5는 보기).
+- 시작 화면에 안내: "정말 모르겠으면 찍지 말고 🤔 모름을 눌러 주세요".
+- 결과 화면: 점수 옆에 `(🤔 모름 N)`, 해설은 주황색 테두리로 "🤔 모름 → 정답: … (이제 알게 됐어요!)".
+- 전송: `unknown: [모름 문항 번호]` 를 추가하고, `detail` 각 문항에 `unknown: true/false` 를 넣는다. 카톡 복사 문구에도 "모름: …" 줄 추가.
+- 기준 구현: `test-hte-0924.html` (그대로 복사해서 쓰기).
+
+```js
+var IDK = "모름";
+function pick(choice) {
+  var unknown = choice === IDK;
+  var ok = !unknown && choice === q.answer;
+  if (unknown) unknownNumbers.push(no);
+  answersLog.push({ no: no, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+}
+```
+
+분석 도구는 `모름` 답을 개념별로 따로 세어, 리포트에 「🤔 모름으로 답한 문항 — 가장 먼저 가르칠 내용」으로 보여 준다.
+
 ---
 
 # 영상용 HTML 제작 지침
