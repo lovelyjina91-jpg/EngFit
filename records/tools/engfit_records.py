@@ -169,6 +169,23 @@ def concepts_of(title):
     return found
 
 
+def fix_wrong(wrong, total, detail=""):
+    """구글시트가 "4, 8, 10"을 날짜로 읽어 "2004, 8, 10"으로 바꾼 경우를 되돌린다.
+    문항별 detail이 있으면 거기서 틀린 번호를 다시 만들고, 없으면 2000을 뺀다."""
+    parts = [p.strip() for p in wrong.split(",")] if wrong else []
+    if not (parts and parts[0].isdigit() and 2000 < int(parts[0]) < 2100):
+        return wrong
+    try:
+        items = json.loads(detail)
+        nos = [str(i["no"]) for i in items if isinstance(i, dict) and not i.get("ok")]
+        if nos and nos[1:] == parts[1:len(nos)]:
+            return ", ".join(nos)
+    except (TypeError, ValueError, KeyError):
+        pass
+    parts[0] = str(int(parts[0]) - 2000)
+    return ", ".join(parts)
+
+
 def to_int(v):
     try:
         return int(float(v))
@@ -207,7 +224,7 @@ def normalize(sheet_text, roster):
             "score": score,
             "total": total,
             "pct": round(score * 100 / total, 1) if score is not None and total else None,
-            "wrong": c[7],
+            "wrong": fix_wrong(c[7], total, detail),
             "sec": to_int(c[8]),
             "project": classify_project(qid, title),
             "origin": origin_quiz(qid),
@@ -344,9 +361,12 @@ def wrong_summary(detail):
         items = json.loads(detail)
     except (TypeError, ValueError):
         return (detail or "")[:300]
-    parts = [f"{i.get('no')}번 {str(i.get('chosen'))[:40]}→{str(i.get('answer'))[:40]}"
+    def clean(v):
+        # 노션은 끝 공백을 지우고 ___ 를 서식 기호로 먹어버리므로 미리 바꿔 둔다
+        return re.sub(r"_{2,}", "(빈칸)", str(v)[:40]).strip()
+    parts = [f"{i.get('no')}번 {clean(i.get('chosen'))}→{clean(i.get('answer'))}"
              for i in items if isinstance(i, dict) and not i.get("ok")]
-    return " / ".join(parts)[:1900]
+    return " / ".join(parts)[:1900].strip()
 
 
 def page_url(page_id):
@@ -553,10 +573,11 @@ def main(argv):
     elif len(argv) >= 5 and argv[1] == "verify":
         # verify records.json OUTDIR DUMP1.txt [DUMP2.txt ...]
         recs = json.load(open(argv[2], encoding="utf-8"))
-        actual = []
-        for path in argv[4:]:
-            txt = open(path, encoding="utf-8").read()
-            actual += json.loads(txt)["results"]
+        by_url = {}
+        for path in argv[4:]:  # 겹쳐 읽은 파일이 있어도 url 기준으로 한 번만 센다
+            for row in json.loads(open(path, encoding="utf-8").read())["results"]:
+                by_url[row["url"]] = row
+        actual = list(by_url.values())
         fixes, extra, missing = verify_records(actual, notion_record_rows(recs, set()))
         import os
         os.makedirs(argv[3], exist_ok=True)
