@@ -294,7 +294,8 @@ def trend(pcts):
 def analyze(records):
     per = defaultdict(list)
     for r in records:
-        if r["studentId"] and r["pct"] is not None and not r.get("dup"):
+        # 영어 분석만: 과학·도덕 같은 타과목 기록은 학습 기록에는 남기되 분석에서는 뺀다
+        if r["studentId"] and r["pct"] is not None and not r.get("dup") and r["project"] != "타과목":
             per[r["studentId"]].append(r)
     result = {}
     for sid, rs in per.items():
