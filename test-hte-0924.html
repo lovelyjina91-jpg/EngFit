@@ -28,6 +28,10 @@
   .exp.wrong { border-left-color: #c0392b; }
   .exp b { color: #1B4332; }
   .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
   .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
   .hidden { display: none; }
 </style>
@@ -41,7 +45,7 @@
       to부정사 용법 · 5형식 보어 · 간접의문문 · 감탄문 · 시제 일치 · 영작/글의 흐름</p>
     <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
     <button class="btn" id="start-btn" disabled>시작하기</button>
-    <p class="hint">컴퓨터에서는 숫자키 1~5로 답을 고를 수 있어요</p>
+    <p class="hint">정말 모르겠으면 찍지 말고 <b>🤔 모름</b>을 눌러 주세요 — 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>컴퓨터: 숫자키 1~5 = 보기 선택 · 0 = 모름</p>
   </div>
 
   <div class="card hidden" id="quiz-card">
@@ -49,6 +53,7 @@
     <div class="tag" id="qtag"></div>
     <div class="qtext" id="qtext"></div>
     <div id="choices"></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
   </div>
 
   <div class="card hidden" id="result-card">
@@ -230,6 +235,7 @@ var studentName = "";
 var current = 0;
 var correctCount = 0;
 var wrongNumbers = [];
+var unknownNumbers = [];
 var answersLog = [];
 var startTime = 0;
 var shownChoices = [];
@@ -282,13 +288,16 @@ function showQuestion() {
 }
 
 var locked = false;
+var IDK = "모름";
 function pick(choice) {
   if (locked) return; locked = true;
   var q = QUESTIONS[current];
-  var ok = choice === q.answer;
+  var unknown = choice === IDK;
+  var ok = !unknown && choice === q.answer;
   if (ok) correctCount++;
   else wrongNumbers.push(current + 1);
-  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag });
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
   setTimeout(function () {
     locked = false;
     current++;
@@ -300,21 +309,25 @@ function pick(choice) {
 document.addEventListener("keydown", function (e) {
   if (document.activeElement === nameInput) return;
   if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
   var n = parseInt(e.key, 10);
   if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
 });
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
 
 function showResult() {
   document.getElementById("quiz-card").classList.add("hidden");
   document.getElementById("result-card").classList.remove("hidden");
-  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length +
+    (unknownNumbers.length ? "  (🤔 모름 " + unknownNumbers.length + ")" : "");
 
   var expBox = document.getElementById("explanations");
   QUESTIONS.forEach(function (q, i) {
     var log = answersLog[i];
     var d = document.createElement("div");
-    d.className = "exp" + (log.ok ? "" : " wrong");
-    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    d.className = "exp" + (log.ok ? "" : log.unknown ? " unknown" : " wrong");
+    var head = log.ok ? "정답!" : log.unknown ? "🤔 모름 → 정답: " + q.answer + " (이제 알게 됐어요!)" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")";
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + head + "</b><br>" + q.exp;
     expBox.appendChild(d);
   });
 
@@ -325,6 +338,7 @@ function showResult() {
     score: correctCount,
     total: QUESTIONS.length,
     wrong: wrongNumbers,
+    unknown: unknownNumbers,
     durationSec: Math.round((Date.now() - startTime) / 1000),
     detail: answersLog
   });
@@ -333,7 +347,8 @@ function showResult() {
 document.getElementById("kakao-btn").addEventListener("click", function () {
   var msg = "[한태은 영어 약점 맞춤 테스트 9/24]\n학생: " + studentName +
             "\n점수: " + correctCount + "/" + QUESTIONS.length +
-            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음");
   navigator.clipboard.writeText(msg).then(function () {
     document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
   }).catch(function () {
