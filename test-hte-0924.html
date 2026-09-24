@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>한태은 영어 약점 맞춤 테스트 9/24</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>한태은 영어 약점 맞춤 테스트 💪</h1>
+    <p class="sub">1학기 중간고사에서 아쉬웠던 6가지만 모았어요 · 22문항<br>
+      to부정사 용법 · 5형식 보어 · 간접의문문 · 감탄문 · 시제 일치 · 영작/글의 흐름</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+    <p class="hint">컴퓨터에서는 숫자키 1~5로 답을 고를 수 있어요</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════
+   tag = 개념 이름 (학습 기록 분석용, records/tools/engfit_records.py CONCEPTS와 같은 이름) */
+var QUESTIONS = [
+  /* ── 1. to부정사 3대 용법 ── */
+  { tag: "to부정사",
+    q: "밑줄 친 to부정사와 <u>쓰임이 같은</u> 것은?<br>I went to the library <u>to borrow</u> some books.",
+    choices: ["She saved money to buy a new bike.", "I have a lot of homework to do.", "My plan is to travel to Jeju.", "It is fun to learn English.", "He wants to be a doctor."],
+    answer: "She saved money to buy a new bike.",
+    exp: "to borrow는 '빌리기 위해서' → <b>부사적 용법(목적)</b>. to buy도 '사기 위해서'라서 같아요. homework to do는 명사 수식(형용사적), is to travel·to be는 명사적이에요." },
+  { tag: "to부정사",
+    q: "밑줄 친 to부정사와 <u>쓰임이 같은</u> 것은?<br>There are many places <u>to visit</u> in Seoul.",
+    choices: ["Give me something to drink.", "To exercise every day is not easy.", "She went out to buy milk.", "I decided to join the club.", "His dream is to become a pilot."],
+    answer: "Give me something to drink.",
+    exp: "places to visit은 '방문할 장소' → 명사를 꾸미는 <b>형용사적 용법</b>. something to drink('마실 것')도 같아요. (중간고사 7번 (B) some skills to learn과 같은 유형!)" },
+  { tag: "to부정사",
+    q: "밑줄 친 to부정사와 <u>쓰임이 같은</u> 것은?<br>My goal is <u>to read</u> fifty books this year.",
+    choices: ["The best way is to practice every day.", "He needs a pen to write with.", "They came here to help us.", "I have no time to rest.", "She was happy to hear the news."],
+    answer: "The best way is to practice every day.",
+    exp: "be동사 뒤에서 '읽는 것'으로 해석 → <b>명사적 용법(보어)</b>. is to practice도 '연습하는 것'이라 같아요. 중간고사 7번 (A) The latest project is to return them과 같은 구조예요." },
+  { tag: "to부정사",
+    q: "빈칸에 알맞은 것은?<br>My mom told me ______ my room.",
+    choices: ["to clean", "clean", "cleaning", "cleaned", "cleans"],
+    answer: "to clean",
+    exp: "tell + 목적어 + <b>to부정사</b> (5형식). want, expect, allow, ask, tell, advise + 목적어 + to V 는 세트로 외워 두기! (중간고사 11번)" },
+  { tag: "to부정사",
+    q: "어법상 <u>틀린</u> 문장은?",
+    choices: ["They expect him win the game.", "I want you to come early.", "She asked me to help her.", "The teacher allowed us to leave early.", "He told me to be quiet."],
+    answer: "They expect him win the game.",
+    exp: "expect + 목적어 + <b>to부정사</b> → They expect him <b>to win</b> the game. 나머지는 모두 '동사 + 목적어 + to V'를 잘 지켰어요." },
+
+  /* ── 2. 5형식 동사 + 형용사 보어 ── */
+  { tag: "형용사·보어",
+    q: "빈칸에 알맞은 것은?<br>The sad news made everyone ______.",
+    choices: ["sad", "sadly", "sadness", "more sadly", "sadden"],
+    answer: "sad",
+    exp: "make + 목적어 + <b>형용사</b> (5형식). 목적어의 상태를 설명하니까 부사(sadly)가 아니라 형용사 sad! (중간고사 19번 made us surprisingly ✗)" },
+  { tag: "형용사·보어",
+    q: "빈칸에 알맞은 것은?<br>The ending of the movie made us ______.",
+    choices: ["surprised", "surprisingly", "surprise", "surprises", "to surprising"],
+    answer: "surprised",
+    exp: "우리가 '놀란' 상태 → 감정을 받는 쪽은 <b>-ed 형용사(surprised)</b>. surprisingly는 부사라 보어 자리에 못 와요. 철자 s-u-r-p-r-i-s-e-d 도 꼭 확인! (서술형 6-1 supprise ✗)" },
+  { tag: "형용사·보어",
+    q: "어법상 <u>바른</u> 문장은?",
+    choices: ["Regular exercise keeps you healthy.", "The song made me happily.", "Please keep the room cleanly.", "Her words made him angrily.", "The warm tea kept my hands warmly."],
+    answer: "Regular exercise keeps you healthy.",
+    exp: "keep/make + 목적어 + <b>형용사</b>. healthy(형용사) ✓. 나머지는 happily, cleanly, angrily, warmly처럼 부사를 써서 틀렸어요 → happy, clean, angry, warm." },
+
+  /* ── 3. 간접의문문 어순 + be동사 ── */
+  { tag: "간접의문문",
+    q: "빈칸에 알맞은 것은?<br>He wonders ______ late for school these days.",
+    choices: ["why she is always", "why is she always", "why she always", "why always she is", "why does she always"],
+    answer: "why she is always",
+    exp: "간접의문문 = 의문사 + <b>주어 + 동사</b>. 그리고 be동사를 빠뜨리면 안 돼요! why she <b>is</b> always late. 빈도부사 always는 be동사 뒤. (서술형 6-2 why she late ✗)" },
+  { tag: "간접의문문",
+    q: "우리말과 같은 뜻이 되도록 할 때 알맞은 것은?<br>나는 그가 어디에 사는지 모른다.",
+    choices: ["I don't know where he lives.", "I don't know where does he live.", "I don't know where he live.", "I don't know where lives he.", "I don't know where did he live."],
+    answer: "I don't know where he lives.",
+    exp: "간접의문문에서는 do/does를 쓰지 않고 <b>평서문 어순(주어 + 동사)</b>. 주어 he가 3인칭 단수니까 lives. (중간고사 서술형 3 how you can communicate ✓ 처럼!)" },
+  { tag: "간접의문문",
+    q: "어법상 <u>바른</u> 문장은?",
+    choices: ["Can you tell me what time the class starts?", "Can you tell me what time does the class start?", "Can you tell me what time the class start?", "Can you tell me what time starts the class?", "Can you tell me what does time the class start?"],
+    answer: "Can you tell me what time the class starts?",
+    exp: "what time + <b>주어(the class) + 동사(starts)</b>. 주어가 단수라서 starts. (중간고사 20번 ② when does the class start ✗와 같은 함정!)" },
+
+  /* ── 4. 감탄문 완성형 ── */
+  { tag: "감탄문",
+    q: "어법상 <u>바른</u> 감탄문은?",
+    choices: ["How kind she is!", "How kind she!", "How she is kind!", "How a kind she is!", "How kind is she!"],
+    answer: "How kind she is!",
+    exp: "How + 형용사 + <b>주어 + 동사</b>! 동사(is)를 빠뜨리면 완전한 문장이 아니에요. (서술형 1 How small the world ✗ → How small the world <b>is</b>!)" },
+  { tag: "감탄문",
+    q: "빈칸에 알맞은 것은?<br>What ______ it is!",
+    choices: ["a beautiful day", "beautiful day", "a beautiful", "beautiful a day", "a day beautiful"],
+    answer: "a beautiful day",
+    exp: "What + <b>a/an + 형용사 + 명사</b> + 주어 + 동사! → What a beautiful day it is! How는 형용사만, What은 명사까지 함께 와요." },
+
+  /* ── 5. and로 연결된 동사 시제 일치 ── */
+  { tag: "병렬·시제 일치",
+    q: "빈칸에 알맞은 것은?<br>Yesterday I went to the beach and ______ in the sea.",
+    choices: ["swam", "swim", "swims", "swimming", "to swim"],
+    answer: "swam",
+    exp: "and로 연결된 동사는 <b>시제를 맞춰요</b>. went(과거) and <b>swam</b>(과거). (중간고사 8번 shouted and wave ✗ → waved)" },
+  { tag: "병렬·시제 일치",
+    q: "다음 문장에서 어법상 <u>틀린</u> 단어는?<br>Last Sunday, she cleaned her room, washed the dishes, and walk the dog.",
+    choices: ["walk", "cleaned", "washed", "dishes", "Last"],
+    answer: "walk",
+    exp: "Last Sunday(과거) + cleaned, washed 모두 과거형이니까 <b>walk → walked</b>. 정답 고르기 전 '동사 시제만 한 번 더 체크' 습관!" },
+  { tag: "병렬·시제 일치",
+    q: "요약문 빈칸에 들어갈 말로 알맞은 것은? (return을 알맞게 바꾸기)<br>After ten years in the aquarium, the dolphins finally ______ to the sea last month.",
+    choices: ["returned", "return", "returns", "returning", "have return"],
+    answer: "returned",
+    exp: "last month(과거 표지)가 있으니 <b>과거형 returned</b>. '단어를 변형할 수 있음' 조건 = 시제·수를 흐름에 맞게 바꾸라는 뜻! (서술형 2 return ✗ → returned)" },
+
+  /* ── 6. 영작: 빠뜨림 없이 / Why 답하기 ── */
+  { tag: "영작·배열",
+    q: "우리말을 <u>빠짐없이</u> 바르게 옮긴 것은?<br>그 갑작스러운 큰 소리는 밤에 그 소녀를 매우 놀라게 했다.",
+    choices: ["The sudden loud sound made the girl very surprised at night.", "The sudden loud sound make the girl very surprised at night.", "The sudden loud sound made the girl very surprising at night.", "The sudden sound made the girl surprised.", "The sudden loud sound made very the girl surprised at night."],
+    answer: "The sudden loud sound made the girl very surprised at night.",
+    exp: "① 과거 <b>made</b> ② 큰 = <b>loud</b> ③ 매우 = <b>very</b> ④ 놀란 = <b>surprised</b> ⑤ 밤에 = <b>at night</b>. 우리말의 부사·형용사를 하나씩 동그라미 치며 옮기기! (서술형 6-1)" },
+  { tag: "영작·배열",
+    q: "우리말을 바르게 옮긴 것은?<br>그는 요즘 항상 학교에 늦는다.",
+    choices: ["He is always late for school these days.", "He always late for school these days.", "He is late always for school these days.", "He is always late school these days.", "He always is late for school this days."],
+    answer: "He is always late for school these days.",
+    exp: "① be동사 <b>is</b> 꼭 넣기 ② always는 <b>be동사 뒤</b> ③ '학교에 늦다' = late <b>for</b> school ④ these days (복수). 작은 단어 하나가 점수를 좌우해요!" },
+  { tag: "영작·배열",
+    q: "질문에 대한 답으로 가장 알맞은 것은?<br>Q: Why did Jisu think Jihoo didn't like her gift?",
+    choices: ["Because she got a text message with only one smiling face.", "It's she got a text message with only on smiling face.", "Because got she a text message with only one smiling face.", "Because she gets a text message with only one smiling face.", "Because of she got a text message with only one smiling face."],
+    answer: "Because she got a text message with only one smiling face.",
+    exp: "Why 질문 → <b>Because + 주어 + 동사</b>로 시작! 질문이 과거(did)니까 got. Because of 뒤에는 명사만 와요. 'only <b>one</b>' 철자도 확인. (서술형 4)" },
+
+  /* ── 7. 글의 흐름 · 연결어 · 점층 ── */
+  { tag: "문장 삽입·흐름", fixed: true,
+    q: "주어진 문장이 들어가기에 가장 알맞은 곳은?<br>" +
+       "<span style='font-weight:normal'>[주어진 문장] Then, he learned that many sea turtles are in danger because of plastic.</span>" +
+       "<div class='passage'>Jun loves animals. ( A ) One day, he watched a documentary about sea turtles. ( B ) Some of them are even dying. ( C ) So he decided to stop using plastic straws. ( D ) Now he always carries his own cup. ( E )</div>",
+    choices: ["( A )", "( B )", "( C )", "( D )", "( E )"],
+    answer: "( B )",
+    exp: "다큐를 봄 → <b>Then</b>(그때) 위험하다는 걸 알게 됨 → Some of them are <b>even</b> dying(심지어 죽기도 함). even은 '앞 내용보다 더 심하다'는 점층 신호라서, 앞에 in danger가 먼저 나와야 해요. (중간고사 4번과 같은 구조!)" },
+  { tag: "문장 삽입·흐름",
+    q: "빈칸에 들어갈 연결어로 알맞은 것은?<br>I studied very hard for the test. ______, I got a bad score.",
+    choices: ["However", "So", "For example", "Also", "Because"],
+    answer: "However",
+    exp: "열심히 공부했다 ↔ 점수가 나빴다 → 반대 내용이니까 <b>However(하지만)</b>. 앞뒤 문장이 같은 방향인지 반대 방향인지 먼저 보기!" },
+  { tag: "독해 유형",
+    q: "빈칸에 들어갈 말로 알맞은 것은?<br>Henry texted \"BRT\" to his mom, but she replied, \"Wait for me.\" Do you think his mom ______ understood BRT? Probably not.",
+    choices: ["correctly", "differently", "wrongly", "badly", "strangely"],
+    answer: "correctly",
+    exp: "엄마는 BRT(Be right there)를 이해 못 했어요. '<b>제대로</b> 이해했을까? → 아마 아닐 거야(Probably not)'가 자연스러워요. 부정 응답(Probably not)까지 보고 논리를 맞추기! (중간고사 10번)" }
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = q.tag;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shownChoices = q.fixed ? q.choices.slice() : shuffle(q.choices);
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput) return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "test-hte-0924",
+    quizTitle: "한태은 영어 약점 맞춤 테스트 9/24 (to부정사·형용사 보어·간접의문문·감탄문·시제 일치·영작·글의 흐름)",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[한태은 영어 약점 맞춤 테스트 9/24]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
