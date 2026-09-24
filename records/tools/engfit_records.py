@@ -14,6 +14,9 @@
   python3 engfit_records.py notion records.json analysis.json ROSTER.json EXISTING_KEYS.json YYYY-MM-DD OUTDIR
     → OUTDIR/new_records_N.json (노션에 없는 기록만, 100건씩), reports.json, tracks.json
       (모두 노션 create-pages 의 pages 형식)
+  python3 engfit_records.py verify records.json OUTDIR NOTION_DUMP.txt [...]
+    → 노션에 실제로 저장된 값과 원본을 비교. OUTDIR/fix_updates.json(고칠 것),
+      extra_pages.json(원본에 없는 페이지), missing_rows.json(빠진 기록). 문제 없으면 종료코드 0
 
 ROSTER.json 형식 (노션 「학생 리스트」에서 만든다):
   [{"name": "김영광", "id": "2026-김영광", "page": "<노션 page id>",
@@ -71,13 +74,18 @@ CONCEPTS = [
 ]
 
 
+def unescape_md(s):
+    """Drive 읽기 결과는 마크다운이라 기호 앞에 \\ 가 붙어 온다 (예: \\~, \\>, \\[). 원래 글자로 되돌린다."""
+    return re.sub(r"\\([\\`*_{}\[\]()#+\-.!|~<>&=^\"'])", r"\1", s)
+
+
 def parse_sheet(text):
     """Drive 읽기 결과(마크다운 표 여러 개)에서 제출 기록만 뽑아 중복 제거."""
     seen = {}
     for line in text.split("\n"):
         if not re.match(r"\| 20\d\d-", line):
             continue
-        cells = [c.strip() for c in line.strip().strip("|").split(" | ")]
+        cells = [unescape_md(c.strip()) for c in re.split(r"(?<!\\) \| ", line.strip().strip("|"))]
         if len(cells) < 10:
             continue
         seen[(cells[0], cells[1], cells[3])] = cells
@@ -457,6 +465,48 @@ def notion_track_rows(sid, name, page_id, v):
     return rows
 
 
+# ---------------------------------------------------------------- 저장 후 검증
+# 노션에 쓴 값은 반드시 다시 읽어서 원본과 비교한다. (도우미가 한글을 옮겨 적다가
+# 반정욱→반정익 같은 오타를 낸 적이 있다.) 노션 SQL 결과를 파일로 받으려면
+# 결과가 커지도록 긴 열을 몇 번 이어 붙인 pad 열을 함께 SELECT 한다 (RUNBOOK 참고).
+
+VERIFY_TEXT = {"f0": "기록", "f1": "학생 ID", "f2": "퀴즈ID", "f3": "원래 입력 이름",
+               "f4": "틀린문항", "f5": "원본퀴즈ID", "f6": "프로젝트", "f7": "상세"}
+VERIFY_NUM = {"n0": "점수", "n1": "총문항", "n2": "정답률", "n3": "시도"}
+
+
+def verify_records(actual_rows, expected_rows):
+    """actual_rows: 노션 SQL 결과(url, k=고유키, f0..f7, n0..n3, d=중복 전송, rel=학생).
+    expected_rows: notion_record_rows() 결과. 고쳐야 할 update 목록과 요약을 돌려준다."""
+    exp = {r["properties"]["고유키"]: r["properties"] for r in expected_rows}
+    seen, fixes, extra = set(), [], []
+    for a in actual_rows:
+        p = exp.get(a["k"])
+        if p is None:
+            extra.append(a["url"])
+            continue
+        seen.add(a["k"])
+        diff = {}
+        for c, name in VERIFY_TEXT.items():
+            if (a.get(c) or "") != p.get(name, ""):
+                diff[name] = p.get(name)
+        for c, name in VERIFY_NUM.items():
+            ev, av = p.get(name), a.get(c)
+            if (ev is None) != (av is None) or (ev is not None and abs(float(ev) - float(av)) > 1e-6):
+                diff[name] = ev
+        if (a.get("d") or "__NO__") != p.get("중복 전송", "__NO__"):
+            diff["중복 전송"] = p.get("중복 전송", "__NO__")
+        want = json.loads(p["학생"])[0].rsplit("/", 1)[-1] if "학생" in p else None
+        rel = json.loads(a.get("rel") or "[]")
+        have = rel[0].rsplit("/", 1)[-1].replace("-", "") if rel else None
+        if want != have:
+            diff["학생"] = p.get("학생")
+        if diff:
+            fixes.append({"page_id": a["url"].rsplit("/", 1)[-1], "properties": diff})
+    missing = [r for k, r in exp.items() if k not in seen]
+    return fixes, extra, missing
+
+
 def build_notion(records, analysis, roster, existing_keys, today, outdir):
     import os
     os.makedirs(outdir, exist_ok=True)
@@ -500,6 +550,21 @@ def main(argv):
         keys = set(json.load(open(argv[5], encoding="utf-8")))
         n = build_notion(recs, ana, roster, keys, argv[6], argv[7])
         print("new_records=%d reports=%d tracks=%d" % n)
+    elif len(argv) >= 5 and argv[1] == "verify":
+        # verify records.json OUTDIR DUMP1.txt [DUMP2.txt ...]
+        recs = json.load(open(argv[2], encoding="utf-8"))
+        actual = []
+        for path in argv[4:]:
+            txt = open(path, encoding="utf-8").read()
+            actual += json.loads(txt)["results"]
+        fixes, extra, missing = verify_records(actual, notion_record_rows(recs, set()))
+        import os
+        os.makedirs(argv[3], exist_ok=True)
+        json.dump(fixes, open(f"{argv[3]}/fix_updates.json", "w", encoding="utf-8"), ensure_ascii=False)
+        json.dump(extra, open(f"{argv[3]}/extra_pages.json", "w", encoding="utf-8"), ensure_ascii=False)
+        json.dump(missing, open(f"{argv[3]}/missing_rows.json", "w", encoding="utf-8"), ensure_ascii=False)
+        print(f"notion_rows={len(actual)} to_fix={len(fixes)} extra={len(extra)} missing={len(missing)}")
+        return 0 if not (fixes or extra or missing) else 2
     else:
         print(__doc__)
         return 1

@@ -42,6 +42,12 @@ Claude 루틴(예약 실행)과 채팅 요청이 따르는 절차예요. 사람�
 5. **이미 있는 고유키**: 학습 기록에서 `SELECT "고유키" FROM 학습기록` (여러 번 나눠 읽어도 됨) → `$WORK/keys.json` (문자열 배열)
 6. **노션 행 만들기**: `python3 $T notion records.json analysis.json roster.json keys.json <오늘 날짜> $WORK/out`
 7. **새 기록 넣기**: `out/new_records_*.json` 각각을 학습 기록 data source에 `create-pages` (100건 이하씩, 내용 그대로).
+7-1. **반드시 검증**: 노션에 들어간 값을 다시 읽어 원본과 비교한다 — 한글을 옮겨 적다 오타가 난 사고가 있었다 (반정욱→반정익, 낱말→냱말).
+   - 학습 기록을 100건씩 SQL로 읽는다. 결과가 파일로 저장되도록 긴 열을 이어 붙인 pad 열을 함께 SELECT 한다:
+     `SELECT url, "고유키" AS k, "기록" AS f0, "학생 ID" AS f1, "퀴즈ID" AS f2, "원래 입력 이름" AS f3, "틀린문항" AS f4, "원본퀴즈ID" AS f5, "프로젝트" AS f6, "상세" AS f7, "점수" AS n0, "총문항" AS n1, "정답률" AS n2, "시도" AS n3, "중복 전송" AS d, "학생" AS rel, "상세"||"상세"||"상세"||"상세"||"기록"||…(기록 20번) AS pad FROM 학습기록 ORDER BY url LIMIT 100 OFFSET n`
+     (결과가 작아 화면에 바로 나오면 pad를 더 길게 해서 다시 읽는다 — 화면 결과를 옮겨 적지 않는다)
+   - `python3 $T verify $WORK/records.json $WORK/verify <저장된 파일들…>` → 종료코드 0이면 끝.
+   - 아니면 `fix_updates.json`을 update-page로 반영(문자 하나도 바꾸지 말고 그대로), `missing_rows.json`은 create, `extra_pages.json`(원본에 없는 페이지)은 「삭제 대기 (학습 기록 오류본)」 페이지로 move-pages. 그리고 **다시 검증** — 0이 나올 때까지 반복.
 8. **강점·약점 갱신**: `out/tracks.json`의 각 줄을 제목(`개념` = "이름 · 개념")으로 기존 행과 맞춰
    - 있으면 `상태, 최근 확인, 시도 수, 최근 정답률, 근거`만 update (값이 바뀐 것만)
    - 없으면 create
