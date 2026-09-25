@@ -31,6 +31,7 @@ Claude 루틴(예약 실행)과 채팅 요청이 따르는 절차예요. 사람�
 1. **도구 준비**: 저장소에 `records/tools/engfit_records.py`가 없으면
    `git fetch origin claude/student-learning-record-repo-5hhxm2 && git checkout FETCH_HEAD -- records/`
 2. **시트 읽기**: Drive `read_file_content(fileId=위 시트)`. 결과가 커서 파일로 저장되면 그 파일 경로를 그대로 쓴다 (`{fileContent: ...}` JSON도 도구가 읽을 수 있음) → `$WORK/sheet.txt`
+   - ⚠️ 결과가 표 **요약(Table Sample Data)**만 오거나 기록 수가 이상하게 적으면(9/25에 가운데 153건이 빠진 적 있음): `download_file_content(fileId=시트, exportMimeType="text/csv")` → 저장된 JSON의 `content`(base64)를 풀어 `$WORK/sheet.csv`로 저장. 도구가 CSV도 읽는다. **CSV가 가장 확실하니 기본으로 써도 된다.**
 3. **명단 만들기**: 학생 리스트에서
    `SELECT url, "이름", "학생 ID", "퀴즈코드", "별칭" FROM 학생리스트 WHERE "학생 ID" IS NOT NULL`
    → `$WORK/roster.json` = `[{"name", "id", "page"(url 끝 32자리), "codes"(퀴즈코드 쉼표 분리), "aliases"(별칭 쉼표 분리)}]`

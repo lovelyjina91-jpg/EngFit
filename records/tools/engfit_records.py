@@ -22,6 +22,8 @@ ROSTER.json 형식 (노션 「학생 리스트」에서 만든다):
   [{"name": "김영광", "id": "2026-김영광", "page": "<노션 page id>",
     "codes": ["kyk", "younggwang"], "aliases": ["영광"]}, ...]
 """
+import csv
+import io
 import json
 import re
 import sys
@@ -84,8 +86,13 @@ def unescape_md(s):
 
 
 def parse_sheet(text):
-    """Drive 읽기 결과(마크다운 표 여러 개)에서 제출 기록만 뽑아 중복 제거."""
+    """Drive 읽기 결과(마크다운 표 여러 개 또는 CSV 내보내기)에서 제출 기록만 뽑아 중복 제거."""
     seen = {}
+    if text.lstrip().startswith("제출시각,"):
+        # download_file_content(text/csv) 결과 — read_file_content가 요약만 줄 때 쓴다
+        for cells in csv.reader(io.StringIO(text)):
+            if len(cells) >= 10 and re.match(r"20\d\d-", cells[0]):
+                seen[(cells[0], cells[1], cells[3])] = [c.strip() for c in cells]
     for line in text.split("\n"):
         if not re.match(r"\| 20\d\d-", line):
             continue
