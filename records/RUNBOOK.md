@@ -56,6 +56,8 @@ Claude 루틴(예약 실행)과 채팅 요청이 따르는 절차예요. 사람�
    - **일요일**: `out/reports.json` 전체를 새 리포트로 create (주간 기록이 쌓여 발전 과정을 볼 수 있음)
    - **다른 요일**: 오늘 새 기록이 생긴 학생만, 그 학생의 가장 최근 리포트를 `reports.json` 내용으로 update (속성 + 본문 replace)
 10. **일요일 백업**: `records.json`에서 `time, studentId, rawName, quizId, title, project, score, total, pct, wrong, sec, attempt, dup, origin, unsure` 열로 CSV를 만들어 드라이브 백업 폴더에 `학습기록_백업_YYYY-MM-DD`로 create_file (text/csv).
+   - ⚠️ **`disableConversionToGoogleType: true` 필수** — 구글시트로 변환되면 `7, 8, 9` 같은 틀린문항이 날짜(`2007, 8, 9`)로 바뀐다 (9/27 발견).
+   - 한 번에 올리기엔 커서(140KB 넘음) 헤더 포함 5조각(`…_part1of5.csv` ~ `part5of5.csv`, 조각당 약 30KB)으로 나눠 올리고, 조각마다 내려받아 바이트 비교로 검증한다.
 11. **보고**: 새 기록 수, 확인 필요 수, 상태가 `취약`으로 새로 바뀐 개념, 찍기 의심이 새로 생긴 학생을 한 문단으로 요약. 새 학생 이름(명단에 없는 이름)이 보이면 "새 학생 등록 필요"로 알린다.
 
 ## B. 테스트 요청 처리 (15~22시 매시)
