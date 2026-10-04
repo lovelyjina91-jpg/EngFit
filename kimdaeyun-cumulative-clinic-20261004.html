@@ -619,7 +619,7 @@ var S4 = [
 /* ══════════ 5영역 · 관계사 · 가정법 (10) ══════════ */
 var S5 = [
 { tip: E2, lv: "심화", src: "9/30 관계사 수일치 (Ch.11 C-3) 유형", kor: "다음 글의 밑줄 친 부분 중 어법상 틀린 것을 고르세요.",
-  q: "The museum, which <u>① was built</u> in 1920, attracts visitors who <u>② are</u> interested in history. One of the paintings that <u>③ hang</u> in the main hall <u>④ were</u> painted by a local artist. The artist, whose works <u>⑤ are</u> now famous, died young.",
+  q: "The museum, which <u>① was built</u> in 1920, attracts visitors who <u>② are</u> interested in history. One of the paintings that <u>③ hang</u> in the main hall <u>④ were</u> painted by a local artist. The artist, whose works <u>⑤ are now</u> famous, died young.",
   choices: ["④", "①", "②", "③", "⑤"], answer: "④",
   exp: "정답은 <b>④</b> 예요 ✅ 문장의 주어는 <b>One</b> (of the paintings ~) → <b>was</b> painted. 9/30 belongs 실수와 같은 '주어 찾기' 문제예요<br>· ① which 의 선행사 The museum, 지어진 것 → was built (O)<br>· ② who 의 선행사 visitors(복수) → are (O)<br>· ③ that 의 선행사 the paintings(복수) → hang (O)<br>· ⑤ whose works(복수) → are (O)" },
 
@@ -679,6 +679,21 @@ var S5 = [
 ];
 
 var ALL = [].concat(S1, S2, S3, S4, S5);
+/* 밑줄 번호 고르기 · 개수 고르기 문항은 보기 순서를 고정 (①~⑤ 번호가 지문 번호와 같게) */
+ALL.forEach(function (q) {
+  if (!q.choices) return;
+  if (q.choices.every(function (c) { return /^[①②③④⑤]$/.test(c); })) {
+    var re = /<u>([①②③④⑤])\s*([^<]*)<\/u>/g, m, map = {};
+    while ((m = re.exec(q.q))) map[m[1]] = m[2].trim();
+    var order = ["①", "②", "③", "④", "⑤"];
+    q.answer = map[q.answer];
+    q.choices = order.map(function (k) { return map[k]; });
+    q.fixed = true;
+  } else if (q.choices.every(function (c) { return /^\d개$/.test(c); })) {
+    q.choices = q.choices.slice().sort();
+    q.fixed = true;
+  }
+});
 
 
 
@@ -747,7 +762,7 @@ function balancedAssign(n, k) {
 (function prepareShuffledChoices() {
   SECTIONS.forEach(function (sec) {
     var mcqIdx = [];
-    for (var idx = sec.start; idx < sec.end; idx++) { if (ALL[idx].type !== "ord") mcqIdx.push(idx); }
+    for (var idx = sec.start; idx < sec.end; idx++) { if (ALL[idx].fixed) { ALL[idx].shuffled = ALL[idx].choices.slice(); continue; } if (ALL[idx].type !== "ord") mcqIdx.push(idx); }
     var targetPositions = balancedAssign(mcqIdx.length, 5);
     mcqIdx.forEach(function (idx, mi) {
       var q = ALL[idx];
