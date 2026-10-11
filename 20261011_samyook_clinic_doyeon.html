@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>이도연 오답 클리닉 10/11 — 영핏영어</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .passage { background:#f6f9f8; border:1.5px solid #cfdad7; border-radius:10px; padding:12px 14px; margin-bottom:14px; font-size:0.95rem; line-height:1.6; font-weight:normal; }
+  .tagline { font-size:0.8rem; color:#2e7d6e; font-weight:bold; margin-bottom:6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 시작 화면 -->
+  <div class="card" id="start-card">
+    <h1>이도연 오답 클리닉 🌱</h1>
+    <p class="sub">삼육중 모의고사 3·4회에서 틀렸던 유형만 모았어요 · 44문항 · 천천히, 문제 끝까지 읽고 풀어요!</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off" value="이도연">
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <!-- 문제 화면 -->
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "tag": "어휘",
+  "q": "My sister tried to ______ me to join the dance club.",
+  "choices": [
+   "persuade",
+   "prevent",
+   "protect",
+   "produce",
+   "promise"
+  ],
+  "answer": "persuade",
+  "exp": "<b>persuade</b>는 이유를 말해서 마음을 움직이는 <b>설득하다</b>야. prevent 막다, protect 보호하다, produce 생산하다."
+ },
+ {
+  "tag": "어휘",
+  "q": "persuade의 뜻으로 알맞은 것은?",
+  "choices": [
+   "설득하다",
+   "약속하다",
+   "막다",
+   "보호하다",
+   "생산하다"
+  ],
+  "answer": "설득하다",
+  "exp": "persuade = <b>설득하다</b>. \"페이스(face)를 바꾸게 설득\"이라고 이미지로 외워 봐!"
+ },
+ {
+  "tag": "어휘",
+  "q": "He never shares his snacks with anyone. He is very ______.",
+  "choices": [
+   "selfish",
+   "generous",
+   "kind",
+   "polite",
+   "gentle"
+  ],
+  "answer": "selfish",
+  "exp": "간식을 나눠 주지 않는 사람은 <b>selfish(이기적인)</b>야. generous는 반대로 너그러운 사람!"
+ },
+ {
+  "tag": "어휘",
+  "q": "selfish의 반대말로 알맞은 것은?",
+  "choices": [
+   "generous",
+   "lazy",
+   "shy",
+   "noisy",
+   "careful"
+  ],
+  "answer": "generous",
+  "exp": "selfish(이기적인) ↔ <b>generous(너그러운, 후한)</b>. 둘을 짝으로 외우자!"
+ },
+ {
+  "tag": "어휘",
+  "q": "다음 중 \"지식\"이라는 뜻의 단어를 <b>바르게</b> 쓴 것은?",
+  "choices": [
+   "knowledge",
+   "knowlege",
+   "knowleedge",
+   "nowledge",
+   "knowlledge"
+  ],
+  "answer": "knowledge",
+  "exp": "<b>know + ledge</b>로 나눠서 외우면 쉬워. 맨 앞 k는 소리가 안 나도 꼭 써야 해!"
+ },
+ {
+  "tag": "어휘",
+  "q": "다음 중 철자가 <b>틀린</b> 단어는?",
+  "choices": [
+   "Septembar",
+   "thirsty",
+   "knowledge",
+   "beautiful",
+   "Wednesday"
+  ],
+  "answer": "Septembar",
+  "exp": "September는 끝이 <b>-ber</b>야. (Septem<b>ber</b>) 손으로 두세 번 써 보면 안 틀려!"
+ },
+ {
+  "tag": "어휘",
+  "q": "Plants ______ water and sunlight to grow.",
+  "choices": [
+   "require",
+   "receive",
+   "reduce",
+   "remove",
+   "repair"
+  ],
+  "answer": "require",
+  "exp": "<b>require</b> = 필요로 하다. receive 받다, reduce 줄이다, remove 제거하다, repair 고치다 — re-로 시작해서 헷갈리니 뜻을 꼭 구분!"
+ },
+ {
+  "tag": "어휘",
+  "q": "require의 뜻으로 알맞은 것은?",
+  "choices": [
+   "필요로 하다, 요구하다",
+   "받다",
+   "줄이다",
+   "제거하다",
+   "고치다"
+  ],
+  "answer": "필요로 하다, 요구하다",
+  "exp": "require = <b>필요로 하다, 요구하다</b>. receive(받다) / reduce(줄이다) / remove(제거하다) / repair(고치다)와 짝지어 정리해 보자."
+ },
+ {
+  "tag": "어휘",
+  "q": "The game was canceled ______ the rain.",
+  "choices": [
+   "due to",
+   "because",
+   "so",
+   "but",
+   "although"
+  ],
+  "answer": "due to",
+  "exp": "뒤에 명사(the rain)가 오면 <b>due to (~ 때문에)</b>! because는 뒤에 \"주어 + 동사\"가 와야 해."
+ },
+ {
+  "tag": "어휘",
+  "q": "We stayed home ______ it was raining hard.",
+  "choices": [
+   "because",
+   "due to",
+   "but",
+   "although",
+   "in contrast to"
+  ],
+  "answer": "because",
+  "exp": "뒤에 \"it was raining(주어 + 동사)\"이 있으니 <b>because</b>. due to 뒤에는 명사만 와."
+ },
+ {
+  "tag": "어휘",
+  "q": "In ______ to my sister, I am very tall.",
+  "choices": [
+   "contrast",
+   "contact",
+   "contract",
+   "content",
+   "context"
+  ],
+  "answer": "contrast",
+  "exp": "<b>in contrast to ~ = ~와 대조적으로</b>. contact 연락, contract 계약, content 내용, context 문맥 — 모양이 비슷하니 철자까지 꼼꼼히!"
+ },
+ {
+  "tag": "어휘",
+  "q": "in contrast to의 뜻으로 알맞은 것은?",
+  "choices": [
+   "~와 대조적으로",
+   "~ 때문에",
+   "~와 함께",
+   "~에 대해서",
+   "~ 대신에"
+  ],
+  "answer": "~와 대조적으로",
+  "exp": "<b>in contrast to = ~와 대조적으로</b>. 둘이 서로 반대되는 모습일 때 쓰는 표현이야."
+ },
+ {
+  "tag": "어휘",
+  "q": "glad의 뜻으로 알맞은 것은?",
+  "choices": [
+   "기쁜",
+   "화난",
+   "피곤한",
+   "두려운",
+   "바쁜"
+  ],
+  "answer": "기쁜",
+  "exp": "<b>glad = 기쁜</b> (happy와 비슷한 말). \"I'm glad to meet you(만나서 기뻐)\"로 기억하자!"
+ },
+ {
+  "tag": "어휘",
+  "q": "I was ______ to hear the good news.",
+  "choices": [
+   "glad",
+   "sad",
+   "angry",
+   "afraid",
+   "tired"
+  ],
+  "answer": "glad",
+  "exp": "좋은 소식(good news)을 들었으니 <b>glad(기쁜)</b>! sad는 슬픈, angry는 화난, afraid는 두려운."
+ },
+ {
+  "tag": "어휘",
+  "q": "The fans ______ loudly when our team scored a goal.",
+  "choices": [
+   "cheered",
+   "cried",
+   "left",
+   "slept",
+   "waited"
+  ],
+  "answer": "cheered",
+  "exp": "골이 들어갔을 때 팬들은 크게 <b>응원했어(cheered)</b>. cheer = 응원하다, 환호하다."
+ },
+ {
+  "tag": "어휘",
+  "q": "cheer의 뜻으로 알맞은 것은?",
+  "choices": [
+   "응원하다",
+   "비웃다",
+   "울다",
+   "떠나다",
+   "자다"
+  ],
+  "answer": "응원하다",
+  "exp": "<b>cheer = 응원하다</b>. \"Cheers!\"처럼 힘을 북돋우는 말이야."
+ },
+ {
+  "tag": "대화",
+  "q": "A: Why don't we play soccer after school?<br>B: ______",
+  "choices": [
+   "Sounds great. Let's meet at four.",
+   "Yes, we don't.",
+   "It was fun.",
+   "You're welcome.",
+   "He plays well."
+  ],
+  "answer": "Sounds great. Let's meet at four.",
+  "exp": "<b>Why don't we ~?</b>는 \"우리 ~하는 게 어때?\"라는 <b>제안</b>이야. 좋다고 받아주는 Sounds great가 알맞아."
+ },
+ {
+  "tag": "대화",
+  "q": "A: How about going to the zoo this Sunday?<br>B: ______",
+  "choices": [
+   "Good idea! I love animals.",
+   "Yes, it is.",
+   "I'm fine, thank you.",
+   "He is a zookeeper.",
+   "You're welcome."
+  ],
+  "answer": "Good idea! I love animals.",
+  "exp": "<b>How about ~ing?</b>도 \"~하는 게 어때?\"라는 제안이야. 좋다고 대답하는 Good idea!가 알맞아."
+ },
+ {
+  "tag": "대화",
+  "q": "A: How long does it take to get to school?<br>B: ______",
+  "choices": [
+   "It takes about ten minutes.",
+   "Twice a week.",
+   "By bus.",
+   "At eight o'clock.",
+   "It's very big."
+  ],
+  "answer": "It takes about ten minutes.",
+  "exp": "<b>How long ~?</b>은 \"얼마나 오래 걸려?\"라는 뜻이라 <b>시간</b>으로 대답해야 해. By bus는 \"어떻게(How)\"의 대답!"
+ },
+ {
+  "tag": "대화",
+  "q": "A: How long did you stay in Jeju?<br>B: ______",
+  "choices": [
+   "For three days.",
+   "By plane.",
+   "Last Sunday.",
+   "Three dollars.",
+   "In summer."
+  ],
+  "answer": "For three days.",
+  "exp": "How long은 \"<b>얼마 동안</b>\"이라는 기간을 물어보니까 <b>For three days</b>(3일 동안)가 알맞아."
+ },
+ {
+  "tag": "문법",
+  "q": "The window ______ by Tom yesterday.",
+  "choices": [
+   "was broken",
+   "broke",
+   "is broken",
+   "was break",
+   "breaking"
+  ],
+  "answer": "was broken",
+  "exp": "창문은 \"깨진\" 쪽이니까 수동태 <b>be동사 + 과거분사</b>야. yesterday(과거)니까 was broken!"
+ },
+ {
+  "tag": "문법",
+  "q": "Korean ______ in Korea.",
+  "choices": [
+   "is spoken",
+   "speaks",
+   "spoke",
+   "is speak",
+   "speaking"
+  ],
+  "answer": "is spoken",
+  "exp": "한국어는 \"말해지는\" 쪽이니까 수동태 <b>is + 과거분사</b>. speak - spoke - <b>spoken</b>!"
+ },
+ {
+  "tag": "문법",
+  "q": "He went to the store ______ some milk.",
+  "choices": [
+   "to buy",
+   "buy",
+   "buying",
+   "bought",
+   "buys"
+  ],
+  "answer": "to buy",
+  "exp": "\"~하기 위해서\"라고 <b>목적</b>을 말할 때는 <b>to + 동사원형</b>이야. to buy = 사기 위해서."
+ },
+ {
+  "tag": "문법",
+  "q": "She studies hard ______ a doctor.",
+  "choices": [
+   "to become",
+   "become",
+   "becoming",
+   "became",
+   "becomes"
+  ],
+  "answer": "to become",
+  "exp": "\"의사가 되기 위해서\" = <b>to + 동사원형</b>. 목적을 나타내는 to부정사야!"
+ },
+ {
+  "tag": "문법",
+  "q": "I spent two hours ______ my homework.",
+  "choices": [
+   "doing",
+   "do",
+   "to do",
+   "did",
+   "does"
+  ],
+  "answer": "doing",
+  "exp": "<b>spend + 시간 + ~ing</b> = ~하는 데 시간을 쓰다. 시간 뒤에 동사ing를 붙여!"
+ },
+ {
+  "tag": "문법",
+  "q": "She spends an hour ______ English words every day.",
+  "choices": [
+   "learning",
+   "learn",
+   "to learn",
+   "learned",
+   "learns"
+  ],
+  "answer": "learning",
+  "exp": "<b>spend + 시간 + ~ing</b>! an hour 다음에 learning을 써."
+ },
+ {
+  "tag": "문법",
+  "q": "Mt. Hallasan is ______ mountain in Korea.",
+  "choices": [
+   "the highest",
+   "higher",
+   "the higher",
+   "highest",
+   "more high"
+  ],
+  "answer": "the highest",
+  "exp": "\"가장 ~한\"은 <b>the + 최상급</b>이야. high - higher - <b>the highest</b>. 앞에 the를 꼭 붙이자!"
+ },
+ {
+  "tag": "문법",
+  "q": "She is ______ student in my class.",
+  "choices": [
+   "the best",
+   "better",
+   "the better",
+   "best",
+   "the most good"
+  ],
+  "answer": "the best",
+  "exp": "good의 최상급은 <b>best</b>야. 앞에 the를 붙여서 <b>the best</b>. good - better - best!"
+ },
+ {
+  "tag": "문법",
+  "q": "밑줄 친 ~ing의 쓰임이 나머지와 <b>다른</b> 것은?",
+  "choices": [
+   "His dream is <u>becoming</u> a pilot.",
+   "The girl <u>singing</u> on the stage is my sister.",
+   "He is <u>eating</u> lunch now.",
+   "Look at the <u>running</u> dog.",
+   "The boy <u>playing</u> the piano is Jin."
+  ],
+  "answer": "His dream is <u>becoming</u> a pilot.",
+  "exp": "\"His dream is becoming...\"의 becoming은 \"되는 것\"이라는 <b>동명사</b>야. 나머지는 \"~하고 있는\"이라는 뜻의 <b>현재분사</b>야."
+ },
+ {
+  "tag": "문법",
+  "q": "다음 중 ~ing가 \"~하는 것\"(동명사)으로 쓰인 것은?",
+  "choices": [
+   "<u>Swimming</u> is my favorite sport.",
+   "The baby <u>sleeping</u> on the bed is cute.",
+   "She is <u>washing</u> the dishes.",
+   "I saw a <u>crying</u> boy.",
+   "The man <u>cooking</u> in the kitchen is my dad."
+  ],
+  "answer": "<u>Swimming</u> is my favorite sport.",
+  "exp": "Swimming은 \"수영하는 것\"이라는 뜻으로 문장의 주어 역할을 해. 나머지는 \"~하고 있는\"의 현재분사야."
+ },
+ {
+  "tag": "문법",
+  "q": "다음 중 어법상 틀린 문장은 모두 몇 개인가?<br>(a) She goes to school by bus.<br>(b) He don't like milk.<br>(c) Did you saw the movie?<br>(d) My brother plays soccer.<br>(e) We is going to the park.",
+  "choices": [
+   "1개",
+   "2개",
+   "3개",
+   "4개",
+   "5개"
+  ],
+  "answer": "3개",
+  "exp": "틀린 것은 (b) don't → <b>doesn't</b>, (c) saw → <b>see</b>, (e) is → <b>are</b>, 모두 3개야. 하나씩 차분히 확인하자!",
+  "fixed": true
+ },
+ {
+  "tag": "문법",
+  "q": "다음 중 어법상 틀린 문장은 모두 몇 개인가?<br>(a) I have eaten lunch.<br>(b) She has lived here since ten years.<br>(c) The cake was made by my dad.<br>(d) Does he wants a drink?<br>(e) They went to the library to read books.",
+  "choices": [
+   "1개",
+   "2개",
+   "3개",
+   "4개",
+   "5개"
+  ],
+  "answer": "2개",
+  "exp": "틀린 것은 (b) since ten years → <b>for</b> ten years, (d) Does he wants → Does he <b>want</b>, 모두 2개야.",
+  "fixed": true
+ },
+ {
+  "tag": "문법",
+  "q": "I have known her ______ I was a child.",
+  "choices": [
+   "since",
+   "for",
+   "during",
+   "at",
+   "until"
+  ],
+  "answer": "since",
+  "exp": "since 뒤에는 <b>시작한 때</b>(내가 어렸을 때)가 와. for 뒤에는 기간(ten years)이 와."
+ },
+ {
+  "tag": "문법",
+  "q": "He has played the piano ______ three years.",
+  "choices": [
+   "for",
+   "since",
+   "during",
+   "at",
+   "from"
+  ],
+  "answer": "for",
+  "exp": "three years는 <b>기간</b>이니까 <b>for</b>야. since는 시작한 때(2020, last year) 앞에 써."
+ },
+ {
+  "tag": "문법",
+  "q": "어법상 <b>틀린</b> 문장은?",
+  "choices": [
+   "Did she wrote a letter?",
+   "What did you buy?",
+   "Do you have a pen?",
+   "Does he play tennis?",
+   "Is she a teacher?"
+  ],
+  "answer": "Did she wrote a letter?",
+  "exp": "Did가 있으면 뒤의 동사는 <b>원형</b>이야! Did she <b>write</b> a letter? (Did가 이미 과거를 나타내고 있어.)"
+ },
+ {
+  "tag": "문법",
+  "q": "어법상 <b>틀린</b> 문장은?",
+  "choices": [
+   "Does your sister likes pizza?",
+   "Do you have a pen?",
+   "Does he play tennis?",
+   "Did they visit Busan?",
+   "Is she a teacher?"
+  ],
+  "answer": "Does your sister likes pizza?",
+  "exp": "Does가 있으면 동사는 원형! Does your sister <b>like</b> pizza? (does가 이미 -es를 가져갔어.)"
+ },
+ {
+  "tag": "독해",
+  "q": "빈칸에 알맞은 말은?",
+  "choices": [
+   "before",
+   "after",
+   "because",
+   "but",
+   "or"
+  ],
+  "answer": "before",
+  "exp": "\"자기 전에(before)\" 커피를 마시지 말라는 뜻이야. before = ~하기 전에.",
+  "p": "Don't drink coffee ______ you go to bed. It makes it hard to sleep."
+ },
+ {
+  "tag": "독해",
+  "q": "빈칸에 알맞은 말은?",
+  "choices": [
+   "before",
+   "after",
+   "because",
+   "but",
+   "or"
+  ],
+  "answer": "before",
+  "exp": "자기 <b>전에</b> 양치하라는 뜻이니까 before! 앞뒤 흐름으로 알맞은 말을 찾아보자.",
+  "p": "Brush your teeth ______ you go to bed. Then your teeth will stay clean."
+ },
+ {
+  "tag": "독해",
+  "q": "빈칸에 알맞은 말은?",
+  "choices": [
+   "from",
+   "since",
+   "for",
+   "during",
+   "at"
+  ],
+  "answer": "from",
+  "exp": "<b>from ~ to ~ = ~부터 ~까지</b>를 한 덩어리로 기억하자!",
+  "p": "The library is open ______ 9 a.m. to 6 p.m. on weekdays."
+ },
+ {
+  "tag": "독해",
+  "q": "빈칸에 알맞은 말은?",
+  "choices": [
+   "to",
+   "since",
+   "for",
+   "at",
+   "on"
+  ],
+  "answer": "to",
+  "exp": "<b>from May 3 to May 5</b> = 5월 3일부터 5일까지. from과 to는 짝꿍이야!",
+  "p": "The festival will be held from May 3 ______ May 5."
+ },
+ {
+  "tag": "독해",
+  "q": "윗글에서 언급되지 <b>않은</b> 것은?",
+  "choices": [
+   "Eating a lot of candy",
+   "Drinking water every day",
+   "Going to bed before 10 p.m.",
+   "Walking or running after school",
+   "Exercising for thirty minutes"
+  ],
+  "answer": "Eating a lot of candy",
+  "exp": "사탕을 많이 먹으라는 말은 글에 없어. \"언급되지 않은 것\"은 글에서 하나씩 지워 가며 찾으면 쉬워!",
+  "p": "<b>Three Tips for a Healthy Life</b><br>First, drink eight glasses of water every day. Second, go to bed before 10 p.m. Third, walk or run for thirty minutes after school."
+ },
+ {
+  "tag": "독해",
+  "q": "윗글에서 언급되지 <b>않은</b> 것은?",
+  "choices": [
+   "You must bring your own pencil.",
+   "No eating or drinking",
+   "Speaking quietly",
+   "Borrowing up to three books",
+   "Returning books on time"
+  ],
+  "answer": "You must bring your own pencil.",
+  "exp": "연필을 가져오라는 말은 글에 없어. 보기를 본문에서 하나씩 찾아 지워 보자!",
+  "p": "<b>School Library Rules</b><br>Do not eat or drink in the library. Please speak quietly. You can borrow up to three books for one week. Return the books on time."
+ },
+ {
+  "tag": "독해",
+  "q": "윗글의 내용과 <b>일치하지 않는</b> 것은?",
+  "choices": [
+   "Jisu was bad at swimming.",
+   "Jisu was the shortest girl in her class.",
+   "Jisu practiced every morning.",
+   "Jisu practiced for an hour.",
+   "Jisu won first place in the contest."
+  ],
+  "answer": "Jisu was bad at swimming.",
+  "exp": "본문에 \"she was <b>good</b> at swimming\"이라고 했어. good ↔ bad를 바꿔 놓는 함정이 자주 나와! \"일치하지 않는 것\"은 끝까지 읽고 하나씩 확인하자.",
+  "p": "Jisu was the shortest girl in her class, but she was good at swimming. She practiced every morning for an hour. Last Sunday, she won first place in the school swimming contest."
+ },
+ {
+  "tag": "독해",
+  "q": "윗글의 내용과 <b>일치하지 않는</b> 것은?",
+  "choices": [
+   "Ben gave Coco a bath every week.",
+   "Coco was afraid of water at first.",
+   "Coco jumped into a muddy puddle.",
+   "Ben washed Coco with warm water.",
+   "Coco liked baths after that."
+  ],
+  "answer": "Ben gave Coco a bath every week.",
+  "exp": "본문에 \"Ben <b>never</b> gave her a bath(한 번도 안 씻겼다)\"고 했어. every week는 본문과 반대야!",
+  "p": "Ben had a small dog named Coco. Coco was scared of water, so Ben never gave her a bath. One day, Coco jumped into a muddy puddle and became very dirty. Ben laughed and washed her with warm water. After that, Coco liked baths."
+ }
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+startBtn.disabled = nameInput.value.trim().length === 0;
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtext").innerHTML = '<div class="tagline">' + q.tag + '</div>' + (q.p && q.q.indexOf("윗글") < 0 ? '<div class="passage">' + q.p + '</div>' : (q.p ? '<div class="passage">' + q.p + '</div>' : "")) + "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  (q.fixed ? q.choices : shuffle(q.choices)).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "clinic-doyeon-1011",
+    quizTitle: "이도연 오답 클리닉 10/11 (삼육중 3·4회)",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[이도연 오답 클리닉 결과]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
