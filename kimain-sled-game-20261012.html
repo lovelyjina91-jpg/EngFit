@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- engfit-inapp-escape v3 : 카톡으로 열면 항상 폰의 인터넷 브라우저(크롬·사파리)로 열고 카톡 안의 창은 닫기 -->
+<script>
+(function () {
+  try {
+    var ua = navigator.userAgent || "";
+    var isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/i.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+    if (!(isIOS || /android/i.test(ua))) return;
+    var here = String(location.href || "");
+    var go = window.__engfitTestNav || function (u) { window.location.href = u; };
+    if (/KAKAOTALK/i.test(ua)) {
+      go("kakaotalk://web/openExternal?url=" + encodeURIComponent(here));
+      setTimeout(function () { go(isIOS ? "kakaoweb://closeBrowser" : "kakaotalk://inappbrowser/close"); }, 500);
+    } else if (/\bLine\//i.test(ua) && !/[?&]openExternalBrowser=1/.test(here)) {
+      go(here + (here.indexOf("?") >= 0 ? "&" : "?") + "openExternalBrowser=1");
+    }
+  } catch (e) {}
+})();
+</script>
+<!-- /engfit-inapp-escape v3 -->
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light">
+<title>아인이의 썰매 낱말 게임 🛷</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #eef4f4; color: #2B3A3D; min-height: 100vh; display: flex; justify-content: center; padding: 58px 14px 30px; word-break: keep-all; overflow-wrap: break-word; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; color: #2B3A3D; border-radius: 18px; padding: 22px 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.3rem; color: #2F7C83; line-height: 1.5; margin-bottom: 6px; }
+  h2 { font-size: 1.1rem; color: #235E64; line-height: 1.5; margin-bottom: 8px; }
+  .sub { font-size: 0.92rem; color: #6B7B7E; margin-bottom: 16px; line-height: 1.75; }
+  .logo { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .logo .mark { width: 30px; height: 30px; border-radius: 9px; background: #2F7C83; color: #fff; font-size: 1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+  .logo .name { font-size: 0.85rem; font-weight: bold; color: #235E64; letter-spacing: -0.2px; }
+  #snd { position: fixed; top: 10px; right: 10px; z-index: 20; padding: 9px 14px; font-family: inherit; font-size: 0.85rem; font-weight: bold; color: #235E64; background: #fff; border: 1.5px solid #DBE4E5; border-radius: 999px; cursor: pointer; }
+  input[type=text] { width: 100%; padding: 14px; font-family: inherit; font-size: 1.15rem; color: #2B3A3D; background: #fff; border: 2px solid #DBE4E5; border-radius: 12px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 15px; font-family: inherit; font-size: 1.1rem; font-weight: bold; color: #fff; background: #2F7C83; border: none; border-radius: 12px; cursor: pointer; line-height: 1.45; }
+  .btn:disabled { background: #b8c4c2; color: #fff; cursor: default; }
+  .btn.light { background: #E6F1F1; color: #235E64; border: 1.5px solid #cfe0dc; }
+  .btn.gray { background: #8fa5a1; color: #fff; }
+  .areabtn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; margin-bottom: 10px; background: #f6f9f8; color: #2B3A3D; border: 2px solid #DBE4E5; border-radius: 16px; font-family: inherit; text-align: left; cursor: pointer; }
+  .areabtn:disabled { opacity: 0.45; cursor: default; }
+  .areabtn .ic { font-size: 2rem; width: 46px; text-align: center; flex: none; }
+  .areabtn .tt { font-size: 1.08rem; font-weight: bold; color: #235E64; line-height: 1.4; }
+  .areabtn .ss { font-size: 0.82rem; color: #6B7B7E; margin-top: 2px; line-height: 1.5; }
+  .areabtn .st { margin-left: auto; font-size: 0.9rem; text-align: right; color: #2F7C83; font-weight: bold; flex: none; line-height: 1.5; }
+  .hint { font-size: 0.85rem; color: #a07800; margin: 8px 0 14px; line-height: 1.6; }
+  .progress { font-size: 0.9rem; color: #6B7B7E; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .bar { height: 8px; background: #e3ecea; border-radius: 4px; margin-bottom: 14px; overflow: hidden; }
+  .bar > div { height: 100%; background: #2F7C83; border-radius: 4px; width: 0; transition: width .25s; }
+  .srctag { display: inline-block; font-size: 0.75rem; color: #235E64; background: #E6F1F1; border-radius: 6px; padding: 3px 9px; margin-bottom: 10px; }
+  .qtext { font-size: 1.12rem; line-height: 1.7; margin-bottom: 14px; color: #2B3A3D; text-align: center; }
+  .bigpic { font-size: 4.4rem; text-align: center; line-height: 1.2; margin: 4px 0 6px; }
+  .bigword { font-size: 2.6rem; text-align: center; font-weight: bold; color: #235E64; margin-bottom: 4px; letter-spacing: 1px; }
+  .kosmall { text-align: center; color: #6B7B7E; font-size: 1rem; margin-bottom: 8px; }
+  .saybtn { display: block; margin: 8px auto 16px; padding: 11px 22px; font-family: inherit; font-size: 1rem; font-weight: bold; color: #235E64; background: #E6F1F1; border: 1.5px solid #cfe0dc; border-radius: 999px; cursor: pointer; }
+  .opts { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .opts.g2 { grid-template-columns: 1fr 1fr; }
+  .ch { padding: 16px 12px; font-family: inherit; font-size: 1.2rem; font-weight: bold; color: #2B3A3D; background: #f6f9f8; border: 2px solid #DBE4E5; border-radius: 14px; cursor: pointer; line-height: 1.4; }
+  .ch.big { font-size: 1.9rem; }
+  .ch.ok { background: #dff3e4; border-color: #3a9d5d; color: #1e5e35; }
+  .ch.no { background: #fde4e1; border-color: #d9685c; color: #8a2c22; opacity: 0.75; }
+  .msg { min-height: 28px; text-align: center; font-size: 1rem; font-weight: bold; margin-top: 10px; line-height: 1.6; }
+  .msg.bad { color: #b0463b; }
+  .msg.good { color: #2e7d4a; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-7px); } 75% { transform: translateX(7px); } }
+  .shake { animation: shake .35s; }
+  .cardbox { background: #fff8e6; border: 1px solid #f2e2b3; border-radius: 14px; padding: 14px 14px; margin-bottom: 14px; font-size: 0.97rem; line-height: 1.85; color: #4a4023; }
+  .cardbox h2 { color: #a07800; }
+  .wgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0 4px; }
+  .wc { padding: 10px 6px; text-align: center; font-family: inherit; color: #2B3A3D; background: #fff; border: 2px solid #DBE4E5; border-radius: 14px; cursor: pointer; line-height: 1.35; }
+  .wc .e { display: block; font-size: 1.7rem; min-height: 2.1rem; }
+  .wc .w { display: block; font-size: 1.35rem; font-weight: bold; color: #235E64; margin-top: 2px; }
+  .wc .p { display: block; font-size: 0.85rem; color: #a07800; margin-top: 2px; }
+  .wc .k { display: block; font-size: 0.88rem; color: #6B7B7E; margin-top: 1px; }
+  .wc:active { background: #E6F1F1; }
+  .hl { color: #d9534f; }
+  .blendrow { background: #fff; border: 2px solid #DBE4E5; border-radius: 14px; padding: 12px; margin: 10px 0; color: #2B3A3D; }
+  .blendrow .bb { font-size: 2.2rem; font-weight: bold; color: #d9534f; line-height: 1.2; }
+  .blendrow .bk { font-size: 0.95rem; color: #6B7B7E; margin-bottom: 6px; }
+  .chip { display: inline-block; margin: 4px 4px 0 0; padding: 8px 12px; font-family: inherit; font-size: 1.05rem; font-weight: bold; color: #235E64; background: #E6F1F1; border: 1.5px solid #cfe0dc; border-radius: 999px; cursor: pointer; }
+  .sentbox { background: #fff; border: 2px solid #DBE4E5; border-radius: 14px; padding: 12px; margin: 10px 0; color: #2B3A3D; }
+  .sentbox .en { font-size: 1.25rem; font-weight: bold; color: #235E64; line-height: 1.5; }
+  .sentbox .kr { font-size: 0.95rem; color: #6B7B7E; margin: 2px 0 6px; }
+  .wordrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .wordrow .wd { text-align: center; padding: 6px 9px; font-family: inherit; color: #2B3A3D; background: #f6f9f8; border: 1.5px solid #DBE4E5; border-radius: 10px; cursor: pointer; line-height: 1.3; }
+  .wordrow .wd b { display: block; font-size: 1.1rem; color: #235E64; }
+  .wordrow .wd span { display: block; font-size: 0.75rem; color: #6B7B7E; }
+  .model { background: #eef6f6; border: 1.5px solid #cfe3e3; border-radius: 14px; padding: 12px; text-align: center; margin-bottom: 12px; color: #29474a; }
+  .model .en { font-size: 1.3rem; font-weight: bold; line-height: 1.5; color: #235E64; }
+  .model .kr { font-size: 1.05rem; color: #29474a; line-height: 1.6; }
+  .slots { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 6px 0 14px; min-height: 64px; }
+  .slot { min-width: 58px; min-height: 58px; padding: 8px 10px; font-family: inherit; font-size: 1.35rem; font-weight: bold; color: #2B3A3D; background: #fff; border: 2px dashed #b9c8c9; border-radius: 12px; cursor: pointer; }
+  .slot.f { border-style: solid; border-color: #2F7C83; background: #E6F1F1; color: #235E64; }
+  .slot.n { color: #b9c8c9; font-size: 1rem; cursor: default; }
+  .pool { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 12px; background: #f6f9f8; border-radius: 14px; border: 1.5px solid #DBE4E5; min-height: 70px; }
+  .tile { min-width: 60px; padding: 10px 14px; font-family: inherit; font-size: 1.45rem; font-weight: bold; color: #235E64; background: #fff; border: 2px solid #9fc4c6; border-radius: 12px; cursor: pointer; box-shadow: 0 2px 0 #c9dcdc; line-height: 1.3; }
+  .tile small { display: block; font-size: 0.72rem; font-weight: normal; color: #6B7B7E; margin-top: 1px; }
+  .tile.used { opacity: 0.18; box-shadow: none; cursor: default; }
+  .donebox { background: #e9f6ec; border: 2px solid #8fcaa0; border-radius: 14px; padding: 14px; text-align: center; margin-top: 12px; color: #1e5e35; }
+  .donebox .en { font-size: 1.3rem; font-weight: bold; line-height: 1.5; }
+  .donebox .kr { font-size: 1rem; margin: 3px 0 6px; }
+  .toks { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 4px 0 8px; }
+  .tok { padding: 10px 12px; font-family: inherit; font-size: 1.4rem; font-weight: bold; color: #2B3A3D; background: #f6f9f8; border: 2px solid #DBE4E5; border-radius: 12px; cursor: pointer; }
+  .tok.ok { background: #dff3e4; border-color: #3a9d5d; color: #1e5e35; }
+  .tok.no { background: #fde4e1; border-color: #d9685c; color: #8a2c22; }
+  .stars { font-size: 2.4rem; text-align: center; margin: 6px 0; letter-spacing: 4px; }
+  .score { text-align: center; font-size: 1.5rem; font-weight: bold; color: #235E64; margin-bottom: 4px; }
+  .rev { background: #fffdf6; border-left: 4px solid #e5cf8a; border-radius: 8px; padding: 10px 12px; margin: 10px 0; font-size: 0.95rem; line-height: 1.8; color: #4a4023; }
+  .rev b { color: #8a6400; }
+  .rev .rb { margin-top: 4px; padding: 5px 12px; font-family: inherit; font-size: 0.85rem; font-weight: bold; color: #235E64; background: #E6F1F1; border: 1.5px solid #cfe0dc; border-radius: 999px; cursor: pointer; }
+  details.all { background: #f6f9f8; border: 1px solid #DBE4E5; border-radius: 12px; padding: 10px 12px; margin-top: 10px; color: #2B3A3D; }
+  details.all summary { cursor: pointer; font-weight: bold; color: #235E64; font-size: 0.95rem; }
+  #submit-status { text-align: center; font-size: 0.85rem; margin-top: 10px; min-height: 20px; }
+  .copybox { width: 100%; margin-top: 10px; padding: 10px; font-family: inherit; font-size: 0.85rem; color: #2B3A3D; background: #f6f9f8; border: 1.5px solid #DBE4E5; border-radius: 10px; line-height: 1.6; resize: none; }
+  .note { font-size: 0.85rem; color: #6B7B7E; text-align: center; margin-top: 8px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<button id="snd" type="button">🔊 소리 끄기</button>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ===== 결과 전송 (영핏 표준 전송 코드) ===== */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) {
+      return false;
+    }
+  }
+}
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return;
+  _engfitSent = true;
+  return engfitSubmit(r);
+}
+
+/* ===== 소리 (원어민 미국 여성 목소리, 목소리 로딩 전에는 재생 안 함) ===== */
+var muted = false;
+try { muted = localStorage.getItem("engfit-sound") === "off"; } catch (e) {}
+var VOICE = null, voiceReady = false, pendingSay = null;
+var MALE = /david|alex|mark|daniel|fred|guy|james|george|ryan|eric|tom|jorge|rocko|thomas|bruce|ralph|albert|junior|reed|aaron|arthur|gordon|evan|nathan|oliver|brian|christopher|roger|steffan|male\b/i;
+var FEMALE_PREF = ["Google US English", "Samantha", "Zira", "Aria", "Jenny", "Ava", "Allison", "Susan", "Michelle", "Joanna", "Salli", "Kendra", "Kimberly", "Ivy", "Nicky", "Victoria", "Emma"];
+function pickVoice() {
+  var vs = [];
+  try { vs = window.speechSynthesis.getVoices() || []; } catch (e) {}
+  var us = vs.filter(function (v) { return /^en[-_]US$/i.test(v.lang || ""); });
+  var ok = us.filter(function (v) { return !MALE.test(v.name || ""); });
+  for (var i = 0; i < FEMALE_PREF.length; i++) {
+    for (var j = 0; j < ok.length; j++) {
+      if ((ok[j].name || "").indexOf(FEMALE_PREF[i]) >= 0) return ok[j];
+    }
+  }
+  return ok.length ? ok[0] : null;
+}
+function flushPending() {
+  if (pendingSay) { var p = pendingSay; pendingSay = null; speak(p.t, p.o); }
+}
+function initVoices() {
+  if (!window.speechSynthesis) return;
+  function load() {
+    var n = 0;
+    try { n = window.speechSynthesis.getVoices().length; } catch (e) {}
+    if (n > 0) { VOICE = pickVoice(); voiceReady = true; flushPending(); }
+  }
+  load();
+  try { window.speechSynthesis.onvoiceschanged = load; } catch (e) {}
+  setTimeout(function () { if (!voiceReady) { VOICE = pickVoice(); voiceReady = true; flushPending(); } }, 2500);
+}
+function speak(text, opts) {
+  opts = opts || {};
+  if (muted || !window.speechSynthesis || !text) return;
+  if (!voiceReady) { pendingSay = { t: text, o: opts }; return; }
+  if (!VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(text);
+    u.voice = VOICE; u.lang = "en-US"; u.rate = opts.rate || 0.8; u.pitch = 1.05;
+    if (!opts.queue) window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+function fanfare() {
+  if (muted) return;
+  try {
+    var C = new (window.AudioContext || window.webkitAudioContext)();
+    [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) {
+      var o = C.createOscillator(), g = C.createGain();
+      o.type = "triangle"; o.frequency.value = f;
+      var t = C.currentTime + i * 0.14;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+      o.connect(g); g.connect(C.destination); o.start(t); o.stop(t + 0.45);
+    });
+  } catch (e) {}
+}
+function refreshSnd() {
+  document.getElementById("snd").textContent = muted ? "🔇 소리 켜기" : "🔊 소리 끄기";
+}
+
+/* ===== 낱말 데이터 ===== */
+var W = {
+  glen:   { en: "Glen",   ko: "글렌 (친구 이름)", ph: "글렌",     em: "🧒", ex: "Glen rides a black sled." },
+  rides:  { en: "rides",  ko: "타요",            ph: "라이즈",   em: "🏂", ex: "Glen rides a black sled." },
+  a:      { en: "a",      ko: "하나의",          ph: "어",       say: "uh" },
+  black:  { en: "black",  ko: "검은색",          ph: "블랙",     em: "⚫", ex: "The black sled has flames." },
+  sled:   { en: "sled",   ko: "썰매",            ph: "슬레드",   em: "🛷", ex: "Glen rides a black sled." },
+  the:    { en: "the",    ko: "그",              ph: "더",       say: "thuh" },
+  has:    { en: "has",    ko: "가지고 있어요",   ph: "해즈" },
+  blue:   { en: "blue",   ko: "파란색",          ph: "블루",     em: "🔵", ex: "The black sled has blue blades." },
+  blades: { en: "blades", ko: "(썰매) 날",       ph: "블레이즈", em: "⛸️", ex: "The black sled has blue blades." },
+  flames: { en: "flames", ko: "불꽃",            ph: "플레임즈", em: "🔥", ex: "The black sled has flames." },
+  on:     { en: "on",     ko: "~을 타고 (위에)", ph: "온" },
+  slide:  { en: "slide",  ko: "미끄럼틀",        ph: "슬라이드", em: "🛝", ex: "It is a glass slide." },
+  it:     { en: "it",     ko: "그것",            ph: "잇",       ex: "It is a glass slide." },
+  is:     { en: "is",     ko: "~이에요",         ph: "이즈" },
+  glass:  { en: "glass",  ko: "유리",            ph: "글래스",   em: "🪟", ex: "It is a glass slide." },
+  up:     { en: "up",     ko: "위로",            ph: "업",       em: "⬆️", ex: "Up, up, up!" },
+  stop:   { en: "stop",   ko: "멈춰요",          ph: "스탑",     em: "🛑", ex: "The flames stop." },
+  down:   { en: "down",   ko: "아래로",          ph: "다운",     em: "⬇️", ex: "Down, down, down!" },
+  into:   { en: "into",   ko: "~안으로",         ph: "인투",     em: "⤵️", ex: "Into the blue lake!" },
+  lake:   { en: "lake",   ko: "호수",            ph: "레이크",   em: "🏞️", ex: "Into the blue lake!" }
+};
+var BL = { black: "bl", blue: "bl", blades: "bl", glen: "gl", glass: "gl", flames: "fl", sled: "sl", slide: "sl" };
+var BLK = { bl: "블", gl: "글", fl: "플", sl: "슬" };
+var SP = {
+  black: ["glack", "flack", "slack"], blue: ["glue", "flue", "slue"], blades: ["glades", "flades", "slades"],
+  glen: ["Blen", "Flen", "Slen"], glass: ["blass", "flass", "slass"], flames: ["blames", "glames", "slames"],
+  sled: ["bled", "fled", "gled"], slide: ["glide", "blide", "flide"]
+};
+var SENT = [
+  { en: "Glen rides a black sled.",           ko: "글렌이 검은 썰매를 타요." },
+  { en: "The black sled has blue blades.",    ko: "검은 썰매는 파란 날이 있어요." },
+  { en: "The black sled has flames.",         ko: "검은 썰매에는 불꽃이 있어요." },
+  { en: "Glen on the sled rides a slide.",    ko: "썰매를 탄 글렌이 미끄럼틀을 타요." },
+  { en: "It is a glass slide.",               ko: "그것은 유리 미끄럼틀이에요." },
+  { en: "Up, up, up!",                        ko: "위로, 위로, 위로!" },
+  { en: "The flames stop.",                   ko: "불꽃이 멈춰요." },
+  { en: "Down, down, down!",                  ko: "아래로, 아래로, 아래로!" },
+  { en: "Into the blue lake!",                ko: "파란 호수 속으로!" }
+];
+var AREAS = [
+  { id: 1, ic: "🔤", title: "낱말 뜻 맞히기",   sub: "소리를 듣고 뜻을 골라요" },
+  { id: 2, ic: "👂", title: "첫소리 찾기",       sub: "bl · gl · fl · sl 소리를 들어요" },
+  { id: 3, ic: "🔍", title: "글자 찾기",         sub: "그림을 보고 알맞은 글자를 골라요" },
+  { id: 4, ic: "🛷", title: "문장 만들기 ①",     sub: "Glen rides a black sled …" },
+  { id: 5, ic: "🛝", title: "문장 만들기 ②",     sub: "Glen on the sled rides a slide …" },
+  { id: 6, ic: "🏞️", title: "문장 만들기 ③",     sub: "The flames stop … Into the blue lake!" },
+  { id: 7, ic: "⭕", title: "Find & Circle",      sub: "down · into · it · stop 찾기" }
+];
+var SGROUP = { 4: [0, 1, 2], 5: [3, 4, 5], 6: [6, 7, 8] };
+
+/* ===== 도구 ===== */
+function key(t) { return String(t).toLowerCase().replace(/[^a-z]/g, ""); }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function sayOf(k) { var w = W[k]; return w ? (w.say || w.en) : k; }
+function posSeq(n, k) {
+  for (var tries = 0; tries < 200; tries++) {
+    var seq = [];
+    while (seq.length < n) seq = seq.concat(shuffle(Array.apply(null, { length: k }).map(function (_, i) { return i; })));
+    seq = seq.slice(0, n);
+    var bad = false;
+    for (var i = 2; i < n; i++) if (seq[i] === seq[i - 1] && seq[i] === seq[i - 2]) bad = true;
+    if (!bad) return seq;
+  }
+  return seq;
+}
+function place(correct, others, pos) { var a = others.slice(); a.splice(pos, 0, correct); return a; }
+function logoHtml() { return '<div class="logo"><div class="mark">영</div><div class="name">영핏 지나티처</div></div>'; }
+function lsGet(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+/* ===== 문제 만들기 ===== */
+function buildArea(id) {
+  var qs = [], order, ps;
+  if (id === 1) {
+    order = ["glen", "rides", "black", "sled", "blue", "blades", "flames", "slide", "glass", "lake", "up", "down", "stop", "into"];
+    ps = posSeq(order.length, 4);
+    order.forEach(function (k, i) {
+      var w = W[k];
+      var pool = shuffle(order.filter(function (x) { return x !== k && W[x].ko !== w.ko; }).map(function (x) { return W[x].ko; })).slice(0, 3);
+      qs.push({ t: "mc", kind: "meaning", key: k, say: sayOf(k), opts: place(w.ko, pool, ps[i]), ans: ps[i], ansLabel: w.ko,
+        tag: "Unit 1 · 낱말 뜻",
+        exp: '<b>' + w.en + '</b> 은(는) "' + w.ko + '" 이라는 뜻이에요. 소리는 "' + w.ph + '"! 예) ' + w.ex });
+    });
+  } else if (id === 2) {
+    order = ["flames", "black", "slide", "glen", "blades", "sled", "glass", "blue"];
+    ps = posSeq(order.length, 4);
+    order.forEach(function (k, i) {
+      var w = W[k], b = BL[k];
+      var others = shuffle(["bl", "gl", "fl", "sl"].filter(function (x) { return x !== b; }));
+      qs.push({ t: "mc", kind: "sound", key: k, say: sayOf(k), opts: place(b, others, ps[i]), ans: ps[i], ansLabel: b,
+        tag: "Unit 1 · 첫소리",
+        exp: '<b>' + w.en + '</b> 은(는) <b>' + b + '</b> 로 시작해요. ' + b.charAt(0) + ' 와 ' + b.charAt(1) + ' 를 붙여서 한 번에 "' + BLK[b] + '~" 하고 소리 내요. (' + w.ko + ' · "' + w.ph + '")' });
+    });
+  } else if (id === 3) {
+    order = ["sled", "blue", "glen", "flames", "glass", "blades", "black", "slide"];
+    ps = posSeq(order.length, 4);
+    order.forEach(function (k, i) {
+      var w = W[k], b = BL[k];
+      qs.push({ t: "mc", kind: "spell", key: k, say: sayOf(k), opts: place(w.en, SP[k], ps[i]), ans: ps[i], ansLabel: w.en,
+        tag: "Unit 1 · 글자 모양",
+        exp: '"' + w.ko + '" 은(는) <b>' + w.en + '</b> 이에요. 맨 앞 <b>' + b + '</b> 가 "' + BLK[b] + '" 소리를 만들어요. 다른 글자(' + SP[k].map(function (x) { return x.slice(0, 2); }).join(", ").toLowerCase() + ')로 시작하면 다른 소리가 나요.' });
+    });
+  } else if (SGROUP[id]) {
+    SGROUP[id].forEach(function (si) {
+      var s = SENT[si], toks = s.en.split(" ");
+      [1, 2, 3].forEach(function (r) {
+        qs.push({ t: "ord", round: r, si: si, toks: toks, en: s.en, ko: s.ko,
+          tag: r === 1 ? "문장 보고 똑같이 만들기" : (r === 2 ? "우리말 보고 만들기" : "듣고 만들기"),
+          ansLabel: s.en,
+          exp: '"' + s.en + '" → ' + s.ko + ' (낱말 순서: ' + toks.join(" → ") + ')' });
+      });
+    });
+  } else if (id === 7) {
+    var F = [
+      { t: "find", mode: "hear", target: "stop", text: "The flames stop. Down, down, down!" },
+      { t: "find", mode: "hear", target: "it",   text: "Glen on the sled rides a slide. It is a glass slide." },
+      { t: "find", mode: "hear", target: "into", text: "Down, down, down! Into the blue lake!" },
+      { t: "find", mode: "hear", target: "down", text: "Up, up, up! Down, down, down!" },
+      { t: "find", mode: "ko",   target: "it",   text: "The black sled has flames. It is a glass slide." },
+      { t: "find", mode: "ko",   target: "stop", text: "The flames stop." },
+      { t: "find", mode: "ko",   target: "into", text: "The flames stop. Into the blue lake!" },
+      { t: "find", mode: "ko",   target: "down", text: "Down, down, down! The flames stop." }
+    ];
+    F.forEach(function (f) {
+      var w = W[f.target];
+      f.toks = f.text.split(" ");
+      f.say = sayOf(f.target);
+      f.ansLabel = w.en;
+      f.tag = "Find & Circle";
+      f.exp = '<b>' + w.en + '</b> 은(는) "' + w.ko + '" 이에요. 소리는 "' + w.ph + '"! 예) ' + w.ex;
+      qs.push(f);
+    });
+  }
+  qs.forEach(function (q, i) { q.no = i + 1; });
+  return qs;
+}
+
+/* ===== 상태 ===== */
+var ST = { name: "", area: 0, qs: [], i: 0, res: [], t0: 0, locked: false };
+var DONE = {};
+try { DONE = JSON.parse(lsGet("kimain-sled-done", "{}")) || {}; } catch (e) { DONE = {}; }
+var app = document.getElementById("app");
+
+/* ===== 화면: 처음 ===== */
+function renderHome() {
+  ST.area = 0;
+  var h = '<div class="card">' + logoHtml() +
+    '<h1>썰매 타는 글렌 · 낱말 게임 🛷</h1>' +
+    '<p class="sub">Phonics Monster · Unit 1 · Listen and repeat<br>낱말의 <b>뜻</b>과 <b>소리</b>를 같이 익히고, 문장을 순서대로 만들어 봐요!</p>' +
+    '<input type="text" id="nm" placeholder="이름을 써 주세요" maxlength="12" autocomplete="off" value="' + esc(ST.name) + '">' +
+    '<div class="hint" id="nmhint">↑ 이름을 쓰면 아래 버튼이 켜져요</div>';
+  AREAS.forEach(function (a) {
+    var d = DONE[a.id];
+    var st = d ? ('✓ ' + d.score + '/' + d.total + '<br>' + stars(d.score / d.total)) : '';
+    h += '<button class="areabtn" data-act="area" data-id="' + a.id + '"><span class="ic">' + a.ic + '</span><span><div class="tt">' + a.id + '. ' + a.title + '</div><div class="ss">' + a.sub + '</div></span><span class="st">' + st + '</span></button>';
+  });
+  if (Object.keys(DONE).length) h += '<button class="btn light" data-act="copyall">전체 결과 카톡으로 복사하기</button>';
+  h += '<div id="allcopy"></div></div>';
+  app.innerHTML = h;
+  var nm = document.getElementById("nm");
+  function sync() {
+    ST.name = nm.value.trim();
+    var on = ST.name.length > 0;
+    document.querySelectorAll(".areabtn").forEach(function (b) { b.disabled = !on; });
+    document.getElementById("nmhint").style.visibility = on ? "hidden" : "visible";
+  }
+  nm.addEventListener("input", function () { sync(); lsSet("kimain-sled-name", nm.value.trim()); });
+  sync();
+}
+function stars(r) { return r >= 0.9 ? "⭐⭐⭐" : (r >= 0.7 ? "⭐⭐" : "⭐"); }
+
+/* ===== 화면: 개념 카드 ===== */
+function wordChip(k) {
+  var w = W[k];
+  return '<button class="wd" data-act="say" data-say="' + esc(sayOf(k)) + '"><b>' + w.en + '</b><span>' + w.ko + '</span></button>';
+}
+function cardHtml(id) {
+  var h = "";
+  if (id === 1) {
+    h += '<div class="cardbox"><h2>🛷 낱말 친구들을 만나요</h2>눌러서 <b>소리</b>를 들어 보세요. 따라 말하면서 <b>뜻</b>도 같이 기억해요!</div><div class="wgrid">';
+    ["glen", "rides", "black", "sled", "blue", "blades", "flames", "slide", "glass", "lake", "up", "down", "stop", "into"].forEach(function (k) {
+      var w = W[k];
+      h += '<button class="wc" data-act="say" data-say="' + esc(sayOf(k)) + '"><span class="e">' + (w.em || "") + '</span><span class="w">' + w.en + '</span><span class="p">' + w.ph + '</span><span class="k">' + w.ko + '</span></button>';
+    });
+    h += '</div><div class="cardbox" style="margin-top:12px"><h2>✏️ 작은 낱말도 있어요</h2><div class="wordrow">';
+    ["a", "the", "is", "has", "on", "it"].forEach(function (k) { h += wordChip(k); });
+    h += '</div></div>';
+  } else if (id === 2) {
+    h += '<div class="cardbox"><h2>👂 두 글자가 붙어서 나는 소리</h2>자음 두 개가 만나면 <b>한 번에 붙여서</b> 소리 내요. 낱말을 눌러서 들어 보세요!</div>';
+    [["bl", ["black", "blue", "blades"]], ["gl", ["glen", "glass"]], ["fl", ["flames"]], ["sl", ["sled", "slide"]]].forEach(function (b) {
+      h += '<div class="blendrow"><div class="bb">' + b[0] + '</div><div class="bk">' + b[0].charAt(0) + ' + ' + b[0].charAt(1) + ' → "' + BLK[b[0]] + '~" 하고 한 번에!</div>';
+      b[1].forEach(function (k) { h += '<button class="chip" data-act="say" data-say="' + esc(sayOf(k)) + '">' + (W[k].em || "") + ' ' + W[k].en + '</button>'; });
+      h += '</div>';
+    });
+  } else if (id === 3) {
+    h += '<div class="cardbox"><h2>🔍 글자 모양 기억하기</h2><span class="hl"><b>빨간 글자</b></span>가 낱말의 첫소리예요. 눌러서 듣고, 글자 모양을 눈에 담아 두세요!</div><div class="wgrid">';
+    ["sled", "blue", "glen", "flames", "glass", "blades", "black", "slide"].forEach(function (k) {
+      var w = W[k], b = BL[k];
+      h += '<button class="wc" data-act="say" data-say="' + esc(sayOf(k)) + '"><span class="e">' + w.em + '</span><span class="w"><span class="hl">' + w.en.slice(0, 2) + '</span>' + w.en.slice(2) + '</span><span class="p">' + w.ph + '</span><span class="k">' + w.ko + '</span></button>';
+    });
+    h += '</div>';
+  } else if (SGROUP[id]) {
+    h += '<div class="cardbox"><h2>📖 이 문장을 먼저 읽어 봐요</h2>낱말을 하나씩 눌러서 <b>소리</b>와 <b>뜻</b>을 확인하고, 문장 전체도 들어 보세요!</div>';
+    SGROUP[id].forEach(function (si) {
+      var s = SENT[si];
+      h += '<div class="sentbox"><div class="en">' + esc(s.en) + '</div><div class="kr">' + s.ko + '</div>' +
+        '<button class="saybtn" style="margin:4px 0 6px" data-act="say" data-say="' + esc(s.en) + '" data-rate="0.75">🔊 문장 듣기</button><div class="wordrow">';
+      s.en.split(" ").forEach(function (t) { h += wordChip(key(t)); });
+      h += '</div></div>';
+    });
+  } else if (id === 7) {
+    h += '<div class="cardbox"><h2>⭕ Find &amp; Circle</h2>문장 속에서 <b>같은 낱말</b>을 찾아 눌러요. 먼저 4개 낱말을 익혀요!</div><div class="wgrid">';
+    ["down", "into", "it", "stop"].forEach(function (k) {
+      var w = W[k];
+      h += '<button class="wc" data-act="say" data-say="' + esc(sayOf(k)) + '"><span class="e">' + (w.em || "👉") + '</span><span class="w">' + w.en + '</span><span class="p">' + w.ph + '</span><span class="k">' + w.ko + '</span></button>';
+    });
+    h += '</div>';
+  }
+  return h;
+}
+function renderCard(id) {
+  ST.area = id;
+  var a = AREAS[id - 1];
+  app.innerHTML = '<div class="card">' + logoHtml() + '<h1>' + a.ic + ' ' + a.id + '. ' + a.title + '</h1><p class="sub">먼저 카드를 보고 소리를 들어 봐요.</p>' + cardHtml(id) +
+    '<button class="btn" data-act="startq">게임 시작! ▶</button><button class="btn light" data-act="home">← 영역 고르기</button></div>';
+}
+
+/* ===== 화면: 문제 ===== */
+function startQuiz() {
+  ST.qs = buildArea(ST.area); ST.i = 0; ST.res = []; ST.t0 = Date.now(); _engfitSent = false;
+  renderQ(true);
+}
+function head() {
+  var a = AREAS[ST.area - 1];
+  return logoHtml() + '<div class="progress"><span>' + a.ic + ' ' + a.title + '</span><span>' + (ST.i + 1) + ' / ' + ST.qs.length + '</span></div><div class="bar"><div style="width:' + (ST.i / ST.qs.length * 100) + '%"></div></div>';
+}
+function renderQ(first) {
+  var q = ST.qs[ST.i];
+  ST.locked = false;
+  var h = '<div class="card">' + head() + '<span class="srctag">' + q.tag + '</span>';
+  if (q.t === "mc") {
+    var w = W[q.key];
+    if (q.kind === "meaning") {
+      h += '<div class="bigpic">' + (w.em || "") + '</div><div class="bigword">' + w.en + '</div><button class="saybtn" data-act="say" data-say="' + esc(q.say) + '">🔊 다시 듣기</button><div class="qtext">이 낱말은 무슨 뜻일까요?</div><div class="opts">';
+    } else if (q.kind === "sound") {
+      h += '<div class="bigpic">' + w.em + '</div><div class="kosmall">(' + w.ko + ')</div><button class="saybtn" data-act="say" data-say="' + esc(q.say) + '">🔊 소리 듣기</button><div class="qtext">소리를 듣고, 어떤 글자로 시작하는지 골라요</div><div class="opts g2">';
+    } else {
+      h += '<div class="bigpic">' + w.em + '</div><div class="kosmall">' + w.ko + '</div><button class="saybtn" data-act="say" data-say="' + esc(q.say) + '">🔊 소리 듣기</button><div class="qtext">알맞은 글자를 골라요</div><div class="opts g2">';
+    }
+    q.opts.forEach(function (o, i) {
+      h += '<button class="ch' + (q.kind === "sound" ? " big" : "") + '" data-act="pick" data-i="' + i + '">' + esc(o) + '</button>';
+    });
+    h += '</div><div class="msg" id="msg"></div></div>';
+    app.innerHTML = h;
+    speak(q.say, { queue: !first });
+  } else if (q.t === "ord") {
+    q.picked = []; q.err = 0; q.done = false;
+    q.order = shuffle(q.toks.map(function (_, i) { return i; }));
+    var tries = 0;
+    while (q.order.map(function (i) { return q.toks[i]; }).join(" ") === q.toks.join(" ") && tries++ < 20) q.order = shuffle(q.order);
+    if (q.round === 1) {
+      h += '<div class="model"><div class="en">' + esc(q.en) + '</div><div class="kr">' + q.ko + '</div></div><button class="saybtn" style="margin-top:0" data-act="say" data-say="' + esc(q.en) + '" data-rate="0.75">🔊 문장 듣기</button><div class="qtext">똑같이 만들어 봐요. 낱말을 순서대로 눌러요!</div>';
+    } else if (q.round === 2) {
+      h += '<div class="model"><div class="kr" style="font-size:1.2rem;font-weight:bold">' + q.ko + '</div></div><button class="saybtn" style="margin-top:0" data-act="say" data-say="' + esc(q.en) + '" data-rate="0.75">🔊 영어로 듣기</button><div class="qtext">우리말을 보고 영어 문장을 만들어요</div>';
+    } else {
+      h += '<div class="bigpic">👂</div><button class="saybtn" data-act="say" data-say="' + esc(q.en) + '" data-rate="0.75">🔊 문장 다시 듣기</button><div class="qtext">잘 듣고, 들은 문장을 만들어요</div>';
+    }
+    h += '<div class="slots" id="slots"></div><div class="pool" id="pool"></div><div class="msg" id="msg"></div><div id="doneZone"></div>' +
+      '<button class="btn light" style="margin-top:10px" data-act="reset">↺ 다시 하기</button></div>';
+    app.innerHTML = h;
+    drawOrd(q);
+    speak(q.round === 2 ? "" : q.en, { rate: 0.75, queue: !first });
+  } else if (q.t === "find") {
+    var w2 = W[q.target];
+    if (q.mode === "hear") {
+      h += '<div class="bigpic">👂</div><button class="saybtn" data-act="say" data-say="' + esc(q.say) + '">🔊 낱말 듣기</button><div class="qtext">들은 낱말을 문장에서 찾아 눌러요</div>';
+    } else {
+      h += '<div class="bigpic">' + (w2.em || "👉") + '</div><div class="kosmall" style="font-size:1.3rem;font-weight:bold;color:#235E64">' + w2.ko + '</div><button class="saybtn" data-act="say" data-say="' + esc(q.say) + '">🔊 소리 듣기</button><div class="qtext">이 뜻의 영어 낱말을 문장에서 찾아 눌러요</div>';
+    }
+    h += '<div class="toks">';
+    q.toks.forEach(function (t, i) { h += '<button class="tok" data-act="tok" data-i="' + i + '">' + esc(t) + '</button>'; });
+    h += '</div><div class="msg" id="msg"></div></div>';
+    app.innerHTML = h;
+    if (q.mode === "hear") speak(q.say, { queue: !first });
+  }
+}
+function setMsg(t, cls) { var m = document.getElementById("msg"); if (m) { m.textContent = t; m.className = "msg " + (cls || ""); } }
+function recordFirst(q, ok, chosen) {
+  if (ST.res[ST.i] === undefined) ST.res[ST.i] = { no: q.no, ok: ok, chosen: chosen, answer: q.ansLabel };
+}
+function nextQ() {
+  if (ST.i + 1 >= ST.qs.length) return renderResult();
+  ST.i++; renderQ(false);
+}
+
+/* mc */
+function pick(i) {
+  var q = ST.qs[ST.i];
+  if (ST.locked || q.t !== "mc") return;
+  var btns = document.querySelectorAll(".ch");
+  if (!btns[i] || btns[i].classList.contains("no")) return;
+  var ok = (i === q.ans);
+  recordFirst(q, ok, q.opts[i]);
+  if (ok) {
+    ST.locked = true;
+    btns[i].classList.add("ok");
+    setMsg("⭕ 맞아요! " + (q.kind === "meaning" ? W[q.key].en + " = " + W[q.key].ko : q.ansLabel), "good");
+    speak(q.say, { rate: 0.75, queue: true });
+    setTimeout(nextQ, 250);
+  } else {
+    btns[i].classList.add("no", "shake");
+    setMsg("아쉬워요! 소리를 다시 듣고 골라 봐요 👂", "bad");
+    speak(q.say, { rate: 0.75 });
+  }
+}
+
+/* ord */
+function drawOrd(q) {
+  var s = "", n = q.toks.length;
+  for (var i = 0; i < n; i++) {
+    if (i < q.picked.length) s += '<button class="slot f" data-act="slot" data-i="' + i + '">' + esc(q.toks[q.order[q.picked[i]]]) + '</button>';
+    else s += '<span class="slot n">' + (i + 1) + '</span>';
+  }
+  document.getElementById("slots").innerHTML = s;
+  var p = "";
+  q.order.forEach(function (ti, pi) {
+    var used = q.picked.indexOf(pi) >= 0;
+    var kk = key(q.toks[ti]);
+    var sub = (q.round === 1 && W[kk]) ? '<small>' + W[kk].ko + '</small>' : '';
+    p += '<button class="tile' + (used ? " used" : "") + '" data-act="tile" data-i="' + pi + '"' + (used ? " disabled" : "") + '>' + esc(q.toks[ti]) + sub + '</button>';
+  });
+  document.getElementById("pool").innerHTML = p;
+}
+function tile(pi) {
+  var q = ST.qs[ST.i];
+  if (q.t !== "ord" || q.done || q.picked.indexOf(pi) >= 0 || q.picked.length >= q.toks.length) return;
+  q.picked.push(pi);
+  speak(sayOf(key(q.toks[q.order[pi]])), { rate: 0.75 });
+  setMsg("");
+  drawOrd(q);
+  if (q.picked.length === q.toks.length) { ST.locked = true; setTimeout(checkOrd, 350); }
+}
+function slotRemove(i) {
+  var q = ST.qs[ST.i];
+  if (q.t !== "ord" || q.done || ST.locked) return;
+  q.picked.splice(i, 1); setMsg(""); drawOrd(q);
+}
+function resetOrd() {
+  var q = ST.qs[ST.i];
+  if (q.t !== "ord" || q.done) return;
+  q.picked = []; ST.locked = false; setMsg(""); drawOrd(q);
+}
+function checkOrd() {
+  var q = ST.qs[ST.i];
+  var got = q.picked.map(function (pi) { return q.toks[q.order[pi]]; });
+  var ok = got.map(key).join(" ") === q.toks.map(key).join(" ");
+  recordFirst(q, ok, got.join(" "));
+  if (ok) {
+    q.done = true;
+    document.getElementById("slots").innerHTML = q.toks.map(function (t) { return '<span class="slot f">' + esc(t) + '</span>'; }).join("");
+    document.getElementById("pool").innerHTML = "";
+    document.getElementById("doneZone").innerHTML = '<div class="donebox"><div class="en">' + esc(q.en) + '</div><div class="kr">' + q.ko + '</div>⭕ 잘 만들었어요!</div>' +
+      '<button class="btn" data-act="next">' + (ST.i + 1 >= ST.qs.length ? "결과 보기 ▶" : "다음 ▶") + '</button>';
+    var rb = document.querySelector('[data-act="reset"]'); if (rb) rb.style.display = "none";
+    speak(q.en, { rate: 0.75 });
+  } else {
+    var slots = document.getElementById("slots");
+    slots.classList.add("shake");
+    setMsg("어? 순서가 달라요. 소리 내어 읽으며 다시 만들어 봐요!", "bad");
+    setTimeout(function () { slots.classList.remove("shake"); q.picked = []; ST.locked = false; setMsg(""); drawOrd(q); }, 1100);
+    speak(q.en, { rate: 0.75 });
+  }
+}
+
+/* find */
+function tok(i) {
+  var q = ST.qs[ST.i];
+  if (ST.locked || q.t !== "find") return;
+  var b = document.querySelectorAll(".tok")[i];
+  if (!b || b.classList.contains("no")) return;
+  var ok = key(q.toks[i]) === q.target;
+  recordFirst(q, ok, q.toks[i]);
+  if (ok) {
+    ST.locked = true; b.classList.add("ok");
+    setMsg("⭕ 찾았어요! " + W[q.target].en + " = " + W[q.target].ko, "good");
+    speak(q.say, { rate: 0.75, queue: true });
+    setTimeout(nextQ, 250);
+  } else {
+    b.classList.add("no", "shake");
+    setMsg("아쉬워요! 다시 한 번 찾아봐요 🔍", "bad");
+    speak(q.say, { rate: 0.75 });
+  }
+}
+
+/* ===== 결과 ===== */
+function buildCopy(areaId, score, total, wrong, sec) {
+  var a = AREAS[areaId - 1];
+  var m = Math.floor(sec / 60), s = sec % 60;
+  return "[영핏 지나티처] " + ST.name + " · 썰매 낱말 게임(Unit 1) · " + areaId + ". " + a.title + "\n" +
+    "결과: " + score + " / " + total + "  " + stars(score / total) + "\n" +
+    "한 번에 못 맞힌 문항: " + (wrong.length ? wrong.join(", ") + "번" : "없음 (모두 한 번에 맞혔어요!)") + "\n" +
+    "걸린 시간: " + (m ? m + "분 " : "") + s + "초";
+}
+function renderResult() {
+  var total = ST.qs.length;
+  var detail = ST.qs.map(function (q, i) { var r = ST.res[i] || { no: q.no, ok: false, chosen: "", answer: q.ansLabel }; return { no: r.no, ok: r.ok, chosen: r.chosen, answer: r.answer }; });
+  var wrong = detail.filter(function (d) { return !d.ok; }).map(function (d) { return d.no; });
+  var score = total - wrong.length;
+  var sec = Math.round((Date.now() - ST.t0) / 1000);
+  DONE[ST.area] = { score: score, total: total, wrong: wrong, sec: sec };
+  lsSet("kimain-sled-done", JSON.stringify(DONE));
+  var a = AREAS[ST.area - 1];
+  var h = '<div class="card">' + logoHtml() + '<h1>' + a.ic + ' ' + a.title + ' 끝!</h1><div class="stars">' + stars(score / total) + '</div><div class="score">' + score + ' / ' + total + '</div>' +
+    '<p class="sub" style="text-align:center">' + (wrong.length ? "한 번 더 보면 더 단단해져요. 아래 낱말을 소리 내어 읽어 봐요!" : "와! 모두 한 번에 맞혔어요! 최고예요! 🎉") + '</p>';
+  if (wrong.length) {
+    h += '<h2>🌱 다시 보면 좋은 문제</h2>';
+    wrong.forEach(function (no) {
+      var q = ST.qs[no - 1];
+      h += '<div class="rev"><b>' + no + '번</b> · ' + q.exp + '<br><button class="rb" data-act="say" data-say="' + esc(q.t === "ord" ? q.en : q.say) + '" data-rate="0.75">🔊 듣기</button></div>';
+    });
+  }
+  h += '<details class="all"><summary>전체 해설 보기</summary>';
+  ST.qs.forEach(function (q) { h += '<div class="rev"><b>' + q.no + '번</b> ' + (detail[q.no - 1].ok ? "⭕" : "🌱") + ' · ' + q.exp + '</div>'; });
+  h += '</details>';
+  var txt = buildCopy(ST.area, score, total, wrong, sec);
+  h += '<button class="btn" data-act="copy">📋 결과 카톡으로 복사하기</button><textarea class="copybox" id="ctext" rows="4" readonly>' + esc(txt) + '</textarea>' +
+    '<div class="note">복사한 글을 지나티처에게 카톡으로 보내 주세요.</div><div id="submit-status"></div>' +
+    '<button class="btn light" data-act="again">↺ 이 영역 한 번 더 하기</button><button class="btn gray" data-act="home">← 영역 고르기</button></div>';
+  app.innerHTML = h;
+  fanfare();
+  engfitSubmitWithStatus({
+    quizId: "kimain-sled-1012-p" + ST.area,
+    quizTitle: "김아인 썰매 낱말 게임 " + ST.area + "영역 " + a.title + " 10/12",
+    student: ST.name, score: score, total: total, wrong: wrong, durationSec: sec, detail: detail
+  });
+}
+function copyText(t, done) {
+  function fb() {
+    try { var ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); done(true); } catch (e) { done(false); }
+  }
+  try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { done(true); }, fb); else fb(); } catch (e) { fb(); }
+}
+
+/* ===== 이벤트 ===== */
+app.addEventListener("click", function (e) {
+  var el = e.target.closest ? e.target.closest("[data-act]") : null;
+  if (!el || el.disabled) return;
+  var act = el.getAttribute("data-act"), i = parseInt(el.getAttribute("data-i"), 10);
+  if (act === "say") speak(el.getAttribute("data-say"), { rate: parseFloat(el.getAttribute("data-rate")) || 0.8 });
+  else if (act === "area") { if (ST.name) renderCard(parseInt(el.getAttribute("data-id"), 10)); }
+  else if (act === "startq") startQuiz();
+  else if (act === "home") renderHome();
+  else if (act === "again") startQuiz();
+  else if (act === "pick") pick(i);
+  else if (act === "tile") tile(i);
+  else if (act === "slot") slotRemove(i);
+  else if (act === "reset") resetOrd();
+  else if (act === "next") nextQ();
+  else if (act === "tok") tok(i);
+  else if (act === "copy") copyText(document.getElementById("ctext").value, function (ok) { el.textContent = ok ? "✓ 복사됐어요! 카톡에 붙여넣기 해요" : "아래 글을 길게 눌러 복사해 주세요"; });
+  else if (act === "copyall") {
+    var lines = ["[영핏 지나티처] " + ST.name + " · 썰매 낱말 게임(Unit 1) 전체 결과"];
+    AREAS.forEach(function (a) { var d = DONE[a.id]; lines.push(a.id + ". " + a.title + " : " + (d ? d.score + "/" + d.total : "아직")); });
+    var t = lines.join("\n");
+    copyText(t, function (ok) { el.textContent = ok ? "✓ 복사됐어요! 카톡에 붙여넣기 해요" : "아래 글을 길게 눌러 복사해 주세요"; document.getElementById("allcopy").innerHTML = '<textarea class="copybox" rows="6" readonly>' + esc(t) + '</textarea>'; });
+  }
+});
+document.addEventListener("keydown", function (e) {
+  var q = ST.qs[ST.i];
+  if (ST.area && q && q.t === "mc" && /^[1-4]$/.test(e.key) && document.querySelector(".ch")) pick(parseInt(e.key, 10) - 1);
+});
+document.getElementById("snd").addEventListener("click", function () {
+  muted = !muted; lsSet("engfit-sound", muted ? "off" : "on"); refreshSnd();
+  if (muted) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+});
+
+ST.name = lsGet("kimain-sled-name", "");
+refreshSnd(); initVoices(); renderHome();
+</script>
+</body>
+</html>
