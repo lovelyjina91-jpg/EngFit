@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>영핏 사진 클리닉 10/15</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 시작 화면 -->
+  <div class="card" id="start-card">
+    <h1>영핏 사진 클리닉 10/15 🌱</h1>
+    <p class="sub">12문항 · 이름을 입력하고 시작하세요</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+  </div>
+
+  <!-- 문제 화면 -->
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "It was kind ______ him to carry my bag.",
+  "choices": [
+   "of",
+   "for",
+   "to",
+   "at"
+  ],
+  "answer": "of",
+  "exp": "kind처럼 사람의 <b>성격·태도</b>를 나타내는 형용사(kind, polite, silly, wise, generous, careless)가 오면 의미상 주어는 <b>of + 목적격</b>이에요."
+ },
+ {
+  "q": "It is dangerous ______ children to play near the river.",
+  "choices": [
+   "for",
+   "of",
+   "to",
+   "by"
+  ],
+  "answer": "for",
+  "exp": "dangerous는 사물·상황의 성질을 말하는 형용사라서 의미상 주어를 <b>for + 목적격</b>으로 써요. 사람의 성격을 칭찬하거나 비난하는 말(kind, silly 등)일 때만 of!"
+ },
+ {
+  "q": "It was generous ______ her to give away her toys.",
+  "choices": [
+   "of",
+   "for",
+   "with",
+   "on"
+  ],
+  "answer": "of",
+  "exp": "generous(관대한)는 사람의 성격을 나타내는 형용사라서 <b>of her</b>가 맞아요. 'She was generous to give ~'로 바꿔 말할 수 있으면 of를 써요."
+ },
+ {
+  "q": "It is hard ______ me to remember all the dates.",
+  "choices": [
+   "for",
+   "of",
+   "to",
+   "with"
+  ],
+  "answer": "for",
+  "exp": "hard(어려운)는 사람의 성격이 아니라 일의 난이도를 말하므로 <b>for me</b>를 써요. easy, difficult, possible, important도 for!"
+ },
+ {
+  "q": "다음 중 올바른 문장은?",
+  "choices": [
+   "It is easy for him to fix the clock.",
+   "It is kind for him to fix the clock.",
+   "It is easy of him to fix the clock.",
+   "It is easy to fixing the clock."
+  ],
+  "answer": "It is easy for him to fix the clock.",
+  "exp": "easy는 난이도를 나타내므로 <b>for him</b>이에요. kind는 of him이어야 하고, to 뒤에는 -ing가 아니라 <b>동사원형</b>(to fix)이 와야 해요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?",
+  "choices": [
+   "I found strange to see snow in April.",
+   "I found it strange to see snow in April.",
+   "It is not easy to learn a new language.",
+   "It was silly of him to argue about such a small thing."
+  ],
+  "answer": "I found strange to see snow in April.",
+  "exp": "to부정사(to see ...)가 목적어일 때는 <b>가목적어 it</b>이 필요해요: found <b>it</b> strange to see ~. 'found strange to ~'처럼 it을 빼먹으면 틀려요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?",
+  "choices": [
+   "The rain made impossible to play outside.",
+   "The rain made it impossible to play outside.",
+   "We found it hard to believe his story.",
+   "It is important to drink enough water."
+  ],
+  "answer": "The rain made impossible to play outside.",
+  "exp": "make / find / think / consider + <b>it(가목적어) + 형용사 + to V</b> 구조예요. made <b>it</b> impossible to play ~처럼 it이 반드시 필요해요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?",
+  "choices": [
+   "It is not wise to walking alone at night.",
+   "It is fun to grow flowers on the roof.",
+   "It is wise to leave before the storm.",
+   "I think it wrong to throw trash on the street."
+  ],
+  "answer": "It is not wise to walking alone at night.",
+  "exp": "여기서 to는 부정사의 to예요. <b>to + 동사원형</b>이므로 to walk가 맞아요. to 뒤에 -ing(walking)를 쓰면 틀려요!"
+ },
+ {
+  "q": "Do you think it strange ______ pizza with a fork?",
+  "choices": [
+   "to eat",
+   "eating",
+   "eat",
+   "ate"
+  ],
+  "answer": "to eat",
+  "exp": "가목적어 it 뒤에 오는 진목적어는 <b>to부정사(to eat)</b>예요. 'think it strange to eat'의 구조를 기억해요."
+ },
+ {
+  "q": "다음 중 올바르게 쓰인 문장은?",
+  "choices": [
+   "I found it difficult to understand this math problem.",
+   "I found difficult it to understand this math problem.",
+   "I found it to understand difficult this math problem.",
+   "I found to understand it difficult this math problem."
+  ],
+  "answer": "I found it difficult to understand this math problem.",
+  "exp": "어순은 <b>found + it + 형용사 + to V</b>예요. 형용사(difficult)가 it 바로 뒤, 진목적어(to understand ~)는 맨 뒤에 와요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?",
+  "choices": [
+   "Her advice made it easy to choosing a new hobby.",
+   "The loud alarm made it hard to sleep.",
+   "We thought it funny to hear the parrot sing.",
+   "She found it hard to choose a present."
+  ],
+  "answer": "Her advice made it easy to choosing a new hobby.",
+  "exp": "made it easy <b>to choose</b> ~처럼 to 뒤에는 동사원형이에요. to choosing은 틀린 형태예요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?",
+  "choices": [
+   "It is fun to riding horses on the beach.",
+   "I think it wrong to throw trash on the street.",
+   "It is not easy to keep a diary every day.",
+   "She found it hard to leave her hometown."
+  ],
+  "answer": "It is fun to riding horses on the beach.",
+  "exp": "가주어 It ~ <b>to V</b> 구문에서 to 뒤에는 항상 동사원형이에요. to riding → to ride로 고쳐요. (to keeping, to finding도 같은 실수!)"
+ }
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "clinic-kwaksh-1015",
+    quizTitle: "영핏 사진 클리닉 10/15",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/15 결과]\n퀴즈ID: clinic-kwaksh-1015\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

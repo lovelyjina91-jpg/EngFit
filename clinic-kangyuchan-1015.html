@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>영핏 사진 클리닉 10/15</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 시작 화면 -->
+  <div class="card" id="start-card">
+    <h1>영핏 사진 클리닉 10/15 🌱</h1>
+    <p class="sub">16문항 · 이름을 입력하고 시작하세요</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+  </div>
+
+  <!-- 문제 화면 -->
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "______ it was raining, we went out to play soccer.",
+  "choices": [
+   "Although",
+   "Because",
+   "If",
+   "Unless"
+  ],
+  "answer": "Although",
+  "exp": "<b>although</b>는 '~이긴 하지만, ~임에도'라는 양보의 접속사예요. 비가 오는데도 축구하러 나갔으니 although가 맞아요."
+ },
+ {
+  "q": "The main ______ of the story is a brave little girl.",
+  "choices": [
+   "character",
+   "society",
+   "symbol",
+   "adventure"
+  ],
+  "answer": "character",
+  "exp": "<b>character</b>는 '등장인물, 성격, 특징'이라는 뜻이에요. 이야기의 주인공 = main character."
+ },
+ {
+  "q": "It is ______ to copy the program without permission.",
+  "choices": [
+   "illegal",
+   "cheerful",
+   "equal",
+   "tight"
+  ],
+  "answer": "illegal",
+  "exp": "<b>illegal</b>은 '불법적인'이에요. legal(합법적인) 앞에 il-이 붙어 반대 뜻이 돼요."
+ },
+ {
+  "q": "Wearing sunglasses can ______ your eyes from the strong sun.",
+  "choices": [
+   "protect",
+   "wrap",
+   "gain",
+   "fit"
+  ],
+  "answer": "protect",
+  "exp": "<b>protect A from B</b>는 'A를 B로부터 보호하다'예요. 철자 p-r-o-t-e-c-t!"
+ },
+ {
+  "q": "The ______ king stole land from his people.",
+  "choices": [
+   "evil",
+   "cheerful",
+   "equal",
+   "tight"
+  ],
+  "answer": "evil",
+  "exp": "<b>evil</b>은 '사악한'이에요. 백성의 땅을 빼앗은 왕을 설명하는 말로 알맞아요."
+ },
+ {
+  "q": "This shirt is too ______ for me. I can't breathe well.",
+  "choices": [
+   "tight",
+   "cheerful",
+   "equal",
+   "evil"
+  ],
+  "answer": "tight",
+  "exp": "<b>tight</b>는 '꽉 조이는, 꽉 끼는'이에요. 반대말은 loose(헐렁한)예요."
+ },
+ {
+  "q": "I'll wait here until my friend ______ at the station.",
+  "choices": [
+   "shows up",
+   "puts up",
+   "gets over",
+   "looks like"
+  ],
+  "answer": "shows up",
+  "exp": "<b>show up</b>은 '나타나다'예요. 'show(보여주다)'로만 외우면 틀려요! 구동사는 덩어리로 기억해요."
+ },
+ {
+  "q": "I'm ______ sure that he will come. I trust him.",
+  "choices": [
+   "completely",
+   "hardly",
+   "rarely",
+   "barely"
+  ],
+  "answer": "completely",
+  "exp": "<b>completely</b>는 '완전히'(부사)예요. complete(완전한, 완벽한)는 형용사이고, 부사는 -ly가 붙어요."
+ },
+ {
+  "q": "She is a ______ girl who always smiles at everyone.",
+  "choices": [
+   "cheerful",
+   "equal",
+   "illegal",
+   "tight"
+  ],
+  "answer": "cheerful",
+  "exp": "<b>cheerful</b>은 '쾌활한, 명랑한'이에요. cheer(응원, 기운) + -ful."
+ },
+ {
+  "q": "Men and women should have ______ rights.",
+  "choices": [
+   "equal",
+   "evil",
+   "tight",
+   "illegal"
+  ],
+  "answer": "equal",
+  "exp": "<b>equal</b>은 '동등한, 같은'이에요. 'equal rights = 평등한 권리'. 철자 e-q-u-a-l!"
+ },
+ {
+  "q": "Our ______ is changing quickly because of new technology.",
+  "choices": [
+   "society",
+   "symbol",
+   "accident",
+   "battle"
+  ],
+  "answer": "society",
+  "exp": "<b>society</b>는 '사회'예요. 철자 s-o-c-i-e-t-y에 주의해요."
+ },
+ {
+  "q": "A four-leaf clover is a ______ of luck.",
+  "choices": [
+   "symbol",
+   "society",
+   "accident",
+   "character"
+  ],
+  "answer": "symbol",
+  "exp": "<b>symbol</b>은 '상징'이에요. 'a symbol of luck = 행운의 상징'. 철자 s-y-m-b-o-l!"
+ },
+ {
+  "q": "다음 중 철자가 맞는 것은?",
+  "choices": [
+   "adventure",
+   "adventer",
+   "advanture",
+   "adventur"
+  ],
+  "answer": "adventure",
+  "exp": "<b>adventure</b>는 '모험'이에요. 끝이 -ture(-ture로 끝나는 단어: picture, culture)임을 기억해요."
+ },
+ {
+  "q": "I broke my leg in a car ______.",
+  "choices": [
+   "accident",
+   "acident",
+   "accidant",
+   "aksident"
+  ],
+  "answer": "accident",
+  "exp": "<b>accident</b>는 '사고'예요. c가 두 번, 끝은 -ent예요: ac-ci-dent."
+ },
+ {
+  "q": "다음 문장에서 동사(is)의 <b>주어</b>는? 'Most of the land in Egypt is desert.'",
+  "choices": [
+   "Most of the land in Egypt",
+   "Egypt",
+   "the land",
+   "desert"
+  ],
+  "answer": "Most of the land in Egypt",
+  "exp": "전치사구(in Egypt)가 주어 뒤를 꾸며서 주어가 길어졌어요. 동사(is) 앞까지가 전부 주어: <b>Most of the land in Egypt / is desert.</b> 'Egypt'는 전치사 in의 목적어일 뿐이에요."
+ },
+ {
+  "q": "Going to bed early and getting up early ______ difficult for me.",
+  "choices": [
+   "is",
+   "are",
+   "were",
+   "be"
+  ],
+  "answer": "is",
+  "exp": "동명사구(Going ... and getting ...)가 주어일 때는 여러 개가 and로 이어져도 하나의 행동으로 보아 <b>단수 취급</b>해서 is를 써요. (Washing and drying clothes takes ~처럼요!)"
+ }
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "clinic-kangyuchan-1015",
+    quizTitle: "영핏 사진 클리닉 10/15",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/15 결과]\n퀴즈ID: clinic-kangyuchan-1015\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
