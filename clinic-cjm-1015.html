@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>영핏 사진 클리닉 10/15</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 시작 화면 -->
+  <div class="card" id="start-card">
+    <h1>영핏 사진 클리닉 10/15 🌱</h1>
+    <p class="sub">16문항 · 이름을 입력하고 시작하세요</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+  </div>
+
+  <!-- 문제 화면 -->
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "A nurse will ______ the sleeping baby all night.",
+  "choices": [
+   "watch over",
+   "bring back",
+   "look ahead",
+   "show off"
+  ],
+  "answer": "watch over",
+  "exp": "<b>watch over</b>는 '~을 지켜보다, 돌보다'라는 뜻의 구예요. 아기를 밤새 돌본다는 문장과 어울려요. watch out(조심해)과 구분해요."
+ },
+ {
+  "q": "The king lived in a ______ palace with a hundred rooms.",
+  "choices": [
+   "grand",
+   "weak",
+   "tight",
+   "rough"
+  ],
+  "answer": "grand",
+  "exp": "<b>grand</b>는 '웅장한, 장대한'이에요. 방이 백 개인 궁전을 꾸며 주는 말로 알맞아요."
+ },
+ {
+  "q": "The shop sells a ______ of colorful umbrellas.",
+  "choices": [
+   "variety",
+   "function",
+   "operator",
+   "temperature"
+  ],
+  "answer": "variety",
+  "exp": "<b>a variety of ~</b>는 '다양한 ~'이라는 표현이에요. 뒤에 복수명사가 오고, variety 앞에는 관사 a가 필요해요."
+ },
+ {
+  "q": "The snake's poison can ______ a small animal's muscles.",
+  "choices": [
+   "paralyze",
+   "persuade",
+   "motivate",
+   "glance"
+  ],
+  "answer": "paralyze",
+  "exp": "<b>paralyze</b>는 '마비시키다'예요. 철자 p-a-r-a-l-y-z-e를 정확히 기억해요. (마지막이 -yze!)"
+ },
+ {
+  "q": "What is the main ______ of the heart?",
+  "choices": [
+   "function",
+   "temperature",
+   "operator",
+   "grand"
+  ],
+  "answer": "function",
+  "exp": "<b>function</b>은 '기능, 작용'이에요. 'What is the function of ~?' = ~의 기능은 무엇인가? 철자 f-u-n-c-t-i-o-n!"
+ },
+ {
+  "q": "The ______ in this room is too high, so please open the window.",
+  "choices": [
+   "temperature",
+   "function",
+   "operator",
+   "variety"
+  ],
+  "answer": "temperature",
+  "exp": "<b>temperature</b>는 '온도, 기온'이에요. 철자가 길어서 tem-per-a-ture로 끊어 외워요."
+ },
+ {
+  "q": "Her teacher's praise ______ her to study harder.",
+  "choices": [
+   "motivated",
+   "operated",
+   "paralyzed",
+   "glanced"
+  ],
+  "answer": "motivated",
+  "exp": "<b>motivate</b>는 '동기를 부여하다'예요. 과거형은 motivated! (motivat<b>ed</b> — 끝의 ed를 빼먹지 않도록!)"
+ },
+ {
+  "q": "Climbing that tall tree will ______ you in danger.",
+  "choices": [
+   "put",
+   "make",
+   "take",
+   "bring"
+  ],
+  "answer": "put",
+  "exp": "<b>put ~ in danger</b>는 '~을 위험에 빠뜨리다'라는 표현이에요. put은 3단 변화가 put-put-put이에요."
+ },
+ {
+  "q": "They ______ him to stay and finish the project.",
+  "choices": [
+   "persuaded",
+   "glanced",
+   "operated",
+   "grand"
+  ],
+  "answer": "persuaded",
+  "exp": "<b>persuade A to V</b>는 'A가 V하도록 설득하다'예요. 철자 p-e-r-s-u-a-d-e-d를 정확히!"
+ },
+ {
+  "q": "He works as a crane ______ at the port.",
+  "choices": [
+   "operator",
+   "function",
+   "variety",
+   "temperature"
+  ],
+  "answer": "operator",
+  "exp": "<b>operator</b>는 '(기계) 조작자, 기사'예요. operate(작동시키다) + -or(사람)이에요."
+ },
+ {
+  "q": "He died in a ______ plane crash. No one knows why it fell.",
+  "choices": [
+   "mysterious",
+   "waterproof",
+   "structure",
+   "embarrass"
+  ],
+  "answer": "mysterious",
+  "exp": "<b>mysterious</b>는 '불가사의한, 신비한'이에요. mystery(미스터리)에서 나왔고 철자에 -ious가 붙어요."
+ },
+ {
+  "q": "She ______ at her cell phone and smiled.",
+  "choices": [
+   "glanced",
+   "feast",
+   "sincere",
+   "nest"
+  ],
+  "answer": "glanced",
+  "exp": "<b>glance (at)</b>는 '흘끗 보다'예요. 과거형은 glanced. 철자 g-l-a-n-c-e!"
+ },
+ {
+  "q": "'학생들에게 지식을 늘리도록 요구한다'를 뜻하는 문장으로 알맞은 것은?",
+  "choices": [
+   "Exams push students to increase their knowledge.",
+   "Exams push students increase to their knowledge.",
+   "Exams push to students increase their knowledge.",
+   "Exams push students increasing their knowledge to."
+  ],
+  "answer": "Exams push students to increase their knowledge.",
+  "exp": "<b>push / ask + 목적어 + to V</b> 구조예요. 'push students to increase = 학생들이 늘리도록 몰아붙이다', 'ask students to solve = 학생들에게 풀라고 요청하다'처럼 목적어 뒤에 to부정사를 써요."
+ },
+ {
+  "q": "They may skip meals or lose sleep because of exams. 이 문장의 뜻으로 알맞은 것은?",
+  "choices": [
+   "그들은 시험 때문에 식사를 거르거나 잠을 못 잘 수도 있다.",
+   "그들은 식사를 하고 잠도 잘 수 있어서 시험을 잘 본다.",
+   "그들은 시험 후에 식사를 하거나 잠을 잔다.",
+   "그들은 식사와 잠 때문에 시험을 걱정한다."
+  ],
+  "answer": "그들은 시험 때문에 식사를 거르거나 잠을 못 잘 수도 있다.",
+  "exp": "<b>skip meals</b>는 '식사를 거르다', <b>lose sleep</b>은 '잠을 설치다', because of ~는 '~ 때문에'예요. or는 '또는'이므로 두 가지 중 하나가 일어날 수 있다는 뜻이에요."
+ },
+ {
+  "q": "This game is less exciting ______ children.",
+  "choices": [
+   "for",
+   "from",
+   "at",
+   "than"
+  ],
+  "answer": "for",
+  "exp": "'아이들에게 덜 재미있다'는 <b>less exciting for children</b>이에요. '~에게'의 의미로 for를 써요. from은 '~로부터'라서 어색해요."
+ },
+ {
+  "q": "다음 중 철자가 맞는 것은?",
+  "choices": [
+   "Usually",
+   "Usualy",
+   "Usully",
+   "Usuaally"
+  ],
+  "answer": "Usually",
+  "exp": "usual + ly = <b>usually</b>. l이 두 번 들어가요. 'Usually, animal leather is treated with strong chemicals.'처럼 문장 앞에서 쓰이면 대문자로 시작해요."
+ }
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "clinic-cjm-1015",
+    quizTitle: "영핏 사진 클리닉 10/15",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/15 결과]\n퀴즈ID: clinic-cjm-1015\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
