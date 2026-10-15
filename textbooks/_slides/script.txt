@@ -1,0 +1,59 @@
+<script>
+(function(){
+  var stage=document.getElementById('stage');
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var seq=[];
+  slides.forEach(function(s,i){
+    var n=s.querySelectorAll('.r').length;
+    for(var k=0;k<=n;k++) seq.push([i,k]);
+  });
+  var p=0;
+  /* 안전장치: 내용이 화면보다 길면 그 슬라이드만 살짝 축소 */
+  function fit(){
+    document.body.classList.add('measuring');
+    slides.forEach(function(s){
+      var w=s.querySelector('.wrap'); if(!w) return;
+      w.style.transform='none';
+      var avail=w.clientHeight, need=w.scrollHeight;
+      if(need>avail+1){
+        var k=Math.max(.75, avail/need);
+        w.style.transform='scale('+k+')';
+        w.style.width=(100/k)+'%';
+      } else { w.style.width='100%'; }
+    });
+    document.body.classList.remove('measuring');
+  }
+  function render(){
+    var si=seq[p][0], rc=seq[p][1];
+    slides.forEach(function(s,i){ s.classList.toggle('on', i===si); });
+    slides[si].querySelectorAll('.r').forEach(function(el,k){ el.classList.toggle('show', k<rc); });
+    document.getElementById('bar').style.width=((p+1)/seq.length*100)+'%';
+    document.getElementById('num').textContent=(si+1)+' / '+slides.length;
+  }
+  function go(d){ p=Math.max(0,Math.min(seq.length-1,p+d)); render(); }
+  function ripple(x,y){
+    var d=document.createElement('div'); d.className='ripple';
+    var r=stage.getBoundingClientRect();
+    d.style.left=(x-r.left)+'px'; d.style.top=(y-r.top)+'px';
+    stage.appendChild(d); setTimeout(function(){d.remove();},600);
+  }
+  function tap(e,d){
+    var t=e.changedTouches?e.changedTouches[0]:e;
+    ripple(t.clientX,t.clientY); go(d); e.preventDefault();
+  }
+  ['zoneL','zoneR'].forEach(function(id,i){
+    var el=document.getElementById(id), d=i?1:-1;
+    el.addEventListener('click',function(e){tap(e,d);});
+    el.addEventListener('touchstart',function(e){tap(e,d);},{passive:false});
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){go(1);e.preventDefault();}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){go(-1);e.preventDefault();}
+    else if(e.key==='f'||e.key==='F'){ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen(); }
+    else if(e.key==='Home'){p=0;render();}
+  });
+  window.addEventListener('resize',function(){ setTimeout(fit,60); });
+  if(document.fonts&&document.fonts.ready){ document.fonts.ready.then(function(){ fit(); render(); }); }
+  fit(); render();
+})();
+</script></body></html>
