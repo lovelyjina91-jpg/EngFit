@@ -12,3 +12,4 @@
 3. detail 문항마다 `tag`(개념 이름) 넣기 — `records/tools/engfit_records.py`의 `CONCEPTS` 이름 사용
 4. 오답 클리닉은 원본 quizId 뒤에 `-clinic`을 붙이기
 5. **🤔 모름 버튼을 항상 넣기** (선생님 지시, 예외 없음) — 누르면 `chosen:"모름", unknown:true` 로 기록, 키보드 0. 자세한 규칙: `GUIDELINES.md` 「모름 버튼」, 기준 구현: `test-hte-0924.html`
+6. **영핏 로고 흐린 배경 넣기** (선생님 지시) — `</body>` 앞에 `engfit-watermark` 한 줄. 자세한 규칙: `GUIDELINES.md` 「로고 배경」

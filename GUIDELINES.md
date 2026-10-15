@@ -93,3 +93,18 @@ function pick(choice) {
 ## 2. 영상용 공통 규칙
 - 글자 크기는 촬영 화면에서 읽히도록 크게 (본문 예문 16px 이상, clamp로 반응형).
 - 섹션은 ① ② ③ 번호 배지로 구분하고, 한 클릭에 한 섹션씩 진행되는 흐름으로 구성한다.
+
+---
+
+# 🧩 로고 배경 (모든 학생용 HTML·PDF에 **항상** 넣기)
+
+선생님 지시: 영핏 로고를 **흐린 배경 무늬**로 넣는다.
+
+- 로고 파일: `assets/engfit-logo.png` (큐브 + English Fit), `assets/engfit-cube.png` (큐브만)
+- HTML: `</body>` 바로 앞에 아래 한 줄을 그대로 넣는다 (`pointer-events:none` 이라 버튼 클릭을 막지 않음).
+
+```html
+<!-- engfit-watermark: 영핏 로고 흐린 배경 (GUIDELINES.md 「로고 배경」) --><div class="engfit-wm" aria-hidden="true" style="position:fixed;left:50%;top:50%;width:min(70vw,520px);aspect-ratio:900/608;transform:translate(-50%,-50%);background:url(assets/engfit-logo.png) center/contain no-repeat;opacity:.06;pointer-events:none;z-index:9999"></div>
+```
+
+- PDF(데일리 10·등원 브리핑): 페이지마다 가운데에 같은 로고를 투명도 7%로 깐다.
