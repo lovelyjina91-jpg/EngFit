@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>이주연 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="이주연 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>이주연 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="이주연" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "'방문객, 찾아온 사람'을 뜻하는 단어의 철자가 바른 것은?",
+  "choices": [
+   "visitor",
+   "vistor",
+   "visitar",
+   "visiter"
+  ],
+  "answer": "visitor",
+  "exp": "사람을 나타내는 <b>-or<\/b>로 끝나요. visit(방문하다)에 -or가 붙어 <b>visitor<\/b>(방문객)가 돼요. 철자를 빼먹거나 -er로 쓰지 않도록 주의!",
+  "part": "Part 1 · 단어·철자 (visitor, experiment)"
+ },
+ {
+  "q": "'실험'을 뜻하는 단어의 철자가 바른 것은?",
+  "choices": [
+   "experement",
+   "experiment",
+   "experimant",
+   "expariment"
+  ],
+  "answer": "experiment",
+  "exp": "<b>ex-per-i-ment<\/b> 로 끊어 외워요. 가운데 <b>i<\/b>와 끝의 <b>-ment<\/b>를 정확히 써야 해요."
+ },
+ {
+  "q": "A person who works in a garden is a ______.",
+  "choices": [
+   "gardenar",
+   "gardiner",
+   "gardner",
+   "gardener"
+  ],
+  "answer": "gardener",
+  "exp": "garden + <b>-er<\/b> = <b>gardener<\/b>(정원사). 'garden' 철자 전체를 살려서 써요."
+ },
+ {
+  "q": "Many ______ come to the museum on weekends.",
+  "choices": [
+   "visited",
+   "visiting",
+   "visit",
+   "visitors"
+  ],
+  "answer": "visitors",
+  "exp": "'많은 방문객들'이라는 <b>사람 명사(복수)<\/b>가 필요해요. visit는 '방문하다'라는 동사, <b>visitor(s)<\/b>가 '방문객'이에요."
+ },
+ {
+  "q": "We did an ______ in science class today.",
+  "choices": [
+   "experiments",
+   "experiment",
+   "experimenting",
+   "to experiment"
+  ],
+  "answer": "experiment",
+  "exp": "앞에 <b>an<\/b>(하나)이 있으니 단수 명사 <b>experiment<\/b>가 와야 해요. experiments는 복수라서 an과 함께 쓸 수 없어요."
+ },
+ {
+  "q": "'경험'을 뜻하는 영어 단어는?",
+  "choices": [
+   "experiment",
+   "expert",
+   "experience",
+   "expect"
+  ],
+  "answer": "experience",
+  "exp": "<b>experience<\/b>=경험, experiment=실험, expert=전문가, expect=기대하다. 비슷하게 생겼지만 뜻이 모두 달라요."
+ },
+ {
+  "q": "We will ______ my grandmother this weekend.",
+  "choices": [
+   "visit",
+   "a visitor",
+   "visitor",
+   "visitors"
+  ],
+  "answer": "visit",
+  "exp": "'할머니를 방문할 것이다'는 <b>동사<\/b>가 필요하므로 원형 <b>visit<\/b>를 써요. visitor는 '방문객(사람)'이에요."
+ },
+ {
+  "q": "다음 중 철자가 바른 단어는?",
+  "choices": [
+   "library",
+   "librery",
+   "libary",
+   "liberary"
+  ],
+  "answer": "library",
+  "exp": "<b>li-brar-y<\/b>. 가운데 r이 두 번 들어가요. 소리 나는 대로 쓰지 말고 철자를 따로 외워요."
+ },
+ {
+  "q": "다음 중 철자가 <b>틀린<\/b> 단어는?",
+  "choices": [
+   "library",
+   "vegtable",
+   "visitor",
+   "experiment"
+  ],
+  "answer": "vegtable",
+  "exp": "올바른 철자는 <b>vegetable<\/b>(채소)이에요. 가운데 <b>e<\/b>를 빼먹기 쉬워요."
+ },
+ {
+  "q": "They did three ______ in science class yesterday.",
+  "choices": [
+   "an experiment",
+   "experiments",
+   "experiment",
+   "experimenting"
+  ],
+  "answer": "experiments",
+  "exp": "앞에 <b>three<\/b>(셋)가 있으니 <b>복수형 experiments<\/b>가 필요해요."
+ },
+ {
+  "q": "My two older sisters ______ tennis every Sunday.",
+  "choices": [
+   "plays",
+   "playing",
+   "play",
+   "to play"
+  ],
+  "answer": "play",
+  "exp": "주어가 <b>My two older sisters(복수)<\/b>라서 동사는 <b>원형 play<\/b>예요. 현재형 자리에 -ing(playing)를 쓰면 안 돼요. -ing는 be동사(am/is/are)와 함께 써야 해요.",
+  "part": "Part 2 · 3인칭 단수 일반동사 (-s/-es)"
+ },
+ {
+  "q": "Her brother ______ cartoons every morning.",
+  "choices": [
+   "watches",
+   "watching",
+   "watchs",
+   "watch"
+  ],
+  "answer": "watches",
+  "exp": "주어가 <b>3인칭 단수(Her brother)<\/b>이므로 동사에 -s/-es를 붙여요. watch는 끝이 <b>-ch<\/b>라서 <b>-es<\/b>를 붙여 <b>watches<\/b>! 'watching'은 현재형 한 단어 자리에 쓸 수 없어요."
+ },
+ {
+  "q": "The boys in my class ______ soccer after school.",
+  "choices": [
+   "to play",
+   "play",
+   "plays",
+   "playing"
+  ],
+  "answer": "play",
+  "exp": "주어는 <b>The boys(복수)<\/b>. 'in my class'는 꾸며 주는 말이에요. 복수 주어에는 <b>원형 play<\/b>를 써요."
+ },
+ {
+  "q": "My father ______ to work by bus every day.",
+  "choices": [
+   "goes",
+   "gos",
+   "go",
+   "going"
+  ],
+  "answer": "goes",
+  "exp": "3인칭 단수 주어 + 일반동사 현재형. go는 끝이 <b>-o<\/b>라서 <b>-es<\/b>를 붙여 <b>goes<\/b>가 돼요."
+ },
+ {
+  "q": "She ______ her homework after dinner.",
+  "choices": [
+   "do",
+   "doing",
+   "does",
+   "doies"
+  ],
+  "answer": "does",
+  "exp": "3인칭 단수(She)에서 do는 <b>does<\/b>가 돼요. (do → does)"
+ },
+ {
+  "q": "Tom ______ English very hard.",
+  "choices": [
+   "studys",
+   "studies",
+   "study",
+   "studying"
+  ],
+  "answer": "studies",
+  "exp": "study는 <b>자음 + y<\/b>로 끝나서 y를 i로 바꾸고 <b>-es<\/b>를 붙여 <b>studies<\/b>가 돼요."
+ },
+ {
+  "q": "My cat ______ on the sofa all day.",
+  "choices": [
+   "sleeping",
+   "sleepes",
+   "sleeps",
+   "sleep"
+  ],
+  "answer": "sleeps",
+  "exp": "주어 <b>My cat<\/b>은 3인칭 단수예요. 일반 동사는 그냥 <b>-s<\/b>를 붙여 sleeps!"
+ },
+ {
+  "q": "Minho and Jiho ______ to school together.",
+  "choices": [
+   "walks",
+   "walkes",
+   "walk",
+   "walking"
+  ],
+  "answer": "walk",
+  "exp": "<b>Minho and Jiho<\/b>는 두 사람이므로 복수예요. 그래서 동사 원형 <b>walk<\/b>를 써요. (and로 연결된 주어는 복수)"
+ },
+ {
+  "q": "Mr. Kim ______ English at my school.",
+  "choices": [
+   "teaches",
+   "teaching",
+   "teach",
+   "teachs"
+  ],
+  "answer": "teaches",
+  "exp": "3인칭 단수 + teach는 끝이 <b>-ch<\/b>라서 <b>-es<\/b>! → <b>teaches<\/b>."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>'그녀는 매일 아침 우유를 마신다.'",
+  "choices": [
+   "She drinking milk every morning.",
+   "She drinks milk every morning.",
+   "She drink milk every morning.",
+   "She is drink milk every morning."
+  ],
+  "answer": "She drinks milk every morning.",
+  "exp": "주어가 She(3인칭 단수)이므로 동사에 <b>-s<\/b>를 붙여 <b>drinks<\/b>. 한 문장에 동사는 하나만 쓰고, 'is drink'처럼 be동사와 일반동사를 같이 쓰지 않아요."
+ },
+ {
+  "q": "______ pictures is my favorite hobby. (draw)",
+  "choices": [
+   "Draws",
+   "Drawed",
+   "Drawing",
+   "Draw"
+  ],
+  "answer": "Drawing",
+  "exp": "'~하는 것은'이라는 <b>주어<\/b>가 필요하면 동사에 <b>-ing<\/b>를 붙여요(동명사). 문장의 맨 앞이니 <b>대문자<\/b>로 시작해야 해요: <b>Drawing<\/b>.",
+  "part": "Part 3 · 동명사 주어 (~하는 것은)"
+ },
+ {
+  "q": "______ English every day helps you a lot. (study)",
+  "choices": [
+   "Studying",
+   "To studying",
+   "Studies",
+   "Study"
+  ],
+  "answer": "Studying",
+  "exp": "'영어를 공부하는 것은'이 문장의 주어예요. 동사 study를 <b>Studying<\/b>으로 바꿔 주어로 써요. 문장 첫 글자는 대문자!"
+ },
+ {
+  "q": "Swimming ______ my favorite sport.",
+  "choices": [
+   "be",
+   "are",
+   "am",
+   "is"
+  ],
+  "answer": "is",
+  "exp": "동명사(Swimming)가 주어이면 <b>단수<\/b> 취급해서 be동사는 <b>is<\/b>를 써요."
+ },
+ {
+  "q": "Eating fast food too often ______ bad for your health.",
+  "choices": [
+   "am",
+   "be",
+   "is",
+   "are"
+  ],
+  "answer": "is",
+  "exp": "'Eating ... often' 전체가 <b>하나의 주어(~하는 것)<\/b>이고 단수예요. 그래서 <b>is<\/b>! food가 복수처럼 보여도 are를 쓰지 않아요."
+ },
+ {
+  "q": "다음 문장을 바르게 고친 것은?<br>'Playing games are fun.'",
+  "choices": [
+   "Playing games am fun.",
+   "Play games is fun.",
+   "Playing games are funny.",
+   "Playing games is fun."
+  ],
+  "answer": "Playing games is fun.",
+  "exp": "<b>Playing games<\/b>(게임하는 것)는 단수 주어예요. 그래서 are를 <b>is<\/b>로 고쳐요. 'games'가 복수여도 동명사 주어는 단수!"
+ },
+ {
+  "q": "다음 중 어법상 올바른 문장은?",
+  "choices": [
+   "Cooking dinner takes a long time.",
+   "Cooking dinner take a long time.",
+   "Cook dinner takes a long time.",
+   "Cooks dinner takes a long time."
+  ],
+  "answer": "Cooking dinner takes a long time.",
+  "exp": "'저녁을 요리하는 것'이 주어이므로 <b>Cooking dinner<\/b>, 단수 주어에 맞게 동사는 <b>takes<\/b>예요."
+ },
+ {
+  "q": "My brother enjoys ______ comic books. (read)",
+  "choices": [
+   "to read",
+   "reads",
+   "read",
+   "reading"
+  ],
+  "answer": "reading",
+  "exp": "<b>enjoy<\/b> 뒤에는 동사를 <b>-ing(동명사)<\/b>로 써요. enjoy reading (O), enjoy to read (X)."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>'나의 취미는 사진을 찍는 것이다.'",
+  "choices": [
+   "My hobby taking pictures is.",
+   "My hobby is taking pictures.",
+   "My hobby is take pictures.",
+   "My hobby is takes pictures."
+  ],
+  "answer": "My hobby is taking pictures.",
+  "exp": "be동사 is 뒤에 '~하는 것'을 말할 때는 동사에 -ing를 붙여요 → <b>taking pictures<\/b>. 어순은 '주어 + be동사 + 보어'."
+ },
+ {
+  "q": "The flowers in the garden ______ very beautiful.",
+  "choices": [
+   "am",
+   "is",
+   "be",
+   "are"
+  ],
+  "answer": "are",
+  "exp": "문장의 진짜 주어는 <b>The flowers<\/b>(복수)예요. 'in the garden'은 꾸며 주는 말이라서 be동사는 가까운 garden이 아니라 flowers에 맞춰 <b>are<\/b>!"
+ },
+ {
+  "q": "The girl with long hair ______ my cousin.",
+  "choices": [
+   "is",
+   "be",
+   "am",
+   "are"
+  ],
+  "answer": "is",
+  "exp": "주어는 <b>The girl<\/b>(단수)이고 'with long hair'는 꾸밈말이에요. 그래서 be동사는 <b>is<\/b>."
+ },
+ {
+  "q": "Look! The dog ______ under the tree now.",
+  "choices": [
+   "sleeping is",
+   "is sleeping",
+   "sleep",
+   "are sleeping"
+  ],
+  "answer": "is sleeping",
+  "exp": "<b>Look!<\/b>, <b>now<\/b>는 '지금 ~하는 중이다(현재진행형)'의 단서예요. <b>be동사 + 동사-ing<\/b>, 주어가 단수이므로 <b>is sleeping<\/b>.",
+  "part": "Part 4 · be동사·현재진행·종합"
+ },
+ {
+  "q": "Listen! My sisters ______ the piano now.",
+  "choices": [
+   "are playing",
+   "is playing",
+   "are play",
+   "play"
+  ],
+  "answer": "are playing",
+  "exp": "주어가 복수(My sisters)이므로 <b>are + playing<\/b>. 현재진행형은 be동사와 -ing를 함께 써요."
+ },
+ {
+  "q": "I ______ a middle school student.",
+  "choices": [
+   "are",
+   "be",
+   "am",
+   "is"
+  ],
+  "answer": "am",
+  "exp": "주어 <b>I<\/b>에는 be동사 <b>am<\/b>을 써요."
+ },
+ {
+  "q": "Tom and I ______ good friends.",
+  "choices": [
+   "be",
+   "are",
+   "am",
+   "is"
+  ],
+  "answer": "are",
+  "exp": "<b>Tom and I<\/b>는 둘이므로 복수예요. 그래서 be동사는 <b>are<\/b>."
+ },
+ {
+  "q": "What are you doing? - I ______ my homework now.",
+  "choices": [
+   "does",
+   "do",
+   "doing",
+   "am doing"
+  ],
+  "answer": "am doing",
+  "exp": "<b>now<\/b>가 있으니 현재진행형이에요. 주어 I이므로 <b>am + doing<\/b>. doing만 쓰면 be동사가 빠져서 틀려요."
+ },
+ {
+  "q": "He is ______ a letter to his friend. (write)",
+  "choices": [
+   "writeing",
+   "writing",
+   "writting",
+   "wrotting"
+  ],
+  "answer": "writing",
+  "exp": "write처럼 <b>-e로 끝나는 동사<\/b>는 e를 빼고 <b>-ing<\/b>를 붙여요: write → <b>writing<\/b>."
+ },
+ {
+  "q": "The kids are ______ in the pool. (swim)",
+  "choices": [
+   "swimeing",
+   "swiming",
+   "swimmiing",
+   "swimming"
+  ],
+  "answer": "swimming",
+  "exp": "swim은 <b>모음 1개 + 자음 1개<\/b>로 끝나서 마지막 자음을 한 번 더 쓰고 -ing: swim → <b>swimming<\/b>."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린<\/b> 문장은?",
+  "choices": [
+   "He watching TV every evening.",
+   "My brother plays soccer every Sunday.",
+   "She is cooking dinner now.",
+   "Reading comics is fun."
+  ],
+  "answer": "He watching TV every evening.",
+  "exp": "'He watching TV'는 be동사가 없는 -ing라서 틀려요. 습관(every evening)이니 <b>He watches TV every evening.<\/b>이 바른 문장이에요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>'우리 아버지는 매일 회사에 걸어가신다.'",
+  "choices": [
+   "My father walking to work every day.",
+   "My father walk to work every day.",
+   "My father walks to work every day.",
+   "My father is walk to work every day."
+  ],
+  "answer": "My father walks to work every day.",
+  "exp": "주어가 My father(3인칭 단수)이므로 동사에 <b>-s<\/b>를 붙여 <b>walks<\/b>. '매일(every day)'은 습관이라 현재진행형이 아니에요."
+ },
+ {
+  "q": "My sister usually ______ cartoons, but now she ______ a movie.",
+  "choices": [
+   "watches / is watching",
+   "watch / is watching",
+   "watching / watches",
+   "is watching / watches"
+  ],
+  "answer": "watches / is watching",
+  "exp": "<b>usually<\/b>(습관)는 3인칭 단수 현재형 <b>watches<\/b>, <b>now<\/b>(지금)는 현재진행형 <b>is watching<\/b>이에요."
+ }
+];
+
+var QUIZ_ID = "clinic-ljy-1016";
+var QUIZ_TITLE = "이주연 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

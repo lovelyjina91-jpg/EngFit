@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>위화랑 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="위화랑 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>위화랑 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="위화랑" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "다음 중 어법상 올바른 문장은?",
+  "choices": [
+   "You should wear a hat.",
+   "You should to wear a hat.",
+   "You shoulds wear a hat.",
+   "You should wearing a hat."
+  ],
+  "answer": "You should wear a hat.",
+  "exp": "조동사 <b>should<\/b> 바로 뒤에는 <b>to 없이 동사원형<\/b>이 와요. 'must to wear'처럼 쓰는 오개념에 주의!",
+  "part": "Part 1 · should / must + 동사원형"
+ },
+ {
+  "q": "You should ______ your homework before dinner.",
+  "choices": [
+   "to finish",
+   "finish",
+   "finishes",
+   "finishing"
+  ],
+  "answer": "finish",
+  "exp": "should 뒤에는 <b>동사원형<\/b>(finish)만 와요. to를 붙이거나 -ing, -es를 붙이지 않아요."
+ },
+ {
+  "q": "Tom must ______ his seat belt in the car.",
+  "choices": [
+   "wearing",
+   "wears",
+   "to wear",
+   "wear"
+  ],
+  "answer": "wear",
+  "exp": "must도 조동사라서 <b>주어가 3인칭 단수여도 동사에 -s를 붙이지 않고<\/b> 동사원형을 써요."
+ },
+ {
+  "q": "다음 중 <b>틀린<\/b> 문장은?",
+  "choices": [
+   "They will visit us.",
+   "We should help her.",
+   "She can swim well.",
+   "He must to go now."
+  ],
+  "answer": "He must to go now.",
+  "exp": "'must to go'가 틀렸어요. <b>must + 동사원형<\/b>이므로 He must go now.가 맞아요."
+ },
+ {
+  "q": "'너는 일찍 자야 해.'를 영어로 바르게 쓴 것은?",
+  "choices": [
+   "You should to go to bed early.",
+   "You should go to bed early.",
+   "You should goes to bed early.",
+   "You should going to bed early."
+  ],
+  "answer": "You should go to bed early.",
+  "exp": "<b>should + 동사원형<\/b>: should 뒤에 to, -s, -ing를 붙이지 않아요."
+ },
+ {
+  "q": "Dad ______ drink so much coffee. It is bad for his health.",
+  "choices": [
+   "shouldn't to",
+   "doesn't should",
+   "shouldn't",
+   "not should"
+  ],
+  "answer": "shouldn't",
+  "exp": "'~하지 않는 게 좋다'는 <b>should not(shouldn't) + 동사원형<\/b>이에요."
+ },
+ {
+  "q": "Students should ______ quiet in the library.",
+  "choices": [
+   "be",
+   "being",
+   "to be",
+   "are"
+  ],
+  "answer": "be",
+  "exp": "조동사 뒤에는 be동사도 <b>원형 be<\/b>를 써요. should are / should is는 안 돼요."
+ },
+ {
+  "q": "My sister looks very tired. She ______ take a rest.",
+  "choices": [
+   "should",
+   "is should",
+   "shoulds",
+   "to should"
+  ],
+  "answer": "should",
+  "exp": "조언·충고('~하는 게 좋겠다')는 <b>should<\/b>를 써요. 조동사는 -s를 붙이지 않아요."
+ },
+ {
+  "q": "'She should to study harder.'를 바르게 고친 문장은?",
+  "choices": [
+   "She should studying harder.",
+   "She should study harder.",
+   "She should studies harder.",
+   "She shoulds study harder."
+  ],
+  "answer": "She should study harder.",
+  "exp": "<b>should to<\/b>가 오류예요. 조동사 뒤에는 to 없이 동사원형 study를 써요."
+ },
+ {
+  "q": "다음 중 어법상 올바른 것은?",
+  "choices": [
+   "Mina doesn't should be late for class.",
+   "Mina should not be late for class.",
+   "Mina should not to be late for class.",
+   "Mina not should be late for class."
+  ],
+  "answer": "Mina should not be late for class.",
+  "exp": "부정은 <b>조동사 바로 뒤에 not<\/b>: should not + 동사원형. doesn't should는 쓰지 않아요."
+ },
+ {
+  "q": "'식당'을 뜻하는 영어 단어의 철자가 올바른 것은?",
+  "choices": [
+   "restrent",
+   "restaurent",
+   "restaurant",
+   "resturant"
+  ],
+  "answer": "restaurant",
+  "exp": "<b>res-tau-rant<\/b>로 기억해요. 가운데 <b>au<\/b>와 끝 <b>-ant<\/b>를 놓치기 쉬워요. 'restrent'는 틀린 철자!",
+  "part": "Part 2 · 장소 단어 철자"
+ },
+ {
+  "q": "We had dinner at a nice ______.",
+  "choices": [
+   "restaurant",
+   "restorant",
+   "resteraunt",
+   "restarant"
+  ],
+  "answer": "restaurant",
+  "exp": "restaurant는 <b>rest + au + rant<\/b>. au를 꼭 넣어요."
+ },
+ {
+  "q": "'도서관'의 올바른 철자는?",
+  "choices": [
+   "librery",
+   "library",
+   "libary",
+   "liberary"
+  ],
+  "answer": "library",
+  "exp": "<b>li-brar-y<\/b>: b 뒤에 r이 하나 더 있어요(brar)."
+ },
+ {
+  "q": "'병원'의 올바른 철자는?",
+  "choices": [
+   "hospital",
+   "hospidal",
+   "hospitel",
+   "hospitle"
+  ],
+  "answer": "hospital",
+  "exp": "<b>hos-pi-tal<\/b>, 끝은 -tal이에요."
+ },
+ {
+  "q": "'교실'의 올바른 철자는?",
+  "choices": [
+   "clasroom",
+   "classrom",
+   "classroom",
+   "clasrom"
+  ],
+  "answer": "classroom",
+  "exp": "class(s 두 개) + room(o 두 개)의 합성어예요."
+ },
+ {
+  "q": "'박물관'의 올바른 철자는?",
+  "choices": [
+   "musium",
+   "museum",
+   "muzeum",
+   "meseum"
+  ],
+  "answer": "museum",
+  "exp": "<b>mu-se-um<\/b>으로 기억해요."
+ },
+ {
+  "q": "'슈퍼마켓'의 올바른 철자는?",
+  "choices": [
+   "supermarcket",
+   "suppermarket",
+   "supermarket",
+   "supermarkit"
+  ],
+  "answer": "supermarket",
+  "exp": "super + market의 합성어예요. market의 철자(<b>k-e-t<\/b>)에 주의!"
+ },
+ {
+  "q": "'공항'의 올바른 철자는?",
+  "choices": [
+   "airpot",
+   "airpork",
+   "airport",
+   "aireport"
+  ],
+  "answer": "airport",
+  "exp": "air + port의 합성어예요."
+ },
+ {
+  "q": "'맛있는'의 올바른 철자는?",
+  "choices": [
+   "delicious",
+   "delishous",
+   "delisious",
+   "delicous"
+  ],
+  "answer": "delicious",
+  "exp": "<b>de-li-cious<\/b>: 끝이 -cious예요."
+ },
+ {
+  "q": "'다른'의 올바른 철자는?",
+  "choices": [
+   "diferent",
+   "different",
+   "diffrent",
+   "differant"
+  ],
+  "answer": "different",
+  "exp": "<b>dif-fer-ent<\/b>: f 두 개, 끝은 -ent!"
+ },
+ {
+  "q": "She worked all day. She ______ be tired.",
+  "choices": [
+   "musts",
+   "is must",
+   "must",
+   "must to"
+  ],
+  "answer": "must",
+  "exp": "강한 추측('~임에 틀림없다')은 <b>must + 동사원형<\/b>이에요.",
+  "part": "Part 3 · must / have to 정리"
+ },
+ {
+  "q": "You ______ open the box. It is dangerous.",
+  "choices": [
+   "must not",
+   "must don't",
+   "don't must",
+   "not must"
+  ],
+  "answer": "must not",
+  "exp": "금지('~하면 안 된다')는 <b>must not + 동사원형<\/b>이에요."
+ },
+ {
+  "q": "He ______ get up early tomorrow.",
+  "choices": [
+   "has",
+   "have to",
+   "haves to",
+   "has to"
+  ],
+  "answer": "has to",
+  "exp": "have to는 '~해야 한다'. 주어가 3인칭 단수(He)이면 <b>has to<\/b>예요."
+ },
+ {
+  "q": "'나는 숙제를 해야 한다.'를 바르게 쓴 것은?",
+  "choices": [
+   "I must to do my homework.",
+   "I have do my homework.",
+   "I have to do my homework.",
+   "I has to do my homework."
+  ],
+  "answer": "I have to do my homework.",
+  "exp": "<b>have to + 동사원형<\/b>. must는 to 없이 쓰고, have는 to가 꼭 필요해요."
+ },
+ {
+  "q": "'You must not touch it.'의 뜻은?",
+  "choices": [
+   "그것을 만질지도 모른다.",
+   "그것을 만져야 한다.",
+   "그것을 만지지 않아도 된다.",
+   "그것을 만지면 안 된다."
+  ],
+  "answer": "그것을 만지면 안 된다.",
+  "exp": "must not은 <b>금지<\/b>예요. '~하지 않아도 된다'는 don't have to예요."
+ },
+ {
+  "q": "I ______ finish my report yesterday.",
+  "choices": [
+   "had to",
+   "must",
+   "have to",
+   "musted"
+  ],
+  "answer": "had to",
+  "exp": "<b>must에는 과거형이 없어서<\/b> 과거의 의무는 had to로 써요. yesterday가 단서!"
+ },
+ {
+  "q": "어법상 <b>어색한<\/b> 문장을 고르세요.",
+  "choices": [
+   "I have to study.",
+   "You must not run here.",
+   "He must be hungry.",
+   "She has to goes home."
+  ],
+  "answer": "She has to goes home.",
+  "exp": "has to 뒤에도 <b>동사원형<\/b>: She has to go home."
+ },
+ {
+  "q": "'You don't have to wear a uniform.'의 뜻은?",
+  "choices": [
+   "교복을 입어야 한다.",
+   "교복을 입을 필요가 없다.",
+   "교복을 입으면 안 된다.",
+   "교복을 입을 수 없다."
+  ],
+  "answer": "교복을 입을 필요가 없다.",
+  "exp": "<b>don't have to = ~할 필요가 없다<\/b>. must not(금지)과 뜻이 달라요."
+ },
+ {
+  "q": "The light is on. Someone ______ be at home.",
+  "choices": [
+   "must not",
+   "have to",
+   "don't have to",
+   "must"
+  ],
+  "answer": "must",
+  "exp": "'누군가 있음에 틀림없다'는 강한 추측이므로 <b>must<\/b>가 알맞아요."
+ },
+ {
+  "q": "'너는 여기서 사진을 찍으면 안 된다.'를 바르게 쓴 것은?",
+  "choices": [
+   "You must not take pictures here.",
+   "You don't must take pictures here.",
+   "You must not to take pictures here.",
+   "You not must take pictures here."
+  ],
+  "answer": "You must not take pictures here.",
+  "exp": "<b>must not + 동사원형<\/b>. not은 must 뒤, 그리고 to는 쓰지 않아요."
+ },
+ {
+  "q": "This is my sister's bag. It is ______.",
+  "choices": [
+   "she",
+   "hers",
+   "herself",
+   "her"
+  ],
+  "answer": "hers",
+  "exp": "'그녀의 것'은 소유대명사 <b>hers<\/b>예요. her는 뒤에 명사가 와야 해요.",
+  "part": "Part 4 · 대명사 · be동사 · 복수형"
+ },
+ {
+  "q": "I like Mina and Jun. I often play with ______.",
+  "choices": [
+   "them",
+   "they",
+   "their",
+   "theirs"
+  ],
+  "answer": "them",
+  "exp": "전치사 with 뒤에는 <b>목적격<\/b>이 와요. Mina and Jun = <b>them<\/b>."
+ },
+ {
+  "q": "This chair ______ made of plastic.",
+  "choices": [
+   "am",
+   "be",
+   "is",
+   "are"
+  ],
+  "answer": "is",
+  "exp": "주어 This chair는 단수이므로 <b>is<\/b>. 'is made of'는 '~로 만들어졌다'예요."
+ },
+ {
+  "q": "My brother and I ______ hungry.",
+  "choices": [
+   "be",
+   "are",
+   "am",
+   "is"
+  ],
+  "answer": "are",
+  "exp": "A and B는 복수 취급이라 <b>are<\/b>예요. 'My brother and I is'는 오개념!"
+ },
+ {
+  "q": "You have to change ______ in Seoul.",
+  "choices": [
+   "buss",
+   "bus",
+   "busses",
+   "buses"
+  ],
+  "answer": "buses",
+  "exp": "s로 끝나는 명사의 복수형은 <b>-es<\/b>: bus → buses."
+ },
+ {
+  "q": "These shoes are not mine. They are ______.",
+  "choices": [
+   "your",
+   "yours",
+   "you",
+   "yourself"
+  ],
+  "answer": "yours",
+  "exp": "'너의 것'은 소유대명사 <b>yours<\/b>예요."
+ },
+ {
+  "q": "The boxes ______ made of paper.",
+  "choices": [
+   "am",
+   "is",
+   "be",
+   "are"
+  ],
+  "answer": "are",
+  "exp": "주어 The boxes가 복수이므로 <b>are<\/b>예요."
+ },
+ {
+  "q": "That is not my pencil. It is ______.",
+  "choices": [
+   "his",
+   "he",
+   "himself",
+   "him"
+  ],
+  "answer": "his",
+  "exp": "'그의 것'은 소유대명사 <b>his<\/b>예요."
+ },
+ {
+  "q": "다음 중 올바른 문장은?",
+  "choices": [
+   "My parents and me are at home.",
+   "My parents and I is at home.",
+   "My parents and I are at home.",
+   "My parents and I am at home."
+  ],
+  "answer": "My parents and I are at home.",
+  "exp": "'My parents and I'는 복수 주어라서 <b>are<\/b>를 써요. 주어 자리에는 me가 아니라 I!"
+ },
+ {
+  "q": "He has two ______.",
+  "choices": [
+   "watches",
+   "watchs",
+   "watch",
+   "watchies"
+  ],
+  "answer": "watches",
+  "exp": "-ch로 끝나는 명사의 복수형은 <b>-es<\/b>: watch → watches."
+ }
+];
+
+var QUIZ_ID = "clinic-whr-1016";
+var QUIZ_TITLE = "위화랑 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

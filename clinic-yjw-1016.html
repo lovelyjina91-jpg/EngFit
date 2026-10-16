@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>유정완 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="유정완 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>유정완 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="유정완" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>This blanket feels ______. (이 담요는 부드럽게 느껴진다.)",
+  "choices": [
+   "soft",
+   "softness",
+   "softly"
+  ],
+  "answer": "soft",
+  "exp": "<b>feel, look, smell, taste, sound<\/b> 뒤에는 부사(-ly)가 아니라 <b>형용사<\/b>가 와서 주어의 상태를 말해요. 'feels softly'처럼 -ly를 붙이기 쉽지만, 여기서는 담요의 상태를 설명하므로 <b>soft<\/b>가 맞아요.",
+  "part": "Part 1 · 감각동사 + 형용사"
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The sky looks ______ tonight. (오늘 밤 하늘이 어두워 보인다.)",
+  "choices": [
+   "dark",
+   "darkly",
+   "darkness"
+  ],
+  "answer": "dark",
+  "exp": "<b>feel, look, smell, taste, sound<\/b> 뒤에는 부사(-ly)가 아니라 <b>형용사<\/b>가 와서 주어의 상태를 말해요. 'looks darkly'가 아니라 <b>looks dark<\/b>예요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The soup smells ______. (그 수프는 좋은 냄새가 난다.)",
+  "choices": [
+   "well",
+   "good",
+   "goodly"
+  ],
+  "answer": "good",
+  "exp": "<b>feel, look, smell, taste, sound<\/b> 뒤에는 부사(-ly)가 아니라 <b>형용사<\/b>가 와서 주어의 상태를 말해요. smell 뒤에는 형용사 <b>good<\/b>이 와요. well은 '잘'이라는 부사예요."
+ },
+ {
+  "q": "올바른 문장을 고르세요. (네 목소리는 달콤하게 들린다.)",
+  "choices": [
+   "Your voice sounds sweetly.",
+   "Your voice sounds sweet.",
+   "Your voice sounds sweetness."
+  ],
+  "answer": "Your voice sounds sweet.",
+  "exp": "<b>feel, look, smell, taste, sound<\/b> 뒤에는 부사(-ly)가 아니라 <b>형용사<\/b>가 와서 주어의 상태를 말해요. <b>sounds sweet<\/b>가 맞아요. sweetly는 부사, sweetness는 명사예요."
+ },
+ {
+  "q": "올바른 문장을 고르세요. (그 방은 어두워 보인다.)",
+  "choices": [
+   "The room looks darken.",
+   "The room looks dark.",
+   "The room looks darkly.",
+   "The room looks darkness."
+  ],
+  "answer": "The room looks dark.",
+  "exp": "<b>feel, look, smell, taste, sound<\/b> 뒤에는 부사(-ly)가 아니라 <b>형용사<\/b>가 와서 주어의 상태를 말해요. 방이 어때 보이는지 설명하므로 <b>looks dark<\/b>예요. 'looks darkly'로 쓰는 오답을 꼭 고쳐 기억해요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The cake tastes ______. (그 케이크는 달콤한 맛이 난다.)",
+  "choices": [
+   "sweet",
+   "sweeten",
+   "sweetly"
+  ],
+  "answer": "sweet",
+  "exp": "<b>feel, look, smell, taste, sound<\/b> 뒤에는 부사(-ly)가 아니라 <b>형용사<\/b>가 와서 주어의 상태를 말해요. taste 뒤에도 형용사 <b>sweet<\/b>가 와요."
+ },
+ {
+  "q": "올바른 문장을 고르세요. (그 음악은 시끄럽게 들린다.)",
+  "choices": [
+   "The music sounds loud.",
+   "The music sounds loudly.",
+   "The music sounds loudness."
+  ],
+  "answer": "The music sounds loud.",
+  "exp": "<b>feel, look, smell, taste, sound<\/b> 뒤에는 부사(-ly)가 아니라 <b>형용사<\/b>가 와서 주어의 상태를 말해요. <b>sounds loud<\/b>(소리가 크게 들린다)가 맞아요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The boy looks ______ in his new coat. (그 소년은 새 코트를 입고 행복해 보인다.)",
+  "choices": [
+   "happily",
+   "happy",
+   "happiness"
+  ],
+  "answer": "happy",
+  "exp": "<b>feel, look, smell, taste, sound<\/b> 뒤에는 부사(-ly)가 아니라 <b>형용사<\/b>가 와서 주어의 상태를 말해요. 소년의 모습을 설명하므로 형용사 <b>happy<\/b>예요."
+ },
+ {
+  "q": "우리말에 맞게 배열한 문장을 고르세요.<br>(호수가 매우 잔잔해 보인다.) looks / the lake / calm / very",
+  "choices": [
+   "The lake very looks calm.",
+   "The lake looks calmly very.",
+   "The lake looks very calm.",
+   "Looks the lake very calm."
+  ],
+  "answer": "The lake looks very calm.",
+  "exp": "<b>주어 + looks + (very) + 형용사<\/b> 순서예요. very는 형용사 calm 앞에 와요."
+ },
+ {
+  "q": "문법적으로 올바른 문장을 고르세요.",
+  "choices": [
+   "He looked at me angrily.",
+   "She seems happily.",
+   "He looks angrily.",
+   "The milk smells badly."
+  ],
+  "answer": "He looked at me angrily.",
+  "exp": "<b>look at ~<\/b>(~를 쳐다보다)는 동작이므로 부사 angrily가 어울려요. 반면 looks, smells, seems 뒤의 상태 설명은 <b>형용사<\/b>(angry, bad, happy)가 와야 해요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The shoes under the bed ______ my brother's. (침대 아래 신발들은 내 동생 것이다.)",
+  "choices": [
+   "are",
+   "be",
+   "is",
+   "am"
+  ],
+  "answer": "are",
+  "exp": "<b>주어를 먼저 찾으세요.<\/b> 전치사구(on/in/with/of ~)는 주어를 꾸며 주는 말일 뿐, 동사의 수는 <b>진짜 주어<\/b>에 맞춥니다. 주어는 bed가 아니라 복수 <b>The shoes<\/b>이므로 <b>are<\/b>예요. 'The books on the desk is'처럼 desk에 맞추면 안 돼요.",
+  "part": "Part 2 · 주어 찾기(수일치)"
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The boy with two dogs ______ in my town. (두 마리 개를 데리고 있는 그 소년은 우리 동네에 산다.)",
+  "choices": [
+   "are living",
+   "lives",
+   "live",
+   "living"
+  ],
+  "answer": "lives",
+  "exp": "<b>주어를 먼저 찾으세요.<\/b> 전치사구(on/in/with/of ~)는 주어를 꾸며 주는 말일 뿐, 동사의 수는 <b>진짜 주어<\/b>에 맞춥니다. 주어는 단수 <b>The boy<\/b>예요. dogs(복수)에 속으면 안 돼요. 그래서 <b>lives<\/b>."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The pictures on the wall ______ beautiful. (벽에 걸린 그림들은 아름답다.)",
+  "choices": [
+   "be",
+   "are",
+   "is",
+   "am"
+  ],
+  "answer": "are",
+  "exp": "<b>주어를 먼저 찾으세요.<\/b> 전치사구(on/in/with/of ~)는 주어를 꾸며 주는 말일 뿐, 동사의 수는 <b>진짜 주어<\/b>에 맞춥니다. 주어는 복수 <b>The pictures<\/b>이므로 <b>are<\/b>예요. 앞에 있는 wall은 신경 쓰지 않아요."
+ },
+ {
+  "q": "올바른 문장을 고르세요. (세 마리 고양이를 키우는 그 남자는 옆집에 산다.)",
+  "choices": [
+   "The man with three cats live next door.",
+   "The men with three cats lives next door.",
+   "The man with three cats lives next door.",
+   "The man with three cats living next door."
+  ],
+  "answer": "The man with three cats lives next door.",
+  "exp": "<b>주어를 먼저 찾으세요.<\/b> 전치사구(on/in/with/of ~)는 주어를 꾸며 주는 말일 뿐, 동사의 수는 <b>진짜 주어<\/b>에 맞춥니다. 주어는 단수 <b>The man<\/b>이므로 동사에 -s가 붙은 <b>lives<\/b>가 맞아요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The eggs in the basket ______ fresh. (바구니 안의 달걀들은 신선하다.)",
+  "choices": [
+   "are",
+   "am",
+   "be",
+   "is"
+  ],
+  "answer": "are",
+  "exp": "<b>주어를 먼저 찾으세요.<\/b> 전치사구(on/in/with/of ~)는 주어를 꾸며 주는 말일 뿐, 동사의 수는 <b>진짜 주어<\/b>에 맞춥니다. 주어는 복수 <b>The eggs<\/b>이므로 <b>are<\/b>예요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The teacher of the students ______ kind. (그 학생들의 선생님은 친절하다.)",
+  "choices": [
+   "were",
+   "is",
+   "are",
+   "am"
+  ],
+  "answer": "is",
+  "exp": "<b>주어를 먼저 찾으세요.<\/b> 전치사구(on/in/with/of ~)는 주어를 꾸며 주는 말일 뿐, 동사의 수는 <b>진짜 주어<\/b>에 맞춥니다. 주어는 단수 <b>The teacher<\/b>예요. of the students(복수)에 속으면 안 돼요. 그래서 <b>is<\/b>."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>A cup of tea ______ on the table. (차 한 잔이 탁자 위에 있다.)",
+  "choices": [
+   "is",
+   "be",
+   "are",
+   "am"
+  ],
+  "answer": "is",
+  "exp": "<b>주어를 먼저 찾으세요.<\/b> 전치사구(on/in/with/of ~)는 주어를 꾸며 주는 말일 뿐, 동사의 수는 <b>진짜 주어<\/b>에 맞춥니다. 주어는 <b>A cup<\/b>(한 잔)이에요. 단수이므로 <b>is<\/b>."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The windows in our classroom ______ big. (우리 교실의 창문들은 크다.)",
+  "choices": [
+   "is",
+   "am",
+   "are",
+   "be"
+  ],
+  "answer": "are",
+  "exp": "<b>주어를 먼저 찾으세요.<\/b> 전치사구(on/in/with/of ~)는 주어를 꾸며 주는 말일 뿐, 동사의 수는 <b>진짜 주어<\/b>에 맞춥니다. 주어는 복수 <b>The windows<\/b>이므로 <b>are<\/b>예요."
+ },
+ {
+  "q": "올바른 문장을 고르세요. (사과가 든 그 가방은 무겁다.)",
+  "choices": [
+   "The bag of apples are heavy.",
+   "The bag of apples is heavy.",
+   "The bags of apples is heavy.",
+   "The bag of apples be heavy."
+  ],
+  "answer": "The bag of apples is heavy.",
+  "exp": "<b>주어를 먼저 찾으세요.<\/b> 전치사구(on/in/with/of ~)는 주어를 꾸며 주는 말일 뿐, 동사의 수는 <b>진짜 주어<\/b>에 맞춥니다. 주어는 단수 <b>The bag<\/b>이에요. apples는 of 뒤에 붙은 꾸밈말이라서 <b>is<\/b>를 써요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The students in that room ______ studying now. (저 교실의 학생들은 지금 공부하고 있다.)",
+  "choices": [
+   "am",
+   "was",
+   "are",
+   "is"
+  ],
+  "answer": "are",
+  "exp": "<b>주어를 먼저 찾으세요.<\/b> 전치사구(on/in/with/of ~)는 주어를 꾸며 주는 말일 뿐, 동사의 수는 <b>진짜 주어<\/b>에 맞춥니다. 주어는 복수 <b>The students<\/b>이고 지금(now)의 일이므로 <b>are<\/b>예요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>There isn't ______ juice in the bottle. (병에 주스가 많이 없다.)",
+  "choices": [
+   "much",
+   "many",
+   "few"
+  ],
+  "answer": "much",
+  "exp": "<b>much<\/b>는 셀 수 없는 명사(water, time, money), <b>many<\/b>는 셀 수 있는 복수 명사(apples, books) 앞에 써요. juice는 셀 수 없으므로 <b>much<\/b>예요.",
+  "part": "Part 3 · 수량 표현 · 과거시제 · 철자"
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>How ______ pencils do you have? (연필을 몇 자루 가지고 있니?)",
+  "choices": [
+   "much",
+   "a little",
+   "many"
+  ],
+  "answer": "many",
+  "exp": "<b>much<\/b>는 셀 수 없는 명사(water, time, money), <b>many<\/b>는 셀 수 있는 복수 명사(apples, books) 앞에 써요. pencils는 셀 수 있는 복수 명사이므로 <b>How many<\/b>예요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>How ______ money does the book cost? (그 책은 돈이 얼마니?)",
+  "choices": [
+   "much",
+   "few",
+   "many"
+  ],
+  "answer": "much",
+  "exp": "<b>much<\/b>는 셀 수 없는 명사(water, time, money), <b>many<\/b>는 셀 수 있는 복수 명사(apples, books) 앞에 써요. money는 셀 수 없으므로 <b>How much<\/b>예요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>There are not ______ chairs in the room. (방에 의자가 많지 않다.)",
+  "choices": [
+   "many",
+   "a little",
+   "much"
+  ],
+  "answer": "many",
+  "exp": "<b>much<\/b>는 셀 수 없는 명사(water, time, money), <b>many<\/b>는 셀 수 있는 복수 명사(apples, books) 앞에 써요. chairs는 셀 수 있는 복수 명사이므로 <b>many<\/b>예요."
+ },
+ {
+  "q": "'압력'이라는 뜻의 영어 단어를 바르게 쓴 것을 고르세요.",
+  "choices": [
+   "presure",
+   "pressur",
+   "pressure",
+   "preshure"
+  ],
+  "answer": "pressure",
+  "exp": "press(누르다)에서 나온 <b>pressure<\/b>예요. s가 두 개, 끝에 <b>-ure<\/b>가 붙어요. 'press'만 쓰면 '누르다'라는 동사가 돼요."
+ },
+ {
+  "q": "빈칸에 알맞은 단어를 고르세요.<br>The ______ of the water was too high for the small pipe. (물의 압력이 작은 관에는 너무 높았다.)",
+  "choices": [
+   "pressuer",
+   "pressure",
+   "preshure",
+   "presure"
+  ],
+  "answer": "pressure",
+  "exp": "'압력'은 <b>pressure<\/b>(press + ure)예요. 철자를 꼭 기억해요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>Last year, my sister ______ a small dog. (작년에 내 여동생은 작은 개를 원했다.)",
+  "choices": [
+   "wants",
+   "want",
+   "wanted",
+   "wanting"
+  ],
+  "answer": "wanted",
+  "exp": "<b>과거의 일<\/b>이면 동사를 과거형으로 써야 해요. want의 과거형은 <b>wanted<\/b>예요. 또 '조용한 삶'처럼 <b>형용사 + 명사<\/b> 앞에는 <b>a/an<\/b>이 필요해요(a quiet life). 'Last year'가 있으므로 <b>wanted<\/b>예요."
+ },
+ {
+  "q": "우리말에 맞는 문장을 고르세요.<br>(그녀는 행복한 삶을 원했다.)",
+  "choices": [
+   "She wanted happy life.",
+   "She wants a happy life.",
+   "She wanted a happy life.",
+   "She want a happy life."
+  ],
+  "answer": "She wanted a happy life.",
+  "exp": "<b>과거의 일<\/b>이면 동사를 과거형으로 써야 해요. want의 과거형은 <b>wanted<\/b>예요. 또 '조용한 삶'처럼 <b>형용사 + 명사<\/b> 앞에는 <b>a/an<\/b>이 필요해요(a quiet life). 과거이므로 wanted, 그리고 life 앞에 <b>a<\/b>가 필요해요. 'He want quiet life'처럼 쓰면 안 돼요."
+ },
+ {
+  "q": "우리말에 맞게 배열한 문장을 고르세요.<br>(그는 조용한 방을 원했다.) wanted / a / he / quiet / room",
+  "choices": [
+   "He want a quiet room.",
+   "He wanted quiet a room.",
+   "He a wanted quiet room.",
+   "He wanted a quiet room."
+  ],
+  "answer": "He wanted a quiet room.",
+  "exp": "<b>주어 + 과거 동사 + a + 형용사 + 명사<\/b> 순서예요. a는 형용사 quiet 앞에 와요."
+ },
+ {
+  "q": "올바른 문장을 고르세요. (아빠는 조용한 주말을 원하셨다.)",
+  "choices": [
+   "My dad wanted a quiet weekend.",
+   "My dad wanted quiet a weekend.",
+   "My dad want a quiet weekend.",
+   "My dad wants a quiet weekend yesterday."
+  ],
+  "answer": "My dad wanted a quiet weekend.",
+  "exp": "<b>과거의 일<\/b>이면 동사를 과거형으로 써야 해요. want의 과거형은 <b>wanted<\/b>예요. 또 '조용한 삶'처럼 <b>형용사 + 명사<\/b> 앞에는 <b>a/an<\/b>이 필요해요(a quiet life). <b>wanted a quiet weekend<\/b>가 맞아요. 'yesterday'처럼 과거를 나타내는 말과 wants는 함께 쓸 수 없어요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요. (주어의 수와 감각동사를 모두 생각하세요.)<br>The soup in the pots ______ ______. (냄비 속 수프는 맛있어 보인다.)",
+  "choices": [
+   "look / deliciously",
+   "looks / deliciously",
+   "look / delicious",
+   "looks / delicious"
+  ],
+  "answer": "looks / delicious",
+  "exp": "주어는 단수 <b>The soup<\/b>이므로 <b>looks<\/b>, 감각동사 뒤에는 형용사 <b>delicious<\/b>예요. pots에 속으면 안 돼요.",
+  "part": "Part 4 · 종합 복습"
+ },
+ {
+  "q": "올바른 문장을 고르세요. (정원의 꽃들은 달콤한 향이 난다.)",
+  "choices": [
+   "The flowers in the garden smell sweetly.",
+   "The flowers in the garden smell sweet.",
+   "The flowers in the garden smells sweet.",
+   "The flowers in the garden smells sweetly."
+  ],
+  "answer": "The flowers in the garden smell sweet.",
+  "exp": "주어는 복수 <b>The flowers<\/b>라서 smell, 감각동사 뒤는 형용사 <b>sweet<\/b>예요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>There ______ ______ apples on the tree. (나무에 사과가 많지 않다.)",
+  "choices": [
+   "aren't / much",
+   "isn't / many",
+   "isn't / much",
+   "aren't / many"
+  ],
+  "answer": "aren't / many",
+  "exp": "apples는 셀 수 있는 복수이므로 <b>aren't many<\/b>예요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The boy with two heavy bags ______ tired. (무거운 가방 두 개를 든 소년은 피곤해 보인다.)",
+  "choices": [
+   "looks",
+   "looks like",
+   "looking",
+   "look"
+  ],
+  "answer": "looks",
+  "exp": "주어는 단수 <b>The boy<\/b>이므로 <b>looks<\/b>예요. 'looks like' 뒤에는 명사가 와요. 형용사 tired 앞에는 like 없이 써요."
+ },
+ {
+  "q": "어법상 <b>틀린<\/b> 문장을 고르세요.",
+  "choices": [
+   "How many eggs do you need?",
+   "The books on the shelf is mine.",
+   "She wanted a new bike.",
+   "The tea smells good."
+  ],
+  "answer": "The books on the shelf is mine.",
+  "exp": "주어는 복수 <b>The books<\/b>이므로 <b>are mine<\/b>이 되어야 해요. 나머지는 모두 올바른 문장이에요."
+ },
+ {
+  "q": "올바른 문장을 고르세요. (합창단 소녀들은 행복하게 들린다.)",
+  "choices": [
+   "The girls in the choir sound happy.",
+   "The girls in the choir sounds happy.",
+   "The girls in the choir sound happily.",
+   "The girls in the choir sounds happily."
+  ],
+  "answer": "The girls in the choir sound happy.",
+  "exp": "주어 <b>The girls<\/b>는 복수라 sound, 상태를 설명하므로 형용사 <b>happy<\/b>예요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>How ______ sugar do you put in your tea? (차에 설탕을 얼마나 넣니?)",
+  "choices": [
+   "few",
+   "a few",
+   "much",
+   "many"
+  ],
+  "answer": "much",
+  "exp": "<b>much<\/b>는 셀 수 없는 명사(water, time, money), <b>many<\/b>는 셀 수 있는 복수 명사(apples, books) 앞에 써요. sugar는 셀 수 없으므로 <b>How much<\/b>예요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The old man ______ a quiet place to rest, so he sat under the tree. (노인은 쉴 조용한 곳을 원해서 나무 아래 앉았다.)",
+  "choices": [
+   "was want",
+   "wanted",
+   "wants",
+   "want"
+  ],
+  "answer": "wanted",
+  "exp": "<b>과거의 일<\/b>이면 동사를 과거형으로 써야 해요. want의 과거형은 <b>wanted<\/b>예요. 또 '조용한 삶'처럼 <b>형용사 + 명사<\/b> 앞에는 <b>a/an<\/b>이 필요해요(a quiet life). sat(앉았다)처럼 과거의 일이므로 <b>wanted<\/b>예요."
+ },
+ {
+  "q": "우리말에 맞는 문장을 고르세요.<br>(책상 위의 연필들은 새것처럼 보인다.)",
+  "choices": [
+   "The pencils on the desk look newly.",
+   "The pencils on the desk looks new.",
+   "The pencils on the desk looks newly.",
+   "The pencils on the desk look new."
+  ],
+  "answer": "The pencils on the desk look new.",
+  "exp": "주어는 복수 <b>The pencils<\/b>이므로 look, 감각동사 뒤는 형용사 <b>new<\/b>예요."
+ },
+ {
+  "q": "문법적으로 올바른 문장을 고르세요. (두 마리 개를 데리고 있는 소년은 조용한 저녁을 원해서 피곤해 보였다.)",
+  "choices": [
+   "The boy with two dogs looked tiredly because he wanted a quiet evening.",
+   "The boy with two dogs looked tired because he wanted a quiet evening.",
+   "The boy with two dogs looked tired because he want a quiet evening.",
+   "The boy with two dogs look tired because he wanted a quiet evening."
+  ],
+  "answer": "The boy with two dogs looked tired because he wanted a quiet evening.",
+  "exp": "세 가지를 한꺼번에 확인해요. 주어는 단수 <b>The boy<\/b>, 감각동사 뒤는 형용사 <b>tired<\/b>, 과거의 일이라 <b>wanted a quiet evening<\/b>이에요."
+ }
+];
+
+var QUIZ_ID = "clinic-yjw-1016";
+var QUIZ_TITLE = "유정완 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

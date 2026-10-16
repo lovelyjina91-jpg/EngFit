@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>김아인 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="김아인 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>김아인 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="김아인" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "검은색 ⚫ — 바른 철자는?",
+  "choices": [
+   "blek",
+   "black",
+   "blak",
+   "balck"
+  ],
+  "answer": "black",
+  "exp": "검은색은 <b>black<\/b>이에요. 'bl' 소리 뒤에 <b>ack<\/b>! 'blek'처럼 e로 쓰지 않아요.",
+  "part": "Part 1 · bl · dr · br · sl · c 낱말"
+ },
+ {
+  "q": "I have a ______ cat. (검은 고양이 🐈‍⬛)",
+  "choices": [
+   "black",
+   "blek",
+   "blac",
+   "blck"
+  ],
+  "answer": "black",
+  "exp": "검은색은 <b>black<\/b>이에요. b-l-a-c-k, 'a'가 꼭 들어가요."
+ },
+ {
+  "q": "북 🥁 — 바른 철자는?",
+  "choices": [
+   "dram",
+   "drom",
+   "jrum",
+   "drum"
+  ],
+  "answer": "drum",
+  "exp": "북은 <b>drum<\/b>이에요. 'dr'(드르) 소리로 시작하고, 학생이 쓴 'dr' 뒤에 <b>um<\/b>을 붙이면 완성!"
+ },
+ {
+  "q": "I play the ______. (북 🥁)",
+  "choices": [
+   "brum",
+   "trum",
+   "drum",
+   "grum"
+  ],
+  "answer": "drum",
+  "exp": "북은 <b>drum<\/b>이에요. d로 시작하는 <b>dr<\/b>를 기억해요."
+ },
+ {
+  "q": "__ick (벽돌 🧱) — 빈칸에 알맞은 글자는?",
+  "choices": [
+   "dr",
+   "br",
+   "gr",
+   "bl"
+  ],
+  "answer": "br",
+  "exp": "벽돌은 <b>brick<\/b>이에요. 'b' 소리 뒤에 'r'이 붙은 <b>br<\/b>로 시작해요."
+ },
+ {
+  "q": "벽돌 🧱 — 바른 철자는?",
+  "choices": [
+   "brick",
+   "drick",
+   "brik",
+   "bick"
+  ],
+  "answer": "brick",
+  "exp": "벽돌은 <b>brick<\/b>이에요. br + ick!"
+ },
+ {
+  "q": "썰매 🛷 — 바른 철자는?",
+  "choices": [
+   "slib",
+   "slad",
+   "sleb",
+   "sled"
+  ],
+  "answer": "sled",
+  "exp": "썰매는 <b>sled<\/b>예요. 'slib'처럼 i가 아니라 <b>e<\/b>를 써요. sl + ed!"
+ },
+ {
+  "q": "We ride a ______ on the snow. (썰매 🛷)",
+  "choices": [
+   "slib",
+   "slad",
+   "sled",
+   "slid"
+  ],
+  "answer": "sled",
+  "exp": "썰매는 <b>sled<\/b>예요. s-l-e-d 네 글자! slid는 '미끄러졌다'라는 다른 말이에요."
+ },
+ {
+  "q": "케이크 🍰 — 바른 철자는?",
+  "choices": [
+   "cike",
+   "cake",
+   "cack",
+   "kake"
+  ],
+  "answer": "cake",
+  "exp": "케이크는 <b>cake<\/b>예요. 'c'로 시작하고 <b>a_e<\/b>(에이 소리)로 써요. 'cike'는 틀려요."
+ },
+ {
+  "q": "I like ______. (케이크 🎂)",
+  "choices": [
+   "cake",
+   "cike",
+   "caik",
+   "cacke"
+  ],
+  "answer": "cake",
+  "exp": "케이크는 <b>cake<\/b>예요. c-a-k-e, 마지막 e는 소리가 안 나지만 꼭 써요."
+ },
+ {
+  "q": "채찍 — 바른 철자는?",
+  "choices": [
+   "wip",
+   "hwip",
+   "wihp",
+   "whip"
+  ],
+  "answer": "whip",
+  "exp": "채찍은 <b>whip<\/b>이에요. <b>wh<\/b>(우) 소리로 시작해요. w만 쓰면 틀려요.",
+  "part": "Part 2 · wh · th · in 낱말"
+ },
+ {
+  "q": "고래 🐳 — 바른 철자는?",
+  "choices": [
+   "wale",
+   "whael",
+   "whale",
+   "wlale"
+  ],
+  "answer": "whale",
+  "exp": "고래는 <b>whale<\/b>이에요. <b>wh<\/b>로 시작해요."
+ },
+ {
+  "q": "두꺼운 — 바른 철자는?",
+  "choices": [
+   "tick",
+   "thick",
+   "thik",
+   "thikc"
+  ],
+  "answer": "thick",
+  "exp": "두꺼운은 <b>thick<\/b>이에요. <b>th<\/b>(혀를 살짝 물고 쓰)로 시작해서 t만 쓰면 안 돼요."
+ },
+ {
+  "q": "a ______ book (두꺼운 책 📚)",
+  "choices": [
+   "thick",
+   "tick",
+   "thik",
+   "sick"
+  ],
+  "answer": "thick",
+  "exp": "두꺼운은 <b>thick<\/b>이에요. th + ick!"
+ },
+ {
+  "q": "__ite (하얀색 ⚪) — 빈칸에 알맞은 글자는?",
+  "choices": [
+   "th",
+   "ch",
+   "br",
+   "wh"
+  ],
+  "answer": "wh",
+  "exp": "하얀색은 <b>white<\/b>예요. <b>wh<\/b> + ite!"
+ },
+ {
+  "q": "하얀색 ⚪ — 바른 철자는?",
+  "choices": [
+   "whit",
+   "wite",
+   "white",
+   "whiet"
+  ],
+  "answer": "white",
+  "exp": "하얀색은 <b>white<\/b>예요. wh + ite, 끝의 e를 잊지 말아요."
+ },
+ {
+  "q": "안으로 — 바른 철자는?",
+  "choices": [
+   "intu",
+   "into",
+   "inta",
+   "ento"
+  ],
+  "answer": "into",
+  "exp": "'~ 안으로'는 <b>into<\/b>예요. in + to, 두 낱말이 붙은 모양이에요."
+ },
+ {
+  "q": "The cat jumps ______ the box. (상자 안으로)",
+  "choices": [
+   "into",
+   "intu",
+   "intow",
+   "inta"
+  ],
+  "answer": "into",
+  "exp": "'~ 안으로'는 <b>into<\/b>예요. i-n-t-o 로 써요."
+ },
+ {
+  "q": "숫자 3 — 바른 철자는?",
+  "choices": [
+   "tree",
+   "thee",
+   "thre",
+   "three"
+  ],
+  "answer": "three",
+  "exp": "숫자 3은 <b>three<\/b>이에요. 'th'가 있어요. 'tree'는 나무!"
+ },
+ {
+  "q": "생각하다 💭 — 바른 철자는?",
+  "choices": [
+   "tink",
+   "thinc",
+   "think",
+   "thenk"
+  ],
+  "answer": "think",
+  "exp": "생각하다는 <b>think<\/b>예요. <b>th<\/b>로 시작해요."
+ },
+ {
+  "q": "염소 🐐 — 바른 철자는?",
+  "choices": [
+   "goet",
+   "goat",
+   "goot",
+   "gaot"
+  ],
+  "answer": "goat",
+  "exp": "염소는 <b>goat<\/b>예요. <b>g<\/b>(그) 소리로 시작해요.",
+  "part": "Part 3 · 첫소리 c · g · wh · th 복습"
+ },
+ {
+  "q": "__ap (모자 🧢) — 빈칸에 알맞은 글자는?",
+  "choices": [
+   "c",
+   "g",
+   "t",
+   "b"
+  ],
+  "answer": "c",
+  "exp": "모자는 <b>cap<\/b>이에요. c는 '크' 소리가 나요."
+ },
+ {
+  "q": "게임 🎮 — 바른 철자는?",
+  "choices": [
+   "kame",
+   "gaim",
+   "gam",
+   "game"
+  ],
+  "answer": "game",
+  "exp": "게임은 <b>game<\/b>이에요. g + a_e!"
+ },
+ {
+  "q": "고양이 🐱 — 바른 철자는?",
+  "choices": [
+   "gat",
+   "kat",
+   "cat",
+   "dat"
+  ],
+  "answer": "cat",
+  "exp": "고양이는 <b>cat<\/b>이에요. c-a-t!"
+ },
+ {
+  "q": "__y (왜?) — 빈칸에 알맞은 글자는?",
+  "choices": [
+   "th",
+   "wh",
+   "ch",
+   "br"
+  ],
+  "answer": "wh",
+  "exp": "'왜'는 <b>why<\/b>예요. <b>wh<\/b>로 시작하는 질문 낱말이에요."
+ },
+ {
+  "q": "고마워요 🙏 — Th______ you. 빈칸에 알맞은 낱말은?",
+  "choices": [
+   "thank",
+   "thenk",
+   "thanc",
+   "thamk"
+  ],
+  "answer": "thank",
+  "exp": "고마워요는 <b>Thank you<\/b>예요. th + ank!"
+ },
+ {
+  "q": "언제 🕐 — 바른 철자는?",
+  "choices": [
+   "wen",
+   "hwen",
+   "wehn",
+   "when"
+  ],
+  "answer": "when",
+  "exp": "'언제'는 <b>when<\/b>이에요. <b>wh<\/b>로 시작해요. w만 쓰면 틀려요."
+ },
+ {
+  "q": "초록색 🟢 — 바른 철자는?",
+  "choices": [
+   "creen",
+   "kreen",
+   "green",
+   "jreen"
+  ],
+  "answer": "green",
+  "exp": "초록색은 <b>green<\/b>이에요. <b>g<\/b>(그) + reen!"
+ },
+ {
+  "q": "컵 🥤 — 바른 철자는?",
+  "choices": [
+   "gup",
+   "cup",
+   "kup",
+   "cuf"
+  ],
+  "answer": "cup",
+  "exp": "컵은 <b>cup<\/b>이에요. c로 시작해요."
+ },
+ {
+  "q": "빵 🍞 — 바른 철자는?",
+  "choices": [
+   "bread",
+   "breod",
+   "braed",
+   "bwead"
+  ],
+  "answer": "bread",
+  "exp": "빵은 <b>bread<\/b>예요. br + ead!"
+ },
+ {
+  "q": "(is / it / a / black / sled) 올바른 문장은?",
+  "choices": [
+   "Sled is a it black.",
+   "It is sled a black.",
+   "A it is black sled.",
+   "It is a black sled."
+  ],
+  "answer": "It is a black sled.",
+  "exp": "문장은 <b>It is a black sled.<\/b> 순서예요. '그것은(It) ~이다(is) 하나의(a) 검은(black) 썰매(sled)' 순서로 놓아요. 'It'은 대문자로 시작!",
+  "part": "Part 4 · 문장 만들기 · he she it we they"
+ },
+ {
+  "q": "(is / a / it / white / cake) 올바른 문장은?",
+  "choices": [
+   "Cake is a it white.",
+   "It a is white cake.",
+   "It is a white cake.",
+   "White is it a cake."
+  ],
+  "answer": "It is a white cake.",
+  "exp": "<b>It is a white cake.<\/b> 'It is a ~' 뒤에 색(white)과 물건(cake)을 차례로 써요."
+ },
+ {
+  "q": "Mina is my friend. ______ is kind.",
+  "choices": [
+   "He",
+   "She",
+   "It",
+   "We"
+  ],
+  "answer": "She",
+  "exp": "미나는 여자아이이므로 <b>She<\/b>(그녀)를 써요."
+ },
+ {
+  "q": "Tom is my brother. ______ is tall.",
+  "choices": [
+   "He",
+   "She",
+   "It",
+   "We"
+  ],
+  "answer": "He",
+  "exp": "톰은 남자아이이므로 <b>He<\/b>(그)를 써요."
+ },
+ {
+  "q": "Look at the cake. ______ is big.",
+  "choices": [
+   "He",
+   "She",
+   "They",
+   "It"
+  ],
+  "answer": "It",
+  "exp": "케이크처럼 사람이 아닌 하나의 물건은 <b>It<\/b>(그것)이에요."
+ },
+ {
+  "q": "Tom and I are friends. ______ play soccer.",
+  "choices": [
+   "He",
+   "She",
+   "We",
+   "It"
+  ],
+  "answer": "We",
+  "exp": "나(I)와 톰이 함께이므로 <b>We<\/b>(우리)를 써요."
+ },
+ {
+  "q": "Amy and Ben are my friends. ______ are kind.",
+  "choices": [
+   "We",
+   "They",
+   "He",
+   "It"
+  ],
+  "answer": "They",
+  "exp": "에이미와 벤, 둘 이상의 다른 사람은 <b>They<\/b>(그들)예요."
+ },
+ {
+  "q": "(am / I / happy) 올바른 문장은?",
+  "choices": [
+   "I happy am.",
+   "I am happy.",
+   "Am happy I."
+  ],
+  "answer": "I am happy.",
+  "exp": "<b>I am happy.<\/b> 'I' 다음에 'am'을 쓰고 마지막에 happy를 써요."
+ },
+ {
+  "q": "(a / It / red / is / cake) 올바른 문장은?",
+  "choices": [
+   "It is red a cake.",
+   "Red cake a is it.",
+   "It a red is cake.",
+   "It is a red cake."
+  ],
+  "answer": "It is a red cake.",
+  "exp": "<b>It is a red cake.<\/b> a 다음에 색(red), 그 다음에 물건(cake)이 와요."
+ },
+ {
+  "q": "바르게 쓴 문장을 고르세요.",
+  "choices": [
+   "This is a tick book.",
+   "This is a thik book.",
+   "This is a thick book.",
+   "This is a thikk book."
+  ],
+  "answer": "This is a thick book.",
+  "exp": "<b>thick<\/b>은 th로 시작하고 끝이 ick이에요. 문장은 <b>This is a thick book.<\/b>"
+ }
+];
+
+var QUIZ_ID = "clinic-kai-1016";
+var QUIZ_TITLE = "김아인 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

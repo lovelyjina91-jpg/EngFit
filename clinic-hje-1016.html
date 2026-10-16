@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>한주은 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="한주은 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>한주은 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="한주은" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "다음 중 '나무'를 뜻하는 단어의 바른 철자는?",
+  "choices": [
+   "tree",
+   "three",
+   "trea",
+   "tre"
+  ],
+  "answer": "tree",
+  "exp": "나무는 <b>tree<\/b>, 숫자 3은 <b>three<\/b>예요. 철자가 비슷해서 헷갈리기 쉬우니 'th'가 있으면 숫자 3!",
+  "part": "Part 1 · 철자 · 복수형 · There is/are"
+ },
+ {
+  "q": "I have ______ pencils in my bag. (3개)",
+  "choices": [
+   "tree",
+   "three",
+   "thee",
+   "thre"
+  ],
+  "answer": "three",
+  "exp": "숫자 3은 <b>three<\/b>예요. 'tree'는 나무라는 뜻이라 숫자 자리에 쓰면 안 돼요."
+ },
+ {
+  "q": "There are ______ apples on the table. (세 개)",
+  "choices": [
+   "thre",
+   "thrie",
+   "tree",
+   "three"
+  ],
+  "answer": "three",
+  "exp": "'세 개'처럼 개수를 나타낼 때는 숫자 <b>three<\/b>를 써요. <b>tree<\/b>는 '나무'예요."
+ },
+ {
+  "q": "There are two ______ in the box.",
+  "choices": [
+   "catt",
+   "cates",
+   "cat",
+   "cats"
+  ],
+  "answer": "cats",
+  "exp": "둘 이상이면 명사 뒤에 <b>-s<\/b>를 붙여요. two 뒤에는 <b>cats<\/b>."
+ },
+ {
+  "q": "I see five ______ in the park. (dog)",
+  "choices": [
+   "dog",
+   "dogs",
+   "doges",
+   "dogies"
+  ],
+  "answer": "dogs",
+  "exp": "다섯 마리처럼 여러 개일 때는 <b>dogs<\/b>처럼 -s를 붙여요."
+ },
+ {
+  "q": "Two ______ are on the desk. (box)",
+  "choices": [
+   "boxs",
+   "box",
+   "boxes",
+   "boxies"
+  ],
+  "answer": "boxes",
+  "exp": "x, s, ch, sh로 끝나는 말은 <b>-es<\/b>를 붙여요. box → <b>boxes<\/b>."
+ },
+ {
+  "q": "There ______ two dogs in the yard.",
+  "choices": [
+   "are",
+   "be",
+   "is",
+   "am"
+  ],
+  "answer": "are",
+  "exp": "복수(two dogs) 앞에는 <b>There are<\/b>를 써요."
+ },
+ {
+  "q": "There ______ a cat under the chair.",
+  "choices": [
+   "is",
+   "were",
+   "are",
+   "am"
+  ],
+  "answer": "is",
+  "exp": "하나(a cat)일 때는 <b>There is<\/b>를 써요."
+ },
+ {
+  "q": "다음 중 문법이 맞는 문장은?",
+  "choices": [
+   "There are four birds in the tres.",
+   "There are four birds in the tree.",
+   "There is four birds in the tree.",
+   "There are four bird in the tree."
+  ],
+  "answer": "There are four birds in the tree.",
+  "exp": "four(넷)는 복수니까 <b>There are<\/b> + 명사 뒤에 <b>-s<\/b> (birds)가 필요해요."
+ },
+ {
+  "q": "다음 중 바른 문장은?",
+  "choices": [
+   "There are three bookes on the desk.",
+   "There are three books on the desk.",
+   "There are three book on the desk.",
+   "There is three books on the desk."
+  ],
+  "answer": "There are three books on the desk.",
+  "exp": "three 다음 명사는 복수형 <b>books<\/b>이고, 복수일 때는 <b>There are<\/b>를 써요."
+ },
+ {
+  "q": "I ______ sick yesterday.",
+  "choices": [
+   "am",
+   "were",
+   "was",
+   "are"
+  ],
+  "answer": "was",
+  "exp": "<b>yesterday(어제)<\/b>는 과거예요. I의 과거 be동사는 <b>was<\/b>. 'I am sick yesterday'처럼 현재형 am을 쓰면 틀려요.",
+  "part": "Part 2 · be동사 과거 (was/were)"
+ },
+ {
+  "q": "She ______ tired last night.",
+  "choices": [
+   "was",
+   "am",
+   "are",
+   "were"
+  ],
+  "answer": "was",
+  "exp": "last night은 과거. She의 과거 be동사는 <b>was<\/b>."
+ },
+ {
+  "q": "My brother ______ at home yesterday.",
+  "choices": [
+   "are",
+   "was",
+   "were",
+   "is"
+  ],
+  "answer": "was",
+  "exp": "My brother는 3인칭 단수, 과거이므로 <b>was<\/b>."
+ },
+ {
+  "q": "I ______ hungry now, but I was full an hour ago.",
+  "choices": [
+   "am",
+   "is",
+   "was",
+   "were"
+  ],
+  "answer": "am",
+  "exp": "<b>now(지금)<\/b>는 현재이므로 I am. 'an hour ago'는 과거라서 뒤 문장만 was예요."
+ },
+ {
+  "q": "They ______ at the park last Sunday.",
+  "choices": [
+   "was",
+   "are",
+   "were",
+   "is"
+  ],
+  "answer": "were",
+  "exp": "They는 복수, last Sunday는 과거. 과거 복수 be동사는 <b>were<\/b>."
+ },
+ {
+  "q": "You ______ late for school yesterday.",
+  "choices": [
+   "was",
+   "were",
+   "are",
+   "am"
+  ],
+  "answer": "were",
+  "exp": "You의 과거 be동사는 단수여도 <b>were<\/b>예요."
+ },
+ {
+  "q": "The children ______ in the garden last weekend.",
+  "choices": [
+   "are",
+   "is",
+   "were",
+   "was"
+  ],
+  "answer": "were",
+  "exp": "The children은 복수, 과거이므로 <b>were<\/b>."
+ },
+ {
+  "q": "It ______ very cold last winter, but it is warm today.",
+  "choices": [
+   "were",
+   "are",
+   "was",
+   "is"
+  ],
+  "answer": "was",
+  "exp": "last winter는 과거. It의 과거는 <b>was<\/b>. 'is warm today'는 현재 문장이에요."
+ },
+ {
+  "q": "My friends and I ______ in the same club last year.",
+  "choices": [
+   "were",
+   "am",
+   "was",
+   "are"
+  ],
+  "answer": "were",
+  "exp": "My friends and I는 '우리(복수)'이고 last year는 과거. <b>were<\/b>를 써요. 'We are ... last year'처럼 현재형 are를 쓰는 실수를 조심!"
+ },
+ {
+  "q": "I ______ at school last Sunday. (부정문)",
+  "choices": [
+   "am not",
+   "wasn't",
+   "weren't",
+   "aren't"
+  ],
+  "answer": "wasn't",
+  "exp": "I의 과거 부정은 <b>wasn't<\/b> (was not)."
+ },
+ {
+  "q": "Look! The cat ______ on the sofa. (sleep)",
+  "choices": [
+   "are sleeping",
+   "sleep",
+   "is sleeping",
+   "is sleeps"
+  ],
+  "answer": "is sleeping",
+  "exp": "Look!은 '지금 보이는 일'이라 <b>현재진행형(be동사 + 동사ing)<\/b>. 'is sleeps'처럼 be동사 뒤에 동사원형·-s형을 쓰면 안 돼요.",
+  "part": "Part 3 · 현재진행형 · be동사 섞어 풀기"
+ },
+ {
+  "q": "Listen! The birds ______ in the tree. (sing)",
+  "choices": [
+   "are singing",
+   "sing",
+   "are sings",
+   "is singing"
+  ],
+  "answer": "are singing",
+  "exp": "The birds는 복수 → <b>are<\/b> + singing."
+ },
+ {
+  "q": "My mom ______ dinner now. (cook)",
+  "choices": [
+   "cooking",
+   "is cooks",
+   "are cooking",
+   "is cooking"
+  ],
+  "answer": "is cooking",
+  "exp": "now가 있으니 현재진행형. My mom은 단수 → <b>is cooking<\/b>."
+ },
+ {
+  "q": "He ______ a book now. (read)",
+  "choices": [
+   "is read",
+   "are reading",
+   "is reading",
+   "reads"
+  ],
+  "answer": "is reading",
+  "exp": "now는 지금 하고 있는 일이므로 <b>is + reading<\/b>."
+ },
+ {
+  "q": "They ______ soccer in the playground now. (play)",
+  "choices": [
+   "are plays",
+   "is playing",
+   "plays",
+   "are playing"
+  ],
+  "answer": "are playing",
+  "exp": "They → <b>are<\/b>, 동사는 <b>playing<\/b>."
+ },
+ {
+  "q": "The girl is ______ a letter. (write)",
+  "choices": [
+   "writing",
+   "writting",
+   "writeing",
+   "writeng"
+  ],
+  "answer": "writing",
+  "exp": "e로 끝나는 동사는 e를 빼고 <b>-ing<\/b>: write → <b>writing<\/b>."
+ },
+ {
+  "q": "Look! The dog is ______ in the park. (run)",
+  "choices": [
+   "runs",
+   "runneing",
+   "runing",
+   "running"
+  ],
+  "answer": "running",
+  "exp": "run은 끝 자음을 한 번 더 써서 <b>running<\/b>. 'The dog is runs'처럼 쓰면 틀려요."
+ },
+ {
+  "q": "Where ______ you yesterday?",
+  "choices": [
+   "are",
+   "were",
+   "was",
+   "is"
+  ],
+  "answer": "were",
+  "exp": "you의 과거 be동사는 <b>were<\/b>. yesterday는 과거예요."
+ },
+ {
+  "q": "다음 단어를 알맞게 배열한 문장은? ( is / your brother / at home / ? )",
+  "choices": [
+   "Are your brother at home?",
+   "Your brother is at home?",
+   "Is at home your brother?",
+   "Is your brother at home?"
+  ],
+  "answer": "Is your brother at home?",
+  "exp": "be동사 의문문은 <b>be동사 + 주어 ...?<\/b> 순서. 주어 your brother는 단수라 Is."
+ },
+ {
+  "q": "Were you at the library yesterday? — Yes, I ______.",
+  "choices": [
+   "was",
+   "are",
+   "am",
+   "were"
+  ],
+  "answer": "was",
+  "exp": "질문은 you(were)지만 대답의 주어는 I → 과거 <b>was<\/b>."
+ },
+ {
+  "q": "______ your friend like pizza?",
+  "choices": [
+   "Is",
+   "Does",
+   "Are",
+   "Do"
+  ],
+  "answer": "Does",
+  "exp": "일반동사(like) 의문문에서 3인칭 단수(your friend)는 <b>Does<\/b>.",
+  "part": "Part 4 · 일반동사 do/does · 종합"
+ },
+ {
+  "q": "They ______ play baseball on Sundays.",
+  "choices": [
+   "don't",
+   "doesn't",
+   "aren't",
+   "isn't"
+  ],
+  "answer": "don't",
+  "exp": "일반동사 부정문, 주어가 복수(They) → <b>don't<\/b>."
+ },
+ {
+  "q": "She ______ like carrots.",
+  "choices": [
+   "isn't",
+   "not",
+   "doesn't",
+   "don't"
+  ],
+  "answer": "doesn't",
+  "exp": "3인칭 단수의 일반동사 부정문은 <b>doesn't + 동사원형<\/b>."
+ },
+ {
+  "q": "______ you have a pencil?",
+  "choices": [
+   "Is",
+   "Do",
+   "Are",
+   "Does"
+  ],
+  "answer": "Do",
+  "exp": "you는 do를 써요: <b>Do you ...?<\/b>"
+ },
+ {
+  "q": "My dad ______ breakfast every morning.",
+  "choices": [
+   "are making",
+   "make",
+   "is make",
+   "makes"
+  ],
+  "answer": "makes",
+  "exp": "<b>every morning<\/b>은 반복되는 습관 → 현재시제. 3인칭 단수 → <b>makes<\/b>."
+ },
+ {
+  "q": "Tom ______ TV now.",
+  "choices": [
+   "watches",
+   "is watching",
+   "is watch",
+   "are watching"
+  ],
+  "answer": "is watching",
+  "exp": "<b>now<\/b>는 지금 하는 일 → 현재진행형 <b>is watching<\/b>."
+ },
+ {
+  "q": "우유를 좋아하지 않는다는 뜻의 바른 문장은?",
+  "choices": [
+   "He doesn't likes milk.",
+   "He don't like milk.",
+   "He isn't like milk.",
+   "He doesn't like milk."
+  ],
+  "answer": "He doesn't like milk.",
+  "exp": "3인칭 단수 부정은 <b>doesn't + 동사원형<\/b>. doesn't 뒤에는 -s를 붙이지 않아요."
+ },
+ {
+  "q": "Yesterday, my sister ______ sick, so she ______ at home.",
+  "choices": [
+   "was – was",
+   "is – was",
+   "were – was",
+   "was – were"
+  ],
+  "answer": "was – was",
+  "exp": "yesterday는 과거. my sister는 단수 → 둘 다 <b>was<\/b>."
+ },
+ {
+  "q": "Last year I was in grade 3, but now I ______ in grade 4.",
+  "choices": [
+   "were",
+   "was",
+   "am",
+   "is"
+  ],
+  "answer": "am",
+  "exp": "<b>now<\/b>는 현재 → I <b>am<\/b>. last year는 과거라서 앞 문장만 was예요."
+ },
+ {
+  "q": "Yesterday we ______ at the zoo. Now we ______ lunch.",
+  "choices": [
+   "were – are eating",
+   "were – is eating",
+   "was – are eating",
+   "are – were eating"
+  ],
+  "answer": "were – are eating",
+  "exp": "yesterday는 과거 → we <b>were<\/b>, now는 현재진행 → we <b>are eating<\/b>."
+ }
+];
+
+var QUIZ_ID = "clinic-hje-1016";
+var QUIZ_TITLE = "한주은 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

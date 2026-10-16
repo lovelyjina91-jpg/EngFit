@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>장새봄 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="장새봄 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>장새봄 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="장새봄" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "Choosing a school was a hard ______ for my brother.",
+  "choices": [
+   "decision",
+   "decide",
+   "deciding",
+   "decided"
+  ],
+  "answer": "decision",
+  "exp": "'a hard' 뒤에는 명사가 와야 해요. decide(결정하다)의 명사형은 <b>decision<\/b>입니다.",
+  "part": "Part 1 · 동사를 명사로 바꾸기"
+ },
+ {
+  "q": "Air ______ is a big problem in many cities.",
+  "choices": [
+   "pollute",
+   "pollution",
+   "polluted",
+   "polluting"
+  ],
+  "answer": "pollution",
+  "exp": "빈칸은 'Air ___ is'에서 주어 역할을 하는 명사 자리예요. pollute(오염시키다) → 명사 <b>pollution<\/b>."
+ },
+ {
+  "q": "Too much ______ to strong sunlight can hurt your skin.",
+  "choices": [
+   "exposure",
+   "exposes",
+   "exposed",
+   "expose"
+  ],
+  "answer": "exposure",
+  "exp": "'much' 뒤에는 명사가 와요. expose(노출시키다)의 명사형은 <b>exposure<\/b>입니다. 'to the sun' 앞에서 exposing 처럼 -ing 로 쓰지 않도록 주의!"
+ },
+ {
+  "q": "I need some ______ about the school trip.",
+  "choices": [
+   "informing",
+   "informed",
+   "information",
+   "inform"
+  ],
+  "answer": "information",
+  "exp": "'some' 뒤에는 명사가 와요. inform → <b>information<\/b> (셀 수 없는 명사라 s를 붙이지 않아요)."
+ },
+ {
+  "q": "The teacher gave a clear ______ of the rule.",
+  "choices": [
+   "explain",
+   "explaining",
+   "explanation",
+   "explained"
+  ],
+  "answer": "explanation",
+  "exp": "'a clear' 뒤는 명사 자리예요. explain → <b>explanation<\/b>."
+ },
+ {
+  "q": "Long ______ to the cold wind made her face red.",
+  "choices": [
+   "exposed",
+   "expose",
+   "exposing",
+   "exposure"
+  ],
+  "answer": "exposure",
+  "exp": "'Long' (긴) 뒤에 오는 명사가 필요해요. '노출'이라는 뜻의 명사는 <b>exposure<\/b>. 'exposing'은 동명사로 '노출시키는 것'이라 형용사 Long 과 어울리지 않아요."
+ },
+ {
+  "q": "The ______ of a new planet surprised scientists.",
+  "choices": [
+   "discover",
+   "discovery",
+   "discovered",
+   "discovers"
+  ],
+  "answer": "discovery",
+  "exp": "'The' 뒤는 명사 자리예요. discover → <b>discovery<\/b>."
+ },
+ {
+  "q": "Wear a helmet for your ______ when you ride a bike.",
+  "choices": [
+   "safe",
+   "saver",
+   "safely",
+   "safety"
+  ],
+  "answer": "safety",
+  "exp": "'your' 뒤에는 명사가 와요. safe(안전한)의 명사형은 <b>safety<\/b>."
+ },
+ {
+  "q": "Good ______ helps children build a better future.",
+  "choices": [
+   "educate",
+   "educated",
+   "educator",
+   "education"
+  ],
+  "answer": "education",
+  "exp": "주어 자리의 명사가 필요하고 '교육'이라는 뜻이므로 <b>education<\/b>. educator는 '교육자'라서 관사 없이 쓸 수 없어요."
+ },
+ {
+  "q": "My uncle has a large ______ of old coins.",
+  "choices": [
+   "collecting",
+   "collection",
+   "collected",
+   "collect"
+  ],
+  "answer": "collection",
+  "exp": "'a large' 뒤는 명사 자리예요. collect → <b>collection<\/b>(수집품)."
+ },
+ {
+  "q": "My brother really ______ pizza and chicken.",
+  "choices": [
+   "likes",
+   "liking",
+   "like",
+   "to like"
+  ],
+  "answer": "likes",
+  "exp": "주어 My brother 는 3인칭 단수! 현재 시제 동사에는 <b>-s<\/b>를 붙여 likes. really 는 부사라 주어가 바뀌지 않아요.",
+  "part": "Part 2 · 3인칭 단수 현재"
+ },
+ {
+  "q": "Her cousin really ______ to play badminton after school.",
+  "choices": [
+   "to love",
+   "loves",
+   "loving",
+   "love"
+  ],
+  "answer": "loves",
+  "exp": "Her cousin 은 3인칭 단수라서 <b>loves<\/b>. 'really'는 동사 앞에 두는 부사일 뿐, 동사 형태는 주어가 정해요."
+ },
+ {
+  "q": "Which sentence is correct? (1)",
+  "choices": [
+   "My sister really liking fantasy movies.",
+   "My sister really likes fantasy movies.",
+   "My sister really like fantasy movies.",
+   "My sister likes really fantasy movies."
+  ],
+  "answer": "My sister really likes fantasy movies.",
+  "exp": "My sister(3인칭 단수) → <b>likes<\/b>. 또 really 는 보통 동사 바로 앞에 놓아요."
+ },
+ {
+  "q": "The boy next door ______ his dog every morning.",
+  "choices": [
+   "to walk",
+   "walking",
+   "walk",
+   "walks"
+  ],
+  "answer": "walks",
+  "exp": "The boy 는 3인칭 단수, 'every morning' 은 습관이니 현재형 <b>walks<\/b>."
+ },
+ {
+  "q": "Mina's mom ______ in a hospital.",
+  "choices": [
+   "work",
+   "works",
+   "working",
+   "to work"
+  ],
+  "answer": "works",
+  "exp": "Mina's mom 은 3인칭 단수 → <b>works<\/b>."
+ },
+ {
+  "q": "He ______ English very hard.",
+  "choices": [
+   "studying",
+   "studies",
+   "study",
+   "studys"
+  ],
+  "answer": "studies",
+  "exp": "자음+y 로 끝나는 동사는 y 를 i 로 바꾸고 es: study → <b>studies<\/b>."
+ },
+ {
+  "q": "My dad ______ his car on Sundays.",
+  "choices": [
+   "wash",
+   "washing",
+   "washes",
+   "washs"
+  ],
+  "answer": "washes",
+  "exp": "-sh, -ch, -s, -x 로 끝나는 동사는 <b>-es<\/b>를 붙여요: washes."
+ },
+ {
+  "q": "Does your brother ______ fantasy books?",
+  "choices": [
+   "liking",
+   "liked",
+   "likes",
+   "like"
+  ],
+  "answer": "like",
+  "exp": "의문문에 does 가 있으면 동사는 <b>원형<\/b>! likes 처럼 -s 를 또 붙이지 않아요."
+ },
+ {
+  "q": "She doesn't ______ spicy food.",
+  "choices": [
+   "liked",
+   "like",
+   "likes",
+   "liking"
+  ],
+  "answer": "like",
+  "exp": "doesn't 뒤에는 동사원형 <b>like<\/b>. -s 는 doesn't 가 이미 담당해요."
+ },
+ {
+  "q": "Which sentence is correct? (2)",
+  "choices": [
+   "Tom don't play soccer.",
+   "Tom not plays soccer.",
+   "Tom doesn't plays soccer.",
+   "Tom doesn't play soccer."
+  ],
+  "answer": "Tom doesn't play soccer.",
+  "exp": "Tom 은 3인칭 단수라 <b>doesn't + 동사원형<\/b>. 'doesn't plays'처럼 -s 를 중복하면 안 돼요."
+ },
+ {
+  "q": "There is ______ milk in the box than in the bottle.",
+  "choices": [
+   "littler",
+   "lesser",
+   "less",
+   "least"
+  ],
+  "answer": "less",
+  "exp": "little 의 비교급은 <b>less<\/b>(더 적은). 'than'이 있으니 비교급이에요.",
+  "part": "Part 3 · 비교급과 최상급"
+ },
+ {
+  "q": "This bag is much ______ than that one.",
+  "choices": [
+   "heavier",
+   "heavyer",
+   "more heavy",
+   "heaviest"
+  ],
+  "answer": "heavier",
+  "exp": "짧은 형용사는 -er. heavy 는 y→i 로 바꿔 <b>heavier<\/b>. much 는 비교급을 강조해요."
+ },
+ {
+  "q": "This puzzle is much ______ than the last one.",
+  "choices": [
+   "difficulter",
+   "most difficult",
+   "more difficult",
+   "the more difficult"
+  ],
+  "answer": "more difficult",
+  "exp": "긴 형용사(difficult)는 앞에 <b>more<\/b>를 붙여 비교급을 만들어요. than 앞에는 the 를 쓰지 않아요."
+ },
+ {
+  "q": "This test was easier ______ the last one.",
+  "choices": [
+   "as",
+   "than",
+   "that",
+   "then"
+  ],
+  "answer": "than",
+  "exp": "비교급 뒤에서 '~보다'는 <b>than<\/b>. that(저것)이나 then(그때)과 헷갈리지 않게 철자 주의!"
+ },
+ {
+  "q": "She is the ______ student in her class.",
+  "choices": [
+   "most tall",
+   "tallest",
+   "taller",
+   "more tall"
+  ],
+  "answer": "tallest",
+  "exp": "'the ... in her class' 는 최상급 신호. tall → the <b>tallest<\/b>."
+ },
+ {
+  "q": "This is ______ movie I have ever seen.",
+  "choices": [
+   "better",
+   "the most good",
+   "the best",
+   "the goodest"
+  ],
+  "answer": "the best",
+  "exp": "good 의 최상급은 불규칙 변화 <b>best<\/b>. 앞에 the 도 필요해요."
+ },
+ {
+  "q": "My bag is as heavy ______ yours.",
+  "choices": [
+   "like",
+   "as",
+   "that",
+   "than"
+  ],
+  "answer": "as",
+  "exp": "'as 형용사 as' 는 '~만큼 ...한'. 뒤쪽 빈칸도 <b>as<\/b>입니다."
+ },
+ {
+  "q": "My dog runs as ______ as your dog.",
+  "choices": [
+   "fastest",
+   "faster",
+   "more fast",
+   "fast"
+  ],
+  "answer": "fast",
+  "exp": "as ... as 사이에는 형용사·부사의 <b>원급<\/b>을 써요. 비교급을 넣으면 안 돼요."
+ },
+ {
+  "q": "Which sentence is correct? (3)",
+  "choices": [
+   "He is most famous singer in the school.",
+   "He is the famousest singer in the school.",
+   "He is the most famous singer in the school.",
+   "He is the more famous singer in the school."
+  ],
+  "answer": "He is the most famous singer in the school.",
+  "exp": "famous 는 긴 형용사라 <b>the most famous<\/b>. 최상급엔 the 가 필요하고 -est 를 붙이지 않아요."
+ },
+ {
+  "q": "Which sentence is correct? (4)",
+  "choices": [
+   "Health is importanter than money.",
+   "Health is more important than money.",
+   "Health is the more important than money.",
+   "Health is more important that money."
+  ],
+  "answer": "Health is more important than money.",
+  "exp": "important 는 긴 형용사 → <b>more important than<\/b>. than 앞에 the 는 쓰지 않아요."
+ },
+ {
+  "q": "My uncle ______ drinks coffee. He doesn't like it.",
+  "choices": [
+   "seldom",
+   "often",
+   "usually",
+   "always"
+  ],
+  "answer": "seldom",
+  "exp": "'doesn't like it' 이라고 했으니 거의 마시지 않는다는 뜻의 <b>seldom<\/b>이 맞아요.",
+  "part": "Part 4 · 빈도부사·복수형·수동태"
+ },
+ {
+  "q": "Which sentence has the correct word order?",
+  "choices": [
+   "She late is always for class.",
+   "She is late always for class.",
+   "She always is late for class.",
+   "She is always late for class."
+  ],
+  "answer": "She is always late for class.",
+  "exp": "빈도부사는 be동사 <b>뒤<\/b>, 일반동사 <b>앞<\/b>에 놓아요. She is always late."
+ },
+ {
+  "q": "I ______ go to bed before ten. I do it every night.",
+  "choices": [
+   "seldom",
+   "hardly ever",
+   "always",
+   "never"
+  ],
+  "answer": "always",
+  "exp": "'every night' 매일 밤 하는 일이므로 <b>always<\/b>."
+ },
+ {
+  "q": "Which sentence is correct? (5)",
+  "choices": [
+   "He plays often soccer on Sundays.",
+   "He plays soccer on Sundays often the.",
+   "He often plays soccer on Sundays.",
+   "He plays soccer on often Sundays."
+  ],
+  "answer": "He often plays soccer on Sundays.",
+  "exp": "일반동사 문장에서 빈도부사는 동사 바로 앞: <b>often plays<\/b>."
+ },
+ {
+  "q": "Three ______ are sleeping in the room.",
+  "choices": [
+   "babyes",
+   "babies",
+   "baby",
+   "babys"
+  ],
+  "answer": "babies",
+  "exp": "자음+y 로 끝나는 명사는 y→i 후 es: baby → <b>babies<\/b>. (sky → skies 도 같은 규칙!)"
+ },
+ {
+  "q": "There are many ______ on the table.",
+  "choices": [
+   "dishs",
+   "dishies",
+   "dish",
+   "dishes"
+  ],
+  "answer": "dishes",
+  "exp": "-sh 로 끝나는 명사는 <b>-es<\/b>: dishes."
+ },
+ {
+  "q": "The kids were ______ to the park by their teacher.",
+  "choices": [
+   "taking",
+   "taken",
+   "took",
+   "take"
+  ],
+  "answer": "taken",
+  "exp": "'were + 과거분사' 는 수동태(~되었다). take 의 과거분사는 <b>taken<\/b>."
+ },
+ {
+  "q": "The little girl was ______ by her uncle to the zoo.",
+  "choices": [
+   "accompanied",
+   "accompanies",
+   "accompany",
+   "accompanying"
+  ],
+  "answer": "accompanied",
+  "exp": "'was + 과거분사' 수동태. accompany 는 y→i + ed 로 <b>accompanied<\/b> (함께 왔다/동행했다)."
+ },
+ {
+  "q": "This room is cleaned ______ my brother every day.",
+  "choices": [
+   "with",
+   "to",
+   "from",
+   "by"
+  ],
+  "answer": "by",
+  "exp": "수동태에서 '~에 의해'는 <b>by<\/b>."
+ },
+ {
+  "q": "Which sentence is correct? (6)",
+  "choices": [
+   "The windows broken by the strong wind.",
+   "The windows were broken by the strong wind.",
+   "The windows were break by the strong wind.",
+   "The windows was broken by the strong wind."
+  ],
+  "answer": "The windows were broken by the strong wind.",
+  "exp": "주어가 복수(The windows)이므로 <b>were + 과거분사(broken)<\/b>."
+ }
+];
+
+var QUIZ_ID = "clinic-jsb-1016";
+var QUIZ_TITLE = "장새봄 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

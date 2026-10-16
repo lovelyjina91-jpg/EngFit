@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>오승유 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="오승유 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>오승유 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="오승유" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "Which word means '~을 더 좋아하다'?",
+  "choices": [
+   "prefer",
+   "prefar",
+   "perfer",
+   "prifer"
+  ],
+  "answer": "prefer",
+  "exp": "<b>prefer<\/b>(선호하다)는 p-r-e-f-e-r 순서예요. 'pre-'로 시작하고 끝은 '-er'입니다.",
+  "part": "Part 1 · 구동사 대명사 위치"
+ },
+ {
+  "q": "Here are my muddy shoes. Please ______ at the door.",
+  "choices": [
+   "take off them",
+   "take them off",
+   "take them to off",
+   "off take them"
+  ],
+  "answer": "take them off",
+  "exp": "구동사의 목적어가 <b>대명사(them, it, me ...)<\/b>이면 동사와 부사 <b>사이<\/b>에 넣어요: take them off."
+ },
+ {
+  "q": "Choose the correct sentence.",
+  "choices": [
+   "I will give back it tomorrow.",
+   "I will back give it tomorrow.",
+   "I will give it back tomorrow.",
+   "I will give tomorrow it back."
+  ],
+  "answer": "I will give it back tomorrow.",
+  "exp": "give back도 구동사예요. 대명사 it은 <b>give it back<\/b>처럼 가운데에 와야 해요. 'give back it'은 틀린 어순입니다."
+ },
+ {
+  "q": "Can you ______ at the station at six?",
+  "choices": [
+   "pick up me",
+   "me pick up",
+   "up pick me",
+   "pick me up"
+  ],
+  "answer": "pick me up",
+  "exp": "pick up(~를 태우러 가다)의 목적어가 대명사 me이므로 <b>pick me up<\/b>이 맞아요."
+ },
+ {
+  "q": "My phone is ringing, but I am in class. I will ______.",
+  "choices": [
+   "turn it off",
+   "turn off it",
+   "turn it of",
+   "off turn it"
+  ],
+  "answer": "turn it off",
+  "exp": "<b>turn it off<\/b>: 대명사 it은 turn과 off 사이에 와야 합니다. 'turn off it'은 흔한 실수예요."
+ },
+ {
+  "q": "다음 중 <b>틀린<\/b> 문장은?",
+  "choices": [
+   "Turn the TV off.",
+   "Turn off it.",
+   "Turn off the TV.",
+   "Turn it off."
+  ],
+  "answer": "Turn off it.",
+  "exp": "명사 목적어는 turn the TV off / turn off the TV 둘 다 가능하지만, <b>대명사는 반드시 사이<\/b>에 와야 해서 'Turn off it'만 틀려요."
+ },
+ {
+  "q": "She tried on a new dress. It was too small, so she ______.",
+  "choices": [
+   "took off it",
+   "took it of",
+   "took it off",
+   "off took it"
+  ],
+  "answer": "took it off",
+  "exp": "대명사 it이 목적어이므로 <b>took it off<\/b>가 맞아요. 대명사는 구동사 사이에 넣습니다."
+ },
+ {
+  "q": "Mina found a wallet on the street and picked up it. 밑줄 친 부분을 바르게 고친 것은?",
+  "choices": [
+   "picked up it",
+   "picked it on",
+   "picked on it",
+   "picked it up"
+  ],
+  "answer": "picked it up",
+  "exp": "'picked up it'이 아니라 <b>picked it up<\/b>이에요. 대명사 목적어는 동사와 up 사이! pick on은 '괴롭히다'라는 전혀 다른 뜻입니다."
+ },
+ {
+  "q": "Which sentence is grammatically correct?",
+  "choices": [
+   "She tried it on in the shop.",
+   "She tried on it in the shop.",
+   "She on tried it in the shop.",
+   "She tried up it in the shop."
+  ],
+  "answer": "She tried it on in the shop.",
+  "exp": "try on(입어보다)도 구동사라서 대명사는 <b>tried it on<\/b>으로 써요."
+ },
+ {
+  "q": "The TV is too loud. Please turn off it. 어법상 바르게 고친 문장은?",
+  "choices": [
+   "Please turn off it.",
+   "Please turn it off.",
+   "Please turn to it off.",
+   "Please it turn off."
+  ],
+  "answer": "Please turn it off.",
+  "exp": "대명사 it은 구동사 turn off의 <b>가운데<\/b>에 넣어 <b>turn it off<\/b>로 씁니다. 'turn off it'은 틀려요."
+ },
+ {
+  "q": "By the time I got to school, the bell ______ already ______.",
+  "choices": [
+   "has rung",
+   "have rung",
+   "had rung",
+   "had rang"
+  ],
+  "answer": "had rung",
+  "exp": "'학교에 도착한 시점'보다 <b>먼저<\/b> 일어난 일은 <b>had + 과거분사<\/b>예요. ring-rang-<b>rung<\/b>.",
+  "part": "Part 2 · 과거완료"
+ },
+ {
+  "q": "She said that she ______ her key at home.",
+  "choices": [
+   "has left",
+   "have left",
+   "leaves",
+   "had left"
+  ],
+  "answer": "had left",
+  "exp": "said(과거) 보다 이전의 일은 <b>had left<\/b>(과거완료)로 나타냅니다."
+ },
+ {
+  "q": "Choose the sentence with the correct word order.",
+  "choices": [
+   "The movie had already started when we arrived.",
+   "The movie already started had when we arrived.",
+   "The movie had already start when we arrived.",
+   "The movie has already started when we arrived."
+  ],
+  "answer": "The movie had already started when we arrived.",
+  "exp": "과거완료는 <b>had + 과거분사(started)<\/b>이고, already는 had와 과거분사 사이에 들어가요."
+ },
+ {
+  "q": "Tom ______ never ______ sushi before he went to Japan.",
+  "choices": [
+   "has eaten",
+   "had eaten",
+   "had ate",
+   "was eating"
+  ],
+  "answer": "had eaten",
+  "exp": "일본에 가기 전의 경험은 <b>had never eaten<\/b>. eat-ate-<b>eaten<\/b>입니다. 'had ate'는 과거분사 자리에 과거형을 쓴 오류예요."
+ },
+ {
+  "q": "다음 중 어법상 바른 문장은?",
+  "choices": [
+   "He had not ride a horse before that day.",
+   "He not had ridden a horse before that day.",
+   "He had not ridden a horse before that day.",
+   "He had ridden not a horse before that day."
+  ],
+  "answer": "He had not ridden a horse before that day.",
+  "exp": "과거완료 부정은 <b>had not + 과거분사<\/b>. ride-rode-<b>ridden<\/b>이에요."
+ },
+ {
+  "q": "______ you ever visited Jeju before you moved there?",
+  "choices": [
+   "Have",
+   "Do",
+   "Will",
+   "Had"
+  ],
+  "answer": "Had",
+  "exp": "이사 간 시점(과거)보다 이전의 경험을 묻는 과거완료 의문문이므로 <b>Had + 주어 + 과거분사<\/b>로 써요."
+ },
+ {
+  "q": "When Jisu came back to the room, she found that someone ______ her cake.",
+  "choices": [
+   "had eaten",
+   "has eaten",
+   "will eat",
+   "is eating"
+  ],
+  "answer": "had eaten",
+  "exp": "방에 돌아와 발견한 시점보다 먼저 일어난 일이므로 <b>had eaten<\/b>이에요."
+ },
+ {
+  "q": "The window ______ before the storm came.",
+  "choices": [
+   "had broke",
+   "had broken",
+   "had breaked",
+   "had break"
+  ],
+  "answer": "had broken",
+  "exp": "break-broke-<b>broken<\/b>. 과거완료는 <b>had + 과거분사<\/b>이므로 had broken입니다."
+ },
+ {
+  "q": "Which sentence means that Mina left BEFORE I arrived?",
+  "choices": [
+   "Mina left when I had arrived.",
+   "Mina leaves when I arrived.",
+   "Mina had left when I arrived.",
+   "Mina has left when I arrived."
+  ],
+  "answer": "Mina had left when I arrived.",
+  "exp": "먼저 일어난 일(떠남)에 <b>had left<\/b>를 써요. 'left when I had arrived'는 오히려 내가 도착한 뒤에 떠났다는 뜻이 됩니다."
+ },
+ {
+  "q": "By the time the teacher came, the students ______ the classroom.",
+  "choices": [
+   "has cleaned",
+   "will clean",
+   "are cleaning",
+   "had cleaned"
+  ],
+  "answer": "had cleaned",
+  "exp": "'선생님이 온 시점'보다 먼저 청소를 끝낸 상황이므로 <b>had cleaned<\/b>(과거완료)가 맞아요."
+ },
+ {
+  "q": "I have ______ this movie three times.",
+  "choices": [
+   "seen",
+   "saw",
+   "see",
+   "sees"
+  ],
+  "answer": "seen",
+  "exp": "have 뒤에는 과거분사예요. see-saw-<b>seen<\/b>.",
+  "part": "Part 3 · 현재완료·미래완료"
+ },
+ {
+  "q": "By next year, she ______ in Seoul for five years.",
+  "choices": [
+   "has lived",
+   "will have lived",
+   "lived",
+   "will living"
+  ],
+  "answer": "will have lived",
+  "exp": "'내년까지 5년째'는 미래의 한 시점까지의 계속이므로 <b>will have + 과거분사<\/b>(미래완료)예요."
+ },
+ {
+  "q": "We ______ each other since 2020.",
+  "choices": [
+   "know",
+   "knew",
+   "have known",
+   "will known"
+  ],
+  "answer": "have known",
+  "exp": "since + 과거 시점은 <b>현재완료<\/b>와 함께 써요: have known."
+ },
+ {
+  "q": "By the time you wake up, I ______ the homework.",
+  "choices": [
+   "had finished",
+   "has finish",
+   "am finishing",
+   "will have finished"
+  ],
+  "answer": "will have finished",
+  "exp": "미래의 시점(네가 일어날 때)까지 완료될 일은 <b>will have finished<\/b>(미래완료)로 표현해요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린<\/b> 문장은?",
+  "choices": [
+   "She has gone to the store just now.",
+   "I have lost my umbrella.",
+   "They have been friends for ten years.",
+   "He has never eaten kimchi."
+  ],
+  "answer": "She has gone to the store just now.",
+  "exp": "<b>just now<\/b>(방금 전)처럼 과거 시점을 나타내는 말은 현재완료와 함께 쓸 수 없어요. 과거형 went를 써야 합니다."
+ },
+ {
+  "q": "Tom ______ in Busan since last month.",
+  "choices": [
+   "lived",
+   "has lived",
+   "will have lived",
+   "lives"
+  ],
+  "answer": "has lived",
+  "exp": "since last month(지난달부터)는 현재완료의 계속 용법이에요: has lived."
+ },
+ {
+  "q": "By next June, they ______ married for twenty years.",
+  "choices": [
+   "have been",
+   "were",
+   "will have been",
+   "had been"
+  ],
+  "answer": "will have been",
+  "exp": "미래의 시점(내년 6월)까지의 계속이므로 <b>will have been<\/b>이에요."
+ },
+ {
+  "q": "By the end of this month, I ______ this book three times.",
+  "choices": [
+   "have read",
+   "will reading",
+   "had read",
+   "will have read"
+  ],
+  "answer": "will have read",
+  "exp": "'이달 말까지'라는 미래 시점에 완료되는 횟수는 <b>will have + 과거분사<\/b>로 표현합니다."
+ },
+ {
+  "q": "Which sentence has the correct word order?",
+  "choices": [
+   "We have known each other for ten years.",
+   "We known have each other for ten years.",
+   "We have each other known for ten years.",
+   "We have known for ten years each other."
+  ],
+  "answer": "We have known each other for ten years.",
+  "exp": "현재완료는 <b>have + 과거분사<\/b> 순서이고 목적어(each other)가 그 뒤에 와요."
+ },
+ {
+  "q": "Have you ever ______ to Jeju?",
+  "choices": [
+   "went",
+   "been",
+   "go",
+   "going"
+  ],
+  "answer": "been",
+  "exp": "경험을 묻는 현재완료는 <b>have + 과거분사<\/b>예요. go-went-gone이지만 '가 본 적 있다'는 <b>have been to<\/b>로 씁니다."
+ },
+ {
+  "q": "Yesterday, I ______ my grandmother.",
+  "choices": [
+   "have visited",
+   "had visited",
+   "visited",
+   "will have visited"
+  ],
+  "answer": "visited",
+  "exp": "<b>yesterday<\/b>는 명확한 과거 시점이라 과거형 visited를 써요.",
+  "part": "Part 4 · 시제 종합"
+ },
+ {
+  "q": "She ______ TV when I called her.",
+  "choices": [
+   "watches",
+   "has watched",
+   "will watch",
+   "was watching"
+  ],
+  "answer": "was watching",
+  "exp": "내가 전화한 그 순간에 진행 중이던 동작은 <b>과거진행형<\/b>이에요."
+ },
+ {
+  "q": "If it ______ tomorrow, we will stay home.",
+  "choices": [
+   "rains",
+   "will rain",
+   "rained",
+   "has rained"
+  ],
+  "answer": "rains",
+  "exp": "조건 부사절(if)에서는 미래 의미라도 <b>현재형<\/b>을 써요."
+ },
+ {
+  "q": "I lost my phone last week, and I still ______ it.",
+  "choices": [
+   "hadn't found",
+   "haven't found",
+   "won't find",
+   "didn't found"
+  ],
+  "answer": "haven't found",
+  "exp": "지금까지도 못 찾았다는 '현재까지의 결과'이므로 <b>현재완료 haven't found<\/b>예요."
+ },
+ {
+  "q": "When I ______ home, my mom had already cooked dinner.",
+  "choices": [
+   "get",
+   "will get",
+   "got",
+   "had got"
+  ],
+  "answer": "got",
+  "exp": "엄마가 요리한 것(had cooked)이 먼저이고, 내가 집에 도착한 것은 과거이므로 <b>got<\/b>이에요."
+ },
+ {
+  "q": "He ______ here for two hours before the bus finally came.",
+  "choices": [
+   "has waited",
+   "waits",
+   "will wait",
+   "had waited"
+  ],
+  "answer": "had waited",
+  "exp": "버스가 온 과거 시점 '이전'까지의 계속이므로 <b>had waited<\/b>(과거완료)예요."
+ },
+ {
+  "q": "Which sentence is correct?",
+  "choices": [
+   "I visited Paris last year.",
+   "I have visited Paris last year.",
+   "I had visit Paris last year.",
+   "I will have visited Paris last year."
+  ],
+  "answer": "I visited Paris last year.",
+  "exp": "<b>last year<\/b>는 과거 시점이므로 현재완료와 쓸 수 없고 과거형을 써야 해요."
+ },
+ {
+  "q": "By the time she gets to the station, the train ______.",
+  "choices": [
+   "left",
+   "will have left",
+   "had left",
+   "is leaving"
+  ],
+  "answer": "will have left",
+  "exp": "'그녀가 도착할 때쯤'은 미래 시점이므로 그때까지 완료된 상태는 <b>will have left<\/b>예요."
+ },
+ {
+  "q": "I ______ the book twice, so I don't want to read it again.",
+  "choices": [
+   "had read",
+   "will read",
+   "have read",
+   "am reading"
+  ],
+  "answer": "have read",
+  "exp": "지금까지의 경험(두 번 읽음)과 현재의 마음을 연결하므로 <b>현재완료<\/b>가 맞아요."
+ },
+ {
+  "q": "Last night I told my sister that I ______ my homework already.",
+  "choices": [
+   "will have finished",
+   "finish",
+   "am finishing",
+   "had finished"
+  ],
+  "answer": "had finished",
+  "exp": "told(과거)보다 먼저 끝낸 일이므로 <b>had finished<\/b>예요. 전달하는 말에서는 시제가 한 단계 앞서요."
+ }
+];
+
+var QUIZ_ID = "clinic-osy-1016";
+var QUIZ_TITLE = "오승유 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

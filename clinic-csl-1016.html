@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>최솔립 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="최솔립 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>최솔립 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="최솔립" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "My brother is good at ______ pictures of animals.",
+  "choices": [
+   "drawing",
+   "draw",
+   "drew",
+   "to draw"
+  ],
+  "answer": "drawing",
+  "exp": "전치사 뒤에는 동사원형이 아니라 <b>동명사(-ing)<\/b>가 와요. 'be good at' 뒤라서 <b>drawing<\/b>이 맞아요. 'draw'처럼 동사원형 그대로 쓰는 실수를 조심해요.",
+  "part": "Part 1 · 전치사 + 동명사"
+ },
+ {
+  "q": "She is interested in ______ new friends at school.",
+  "choices": [
+   "make",
+   "making",
+   "made",
+   "to make"
+  ],
+  "answer": "making",
+  "exp": "전치사 뒤에는 동사원형이 아니라 <b>동명사(-ing)<\/b>가 와요. 'be interested in' 뒤라서 <b>making<\/b>이 맞아요."
+ },
+ {
+  "q": "He is good at ______ the guitar.",
+  "choices": [
+   "played",
+   "to play",
+   "play",
+   "playing"
+  ],
+  "answer": "playing",
+  "exp": "전치사 뒤에는 동사원형이 아니라 <b>동명사(-ing)<\/b>가 와요. 'good at' 다음은 <b>playing<\/b>. 'good at make'처럼 쓰면 틀려요."
+ },
+ {
+  "q": "Thank you for ______ me with my homework.",
+  "choices": [
+   "helped",
+   "to help",
+   "help",
+   "helping"
+  ],
+  "answer": "helping",
+  "exp": "전치사 뒤에는 동사원형이 아니라 <b>동명사(-ing)<\/b>가 와요. 'Thank you for' 뒤의 for는 전치사라서 <b>helping<\/b>!"
+ },
+ {
+  "q": "Tom is afraid of ______ alone in the dark.",
+  "choices": [
+   "be",
+   "being",
+   "to be",
+   "been"
+  ],
+  "answer": "being",
+  "exp": "전치사 뒤에는 동사원형이 아니라 <b>동명사(-ing)<\/b>가 와요. 'be afraid of' 뒤에는 <b>being<\/b>을 써요."
+ },
+ {
+  "q": "Mina is not good at ______ small things with her hands.",
+  "choices": [
+   "make",
+   "to make",
+   "making",
+   "makes"
+  ],
+  "answer": "making",
+  "exp": "전치사 뒤에는 동사원형이 아니라 <b>동명사(-ing)<\/b>가 와요. 'not good at' 뒤에도 똑같이 <b>동명사<\/b>예요."
+ },
+ {
+  "q": "They left the room without ______ goodbye.",
+  "choices": [
+   "saying",
+   "said",
+   "say",
+   "to say"
+  ],
+  "answer": "saying",
+  "exp": "전치사 뒤에는 동사원형이 아니라 <b>동명사(-ing)<\/b>가 와요. without은 전치사이므로 <b>saying<\/b>."
+ },
+ {
+  "q": "Instead of ______ TV, he read a book.",
+  "choices": [
+   "watching",
+   "watched",
+   "watch",
+   "to watch"
+  ],
+  "answer": "watching",
+  "exp": "전치사 뒤에는 동사원형이 아니라 <b>동명사(-ing)<\/b>가 와요. 'instead of' 뒤는 <b>watching<\/b>."
+ },
+ {
+  "q": "My little sister is good at ______ big wooden blocks with her tiny fingers.",
+  "choices": [
+   "moved",
+   "moving",
+   "move",
+   "to move"
+  ],
+  "answer": "moving",
+  "exp": "전치사 뒤에는 동사원형이 아니라 <b>동명사(-ing)<\/b>가 와요. 'good at' 뒤에는 <b>moving<\/b>이 와요. 'tiny fingers' 같은 꾸미는 말이 있어도 규칙은 같아요."
+ },
+ {
+  "q": "I am looking forward to ______ you at the party.",
+  "choices": [
+   "saw",
+   "seeing",
+   "see",
+   "to see"
+  ],
+  "answer": "seeing",
+  "exp": "'look forward to'의 <b>to는 전치사<\/b>예요. 그래서 동명사 <b>seeing<\/b>이 맞아요. 'to see'라고 쓰기 쉬운 함정!"
+ },
+ {
+  "q": "In autumn, apples are ______ in this town. (많이 있는)",
+  "choices": [
+   "plantiful",
+   "plentyful",
+   "plentiful",
+   "plentifull"
+  ],
+  "answer": "plentiful",
+  "exp": "'풍부한'은 <b>plentiful<\/b>이에요. plant(식물)가 아니라 <b>plenty<\/b>(많음)에서 온 단어라 'plen-'으로 시작해요.",
+  "part": "Part 2 · 어휘 (plentiful·persuasive 등)"
+ },
+ {
+  "q": "Fish are ______ in this lake, so you can catch many.",
+  "choices": [
+   "plentiful",
+   "plentifal",
+   "plentaful",
+   "plantiful"
+  ],
+  "answer": "plentiful",
+  "exp": "<b>plentiful<\/b> = 많은, 풍부한. 'plan-'이 아니라 <b>plen-<\/b>이에요."
+ },
+ {
+  "q": "Which word has the correct spelling?",
+  "choices": [
+   "plantyful",
+   "plentiful",
+   "plantiful",
+   "plentyfull"
+  ],
+  "answer": "plentiful",
+  "exp": "plenty + ful 에서 y가 i로 바뀐 <b>plentiful<\/b>이 맞는 철자예요."
+ },
+ {
+  "q": "Which word means \"making people agree or do something with good reasons\"?",
+  "choices": [
+   "persuasive",
+   "presuasive",
+   "persuasife",
+   "perswasive"
+  ],
+  "answer": "persuasive",
+  "exp": "설득력 있는은 <b>persuasive<\/b> (per-sua-sive). 철자를 천천히 나누어 외워 두세요."
+ },
+ {
+  "q": "The ad was so ______ that I bought the shoes right away.",
+  "choices": [
+   "persuasion",
+   "persuade",
+   "persuasive",
+   "persuaded"
+  ],
+  "answer": "persuasive",
+  "exp": "'was so ___' 자리에는 형용사가 와야 해요. <b>persuasive(설득력 있는)<\/b>가 맞아요. persuasion은 명사, persuade는 동사예요."
+ },
+ {
+  "q": "Choose the correct word: Her speech was very ______.",
+  "choices": [
+   "persuasiv",
+   "persuasive",
+   "persueasive",
+   "parsuasive"
+  ],
+  "answer": "persuasive",
+  "exp": "<b>persuasive<\/b>가 올바른 철자예요."
+ },
+ {
+  "q": "Water is ______ in Korea, so people don't worry about running out of it.",
+  "choices": [
+   "rare",
+   "expensive",
+   "plentiful",
+   "scarce"
+  ],
+  "answer": "plentiful",
+  "exp": "'걱정하지 않는다'는 내용으로 보아 '많은' 뜻의 <b>plentiful<\/b>이 맞아요. scarce·rare는 '드문'이라는 반대 뜻이에요."
+ },
+ {
+  "q": "The opposite of \"plentiful\" is ______.",
+  "choices": [
+   "abundant",
+   "common",
+   "scarce",
+   "enough"
+  ],
+  "answer": "scarce",
+  "exp": "plentiful(풍부한)의 반대는 <b>scarce(부족한)<\/b>예요."
+ },
+ {
+  "q": "The teacher's words were so ______ that the whole class changed their minds.",
+  "choices": [
+   "persuasive",
+   "silent",
+   "plentiful",
+   "careful"
+  ],
+  "answer": "persuasive",
+  "exp": "생각을 바꾸게 만들 만큼 '설득력 있는' 말이므로 <b>persuasive<\/b>예요."
+ },
+ {
+  "q": "Which sentence has a spelling mistake?",
+  "choices": [
+   "The ad was persuasive.",
+   "Fruit is plantiful in summer.",
+   "Fruit is plentiful in summer.",
+   "She is good at drawing."
+  ],
+  "answer": "Fruit is plantiful in summer.",
+  "exp": "틀린 철자는 <b>plantiful<\/b> → plentiful 이에요."
+ },
+ {
+  "q": "My little sister is ______ reading this book by herself.",
+  "choices": [
+   "capable for",
+   "capable at",
+   "capable of",
+   "capable to"
+  ],
+  "answer": "capable of",
+  "exp": "'~할 수 있는'은 <b>be capable of + 동명사<\/b>예요. 'capable to'는 틀려요. able to / capable of 를 구분해요.",
+  "part": "Part 3 · capable of · enough 위치"
+ },
+ {
+  "q": "Jiho is capable ______ solving the puzzle alone.",
+  "choices": [
+   "of",
+   "with",
+   "for",
+   "to"
+  ],
+  "answer": "of",
+  "exp": "<b>capable of -ing<\/b> 형태! 전치사 of 뒤에 동명사 solving이 이어졌어요."
+ },
+ {
+  "q": "Which sentence about ability is correct?",
+  "choices": [
+   "She is capable for running a mile.",
+   "She is capable to run a mile.",
+   "She is capable of run a mile.",
+   "She is capable of running a mile."
+  ],
+  "answer": "She is capable of running a mile.",
+  "exp": "<b>capable of + 동명사<\/b>가 맞아요. 'capable to run'은 흔한 오개념이에요."
+ },
+ {
+  "q": "The box was light ______ for me to carry.",
+  "choices": [
+   "so",
+   "much",
+   "enough",
+   "very"
+  ],
+  "answer": "enough",
+  "exp": "'~할 만큼 충분히 가벼운'은 <b>형용사 + enough<\/b>. very/so 는 뒤에 'for me to carry'를 이어 쓸 수 없어요."
+ },
+ {
+  "q": "Which sentence about the bag is correct?",
+  "choices": [
+   "The bag was light for me enough to carry.",
+   "The bag was enough light for me to carry.",
+   "The bag was for me light enough to carry.",
+   "The bag was light enough for me to carry."
+  ],
+  "answer": "The bag was light enough for me to carry.",
+  "exp": "enough는 형용사 <b>뒤<\/b>에 써요: light enough. 'enough light'로 앞에 두면 틀려요."
+ },
+ {
+  "q": "This soup is ______ for us to eat now.",
+  "choices": [
+   "cool enough",
+   "enough very cool",
+   "enough cool",
+   "cool too"
+  ],
+  "answer": "cool enough",
+  "exp": "<b>형용사 + enough + to부정사<\/b> 순서예요. enough가 형용사 뒤로 가야 해요."
+ },
+ {
+  "q": "He is tall ______ to reach the shelf.",
+  "choices": [
+   "very",
+   "so",
+   "much",
+   "enough"
+  ],
+  "answer": "enough",
+  "exp": "'닿을 만큼 충분히 큰'이므로 <b>tall enough to ~<\/b>예요."
+ },
+ {
+  "q": "Which sentence about money is correct?",
+  "choices": [
+   "I have money to enough buy the ticket.",
+   "I have enough money to buy the ticket.",
+   "I have enough to money buy the ticket.",
+   "I have to enough money buy the ticket."
+  ],
+  "answer": "I have enough money to buy the ticket.",
+  "exp": "명사 앞에서는 <b>enough + 명사<\/b>(enough money)가 자연스러워요. 형용사·부사 뒤에서는 'enough'가 뒤에 와요."
+ },
+ {
+  "q": "The water was warm ______ for the baby to swim in.",
+  "choices": [
+   "much",
+   "too",
+   "so",
+   "enough"
+  ],
+  "answer": "enough",
+  "exp": "<b>warm enough for the baby to swim<\/b> 순서예요. enough는 형용사 warm 바로 뒤!"
+ },
+ {
+  "q": "Choose the sentence with the same meaning: \"She is so strong that she can lift the box.\"",
+  "choices": [
+   "She is strong enough to lift the box.",
+   "She is strong to enough lift the box.",
+   "She is too strong to lift the box.",
+   "She is enough strong to lift the box."
+  ],
+  "answer": "She is strong enough to lift the box.",
+  "exp": "so ~ that 구문은 <b>형용사 + enough to ~<\/b>로 바꿀 수 있어요. too ~ to는 '너무 ~해서 못한다'는 반대 뜻이에요."
+ },
+ {
+  "q": "I can't decide ______ to wear to the party.",
+  "choices": [
+   "who",
+   "what",
+   "where",
+   "which"
+  ],
+  "answer": "what",
+  "exp": "'무엇을 입을지'는 <b>what to wear<\/b>예요. 의문사 + to부정사 구문!",
+  "part": "Part 4 · 종합 복습"
+ },
+ {
+  "q": "My uncle never ______ late for work.",
+  "choices": [
+   "is",
+   "be",
+   "are",
+   "does"
+  ],
+  "answer": "is",
+  "exp": "빈도부사 never는 <b>be동사 뒤<\/b>에 와요: is never late."
+ },
+ {
+  "q": "This book is worth ______ twice.",
+  "choices": [
+   "to read",
+   "reads",
+   "reading",
+   "read"
+  ],
+  "answer": "reading",
+  "exp": "<b>be worth + 동명사<\/b>: ~할 가치가 있다. worth 뒤에 to read는 쓰지 않아요."
+ },
+ {
+  "q": "These ______ are my cousins.",
+  "choices": [
+   "child",
+   "children",
+   "childrens",
+   "childs"
+  ],
+  "answer": "children",
+  "exp": "child의 복수형은 <b>children<\/b>이에요. 불규칙 복수이므로 -s를 붙이지 않아요."
+ },
+ {
+  "q": "I don't feel like ______ anything today.",
+  "choices": [
+   "to do",
+   "do",
+   "done",
+   "doing"
+  ],
+  "answer": "doing",
+  "exp": "'~하고 싶지 않다'는 <b>feel like + 동명사<\/b>예요."
+ },
+ {
+  "q": "Which sentence with a frequency adverb is correct?",
+  "choices": [
+   "He never is late for school.",
+   "He is never late for school.",
+   "He is late never for school.",
+   "He is for school never late."
+  ],
+  "answer": "He is never late for school.",
+  "exp": "빈도부사 never는 <b>be동사 뒤<\/b>(is never)에 위치해요."
+ },
+ {
+  "q": "The woman is good at ______ difficult words clearly.",
+  "choices": [
+   "to pronounce",
+   "pronounce",
+   "pronounced",
+   "pronouncing"
+  ],
+  "answer": "pronouncing",
+  "exp": "'good at' 뒤는 동명사 <b>pronouncing<\/b>. 전치사 뒤 동명사 규칙을 복습해요."
+ },
+ {
+  "q": "That girl is my sister, and ______ boys are my brothers.",
+  "choices": [
+   "those",
+   "that",
+   "these",
+   "this"
+  ],
+  "answer": "those",
+  "exp": "복수 명사(boys)를 가리키는 먼 대상은 <b>those<\/b>예요. that은 단수에 써요."
+ },
+ {
+  "q": "The test was easy ______ for everyone to finish on time.",
+  "choices": [
+   "very",
+   "much",
+   "enough",
+   "so"
+  ],
+  "answer": "enough",
+  "exp": "<b>easy enough for everyone to finish<\/b> = 모두가 끝낼 만큼 쉬웠다. enough는 형용사 뒤!"
+ },
+ {
+  "q": "Which sentence is correct?",
+  "choices": [
+   "He is capable of manipulating small tools with his fingers.",
+   "He is capable of manipulate small tools with his fingers.",
+   "He is capable to manipulate small tools with his fingers.",
+   "He is good at manipulate small tools with his fingers."
+  ],
+  "answer": "He is capable of manipulating small tools with his fingers.",
+  "exp": "<b>capable of + 동명사(manipulating)<\/b>가 맞아요. capable to, good at manipulate 모두 틀려요. 이 문제는 오늘 틀린 개념 세 가지를 합친 종합 문제예요."
+ }
+];
+
+var QUIZ_ID = "clinic-csl-1016";
+var QUIZ_TITLE = "최솔립 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

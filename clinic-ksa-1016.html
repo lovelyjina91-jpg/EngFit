@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>김서아 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="김서아 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>김서아 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="김서아" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "My sister is kind. I like ______ a lot.",
+  "choices": [
+   "she",
+   "her",
+   "he",
+   "hers"
+  ],
+  "answer": "her",
+  "exp": "동사 like 뒤에는 '~을/를'을 뜻하는 <b>목적격<\/b>이 와요. she의 목적격은 <b>her<\/b>예요. she는 '주어' 자리에만 써요.",
+  "part": "Part 1 · 목적격 대명사"
+ },
+ {
+  "q": "Look at the birds. Dad is taking pictures of ______.",
+  "choices": [
+   "them",
+   "they",
+   "theirs",
+   "their"
+  ],
+  "answer": "them",
+  "exp": "전치사 of 뒤에도 목적격을 써요. they의 목적격은 <b>them<\/b>이에요. their는 '그들의'라서 뒤에 명사가 필요해요."
+ },
+ {
+  "q": "Mr. Kim is my teacher. We love ______.",
+  "choices": [
+   "himself",
+   "his",
+   "him",
+   "he"
+  ],
+  "answer": "him",
+  "exp": "love의 대상(~을)이니까 목적격 <b>him<\/b>이에요. he는 주어 자리에만 써요."
+ },
+ {
+  "q": "Can you help ______? I can't carry this box.",
+  "choices": [
+   "mine",
+   "me",
+   "my",
+   "I"
+  ],
+  "answer": "me",
+  "exp": "help의 목적어 자리이므로 I의 목적격 <b>me<\/b>가 맞아요. 'I'는 주어일 때만 써요."
+ },
+ {
+  "q": "Which sentence is correct? (문제 5)",
+  "choices": [
+   "Mom reads a book to us.",
+   "Mom reads a book to we.",
+   "Mom reads a book to our.",
+   "Mom reads a book to ours."
+  ],
+  "answer": "Mom reads a book to us.",
+  "exp": "to 뒤에는 목적격이 와요. we의 목적격은 <b>us<\/b>예요. our(우리의)와 ours(우리의 것)는 '~에게'로 쓸 수 없어요."
+ },
+ {
+  "q": "My brother and ______ play soccer every Sunday.",
+  "choices": [
+   "my",
+   "mine",
+   "me",
+   "I"
+  ],
+  "answer": "I",
+  "exp": "'내 남동생과 내가 축구를 한다'에서 나는 <b>주어<\/b>이므로 <b>I<\/b>를 써요. 'me'는 목적어 자리에 써요."
+ },
+ {
+  "q": "The teacher called Mina and ______. (선생님이 미나와 나를 불렀다)",
+  "choices": [
+   "I",
+   "mine",
+   "me",
+   "my"
+  ],
+  "answer": "me",
+  "exp": "called의 목적어(미나와 나를)이므로 <b>me<\/b>가 맞아요. 'Mina and I'는 주어일 때만 써요."
+ },
+ {
+  "q": "Look at that boy. Do you know ______?",
+  "choices": [
+   "he",
+   "himself",
+   "his",
+   "him"
+  ],
+  "answer": "him",
+  "exp": "know의 목적어 자리라서 he의 목적격 <b>him<\/b>이에요. 'he'는 주어, 'his'는 '그의'예요."
+ },
+ {
+  "q": "We have a new puppy. Everyone loves ______.",
+  "choices": [
+   "them",
+   "it",
+   "its",
+   "they"
+  ],
+  "answer": "it",
+  "exp": "puppy 한 마리를 받는 목적격은 <b>it<\/b>이에요. its는 '그것의'라서 뒤에 명사가 필요하고, they/them은 복수예요."
+ },
+ {
+  "q": "I can't find my keys. Oh, I can see ______ on the table.",
+  "choices": [
+   "their",
+   "it",
+   "them",
+   "they"
+  ],
+  "answer": "them",
+  "exp": "keys는 복수이고 see의 목적어이므로 복수 목적격 <b>them<\/b>이에요. it은 단수, they는 주어 자리예요."
+ },
+ {
+  "q": "Which sentence is correct? (문제 11)",
+  "choices": [
+   "She likes them very much.",
+   "She likes their very much.",
+   "She likes they very much.",
+   "She likes theirs very much."
+  ],
+  "answer": "She likes them very much.",
+  "exp": "동사 likes 뒤 목적어 자리에는 <b>them<\/b>(그들을)을 써요. they는 주어, their/theirs는 소유를 나타내요.",
+  "part": "Part 2 · 소유대명사·지시대명사"
+ },
+ {
+  "q": "This bag is not mine. It is yours. 〈이 가방은 너의 것이야〉 This bag is ______.",
+  "choices": [
+   "you",
+   "yours",
+   "you're",
+   "your"
+  ],
+  "answer": "yours",
+  "exp": "뒤에 명사가 없으니 '~의 것'을 뜻하는 <b>소유대명사 yours<\/b>를 써요. your는 뒤에 명사가 꼭 있어야 해요."
+ },
+ {
+  "q": "Those shoes are ______. (저 신발은 내 것이다)",
+  "choices": [
+   "mine",
+   "I",
+   "my",
+   "me"
+  ],
+  "answer": "mine",
+  "exp": "'내 것'은 소유대명사 <b>mine<\/b>이에요. my shoes처럼 my 뒤에 명사를 쓰면 같은 뜻이지만, 여기엔 명사가 없어요."
+ },
+ {
+  "q": "My room is big, but ______ is small. (그의 방)",
+  "choices": [
+   "he",
+   "himself",
+   "him",
+   "his"
+  ],
+  "answer": "his",
+  "exp": "'그의 것'은 소유대명사 <b>his<\/b>예요. his는 '그의'와 '그의 것' 둘 다 될 수 있어요."
+ },
+ {
+  "q": "Your pen is red. ______ is blue. (나의 것)",
+  "choices": [
+   "Me",
+   "I",
+   "My",
+   "Mine"
+  ],
+  "answer": "Mine",
+  "exp": "문장 맨 앞에서 '내 것'이라는 뜻의 주어가 필요하므로 <b>Mine<\/b>이에요. 'My'는 뒤에 명사가 있어야 해요."
+ },
+ {
+  "q": "Look at ______ stars in the sky! (저 별들)",
+  "choices": [
+   "this",
+   "that",
+   "these",
+   "those"
+  ],
+  "answer": "those",
+  "exp": "star가 복수(stars)이고 멀리 있는 것이므로 <b>those<\/b>를 써요. that은 단수 하나에 써요."
+ },
+ {
+  "q": "______ shoes here are too small for me. (여기 있는 이 신발들)",
+  "choices": [
+   "These",
+   "Those",
+   "This",
+   "That"
+  ],
+  "answer": "These",
+  "exp": "shoes는 복수이고 가까이(here) 있으니 <b>These<\/b>예요. This는 단수에 써요."
+ },
+ {
+  "q": "Which sentence is correct? (문제 18)",
+  "choices": [
+   "Those are my crayons over there.",
+   "This are my crayons over there.",
+   "That are my crayons over there.",
+   "Those is my crayons over there."
+  ],
+  "answer": "Those are my crayons over there.",
+  "exp": "멀리 있는 여러 개는 <b>Those + are<\/b>예요. 단수 that/this는 are와 어울리지 않고, Those 뒤에 is를 쓰면 틀려요."
+ },
+ {
+  "q": "This is my bike, and ______ is Ben's. (저것은 벤의 것이다)",
+  "choices": [
+   "this",
+   "those",
+   "that",
+   "these"
+  ],
+  "answer": "that",
+  "exp": "멀리 있는 하나(자전거)를 가리키므로 <b>that<\/b>이에요. these/those는 복수에 써요."
+ },
+ {
+  "q": "A: Whose scarf is this?  B: It is ______. (엄마의 것)",
+  "choices": [
+   "Moms",
+   "Mom",
+   "Mom's",
+   "Moms'"
+  ],
+  "answer": "Mom's",
+  "exp": "'~의 것'은 이름 뒤에 <b>'s<\/b>를 붙여요. 엄마 한 명이므로 Mom's가 맞아요. s만 붙인 Moms는 복수예요."
+ },
+ {
+  "q": "I see three ______ near the school. (bus)",
+  "choices": [
+   "buses",
+   "bus's",
+   "bus",
+   "buss"
+  ],
+  "answer": "buses",
+  "exp": "<b>-s, -ss, -x, -ch, -sh<\/b>로 끝나는 명사는 <b>-es<\/b>를 붙여요. bus → buses.",
+  "part": "Part 3 · 명사 복수형"
+ },
+ {
+  "q": "She has two ______. (baby)",
+  "choices": [
+   "baby",
+   "babies",
+   "babyes",
+   "babys"
+  ],
+  "answer": "babies",
+  "exp": "'자음 + y'로 끝나면 y를 i로 바꾸고 <b>-es<\/b>를 붙여요. baby → babies."
+ },
+ {
+  "q": "My mom cuts three ______ for the salad. (tomato)",
+  "choices": [
+   "tomatoies",
+   "tomatos",
+   "tomatoes",
+   "tomato"
+  ],
+  "answer": "tomatoes",
+  "exp": "tomato는 <b>-o로 끝나서 -es<\/b>를 붙이는 대표 단어예요. tomato → tomatoes."
+ },
+ {
+  "q": "Two ______ are playing in the yard. (child)",
+  "choices": [
+   "childrens",
+   "children",
+   "childs",
+   "childen"
+  ],
+  "answer": "children",
+  "exp": "child의 복수는 <b>불규칙<\/b>으로 children이에요. 이미 복수라서 childrens처럼 s를 또 붙이지 않아요."
+ },
+ {
+  "q": "A shark has many sharp ______. (tooth)",
+  "choices": [
+   "teeths",
+   "teeth",
+   "toothes",
+   "tooths"
+  ],
+  "answer": "teeth",
+  "exp": "tooth의 복수는 <b>teeth<\/b>예요. (foot → feet도 같은 종류예요.)"
+ },
+ {
+  "q": "Please put three ______ on the table. (knife)",
+  "choices": [
+   "knifes",
+   "knives",
+   "knifies",
+   "knive"
+  ],
+  "answer": "knives",
+  "exp": "-f, -fe로 끝나는 단어는 <b>f를 v로 바꾸고 -es<\/b>를 붙여요. knife → knives."
+ },
+ {
+  "q": "Which sentence is correct? (문제 27)",
+  "choices": [
+   "I see two mice.",
+   "I see two mices.",
+   "I see two mouse.",
+   "I see two mouses."
+  ],
+  "answer": "I see two mice.",
+  "exp": "mouse의 복수는 <b>mice<\/b>예요. 불규칙 복수라서 s를 붙이지 않아요."
+ },
+ {
+  "q": "The zoo has many ______. (monkey)",
+  "choices": [
+   "monkeys",
+   "monkey",
+   "monkies",
+   "monkeyes"
+  ],
+  "answer": "monkeys",
+  "exp": "'모음 + y'로 끝나는 단어는 y를 그대로 두고 <b>-s<\/b>만 붙여요. monkey → monkeys. (baby처럼 자음 + y일 때만 -ies)"
+ },
+ {
+  "q": "In autumn, many ______ fall from the trees. (leaf)",
+  "choices": [
+   "leafes",
+   "leaves",
+   "leaf",
+   "leafs"
+  ],
+  "answer": "leaves",
+  "exp": "leaf는 <b>f를 v로 바꾸고 -es<\/b>를 붙여 leaves가 돼요."
+ },
+ {
+  "q": "Which sentence is correct? (문제 30)",
+  "choices": [
+   "There are three woman in the room.",
+   "There are three womens in the room.",
+   "There are three women in the room.",
+   "There are three womans in the room."
+  ],
+  "answer": "There are three women in the room.",
+  "exp": "woman의 복수는 <b>women<\/b>(불규칙)이에요. three가 있으니 복수형이 필요하고, womans/womens라는 말은 없어요."
+ },
+ {
+  "q": "I drink a ______ of milk every morning. (한 잔)",
+  "choices": [
+   "sheet",
+   "glass",
+   "pair",
+   "slice"
+  ],
+  "answer": "glass",
+  "exp": "음료를 컵에 담아 셀 때는 <b>a glass of<\/b>를 써요. slice는 빵·피자 조각, sheet는 종이, pair는 쌍을 셀 때 써요.",
+  "part": "Part 4 · 수량 표현·종합"
+ },
+ {
+  "q": "Can I have a ______ of pizza, please? (한 조각)",
+  "choices": [
+   "glass",
+   "slice",
+   "pair",
+   "bottle"
+  ],
+  "answer": "slice",
+  "exp": "피자나 케이크 한 조각은 <b>a slice of<\/b>예요. glass는 컵, pair는 쌍, bottle은 병이에요."
+ },
+ {
+  "q": "He wants a new ______ of socks. (한 켤레)",
+  "choices": [
+   "bottle",
+   "slice",
+   "pair",
+   "cup"
+  ],
+  "answer": "pair",
+  "exp": "양말·신발·장갑처럼 둘이 짝인 물건은 <b>a pair of<\/b>로 세요."
+ },
+ {
+  "q": "Mom bought two ______ of juice. (두 병)",
+  "choices": [
+   "bottle's",
+   "bottle",
+   "bottleses",
+   "bottles"
+  ],
+  "answer": "bottles",
+  "exp": "'two'처럼 둘 이상이면 단위 명사에 <b>-s<\/b>를 붙여요. 뒤의 juice는 그대로 써요. two bottles of juice."
+ },
+ {
+  "q": "Which is correct? (문제 35)",
+  "choices": [
+   "two slice bread",
+   "two slices bread",
+   "two slices of bread",
+   "two slice of bread"
+  ],
+  "answer": "two slices of bread",
+  "exp": "빵은 셀 수 없으니 <b>단위 + of<\/b>로 세요. 둘 이상이면 단위에 s를 붙여요: two slices of bread."
+ },
+ {
+  "q": "Which sentence is correct? (문제 36)",
+  "choices": [
+   "She drank two cups tea.",
+   "She drank two cup of tea.",
+   "She drank two cups of tea.",
+   "She drank two cups of teas."
+  ],
+  "answer": "She drank two cups of tea.",
+  "exp": "tea는 셀 수 없어서 복수형이 없고, 단위인 <b>cups<\/b>가 복수가 돼요: two cups of tea."
+ },
+ {
+  "q": "There is ______ water in the bottle. (물이 많이 있다)",
+  "choices": [
+   "few",
+   "much",
+   "a few",
+   "many"
+  ],
+  "answer": "much",
+  "exp": "water는 셀 수 없는 명사라서 <b>much<\/b>를 써요. many, few, a few는 셀 수 있는 복수명사 앞에 써요."
+ },
+ {
+  "q": "I have ______ friends at my new school. (많지는 않지만 몇 명 있다)",
+  "choices": [
+   "a little",
+   "little",
+   "a few",
+   "much"
+  ],
+  "answer": "a few",
+  "exp": "friends는 셀 수 있는 복수명사이고 '몇 명 있다'는 긍정의 뜻이므로 <b>a few<\/b>예요. a little/little/much는 셀 수 없는 명사 앞에 써요."
+ },
+ {
+  "q": "Which word is spelled correctly? (이웃)",
+  "choices": [
+   "neibor",
+   "nieghbor",
+   "naighbor",
+   "neighbor"
+  ],
+  "answer": "neighbor",
+  "exp": "neighbor는 <b>-eigh-<\/b>가 들어가요. 눈으로 한 글자씩 외워 두세요."
+ },
+ {
+  "q": "Which sentence is correct? (문제 40)",
+  "choices": [
+   "I gave them two glass of water.",
+   "I gave them two glasses of water.",
+   "I gave they two glasses of water.",
+   "I gave them two glasses of waters."
+  ],
+  "answer": "I gave them two glasses of water.",
+  "exp": "① 동사 뒤 '그들에게'는 목적격 <b>them<\/b> ② 두 잔이니 <b>glasses<\/b> ③ water는 셀 수 없어 그대로. 세 가지를 모두 지킨 문장만 정답이에요."
+ }
+];
+
+var QUIZ_ID = "clinic-ksa-1016";
+var QUIZ_TITLE = "김서아 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

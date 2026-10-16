@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>한승주 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="한승주 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>한승주 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="한승주" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "We have ______ best friends since 2019.",
+  "choices": [
+   "be",
+   "was",
+   "been",
+   "being"
+  ],
+  "answer": "been",
+  "exp": "since(~이후로)가 있어 <b>현재완료(have + p.p.)<\/b>예요. be동사의 p.p.는 <b>been<\/b>입니다.",
+  "part": "Part 1 · 현재완료"
+ },
+ {
+  "q": "He has ______ the guitar for three years. (play)",
+  "choices": [
+   "play",
+   "plays",
+   "playing",
+   "played"
+  ],
+  "answer": "played",
+  "exp": "has 뒤에는 <b>과거분사<\/b>가 와요. play의 과거분사는 played."
+ },
+ {
+  "q": "I have ______ Jisu for five years. (know)",
+  "choices": [
+   "knew",
+   "known",
+   "knowing",
+   "know"
+  ],
+  "answer": "known",
+  "exp": "<b>have + p.p.<\/b> 자리예요. know-knew-<b>known<\/b>. knew(과거형)와 헷갈리지 않게 주의! 'have knew'는 안 돼요."
+ },
+ {
+  "q": "My sister has ______ in a choir since last year. (sing)",
+  "choices": [
+   "singing",
+   "sing",
+   "sung",
+   "sang"
+  ],
+  "answer": "sung",
+  "exp": "sing-sang-<b>sung<\/b>. 현재완료는 have/has 뒤에 <b>과거분사(sung)<\/b>를 써요. sang은 과거형이라 have/has 뒤에 쓸 수 없어요."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (know)",
+  "choices": [
+   "Mina have sung this song many times.",
+   "Mina has sung this song many times.",
+   "Mina has sang this song many times.",
+   "Mina has singed this song many times."
+  ],
+  "answer": "Mina has sung this song many times.",
+  "exp": "주어가 3인칭 단수면 <b>has + sung<\/b>. sing은 불규칙동사라 singed가 아니라 sung이에요."
+ },
+ {
+  "q": "She ______ in Busan for ten years, and she still lives there.",
+  "choices": [
+   "lives",
+   "will live",
+   "has lived",
+   "lived"
+  ],
+  "answer": "has lived",
+  "exp": "과거에 시작해 <b>지금까지 계속<\/b>되는 일은 현재완료(has lived). lived는 지금은 안 산다는 느낌이에요."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (sing)",
+  "choices": [
+   "I have knew him since I was ten.",
+   "I have known him yesterday.",
+   "I know him for ten years.",
+   "I have known him since I was ten."
+  ],
+  "answer": "I have known him since I was ten.",
+  "exp": "since + 과거 시점 → <b>have known<\/b>. 'yesterday' 같은 특정 과거 시점 표현은 현재완료와 함께 쓸 수 없고, for ten years에 현재형 know도 어색해요."
+ },
+ {
+  "q": "We ______ hard for the test since Monday.",
+  "choices": [
+   "are studying",
+   "have studied",
+   "study",
+   "studied"
+  ],
+  "answer": "have studied",
+  "exp": "since Monday처럼 <b>과거부터 지금까지<\/b>를 말할 땐 현재완료 <b>have studied<\/b>를 써요."
+ },
+ {
+  "q": "She has ______ the answer for a long time. (know)",
+  "choices": [
+   "knew",
+   "knowing",
+   "known",
+   "know"
+  ],
+  "answer": "known",
+  "exp": "has 뒤에는 과거분사. know의 p.p.는 <b>known<\/b>이에요. (know-knew-known 세 가지 형태를 구분!)"
+ },
+ {
+  "q": "다음 중 올바른 문장은? (복수 주어)",
+  "choices": [
+   "They have sang together since 2018.",
+   "They sung together since 2018.",
+   "They has sung together since 2018.",
+   "They have sung together since 2018."
+  ],
+  "answer": "They have sung together since 2018.",
+  "exp": "They는 복수이므로 have, 그 뒤에는 <b>sung<\/b>. sang을 have 뒤에 쓰는 것이 흔한 실수예요."
+ },
+ {
+  "q": "There are many ______ in the picture. (baby)",
+  "choices": [
+   "babis",
+   "babies",
+   "babys",
+   "babyes"
+  ],
+  "answer": "babies",
+  "exp": "<b>자음 + y<\/b>로 끝나는 명사는 y를 i로 바꾸고 <b>-ies<\/b>를 붙여요.",
+  "part": "Part 2 · 명사 복수형 · one of the + 복수"
+ },
+ {
+  "q": "Seoul is one of the biggest ______ in Asia. (city)",
+  "choices": [
+   "citis",
+   "city",
+   "citys",
+   "cities"
+  ],
+  "answer": "cities",
+  "exp": "<b>one of the + 최상급 + 복수명사<\/b>. city는 자음+y로 끝나므로 y를 i로 바꾸고 es → <b>cities<\/b>. city 그대로 쓰면 틀려요."
+ },
+ {
+  "q": "She bought three ______ at the market. (box)",
+  "choices": [
+   "box",
+   "boxies",
+   "boxes",
+   "boxs"
+  ],
+  "answer": "boxes",
+  "exp": "-x, -s, -ch, -sh로 끝나는 명사는 <b>-es<\/b>를 붙여요."
+ },
+ {
+  "q": "There are two ______ in the kitchen. (knife)",
+  "choices": [
+   "knifes",
+   "knifs",
+   "knives",
+   "knive"
+  ],
+  "answer": "knives",
+  "exp": "-fe로 끝나는 명사는 f를 v로 바꾸고 <b>-ves<\/b>: knife → <b>knives<\/b>."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (city)",
+  "choices": [
+   "Paris is one of the most beautiful city in the world.",
+   "Paris is one of the most beautiful cities in worlds.",
+   "Paris is one of most beautiful cities in the world.",
+   "Paris is one of the most beautiful cities in the world."
+  ],
+  "answer": "Paris is one of the most beautiful cities in the world.",
+  "exp": "<b>one of the + 최상급 + 복수명사<\/b>. 'one of the' 뒤에는 반드시 복수형(cities)이 와요. the를 빼면 안 돼요."
+ },
+ {
+  "q": "This is one of the oldest ______ in Korea. (temple)",
+  "choices": [
+   "temples",
+   "temple",
+   "templs",
+   "the temple"
+  ],
+  "answer": "temples",
+  "exp": "'~중의 하나'를 뜻하는 one of the 다음에는 <b>복수명사<\/b>가 옵니다."
+ },
+ {
+  "q": "한라산은 한국에서 가장 높은 산들 중 하나이다.",
+  "choices": [
+   "Mt. Halla is one of the highest mountains in Korea.",
+   "Mt. Halla is one of the higher mountains in Korea.",
+   "Mt. Halla is one of the highest mountain in Korea.",
+   "Mt. Halla is one of the most highest mountains in Korea."
+  ],
+  "answer": "Mt. Halla is one of the highest mountains in Korea.",
+  "exp": "<b>one of the + 최상급 + 복수<\/b>. highest에 most를 또 붙이면 이중 최상급이라 틀리고, 최상급이라 higher도 안 돼요."
+ },
+ {
+  "q": "그녀는 우리 반에서 키가 가장 큰 학생들 중 한 명이다.",
+  "choices": [
+   "She is one of the taller students in our class.",
+   "She is one of the tallest students in our class.",
+   "She is one of the tallest student in our class.",
+   "She is one of tallest students in our class."
+  ],
+  "answer": "She is one of the tallest students in our class.",
+  "exp": "'가장 ~한 것들 중 하나'는 <b>one of the + 최상급 + 복수명사<\/b>. 'the tallest building'처럼 단수로 쓰면 '단 하나뿐인 최고'가 되어 의미가 달라져요."
+ },
+ {
+  "q": "My grandmother has two ______. (child)",
+  "choices": [
+   "childes",
+   "children",
+   "childrens",
+   "childs"
+  ],
+  "answer": "children",
+  "exp": "child의 복수형은 불규칙형 <b>children<\/b>이에요. 여기에 s를 또 붙이지 않아요."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (children)",
+  "choices": [
+   "The children is playing with their toys.",
+   "The childrens are playing with their toys.",
+   "The child are playing with their toys.",
+   "The children are playing with their toys."
+  ],
+  "answer": "The children are playing with their toys.",
+  "exp": "children은 이미 복수라 동사는 <b>are<\/b>, s를 또 붙인 childrens는 틀려요."
+ },
+ {
+  "q": "I have a lot of homework ______ today. (do)",
+  "choices": [
+   "to do",
+   "did",
+   "do",
+   "to does"
+  ],
+  "answer": "to do",
+  "exp": "'~할'이라는 뜻으로 명사를 뒤에서 꾸밀 땐 <b>to + 동사원형<\/b>(형용사적 용법): homework to do.",
+  "part": "Part 3 · to부정사 (형용사적 용법)"
+ },
+ {
+  "q": "나는 오늘 읽을 책이 한 권 있다.",
+  "choices": [
+   "I have read a book today.",
+   "I have a book to read today.",
+   "I have to a book read today.",
+   "I have a book reading today."
+  ],
+  "answer": "I have a book to read today.",
+  "exp": "'읽을 책'은 <b>a book to read<\/b>(명사 + to부정사)로 표현해요. 'I have read a book'은 '책을 읽었다'(현재완료)라는 전혀 다른 뜻이 돼요. 또 today night이 아니라 tonight이에요."
+ },
+ {
+  "q": "I need something ______. (drink)",
+  "choices": [
+   "drunk",
+   "drinking",
+   "drink",
+   "to drink"
+  ],
+  "answer": "to drink",
+  "exp": "something, anything 같은 말도 <b>to + 동사원형<\/b>이 뒤에서 꾸며줘요: something to drink."
+ },
+ {
+  "q": "She has no friends ______ with. (play)",
+  "choices": [
+   "play",
+   "to play",
+   "played",
+   "playing"
+  ],
+  "answer": "to play",
+  "exp": "friends to play with (함께 놀 친구들). <b>명사 + to부정사<\/b>의 형태예요."
+ },
+ {
+  "q": "나는 마실 물이 필요하다.",
+  "choices": [
+   "I need water drinking.",
+   "I need water to drink.",
+   "I need drink to water.",
+   "I need to water drink."
+  ],
+  "answer": "I need water to drink.",
+  "exp": "'마실 물' = <b>water to drink<\/b>. 꾸미는 말(to drink)이 명사 뒤에 와요."
+ },
+ {
+  "q": "He wants a chair ______ on. (sit)",
+  "choices": [
+   "sat",
+   "sitting",
+   "sit",
+   "to sit"
+  ],
+  "answer": "to sit",
+  "exp": "a chair to sit on (앉을 의자). 전치사 on을 빠뜨리지 않도록 주의!"
+ },
+ {
+  "q": "My mom wants me ______ my room. (clean)",
+  "choices": [
+   "to clean",
+   "clean",
+   "cleaned",
+   "cleaning"
+  ],
+  "answer": "to clean",
+  "exp": "<b>want + 목적어 + to부정사<\/b>: ~가 …하기를 원하다."
+ },
+ {
+  "q": "My teacher told us ______ quietly. (be)",
+  "choices": [
+   "to be",
+   "be",
+   "being",
+   "been"
+  ],
+  "answer": "to be",
+  "exp": "<b>tell + 목적어 + to + 동사원형<\/b>. be의 원형 앞에 to를 붙여 to be."
+ },
+ {
+  "q": "그에게는 살 집이 필요하다.",
+  "choices": [
+   "He needs to house live in.",
+   "He needs a house to live.",
+   "He needs a house living in.",
+   "He needs a house to live in."
+  ],
+  "answer": "He needs a house to live in.",
+  "exp": "live in a house의 관계이므로 꾸며주는 to부정사에도 <b>전치사 in<\/b>이 필요해요: a house to live in."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (want)",
+  "choices": [
+   "I want you help me.",
+   "I want you to help me.",
+   "I want that you help me.",
+   "I want you helping me."
+  ],
+  "answer": "I want you to help me.",
+  "exp": "want는 <b>want + 목적어 + to + 동사원형<\/b>의 형태로 써요."
+ },
+ {
+  "q": "We spent ______ time on the project.",
+  "choices": [
+   "several",
+   "many",
+   "a few",
+   "a lot of"
+  ],
+  "answer": "a lot of",
+  "exp": "time은 셀 수 없는 명사예요. <b>a lot of<\/b>는 셀 수 있든 없든 모두 가능하지만 many, a few, several은 셀 수 있는 명사에만 써요.",
+  "part": "Part 4 · 수량 표현 · 수일치 복습"
+ },
+ {
+  "q": "There are ______ students in the library.",
+  "choices": [
+   "many",
+   "a little",
+   "much",
+   "little"
+  ],
+  "answer": "many",
+  "exp": "students는 셀 수 있는 복수명사이므로 <b>many<\/b>. much, a little, little은 셀 수 없는 명사와 써요."
+ },
+ {
+  "q": "She doesn't have ______ money.",
+  "choices": [
+   "few",
+   "many",
+   "much",
+   "a few"
+  ],
+  "answer": "much",
+  "exp": "money는 셀 수 없는 명사 → <b>much<\/b>. 부정문에서 많이 쓰이는 짝이에요."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (information)",
+  "choices": [
+   "She gave me many useful informations.",
+   "She gave me many useful information.",
+   "She gave me a lot of useful information.",
+   "She gave me a lot of useful informations."
+  ],
+  "answer": "She gave me a lot of useful information.",
+  "exp": "<b>information은 셀 수 없는 명사<\/b>라서 s를 붙이지 않고, many도 쓸 수 없어요. 'a lot of' 또는 'much'와 함께 써요."
+ },
+ {
+  "q": "We spent ______ hours on the project.",
+  "choices": [
+   "much",
+   "a little",
+   "many",
+   "little"
+  ],
+  "answer": "many",
+  "exp": "hours는 셀 수 있는 복수명사 → <b>many hours<\/b>. 'much hours'는 틀려요."
+ },
+ {
+  "q": "I have ______ advice for you.",
+  "choices": [
+   "a few",
+   "several",
+   "a little",
+   "many"
+  ],
+  "answer": "a little",
+  "exp": "advice도 셀 수 없는 명사예요. 긍정적 의미의 '약간'은 <b>a little<\/b>."
+ },
+ {
+  "q": "The books on the desk ______ mine.",
+  "choices": [
+   "are",
+   "am",
+   "is",
+   "be"
+  ],
+  "answer": "are",
+  "exp": "주어는 on the desk가 아니라 <b>The books(복수)<\/b>이므로 be동사는 are."
+ },
+ {
+  "q": "The boy and his dogs ______ in the park.",
+  "choices": [
+   "am",
+   "is",
+   "be",
+   "are"
+  ],
+  "answer": "are",
+  "exp": "<b>A and B<\/b>는 복수 취급하므로 are를 써요."
+ },
+ {
+  "q": "He has ______ to Jeju twice.",
+  "choices": [
+   "been",
+   "went",
+   "is",
+   "being"
+  ],
+  "answer": "been",
+  "exp": "'~에 가 본 적 있다'는 경험은 <b>has been to<\/b>. went는 과거형이라 has 뒤에 못 와요."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (one of)",
+  "choices": [
+   "One of my friends has sung in a choir.",
+   "One of my friends have sung in a choir.",
+   "One of my friends has sang in a choir.",
+   "One of my friend has sung in a choir."
+  ],
+  "answer": "One of my friends has sung in a choir.",
+  "exp": "<b>One of + 복수명사<\/b>(friends), 동사는 <b>One<\/b>에 맞춰 단수(has) + p.p.(sung)."
+ }
+];
+
+var QUIZ_ID = "clinic-hsj-1016";
+var QUIZ_TITLE = "한승주 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

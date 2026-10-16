@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>차정민 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="차정민 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>차정민 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="차정민" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "Her sister ______ the piano after school. (play)",
+  "choices": [
+   "to play",
+   "plays",
+   "play",
+   "playing"
+  ],
+  "answer": "plays",
+  "exp": "주어가 3인칭 단수(he, she, it, 한 사람)이고 현재 시제이면 동사에 <b>-s/-es<\/b>를 붙여요. play는 그냥 <b>plays<\/b>.",
+  "part": "Part 1 · 현재형 동사 -s/-es"
+ },
+ {
+  "q": "The baby ______ when he is hungry. (cry)",
+  "choices": [
+   "cries",
+   "crys",
+   "crying",
+   "cry"
+  ],
+  "answer": "cries",
+  "exp": "주어가 3인칭 단수(he, she, it, 한 사람)이고 현재 시제이면 동사에 <b>-s/-es<\/b>를 붙여요. <b>자음+y<\/b>로 끝나면 y를 i로 바꾸고 es: cry → <b>cries<\/b>."
+ },
+ {
+  "q": "My dad ______ the dishes after dinner. (wash)",
+  "choices": [
+   "washes",
+   "wash",
+   "washing",
+   "washs"
+  ],
+  "answer": "washes",
+  "exp": "주어가 3인칭 단수(he, she, it, 한 사람)이고 현재 시제이면 동사에 <b>-s/-es<\/b>를 붙여요. <b>-sh, -ch, -s, -x, -o<\/b>로 끝나면 es: wash → <b>washes<\/b>."
+ },
+ {
+  "q": "This machine ______ a lot of electricity. (use)",
+  "choices": [
+   "using",
+   "useing",
+   "use",
+   "uses"
+  ],
+  "answer": "uses",
+  "exp": "주어가 3인칭 단수(he, she, it, 한 사람)이고 현재 시제이면 동사에 <b>-s/-es<\/b>를 붙여요. use → <b>uses<\/b>."
+ },
+ {
+  "q": "Tom ______ his homework before dinner.",
+  "choices": [
+   "doing",
+   "do",
+   "does",
+   "done"
+  ],
+  "answer": "does",
+  "exp": "주어가 3인칭 단수(he, she, it, 한 사람)이고 현재 시제이면 동사에 <b>-s/-es<\/b>를 붙여요. do의 3인칭 단수형은 <b>does<\/b>예요."
+ },
+ {
+  "q": "'공부하다(study)'의 3인칭 단수 현재형으로 알맞은 것은?",
+  "choices": [
+   "studyes",
+   "study's",
+   "studys",
+   "studies"
+  ],
+  "answer": "studies",
+  "exp": "<b>자음+y<\/b>로 끝나는 동사는 y를 i로 고치고 es: study → <b>studies<\/b>."
+ },
+ {
+  "q": "The bus ______ at 7:30 every morning. (arrive)",
+  "choices": [
+   "arrives",
+   "arrived",
+   "arriving",
+   "arrive"
+  ],
+  "answer": "arrives",
+  "exp": "every morning은 반복되는 일이라 현재형이고, the bus는 3인칭 단수라서 <b>arrives<\/b>."
+ },
+ {
+  "q": "My grandmother ______ TV in the evening. (watch)",
+  "choices": [
+   "watching",
+   "watch",
+   "watchs",
+   "watches"
+  ],
+  "answer": "watches",
+  "exp": "-ch로 끝나는 동사는 es를 붙여요: <b>watches<\/b>."
+ },
+ {
+  "q": "Our teacher ______ English very well. (speak)",
+  "choices": [
+   "speaks",
+   "speaking",
+   "speak",
+   "spoke"
+  ],
+  "answer": "speaks",
+  "exp": "현재의 사실을 말하고 주어가 3인칭 단수이므로 <b>speaks<\/b>."
+ },
+ {
+  "q": "다음 중 올바른 문장은?",
+  "choices": [
+   "My cat don't like water.",
+   "My cat not like water.",
+   "My cat doesn't likes water.",
+   "My cat doesn't like water."
+  ],
+  "answer": "My cat doesn't like water.",
+  "exp": "3인칭 단수의 부정문은 <b>doesn't + 동사원형<\/b>. doesn't 뒤에는 -s를 또 붙이지 않아요."
+ },
+ {
+  "q": "She ______ a ball to her dog yesterday. (throw)",
+  "choices": [
+   "thrown",
+   "throw",
+   "throwed",
+   "threw"
+  ],
+  "answer": "threw",
+  "exp": "yesterday는 과거! throw는 불규칙 동사로 throw - <b>threw<\/b> - thrown.",
+  "part": "Part 2 · 과거형 (불규칙·cast·lean)"
+ },
+ {
+  "q": "The fisherman ______ his net into the river this morning. (cast)",
+  "choices": [
+   "casting",
+   "casted",
+   "cast",
+   "casts"
+  ],
+  "answer": "cast",
+  "exp": "cast(던지다)는 <b>cast - cast - cast<\/b>로 모양이 안 변해요. 'casts'는 현재형이라 과거 문장에 쓸 수 없어요."
+ },
+ {
+  "q": "Yesterday, many people ______ their votes at the school. (cast)",
+  "choices": [
+   "casting",
+   "casted",
+   "cast",
+   "casts"
+  ],
+  "answer": "cast",
+  "exp": "cast는 과거형도 <b>cast<\/b>예요. 끝에 -ed를 붙인 casted는 쓰지 않아요."
+ },
+ {
+  "q": "The boy ______ over the fence to pet the horse yesterday. (lean)",
+  "choices": [
+   "was",
+   "leaning",
+   "leaned",
+   "leans"
+  ],
+  "answer": "leaned",
+  "exp": "'몸을 숙이다'는 동사 lean이에요. 과거형은 <b>leaned<\/b>. was는 '~였다'라는 be동사라서 이 자리에 동작 동사 대신 쓸 수 없어요."
+ },
+ {
+  "q": "We ______ back in our chairs and listened to the story. (lean)",
+  "choices": [
+   "was",
+   "leans",
+   "leaned",
+   "lean"
+  ],
+  "answer": "leaned",
+  "exp": "동작을 나타내는 lean의 과거형은 <b>leaned<\/b>. 주어가 We라서 was도 맞지 않아요."
+ },
+ {
+  "q": "He ______ his bag on the desk and sat down yesterday. (put)",
+  "choices": [
+   "put",
+   "puts",
+   "putted",
+   "putting"
+  ],
+  "answer": "put",
+  "exp": "put은 <b>put - put - put<\/b>으로 과거형도 똑같아요."
+ },
+ {
+  "q": "We ______ lunch at noon yesterday. (have)",
+  "choices": [
+   "have",
+   "having",
+   "has",
+   "had"
+  ],
+  "answer": "had",
+  "exp": "have의 과거형은 <b>had<\/b>."
+ },
+ {
+  "q": "My mom ______ me a new bike last month. (buy)",
+  "choices": [
+   "bought",
+   "buy",
+   "buyed",
+   "buys"
+  ],
+  "answer": "bought",
+  "exp": "buy는 불규칙 동사: buy - <b>bought<\/b> - bought."
+ },
+ {
+  "q": "Last Sunday, I ______ my friends at the park. (meet)",
+  "choices": [
+   "met",
+   "meet",
+   "meets",
+   "meeted"
+  ],
+  "answer": "met",
+  "exp": "meet - <b>met<\/b> - met."
+ },
+ {
+  "q": "The boy ______ the glass by accident yesterday. (break)",
+  "choices": [
+   "breaks",
+   "breaked",
+   "broke",
+   "break"
+  ],
+  "answer": "broke",
+  "exp": "break - <b>broke<\/b> - broken."
+ },
+ {
+  "q": "The rules of this game are very ______.",
+  "choices": [
+   "strict",
+   "strictness",
+   "strictly",
+   "stricted"
+  ],
+  "answer": "strict",
+  "exp": "be동사(are) 뒤에서 주어를 설명하는 말(보어)은 <b>형용사<\/b>예요. 부사 strictly를 쓰지 않아요.",
+  "part": "Part 3 · 형용사와 부사"
+ },
+ {
+  "q": "My coach follows the rules ______.",
+  "choices": [
+   "strictly",
+   "strict",
+   "stricter",
+   "strictness"
+  ],
+  "answer": "strictly",
+  "exp": "동사(follows)를 꾸며 주는 말은 <b>부사<\/b>! strict(형용사) + ly = <b>strictly<\/b>."
+ },
+ {
+  "q": "The cake tastes ______.",
+  "choices": [
+   "sweetness",
+   "sweetly",
+   "sweeten",
+   "sweet"
+  ],
+  "answer": "sweet",
+  "exp": "taste, smell, look 같은 감각 동사 뒤에는 <b>형용사<\/b>가 와요."
+ },
+ {
+  "q": "He ran ______ to catch the bus.",
+  "choices": [
+   "quicken",
+   "quick",
+   "quickness",
+   "quickly"
+  ],
+  "answer": "quickly",
+  "exp": "달리는 모습(동사 ran)을 꾸며 주므로 <b>부사 quickly<\/b>."
+ },
+ {
+  "q": "My sister speaks very ______.",
+  "choices": [
+   "softness",
+   "soft",
+   "softly",
+   "softer"
+  ],
+  "answer": "softly",
+  "exp": "동사 speaks를 꾸미는 말이므로 <b>softly<\/b>(부드럽게)."
+ },
+ {
+  "q": "The road was ______ after the rain.",
+  "choices": [
+   "dangers",
+   "dangerous",
+   "dangerously",
+   "danger"
+  ],
+  "answer": "dangerous",
+  "exp": "was(be동사) 뒤 보어 자리에는 <b>형용사 dangerous<\/b>."
+ },
+ {
+  "q": "Please listen ______.",
+  "choices": [
+   "careful",
+   "carefully",
+   "carefulness",
+   "care"
+  ],
+  "answer": "carefully",
+  "exp": "동사 listen을 꾸미는 부사 <b>carefully<\/b>."
+ },
+ {
+  "q": "The soup was a bit ______.",
+  "choices": [
+   "salt",
+   "salty",
+   "saltily",
+   "salted"
+  ],
+  "answer": "salty",
+  "exp": "be동사 뒤 보어 자리라서 형용사 <b>salty<\/b>(짠)."
+ },
+ {
+  "q": "She felt ______ when she lost her bag.",
+  "choices": [
+   "sadness",
+   "sadly",
+   "sadder",
+   "sad"
+  ],
+  "answer": "sad",
+  "exp": "felt(느꼈다) 뒤에는 기분을 나타내는 <b>형용사<\/b>가 와요."
+ },
+ {
+  "q": "He answered the question ______ and got a high score.",
+  "choices": [
+   "correctly",
+   "correct",
+   "correction",
+   "more correct"
+  ],
+  "answer": "correctly",
+  "exp": "answered(대답했다)를 꾸며 주므로 <b>부사 correctly<\/b>."
+ },
+ {
+  "q": "I'm going to ______ the English camp next week.",
+  "choices": [
+   "get part to",
+   "be part in",
+   "go part in",
+   "take part in"
+  ],
+  "answer": "take part in",
+  "exp": "'~에 참가하다'는 <b>take part in<\/b>이에요.",
+  "part": "Part 4 · 표현과 어순 (take part in · give a hand)"
+ },
+ {
+  "q": "Many students ______ the sports day last week.",
+  "choices": [
+   "took part in",
+   "take part in",
+   "were part in",
+   "taking part in"
+  ],
+  "answer": "took part in",
+  "exp": "last week는 과거이므로 take part in의 과거형 <b>took part in<\/b>. 'were part in'이라는 표현은 없어요."
+ },
+ {
+  "q": "다음 중 어순이 올바른 문장은?",
+  "choices": [
+   "She gave a me hand with the box.",
+   "She gave me a hand with the box.",
+   "She gave a hand me with the box.",
+   "She a hand gave me with the box."
+  ],
+  "answer": "She gave me a hand with the box.",
+  "exp": "'~를 도와주다'는 <b>give + 사람 + a hand<\/b> 순서예요."
+ },
+ {
+  "q": "Can you ______ me a hand with this box?",
+  "choices": [
+   "help",
+   "make",
+   "give",
+   "do"
+  ],
+  "answer": "give",
+  "exp": "<b>give me a hand<\/b> = 나를 도와주다. help me a hand라고는 하지 않아요 (help me with ~ 라고 해요)."
+ },
+ {
+  "q": "Dad ______ my brother a hand with his bike.",
+  "choices": [
+   "helped",
+   "made",
+   "gave",
+   "took"
+  ],
+  "answer": "gave",
+  "exp": "<b>give + 사람 + a hand<\/b>의 과거형은 <b>gave<\/b>."
+ },
+ {
+  "q": "'도와주다'라는 뜻의 표현은?",
+  "choices": [
+   "take a hand",
+   "put a hand",
+   "give a hand",
+   "make a hand"
+  ],
+  "answer": "give a hand",
+  "exp": "<b>give a hand<\/b>는 '도와주다'라는 관용 표현이에요."
+ },
+ {
+  "q": "My little brother ______ his toys on the floor yesterday. (leave)",
+  "choices": [
+   "left",
+   "leaves",
+   "leaved",
+   "leave"
+  ],
+  "answer": "left",
+  "exp": "leave - <b>left<\/b> - left."
+ },
+ {
+  "q": "Every evening, Jiho ______ his mom a hand with dinner.",
+  "choices": [
+   "gave",
+   "give",
+   "is give",
+   "gives"
+  ],
+  "answer": "gives",
+  "exp": "every evening은 반복되는 일이고 Jiho는 3인칭 단수라서 <b>gives<\/b>."
+ },
+ {
+  "q": "The baby ______ loudly last night, so we couldn't sleep. (cry)",
+  "choices": [
+   "cried",
+   "cries",
+   "cryed",
+   "crys"
+  ],
+  "answer": "cried",
+  "exp": "last night은 과거! <b>자음+y<\/b>는 y를 i로 바꾸고 ed: cry → <b>cried<\/b>."
+ },
+ {
+  "q": "과거의 일을 바르게 쓴 문장은?",
+  "choices": [
+   "The fisherman casted his line yesterday.",
+   "The fisherman casts his line yesterday.",
+   "The fisherman was cast his line yesterday.",
+   "The fisherman cast his line yesterday."
+  ],
+  "answer": "The fisherman cast his line yesterday.",
+  "exp": "yesterday가 있으니 과거형인데, cast의 과거형은 <b>cast<\/b>예요."
+ }
+];
+
+var QUIZ_ID = "clinic-cjm-1016";
+var QUIZ_TITLE = "차정민 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

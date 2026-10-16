@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>설지오 · 영핏 사진 클리닉 10/16</title>
+<meta property="og:title" content="설지오 주말 클리닉 40문제 · 10/16 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>설지오 학생 클리닉 · 10/16 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="설지오" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "We ______ at the park yesterday.",
+  "choices": [
+   "is",
+   "was",
+   "were",
+   "are"
+  ],
+  "answer": "were",
+  "exp": "주어 <b>We<\/b>는 복수이고 <b>yesterday<\/b>(어제)는 과거이므로 <b>were<\/b>를 씁니다. 'We are ... yesterday'처럼 현재형 are를 쓰면 안 돼요.",
+  "part": "Part 1 · be동사 과거 (was / were)"
+ },
+ {
+  "q": "My mother ______ in the kitchen an hour ago.",
+  "choices": [
+   "was",
+   "am",
+   "are",
+   "were"
+  ],
+  "answer": "was",
+  "exp": "<b>an hour ago<\/b>는 과거 표현이고 주어 My mother는 단수이므로 <b>was<\/b>입니다."
+ },
+ {
+  "q": "The boys ______ very tired last night.",
+  "choices": [
+   "were",
+   "was",
+   "is",
+   "be"
+  ],
+  "answer": "were",
+  "exp": "<b>The boys<\/b>는 복수, <b>last night<\/b>은 과거 → <b>were<\/b>."
+ },
+ {
+  "q": "I ______ at school this morning.",
+  "choices": [
+   "be",
+   "are",
+   "were",
+   "was"
+  ],
+  "answer": "was",
+  "exp": "주어 <b>I<\/b>의 과거 be동사는 <b>was<\/b>입니다. (I were는 틀려요.)"
+ },
+ {
+  "q": "______ you at the library last Sunday?",
+  "choices": [
+   "Were",
+   "Was",
+   "Is",
+   "Are"
+  ],
+  "answer": "Were",
+  "exp": "주어 <b>you<\/b>의 과거형 be동사는 <b>were<\/b>. 의문문이라 문장 맨 앞에 Were를 써요."
+ },
+ {
+  "q": "The movie ______ not interesting last night.",
+  "choices": [
+   "was",
+   "are",
+   "were",
+   "be"
+  ],
+  "answer": "was",
+  "exp": "<b>The movie<\/b>는 단수, 시점은 과거이므로 <b>was<\/b>입니다."
+ },
+ {
+  "q": "They ______ in Busan last week, but now they are in Seoul.",
+  "choices": [
+   "am",
+   "were",
+   "was",
+   "is"
+  ],
+  "answer": "were",
+  "exp": "<b>last week<\/b>이 과거 단서이고 They는 복수 → <b>were<\/b>. 현재(now)와 대비되는 과거를 말하고 있어요."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (과거 be동사)",
+  "choices": [
+   "Tom and Jerry was at home yesterday.",
+   "Tom and Jerry are at home yesterday.",
+   "Tom and Jerry is at home yesterday.",
+   "Tom and Jerry were at home yesterday."
+  ],
+  "answer": "Tom and Jerry were at home yesterday.",
+  "exp": "<b>Tom and Jerry<\/b>는 두 명이므로 복수 → <b>were<\/b>. 'They are at home yesterday'처럼 yesterday와 현재형 are를 함께 쓰는 실수를 조심하세요."
+ },
+ {
+  "q": "Where ______ your dog two days ago?",
+  "choices": [
+   "are",
+   "is",
+   "was",
+   "were"
+  ],
+  "answer": "was",
+  "exp": "<b>your dog<\/b>은 단수, <b>two days ago<\/b>는 과거 → <b>was<\/b>."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (be동사 과거 의문문)",
+  "choices": [
+   "Were you and your brother late for school?",
+   "Is you and your brother late for school?",
+   "Was you and your brother late for school?",
+   "Are you and your brother late for school yesterday?"
+  ],
+  "answer": "Were you and your brother late for school?",
+  "exp": "<b>you and your brother<\/b>는 복수이고 과거 의문문이므로 <b>Were<\/b>로 시작합니다."
+ },
+ {
+  "q": "Tom ______ to the gym every Monday.",
+  "choices": [
+   "goes",
+   "gos",
+   "go",
+   "going"
+  ],
+  "answer": "goes",
+  "exp": "주어가 3인칭 단수(Tom)이고 현재 습관이므로 동사에 -s/-es를 붙입니다. go는 <b>goes<\/b>가 돼요.",
+  "part": "Part 2 · 일반동사 3인칭 단수 · doesn't"
+ },
+ {
+  "q": "He ______ like milk. (그는 우유를 좋아하지 않는다)",
+  "choices": [
+   "isn't",
+   "not",
+   "doesn't",
+   "don't"
+  ],
+  "answer": "doesn't",
+  "exp": "3인칭 단수 주어의 일반동사 부정문은 <b>doesn't + 동사원형<\/b>입니다. 'He don't like'는 틀려요."
+ },
+ {
+  "q": "My sister ______ English at a language school.",
+  "choices": [
+   "study",
+   "studyes",
+   "studys",
+   "studies"
+  ],
+  "answer": "studies",
+  "exp": "<b>자음 + y<\/b>로 끝나는 동사는 y를 i로 바꾸고 <b>-es<\/b>를 붙입니다 → studies."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (doesn't)",
+  "choices": [
+   "My father doesn't drinks coffee.",
+   "My father doesn't drink coffee.",
+   "My father not drink coffee.",
+   "My father don't drink coffee."
+  ],
+  "answer": "My father doesn't drink coffee.",
+  "exp": "<b>doesn't<\/b> 뒤에는 동사원형(drink)을 씁니다. doesn't와 -s를 같이 쓰지 않아요."
+ },
+ {
+  "q": "______ your brother play soccer after school?",
+  "choices": [
+   "Does",
+   "Is",
+   "Are",
+   "Do"
+  ],
+  "answer": "Does",
+  "exp": "3인칭 단수 주어(your brother)의 일반동사 의문문은 <b>Does<\/b>로 시작합니다."
+ },
+ {
+  "q": "The cat ______ a fish every evening.",
+  "choices": [
+   "having",
+   "haves",
+   "has",
+   "have"
+  ],
+  "answer": "has",
+  "exp": "have의 3인칭 단수형은 <b>has<\/b>입니다. (haves는 없는 형태)"
+ },
+ {
+  "q": "She doesn't ______ breakfast on Sundays.",
+  "choices": [
+   "eats",
+   "ate",
+   "eat",
+   "eating"
+  ],
+  "answer": "eat",
+  "exp": "<b>doesn't<\/b> 뒤에는 항상 동사원형 <b>eat<\/b>을 씁니다."
+ },
+ {
+  "q": "Mina ______ her face every morning.",
+  "choices": [
+   "wash",
+   "washes",
+   "washs",
+   "washing"
+  ],
+  "answer": "washes",
+  "exp": "-sh, -ch, -s, -x로 끝나는 동사는 <b>-es<\/b>를 붙여요 → washes."
+ },
+ {
+  "q": "Does he ______ a car?",
+  "choices": [
+   "has",
+   "haves",
+   "have",
+   "having"
+  ],
+  "answer": "have",
+  "exp": "<b>Does<\/b>가 이미 3인칭 단수를 나타내므로 뒤의 동사는 원형 <b>have<\/b>입니다."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (doesn't + 동사원형)",
+  "choices": [
+   "Jisu not like spicy food.",
+   "Jisu doesn't like spicy food.",
+   "Jisu don't like spicy food.",
+   "Jisu doesn't likes spicy food."
+  ],
+  "answer": "Jisu doesn't like spicy food.",
+  "exp": "doesn't + <b>동사원형<\/b>. 3인칭 단수의 -s는 doesn't가 맡기 때문에 like에는 -s를 붙이지 않아요."
+ },
+ {
+  "q": "I will go ______ the library tomorrow.",
+  "choices": [
+   "to",
+   "at",
+   "on",
+   "of"
+  ],
+  "answer": "to",
+  "exp": "'~에 가다'는 <b>go to + 장소<\/b>입니다. 'go library'처럼 to를 빼먹지 않도록 주의하세요.",
+  "part": "Part 3 · will과 장소 가기 (go to ...)"
+ },
+ {
+  "q": "다음 중 올바른 문장은? (will go to)",
+  "choices": [
+   "We will go museum tomorrow.",
+   "We will going to the museum tomorrow.",
+   "We will go at the museum tomorrow.",
+   "We will go to the museum tomorrow."
+  ],
+  "answer": "We will go to the museum tomorrow.",
+  "exp": "<b>will go to the + 장소<\/b> 순서입니다. will 뒤에는 동사원형 go, 장소 앞에는 to가 필요해요."
+ },
+ {
+  "q": "I am going ______ the supermarket with Mom.",
+  "choices": [
+   "for",
+   "in",
+   "at",
+   "to"
+  ],
+  "answer": "to",
+  "exp": "이동의 목적지 앞에는 <b>to<\/b>를 씁니다."
+ },
+ {
+  "q": "They will ______ to the zoo next Saturday.",
+  "choices": [
+   "goes",
+   "go",
+   "went",
+   "going"
+  ],
+  "answer": "go",
+  "exp": "조동사 <b>will<\/b> 뒤에는 동사원형을 씁니다."
+ },
+ {
+  "q": "우리는 내일 영화관에 갈 것이다. 알맞은 영작은?",
+  "choices": [
+   "We go will to the movie theater tomorrow.",
+   "We will to go the movie theater tomorrow.",
+   "We will go the movie theater tomorrow.",
+   "We will go to the movie theater tomorrow."
+  ],
+  "answer": "We will go to the movie theater tomorrow.",
+  "exp": "주어 + <b>will + 동사원형<\/b> + <b>to + 장소<\/b> + 시간 순서로 씁니다."
+ },
+ {
+  "q": "I ______ go to the concert tomorrow.",
+  "choices": [
+   "was",
+   "did",
+   "am",
+   "will"
+  ],
+  "answer": "will",
+  "exp": "<b>tomorrow<\/b>는 미래이므로 <b>will<\/b>이 알맞습니다."
+ },
+ {
+  "q": "Tomorrow, my friends and I will ______ a picnic.",
+  "choices": [
+   "had",
+   "have",
+   "having",
+   "has"
+  ],
+  "answer": "have",
+  "exp": "will 뒤에는 동사원형 <b>have<\/b>를 씁니다."
+ },
+ {
+  "q": "He will ______ his grandmother next week.",
+  "choices": [
+   "visits",
+   "visit",
+   "visiting",
+   "visited"
+  ],
+  "answer": "visit",
+  "exp": "will 뒤에는 3인칭 단수여도 -s 없이 <b>동사원형<\/b>입니다."
+ },
+ {
+  "q": "I will not ______ late tomorrow.",
+  "choices": [
+   "being",
+   "am",
+   "be",
+   "was"
+  ],
+  "answer": "be",
+  "exp": "will not 뒤의 be동사는 원형 <b>be<\/b>로 써야 합니다."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (will 의문문)",
+  "choices": [
+   "Do you will go to the bookstore after lunch?",
+   "Will you goes to the bookstore after lunch?",
+   "Will you go to the bookstore after lunch?",
+   "Will you going to the bookstore after lunch?"
+  ],
+  "answer": "Will you go to the bookstore after lunch?",
+  "exp": "will 의문문은 <b>Will + 주어 + 동사원형<\/b> 순서입니다."
+ },
+ {
+  "q": "There ______ many books on the desk.",
+  "choices": [
+   "is",
+   "am",
+   "be",
+   "are"
+  ],
+  "answer": "are",
+  "exp": "There 뒤의 <b>many books<\/b>가 복수이므로 <b>are<\/b>를 씁니다.",
+  "part": "Part 4 · 종합 (There is/are, 진행형, 감정 형용사)"
+ },
+ {
+  "q": "There ______ a pencil under the chair.",
+  "choices": [
+   "am",
+   "is",
+   "are",
+   "be"
+  ],
+  "answer": "is",
+  "exp": "<b>a pencil<\/b>은 단수이므로 <b>There is<\/b>입니다."
+ },
+ {
+  "q": "There ______ two cats in the garden yesterday.",
+  "choices": [
+   "were",
+   "is",
+   "are",
+   "was"
+  ],
+  "answer": "were",
+  "exp": "<b>two cats<\/b>는 복수이고 <b>yesterday<\/b>는 과거 → <b>There were<\/b>."
+ },
+ {
+  "q": "What ______ you doing now?",
+  "choices": [
+   "is",
+   "are",
+   "do",
+   "does"
+  ],
+  "answer": "are",
+  "exp": "현재진행형은 <b>be동사 + 동사ing<\/b>. 주어 you에는 <b>are<\/b>를 씁니다."
+ },
+ {
+  "q": "She ______ a book now.",
+  "choices": [
+   "read",
+   "is reading",
+   "reads",
+   "reading"
+  ],
+  "answer": "is reading",
+  "exp": "<b>now<\/b>는 지금 진행 중인 동작이므로 <b>is reading<\/b>(현재진행형)이 알맞습니다."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (can)",
+  "choices": [
+   "My sister can dances well.",
+   "My sister cans dance well.",
+   "My sister can to dance well.",
+   "My sister can dance well."
+  ],
+  "answer": "My sister can dance well.",
+  "exp": "<b>can + 동사원형<\/b>. 주어가 3인칭 단수여도 can에는 -s를 붙이지 않고, 뒤에 to도 쓰지 않아요."
+ },
+ {
+  "q": "I was so ______ when I fell down.",
+  "choices": [
+   "embarrass",
+   "embarrassment",
+   "embarrassing",
+   "embarrassed"
+  ],
+  "answer": "embarrassed",
+  "exp": "'(사람이) 당황한' 감정은 <b>-ed<\/b> 형태(embarrassed), '(상황이) 당황스러운'은 -ing 형태입니다. 넘어진 나의 감정이므로 embarrassed."
+ },
+ {
+  "q": "The game was ______. I fell asleep.",
+  "choices": [
+   "bored",
+   "boring",
+   "bore",
+   "borely"
+  ],
+  "answer": "boring",
+  "exp": "사물·상황이 지루하게 만드는 것은 <b>-ing<\/b> (boring), 사람이 지루함을 느끼는 것은 -ed (bored)입니다. 주어가 The game이므로 boring."
+ },
+ {
+  "q": "철자가 올바른 단어를 고르세요.",
+  "choices": [
+   "difficult",
+   "difficalt",
+   "dificult",
+   "diffcult"
+  ],
+  "answer": "difficult",
+  "exp": "<b>difficult<\/b>는 f가 두 개(ff)이고 -cult로 끝납니다."
+ },
+ {
+  "q": "다음 중 올바른 문장은? (종합)",
+  "choices": [
+   "She doesn't like milk, so she will go cafe tomorrow.",
+   "She doesn't like milk, so she will goes to the cafe tomorrow.",
+   "She doesn't likes milk, so she will go to the cafe tomorrow.",
+   "She doesn't like milk, so she will go to the cafe tomorrow."
+  ],
+  "answer": "She doesn't like milk, so she will go to the cafe tomorrow.",
+  "exp": "<b>doesn't like<\/b>(동사원형), <b>will go<\/b>(동사원형), <b>go to the cafe<\/b>(to 필수)를 모두 지켜야 합니다."
+ }
+];
+
+var QUIZ_ID = "clinic-sjo-1016";
+var QUIZ_TITLE = "설지오 사진 클리닉 10/16";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/16 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
