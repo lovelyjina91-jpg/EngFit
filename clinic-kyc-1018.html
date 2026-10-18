@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>김예찬 · 영핏 사진 클리닉 10/18</title>
+<meta property="og:title" content="김예찬 클리닉 · 10/18 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>김예찬 학생 클리닉 · 10/18 🌱</h1>
+    <p class="sub">10문항 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="김예찬" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "Choose the correct spelling of '모험'.",
+  "choices": [
+   "adventure",
+   "adventer",
+   "advanture",
+   "adventur"
+  ],
+  "answer": "adventure",
+  "exp": "ad<b>ven<\/b>ture — 끝이 <b>-ture<\/b>예요. 'adventer'처럼 -er로 쓰기 쉬운데, picture, future, nature도 모두 -ture로 끝나요. '애드-<b>벤<\/b>-처'로 소리 내며 외워요.",
+  "part": "Part 1 · 철자 adventure"
+ },
+ {
+  "q": "Our trip to the jungle was a big ______.",
+  "choices": [
+   "adventure",
+   "adventer",
+   "adventeur",
+   "advencher"
+  ],
+  "answer": "adventure",
+  "exp": "'모험'은 <b>adventure<\/b>. 3번째 틀린 철자니까 손으로 한 번 써 보세요: a-d-v-e-n-t-u-r-e."
+ },
+ {
+  "q": "The beautiful poster was ______ by Hana.",
+  "choices": [
+   "drawn",
+   "drew",
+   "drawed",
+   "draw"
+  ],
+  "answer": "drawn",
+  "exp": "수동태는 <b>be + 과거분사<\/b>예요. draw의 과거분사는 <b>drawn<\/b> (draw–drew–drawn). 'drawed'는 없는 말이에요!",
+  "part": "Part 2 · 불규칙 과거분사"
+ },
+ {
+  "q": "The window was ______ by a baseball.",
+  "choices": [
+   "broken",
+   "broke",
+   "breaked",
+   "break"
+  ],
+  "answer": "broken",
+  "exp": "break–broke–<b>broken<\/b>. 수동태에는 과거형(broke)이 아니라 <b>과거분사(broken)<\/b>를 써요."
+ },
+ {
+  "q": "Many letters ______ written by the students.",
+  "choices": [
+   "were",
+   "was",
+   "is",
+   "been"
+  ],
+  "answer": "were",
+  "exp": "주어 Many letters는 <b>복수<\/b>라서 be동사도 <b>were<\/b>! 'The cookies were made'처럼 복수 주어면 were/are를 써요.",
+  "part": "Part 3 · 복수 주어 수동태"
+ },
+ {
+  "q": "Choose the correct sentence.",
+  "choices": [
+   "The apples were picked by the farmers.",
+   "The apple was picked by the farmers.",
+   "The apples was picked by the farmers.",
+   "The apples were pick by the farmers."
+  ],
+  "answer": "The apples were picked by the farmers.",
+  "exp": "수동태로 바꿀 때 <b>주어의 단수·복수를 그대로<\/b> 지켜요. apples(복수)를 apple(단수)로 바꾸면 뜻이 달라져요. 복수 → were, 과거분사 picked!"
+ },
+ {
+  "q": "'My dad painted the fence.'를 수동태로 바르게 바꾼 것은?",
+  "choices": [
+   "The fence was painted by my dad.",
+   "My dad was painted by the fence.",
+   "The fence painted by my dad.",
+   "The fence was paint by my dad."
+  ],
+  "answer": "The fence was painted by my dad.",
+  "exp": "능동태의 <b>목적어(the fence)가 수동태의 주어<\/b>가 돼요. 그리고 <b>was + 과거분사(painted) + by + 행동한 사람<\/b>! 'Tom opens the door'도 'The door was opened by Tom'처럼 바꿔야 해요.",
+  "part": "Part 4 · 능동태 → 수동태 바꾸기"
+ },
+ {
+  "q": "'The chef cooks these noodles.'를 수동태로 바르게 바꾼 것은?",
+  "choices": [
+   "These noodles are cooked by the chef.",
+   "These noodles is cooked by the chef.",
+   "These noodles cooks the chef.",
+   "The chef is cooked by these noodles."
+  ],
+  "answer": "These noodles are cooked by the chef.",
+  "exp": "목적어 These noodles(복수)가 주어가 되고 현재 시제라 <b>are cooked by the chef<\/b>. 복수 주어에 is를 쓰면 틀려요."
+ },
+ {
+  "q": "French ______ in many countries.",
+  "choices": [
+   "is spoken",
+   "are spoken",
+   "was spoke",
+   "speaks"
+  ],
+  "answer": "is spoken",
+  "exp": "언어 이름(French, English)은 <b>단수<\/b>로 취급해요. 그래서 <b>is spoken<\/b>. 'English are spoken'은 틀려요!",
+  "part": "Part 5 · 언어·곡식 단수 취급"
+ },
+ {
+  "q": "Rice ______ in many Asian countries.",
+  "choices": [
+   "is grown",
+   "are grown",
+   "is grow",
+   "growing"
+  ],
+  "answer": "is grown",
+  "exp": "rice는 셀 수 없는 명사라 <b>단수 취급<\/b> → is grown (be + 과거분사). 'are grown'은 복수 주어일 때 써요."
+ }
+];
+
+var QUIZ_ID = "clinic-kyc-1018";
+var QUIZ_TITLE = "김예찬 사진 클리닉 10/18";
+var KEEP = false;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/18 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

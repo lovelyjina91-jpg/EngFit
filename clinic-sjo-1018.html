@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>설지오 · 영핏 사진 클리닉 10/18</title>
+<meta property="og:title" content="설지오 클리닉 · 10/18 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>설지오 학생 클리닉 · 10/18 🌱</h1>
+    <p class="sub">12문항 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="설지오" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "다음 글의 목적으로 가장 적절한 것은?<div class=\"pass\">Dear Ms. Park,<br>I am writing to ask if you could write a recommendation letter for my application to the Science Club at Hanbit High School. You taught me for two years, so I think you know my work best. The deadline is November 20, and I will visit your office on Monday to explain more. Thank you for your time.<br>Sincerely, Daniel Lee<\/div>",
+  "choices": [
+   "추천서 작성을 부탁하려고",
+   "동아리 가입 절차를 문의하려고",
+   "수업 시간 변경을 요청하려고",
+   "졸업 후 진로를 상담하려고",
+   "시험 결과에 항의하려고"
+  ],
+  "answer": "추천서 작성을 부탁하려고",
+  "exp": "글쓴이가 <b>'write a recommendation letter'<\/b> 해 줄 수 있는지 묻고 있어요. 글의 목적은 첫 부분의 <b>I am writing to ~<\/b>에 가장 잘 드러나요.",
+  "part": "Part 1 · 글의 목적"
+ },
+ {
+  "q": "다음 글의 목적으로 가장 적절한 것은?<div class=\"pass\">Attention, all residents of Maple Apartments.<br>The water supply will be turned off this Thursday from 10 a.m. to 2 p.m. because of repair work on the main pipe. Please store enough water for cooking and washing in advance. We are sorry for any trouble and thank you for your understanding.<br>— Management Office<\/div>",
+  "choices": [
+   "단수 일정을 안내하려고",
+   "관리비 인상을 공지하려고",
+   "수리 업체를 모집하려고",
+   "이웃 간 소음 문제를 항의하려고",
+   "주차장 이용 규칙을 설명하려고"
+  ],
+  "answer": "단수 일정을 안내하려고",
+  "exp": "'물 공급이 끊긴다(water supply will be turned off)'는 날짜와 시간이 핵심이에요. 안내문은 <b>무엇을, 언제<\/b> 알리는지에 집중해서 읽어요."
+ },
+ {
+  "q": "다음 글의 목적으로 가장 적절한 것은?<div class=\"pass\">Hello,<br>I bought a pair of running shoes from your online store last week. When the box arrived, the left shoe was a size smaller than the right one. I would like to exchange them for a correct pair as soon as possible. I have attached a photo of the shoes.<br>Regards, Hana Choi<\/div>",
+  "choices": [
+   "제품 교환을 요청하려고",
+   "배송 지연을 사과하려고",
+   "신제품 출시를 홍보하려고",
+   "환불 규정을 문의하려고",
+   "구매 후기를 남기려고"
+  ],
+  "answer": "제품 교환을 요청하려고",
+  "exp": "<b>I would like to exchange ~<\/b>가 요청의 핵심이에요. 불만의 이유(신발 크기가 다름)보다, 결국 <b>무엇을 해 달라는지<\/b>가 목적이에요."
+ },
+ {
+  "q": "다음 글에 드러난 Ben의 심경으로 가장 적절한 것은?<div class=\"pass\">Ben had practiced the cello every day for three months. On the day of the school concert, he walked onto the stage and his hands were shaking. He could hear his heart beating loudly. “What if I forget the notes?” he thought, looking at the quiet audience.<\/div>",
+  "choices": [
+   "nervous",
+   "bored",
+   "proud",
+   "relieved",
+   "jealous"
+  ],
+  "answer": "nervous",
+  "exp": "손이 떨리고(hands were shaking) 심장이 크게 뛰며 'What if I forget ~?'라고 걱정하는 모습 → <b>nervous(긴장한)<\/b>. 행동·생각 단서로 심경을 찾아요.",
+  "part": "Part 2 · 심경 파악"
+ },
+ {
+  "q": "다음 글에 드러난 Mina의 심경으로 가장 적절한 것은?<div class=\"pass\">Mina opened the box on her desk and found a small notebook with a note: “Happy birthday! — from your friends.” She had thought everyone forgot her birthday. Her eyes filled with tears, and she smiled all day long.<\/div>",
+  "choices": [
+   "touched",
+   "angry",
+   "bored",
+   "embarrassed",
+   "frightened"
+  ],
+  "answer": "touched",
+  "exp": "잊혔다고 생각했는데 친구들의 선물을 받고 눈물이 맺히고 하루 종일 웃었어요 → <b>touched(감동한)<\/b>. 심경이 <b>바뀌는 글<\/b>에서는 마지막 감정을 고르세요."
+ },
+ {
+  "q": "다음 글에 드러난 Tom의 심경으로 가장 적절한 것은?<div class=\"pass\">Tom looked at the clock again. The bus to the airport was supposed to arrive at 7:00, but it was already 7:40. His flight would leave in an hour. He kept walking back and forth, checking his phone every minute.<\/div>",
+  "choices": [
+   "anxious",
+   "relaxed",
+   "amazed",
+   "ashamed",
+   "delighted"
+  ],
+  "answer": "anxious",
+  "exp": "버스가 오지 않고, 비행기 시간이 다가오며, 왔다 갔다 하며 휴대폰을 확인해요 → <b>anxious(불안한)<\/b>."
+ },
+ {
+  "q": "sea otter에 관한 다음 글의 내용과 일치하지 않는 것은?<div class=\"pass\">Sea otters live in the cold waters along the Pacific coast. They have very thick fur, and this fur keeps them warm because they have little body fat. Sea otters eat sea urchins, crabs, and fish, and they often use a small stone to break open shells. They sleep floating on their backs and sometimes hold hands so that they do not drift apart.<\/div>",
+  "choices": [
+   "몸에 지방이 많아서 추위를 견딘다.",
+   "태평양 연안의 차가운 바다에 산다.",
+   "털이 매우 촘촘하다.",
+   "돌을 이용해 껍데기를 깨서 먹는다.",
+   "잘 때 서로 손을 잡기도 한다."
+  ],
+  "answer": "몸에 지방이 많아서 추위를 견딘다.",
+  "exp": "글에서는 'little body fat(지방이 적다)'이라고 했고, 추위는 <b>두꺼운 털<\/b> 덕분에 견뎌요. '일치하지 않는 것'은 글과 <b>반대로 말한 보기<\/b>를 찾는 문제예요.",
+  "part": "Part 3 · 내용 일치·불일치"
+ },
+ {
+  "q": "Night Library Event에 관한 다음 안내문의 내용과 일치하지 않는 것은?<div class=\"pass\"><b>Night Library Event<\/b><br>Join us on Friday, November 7, from 6 p.m. to 8 p.m. at Sunrise Library. You can read books in the dark with a flashlight. Bring your own flashlight and a blanket. Snacks and drinks will be provided for free. The event is open to students in grades 5 to 9, and you must sign up online by November 5.<\/div>",
+  "choices": [
+   "행사 당일 현장에서 신청해도 된다.",
+   "금요일 저녁에 열린다.",
+   "손전등은 직접 가져와야 한다.",
+   "간식과 음료가 무료로 제공된다.",
+   "5~9학년 학생이 참가할 수 있다."
+  ],
+  "answer": "행사 당일 현장에서 신청해도 된다.",
+  "exp": "안내문 마지막에 <b>sign up online by November 5<\/b>(11월 5일까지 온라인 신청)라고 했어요. 날짜·장소·준비물·신청 방법은 불일치 문제의 단골 함정이에요."
+ },
+ {
+  "q": "bamboo에 관한 다음 글의 내용과 일치하지 않는 것은?<div class=\"pass\">Bamboo is a kind of grass, not a tree. Some kinds can grow almost one meter in a day. It is strong, so people use it to build houses, bridges, and furniture. Pandas love bamboo, and an adult panda can eat more than ten kilograms in a day. Bamboo flowers only once in several decades.<\/div>",
+  "choices": [
+   "판다는 하루에 대나무를 거의 먹지 않는다.",
+   "나무가 아니라 풀의 한 종류이다.",
+   "하루에 1미터 가까이 자라는 종류도 있다.",
+   "집, 다리, 가구를 만드는 데 쓰인다.",
+   "수십 년에 한 번 꽃이 핀다."
+  ],
+  "answer": "판다는 하루에 대나무를 거의 먹지 않는다.",
+  "exp": "글에서 판다는 하루에 <b>10kg 넘게<\/b> 먹을 수 있다고 했어요. 숫자·정도 표현(more than, only once)이 보기에서 뒤집히지 않았는지 확인!"
+ },
+ {
+  "q": "octopus에 관한 다음 글의 내용과 일치하지 않는 것은?<div class=\"pass\">An octopus has eight arms and three hearts. Two of the hearts pump blood to the gills, and the third pumps it to the rest of the body. Its blood is blue because it contains copper. An octopus has no bones, so it can squeeze through very small holes. It can also change its color to hide from enemies.<\/div>",
+  "choices": [
+   "뼈가 있어서 작은 구멍을 지나가지 못한다.",
+   "팔이 여덟 개이다.",
+   "심장이 세 개이다.",
+   "피에 구리가 들어 있어 푸른색이다.",
+   "색을 바꿔서 적을 피할 수 있다."
+  ],
+  "answer": "뼈가 있어서 작은 구멍을 지나가지 못한다.",
+  "exp": "글에서는 'no bones(뼈가 없다)' 때문에 아주 작은 구멍도 빠져나갈 수 있다고 했어요. <b>이유와 결과<\/b>가 뒤바뀐 보기에 주의!"
+ },
+ {
+  "q": "Recycling Fair에 관한 다음 안내문의 내용과 일치하지 않는 것은?<div class=\"pass\"><b>Recycling Fair<\/b><br>Saturday, November 15, 1–5 p.m., Central Plaza. Bring old clothes, books, or toys and exchange them for tickets. Tickets can be used at the fair’s market. Children can join workshops making bags from old T-shirts. The fair will be canceled if it rains heavily.<\/div>",
+  "choices": [
+   "비가 와도 장소를 바꿔서 반드시 열린다.",
+   "토요일 오후에 열린다.",
+   "장소는 중앙 광장이다.",
+   "헌 물건을 가져가면 표로 바꿔 준다.",
+   "헌 티셔츠로 가방을 만드는 체험이 있다."
+  ],
+  "answer": "비가 와도 장소를 바꿔서 반드시 열린다.",
+  "exp": "마지막 문장에 <b>canceled if it rains heavily<\/b>(비가 많이 오면 취소된다)라고 했어요. 조건(if)이 들어간 문장은 보기와 꼼꼼히 비교해요."
+ },
+ {
+  "q": "bike safety class에 관한 다음 안내문의 내용과 일치하지 않는 것은?<div class=\"pass\"><b>Bike Safety Class<\/b><br>Who: children aged 8 to 12. When: every Saturday in October at 10 a.m. Where: Riverside Park. You will learn how to wear a helmet correctly, how to use hand signals, and how to ride safely on a busy road. The class is free, but bikes are not provided, so please bring your own.<\/div>",
+  "choices": [
+   "참가비를 내야 한다.",
+   "8~12세 어린이가 대상이다.",
+   "10월 매주 토요일에 열린다.",
+   "헬멧을 올바르게 쓰는 법을 배운다.",
+   "자전거는 직접 가져와야 한다."
+  ],
+  "answer": "참가비를 내야 한다.",
+  "exp": "'The class is <b>free<\/b>'라서 참가비는 없어요. 안내문(Who/When/Where/Fee)은 항목별로 보기와 하나씩 대조하면 빨리 풀려요."
+ }
+];
+
+var QUIZ_ID = "clinic-sjo-1018";
+var QUIZ_TITLE = "설지오 사진 클리닉 10/18";
+var KEEP = false;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/18 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
