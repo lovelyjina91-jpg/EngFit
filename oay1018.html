@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- engfit-inapp-escape v3 : 카톡으로 열면 항상 폰의 인터넷 브라우저(크롬·사파리)로 열고 카톡 안의 창은 닫기 -->
+<script>
+(function () {
+  try {
+    var ua = navigator.userAgent || "";
+    var isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/i.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+    if (!(isIOS || /android/i.test(ua))) return;
+    var here = String(location.href || "");
+    var go = window.__engfitTestNav || function (u) { window.location.href = u; };
+    if (/KAKAOTALK/i.test(ua)) {
+      go("kakaotalk://web/openExternal?url=" + encodeURIComponent(here));
+      setTimeout(function () { go(isIOS ? "kakaoweb://closeBrowser" : "kakaotalk://inappbrowser/close"); }, 500);
+    } else if (/\bLine\//i.test(ua) && !/[?&]openExternalBrowser=1/.test(here)) {
+      go(here + (here.indexOf("?") >= 0 ? "&" : "?") + "openExternalBrowser=1");
+    }
+  } catch (e) {}
+})();
+</script>
+<!-- /engfit-inapp-escape v3 -->
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light">
+<title>아윤이의 조동사 + 단어 숙제 — 영핏 지나티처</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f0f4f4; color: #2B3A3D; min-height: 100vh; display: flex; justify-content: center; padding: 54px 14px 20px; word-break: keep-all; overflow-wrap: break-word; }
+  button, input { font-family: inherit; }
+  .wrap { width: 100%; max-width: 580px; }
+  .card { background: #fff; color: #2B3A3D; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2F7C83; margin-bottom: 6px; line-height: 1.5; }
+  .sub { font-size: 0.9rem; color: #6B7B7E; margin-bottom: 18px; line-height: 1.8; }
+  .sub b { color: #235E64; }
+  .logo { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .logo .mark { width: 30px; height: 30px; border-radius: 9px; background: #2F7C83; color: #fff; font-size: 1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .logo .name { font-size: 0.85rem; font-weight: bold; color: #235E64; letter-spacing: -0.2px; }
+  .logo.slim { margin-bottom: 10px; }
+  .logo.slim .mark { width: 24px; height: 24px; border-radius: 7px; font-size: 0.85rem; }
+  .logo.slim .name { font-size: 0.78rem; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #DBE4E5; border-radius: 10px; background: #fff; color: #2B3A3D; }
+  input[type=text]::placeholder { color: #9aa8a5; opacity: 1; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.03rem; font-weight: bold; color: #fff; background: #2F7C83; border: none; border-radius: 10px; cursor: pointer; text-align: left; line-height: 1.5; }
+  .btn:disabled { background: #b8c4c2; color: #fff; cursor: default; }
+  .btn.sub-btn { background: #8fa5a1; color: #fff; }
+  .btn.center { text-align: center; }
+  .btn .cnt { display: inline-block; font-size: 0.82rem; font-weight: normal; opacity: 0.9; margin-left: 2px; }
+  .btn.done { background: #cfe0dc; color: #35524c; }
+  .progress { font-size: 0.85rem; color: #6B7B7E; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .srctag { display: inline-block; font-size: 0.75rem; color: #235E64; background: #E6F1F1; border-radius: 6px; padding: 3px 8px; margin-bottom: 10px; line-height: 1.6; }
+  .srctag .lv { display: inline-block; font-size: 0.7rem; padding: 0 6px; border-radius: 5px; margin-right: 5px; background: #2F7C83; color: #fff; }
+  .srctag .lv.hi { background: #a07800; color: #fff; }
+  .srctag .lv.cp { background: #38699e; color: #fff; }
+  .srctag .lv.wr { background: #7a5aa6; color: #fff; }
+  .bar { height: 6px; background: #e3ecea; border-radius: 3px; margin-bottom: 14px; overflow: hidden; }
+  .bar > div { height: 100%; background: #2F7C83; border-radius: 3px; width: 0; transition: width .25s; }
+  .cardbox { background: #fff8e6; border: 1px solid #f2e2b3; border-radius: 12px; padding: 16px; margin-bottom: 14px; font-size: 0.94rem; line-height: 1.95; color: #4a4023; }
+  .cardbox h2 { font-size: 1.02rem; color: #a07800; margin-bottom: 10px; line-height: 1.55; }
+  .cardbox .ex, details.tip .ex { display: block; background: #fffdf6; color: #4a4023; border-left: 3px solid #e5cf8a; border-radius: 6px; padding: 10px 12px; margin: 9px 0; font-size: 0.92rem; line-height: 1.95; }
+  .cardbox b, details.tip b { color: #8a6400; }
+  details.tip { background: #fff8e6; border: 1px solid #f2e2b3; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.9rem; line-height: 1.8; color: #6b5a1e; }
+  details.tip summary { cursor: pointer; font-weight: bold; color: #a07800; font-size: 0.85rem; }
+  details.tip .inner { margin-top: 8px; }
+  .hear { display: block; font-size: 0.82rem; color: #235E64; background: #E6F1F1; border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; }
+  .wordchip { display: inline-block; margin: 2px 2px; padding: 1px 8px; font-size: 0.88rem; line-height: 1.7; color: #235E64; background: #E6F1F1; border: 1px solid #cfe0dc; border-radius: 12px; cursor: pointer; white-space: nowrap; }
+  .wordchip:active { background: #d4e8e7; }
+  .kor { display: block; font-size: 0.9rem; color: #6B7B7E; margin-bottom: 8px; line-height: 1.7; }
+  .kor b { color: #235E64; }
+  .qtext { font-size: 1.06rem; line-height: 1.9; margin-bottom: 14px; color: #2B3A3D; }
+  .qtext .kr { display: block; font-size: 0.86rem; color: #6B7B7E; margin: 2px 0 6px; line-height: 1.7; }
+  .qtext .blank { color: #2F7C83; font-weight: bold; white-space: nowrap; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; color: #2B3A3D; background: #f6f9f8; border: 1.5px solid #DBE4E5; border-radius: 10px; cursor: pointer; line-height: 1.55; }
+  .choice:active { background: #E6F1F1; }
+  .num { color: #2F7C83; font-weight: bold; margin-right: 7px; }
+  .say { display: inline-block; margin-left: 8px; padding: 1px 7px; font-size: 0.92rem; border-radius: 7px; color: #235E64; background: #E6F1F1; cursor: pointer; }
+  .saybtn { display: block; width: 100%; margin: 0 0 12px; padding: 10px; font-size: 0.93rem; font-weight: bold; color: #235E64; background: #E6F1F1; border: 1.5px solid #cfe0dc; border-radius: 10px; cursor: pointer; }
+  .keyhint { font-size: 0.78rem; color: #8a9895; text-align: center; margin-top: 10px; line-height: 1.6; }
+  .warn { font-size: 0.85rem; color: #b03a2e; background: #fdf5f4; border: 1px solid #f0c9c4; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; line-height: 1.7; }
+  .slot { min-height: 62px; background: #f6f9f8; border: 1.5px dashed #b9cdcb; border-radius: 10px; padding: 10px; margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; }
+  .slot .ph { color: #9aa8a5; font-size: 0.88rem; padding: 6px 2px; }
+  .tile { display: inline-block; padding: 9px 13px; font-size: 1rem; color: #2B3A3D; background: #fff; border: 1.5px solid #DBE4E5; border-radius: 9px; cursor: pointer; line-height: 1.4; }
+  .tile.used { visibility: hidden; }
+  .slot .tile { background: #2F7C83; color: #fff; border-color: #2F7C83; }
+  .tilebox { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .rowbtn { display: flex; gap: 8px; }
+  .rowbtn .btn { margin-top: 0; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2F7C83; text-align: center; margin: 10px 0; }
+  .exp { background: #f6f9f8; color: #2B3A3D; border-left: 4px solid #2F7C83; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.93rem; line-height: 1.85; }
+  .exp.wrong { border-left-color: #c0392b; background: #fdf5f4; }
+  .exp b { color: #235E64; }
+  .exp.wrong .exp-head b { color: #c0392b; }
+  .exp .ans-line { display: block; font-size: 0.85rem; color: #8a5b55; margin: 4px 0 6px; }
+  .exp .listen { display: inline-block; margin-top: 8px; padding: 5px 11px; font-size: 0.82rem; font-weight: bold; color: #235E64; background: #E6F1F1; border: 1px solid #cfe0dc; border-radius: 14px; cursor: pointer; }
+  .footer { text-align: center; font-size: 0.8rem; color: #8a9895; padding: 8px 0 24px; line-height: 1.7; }
+  #sound-toggle { position: fixed; top: 10px; right: 10px; z-index: 50; background: #fff; border: 1.5px solid #2F7C83; color: #2F7C83; border-radius: 20px; padding: 7px 13px; font-size: 0.8rem; font-weight: bold; cursor: pointer; box-shadow: 0 1px 5px rgba(0,0,0,0.09); }
+  #sound-toggle.off { border-color: #DBE4E5; color: #8a9895; background: #fff; }
+  .psg { background: #F6F9F9; color: #2B3A3D; border: 1px solid #DBE4E5; border-radius: 10px; padding: 10px 12px; margin: 4px 0 12px; font-size: 0.93rem; line-height: 1.6; }
+  .psg p { margin: 0 0 6px; }
+  .psg .pt { font-weight: bold; color: #235E64; }
+  .psg .pk { display: block; font-size: 0.8rem; color: #6B7B7E; }
+  .psg .mk { color: #2F7C83; font-weight: bold; text-align: center; margin: 2px 0 6px; }
+  .hidden { display: none !important; }
+  .nospeech .hear, .nospeech .listen, .nospeech .say, .nospeech .saybtn { display: none !important; }
+  .wordchip { white-space: normal !important; max-width: 100%; display: inline-block; text-align: left; line-height: 1.5; }
+</style>
+</head>
+<body>
+<button type="button" id="sound-toggle" title="소리 켜기 / 끄기">🔊 소리 켜짐</button>
+<div class="wrap">
+
+  <!-- 시작 화면 : 이름 + 영역 선택 -->
+  <div class="card" id="start-card">
+    <div class="logo"><div class="mark">영</div><div class="name">영핏 지나티처</div></div>
+    <h1>아윤이의 조동사 + 단어 숙제 📝<br>Unit 06 조동사 · VOCA Day 40</h1>
+    <p class="sub">개념 카드 10장 + 개념 · 유사문제 <b>50문항 (5영역)</b><br>
+    10월 17일 수업의 <b>Unit 06 여러 가지 조동사 1 · 2</b>와 <b>VOCA EXPRESS Day 40 모양과 질감</b>을 다시 잡아요 👏<br>
+    다섯 영역으로 나눠 차근차근! 👉 <b>will</b> · <b>can · may</b> · <b>must · have to</b> · <b>조동사 해석</b> · <b>단어 뜻 · 철자</b><br>
+    영역마다 <b>왜 틀렸을까? 카드 → 규칙 카드 → 개념 확인 → 유사문제</b> 순서로 올라가요.<br>
+    🔊 버튼을 누르면 원어민 발음을 들을 수 있어요. 답을 고르면 정답 문장도 읽어 줘요.<br>
+    한 영역이 끝나면 결과를 복사해서 지나티처에게 카톡으로 보내주세요.<br>
+    푼 기록은 자동 저장되니 중간에 쉬었다가 이어서 해도 괜찮아요 🙂<br>
+    이름을 입력하고 시작할 영역을 골라 주세요!</p>
+    <input type="text" id="name-input" placeholder="이름을 입력하세요" maxlength="20" autocomplete="off">
+    <p class="sub" style="margin:16px 0 -4px">👇 시작할 영역을 골라 주세요 (1영역부터 순서대로 푸는 걸 추천해요)</p>
+    <button class="btn sec-start" id="start-s1" data-sec="0" disabled>1영역 시작 · will · be going to<br><span class="cnt">조동사+원형 · won't · would · 10문항</span></button>
+    <button class="btn sec-start sub-btn" id="start-s2" data-sec="1" disabled>2영역 시작 · can · could · may<br><span class="cnt">할 수 있다 · 해도 좋다 · 일지도 모른다 · 10문항</span></button>
+    <button class="btn sec-start sub-btn" id="start-s3" data-sec="2" disabled>3영역 시작 · must · have to · should<br><span class="cnt">must not vs don't have to · must 추측 · 10문항</span></button>
+    <button class="btn sec-start sub-btn" id="start-s4" data-sec="3" disabled>4영역 시작 · 조동사 문장 해석<br><span class="cnt">우리말 순서로 끝까지 · 해석 배열 · 10문항</span></button>
+    <button class="btn sec-start sub-btn" id="start-s5" data-sec="4" disabled>5영역 시작 · VOCA Day 40 뜻 · 철자<br><span class="cnt">journalist · square · flexible · blunt · curve · 10문항</span></button>
+    <p class="keyhint" id="sec-done-note" style="margin-top:12px"></p>
+  </div>
+
+  <!-- 이어하기 화면 -->
+  <div class="card hidden" id="resume-card">
+    <div class="logo"><div class="mark">영</div><div class="name">영핏 지나티처</div></div>
+    <h1>이어서 풀 수 있어요! 🔄</h1>
+    <p class="sub" id="resume-info"></p>
+    <button class="btn center" id="resume-btn">이어서 하기</button>
+    <button class="btn sub-btn center" id="restart-btn">처음부터 다시 하기</button>
+  </div>
+
+  <!-- 카드 화면 -->
+  <div class="card hidden" id="cards-card">
+    <div class="logo slim"><div class="mark">영</div><div class="name">영핏 지나티처</div></div>
+    <div class="progress"><span id="card-num"></span><span id="card-sec"></span></div>
+    <div class="bar"><div id="card-bar"></div></div>
+    <div class="cardbox" id="cardbox"></div>
+    <button class="btn center" id="card-next">다음 →</button>
+    <button class="btn sub-btn center" id="card-skip">카드 건너뛰고 바로 문제 풀기</button>
+  </div>
+
+  <!-- 문제 화면 -->
+  <div class="card hidden" id="quiz-card">
+    <div class="logo slim"><div class="mark">영</div><div class="name">영핏 지나티처</div></div>
+    <div class="progress"><span id="prog-num"></span><span id="prog-pct"></span></div>
+    <div class="bar"><div id="bar-fill"></div></div>
+    <span class="srctag" id="srctag"></span>
+    <details class="tip" id="tipbox"><summary>💡 규칙 카드 다시 보기 (헷갈릴 때만 눌러요)</summary><div class="inner" id="tipinner"></div></details>
+    <div class="qtext" id="qtext"></div>
+    <button class="saybtn hidden" id="say-btn" type="button">🔊 발음 듣기 (다시 들으려면 또 눌러요)</button>
+    <div id="choices"></div>
+    <div id="ord-area" class="hidden">
+      <div class="slot" id="ord-slot"></div>
+      <div class="tilebox" id="ord-tiles"></div>
+      <div class="warn hidden" id="ord-warn"></div>
+      <div class="rowbtn">
+        <button class="btn sub-btn center" id="ord-undo" style="flex:1">↩ 하나 지우기</button>
+        <button class="btn center" id="ord-check" style="flex:1">다 만들었어요 ✓</button>
+      </div>
+    </div>
+    <p class="keyhint" id="keyhint">숫자키 1~4로도 선택할 수 있어요</p>
+  </div>
+
+  <!-- 영역별 결과 화면 -->
+  <div class="card hidden" id="sec-result-card">
+    <div class="logo"><div class="mark">영</div><div class="name">영핏 지나티처</div></div>
+    <h1 id="sec-result-title"></h1>
+    <div class="score-big" id="sec-score"></div>
+    <p class="sub" id="sec-wrong" style="text-align:center"></p>
+    <p class="sub" style="text-align:center; margin-bottom:6px">📲 아래 버튼으로 결과를 복사해서 지나티처에게 카톡으로 꼭 보내주세요!</p>
+    <button class="btn center" id="sec-copy-btn"></button>
+    <button class="btn center" id="next-sec-btn" style="background:#38699e; color:#fff"></button>
+    <button class="btn sub-btn center" id="pick-sec-btn">다른 영역 고르기 →</button>
+    <div id="total-block" class="hidden" style="margin-top:22px; border-top:2px dashed #DBE4E5; padding-top:18px">
+      <p class="sub" style="text-align:center; margin-bottom:4px">🏆 전체 최종 결과</p>
+      <div class="score-big" id="total-score"></div>
+      <p class="sub" id="total-detail" style="text-align:center"></p>
+      <button class="btn center" id="total-copy-btn">전체 결과 복사 (카톡용)</button>
+    </div>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 이 영역 해설 — 틀린 문제 위주로 꼭 읽어 보세요! 🔊 버튼으로 정답 문장을 따라 읽어 봐요.</p>
+      <div id="sec-explanations"></div>
+    </div>
+  </div>
+
+  <div class="footer">영핏 지나티처 · 조동사 + 단어 숙제 · 해석은 우리말 순서로 끝까지 — 아윤이 화이팅 💪</div>
+</div>
+
+<script>
+"use strict";
+/* ══════ 코너 카드 (영역당 2장: 왜 틀렸을까 + 규칙) ══════ */
+function W(t) { return "<span class='wordchip' data-say='" + t.replace(/'/g, "&#39;") + "'>🔊 " + t + "</span>"; }
+var HEAR = "<span class='hear'>🔊 표시를 누르면 원어민 발음이 나와요. 따라 읽어 보세요!</span>";
+var BL = "<span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span>";
+function K(t) { return "<span class='kr'>" + t + "</span>"; }
+function P(lines) { return "<div class='psg'>" + lines.join("") + "</div>"; }
+function L(en, kr) { return "<p>" + en + (kr ? "<span class='pk'>" + kr + "</span>" : "") + "</p>"; }
+var TIPS = {};
+var A1 = "코너 A · 왜 틀렸을까? — will · be going to 는 잘 잡았어요";
+var A2 = "코너 A · 규칙 카드 — 조동사 + 동사원형 · will · won't · would";
+var B1 = "코너 B · 왜 틀렸을까? — may · can 뜻은 맞았는데 순서가 뒤집혔어요";
+var B2 = "코너 B · 규칙 카드 — can · could · may 두 가지 뜻";
+var C1 = "코너 C · 왜 틀렸을까? — must not 과 don't have to 가 헷갈렸어요";
+var C2 = "코너 C · 규칙 카드 — must · have to · don't have to · must not · should";
+var D1 = "코너 D · 왜 틀렸을까? — 해석을 우리말 순서로 끝까지";
+var D2 = "코너 D · 규칙 카드 — 조동사 문장 해석 3단계";
+var E1 = "코너 E · 왜 틀렸을까? — VOCA Day 40 뜻 쓰기 · 철자 쓰기";
+var E2 = "코너 E · 규칙 카드 — journalist · wide · square · flexible · blunt · steward · curve";
+TIPS[A1] = "먼저 칭찬부터! 👏 Unit 06 <b>Sentence Reading 1번</b>에서 아윤이가 직접 <b>going to 위에 will</b> 이라고 적어 뒀어요. <b>be going to = will</b> 을 정확히 알고 있다는 뜻이에요 🎉<span class='ex'><b>Sentence Reading 1번</b> <span class='wordchip' data-say='I&#39;m going to tell you a secret.'>🔊 I'm going to tell you a secret.</span><br>→ 나는 너에게 비밀을 <b>말할 거야</b>. ✅ (will 메모 최고!)</span>이번 영역에서는 이 실력을 더 단단하게 만들어요.<br>✅ 조동사 뒤에는 <b>항상 동사원형</b><br>✅ <b>won't</b> = will not<br>✅ <b>would</b> = will의 과거형";
+TIPS[A2] = "<span class='hear'>🔊 표시를 누르면 원어민 발음이 나와요. 따라 읽어 보세요!</span><span class='ex'><b>규칙 ① 조동사 + 동사원형</b> 🧩<br>조동사(will, can, may, must, should) 뒤에는 -s, -ing, -ed 를 붙이지 않아요.<br><span class='wordchip' data-say='She will bake a cake.'>🔊 She will bake a cake.</span> ⭕ &nbsp; She will <s>bakes</s> ❌</span><span class='ex'><b>규칙 ② will = be going to</b> (~할 것이다) 🔮<br><span class='wordchip' data-say='I will send cards.'>🔊 I will send cards.</span><br><span class='wordchip' data-say='I am going to send cards.'>🔊 I am going to send cards.</span><br>→ am / are / is 는 주어에 맞춰요!</span><span class='ex'><b>규칙 ③ won't = will not</b> (~하지 않을 것이다) 🙅<br><span class='wordchip' data-say='I won&#39;t stay here long.'>🔊 I won't stay here long.</span> 나는 여기 오래 머물지 <b>않을 것이다</b>.</span><span class='ex'><b>규칙 ④ would = will 의 과거형</b> ⏪<br><span class='wordchip' data-say='He said he would travel to Egypt.'>🔊 He said he would travel to Egypt.</span> 그는 이집트로 여행 <b>갈 거라고</b> 말했다.</span>";
+TIPS[B1] = "<b>may · can 의 뜻</b>은 정확하게 잡았어요 👏 그런데 우리말로 옮길 때 <b>영어 순서 그대로</b> 적어서 문장이 뒤집혔어요.<span class='ex'><b>Sentence Reading 4번</b> <span class='wordchip' data-say='Most people may know about this website.'>🔊 Most people may know about this website.</span><br>→ '대부분의 사람들은 <u>알지도 몰라 그 웹사이트에 대해서</u>' 😮<br>→ 바르게는 '대부분의 사람들은 이 웹사이트에 대해 <b>알지도 모른다</b>.' ✅</span><span class='ex'><b>Sentence Reading 5번</b> <span class='wordchip' data-say='You can check your e-mail on your smartphone.'>🔊 You can check your e-mail on your smartphone.</span><br>→ '너는 <u>확인할 수 있다 너의 이메일을</u>…' 😮<br>→ 바르게는 '너는 스마트폰으로 이메일을 <b>확인할 수 있다</b>.' ✅</span>이번 영역 목표 ✅ <b>can · could · may</b> 의 두 가지 뜻을 문장 속에서 골라내기!";
+TIPS[B2] = "<span class='hear'>🔊 표시를 누르면 원어민 발음이 나와요. 따라 읽어 보세요!</span><span class='ex'><b>can</b> ① ~할 수 있다 (= be able to) 💪 ② ~해도 좋다 (허락)<br><span class='wordchip' data-say='Can you read my mind?'>🔊 Can you read my mind?</span> = <span class='wordchip' data-say='Are you able to read my mind?'>🔊 Are you able to read my mind?</span><br><span class='wordchip' data-say='You can visit me anytime.'>🔊 You can visit me anytime.</span> 언제든 와도 <b>좋아</b>.</span><span class='ex'><b>can't</b> = cannot (~할 수 없다) · <b>could</b> = can 의 과거 (~할 수 있었다) ⏪<br><span class='wordchip' data-say='I could not hear any sound.'>🔊 I could not hear any sound.</span> 나는 아무 소리도 들을 수 <b>없었다</b>.</span><span class='ex'><b>may</b> ① ~일지도 모른다 (추측) 🤔 ② ~해도 좋다 (= can, 허락) 🙆<br><span class='wordchip' data-say='He may have her phone number.'>🔊 He may have her phone number.</span> 그는 그녀의 번호를 가지고 있을<b>지도 모른다</b>.<br><span class='wordchip' data-say='You may ask questions in English.'>🔊 You may ask questions in English.</span> 영어로 질문해도 <b>좋다</b>.</span><span class='ex'><b>may not</b> (허락의 반대) = ~하면 안 된다 🚫<br><span class='wordchip' data-say='You may not ask questions about age.'>🔊 You may not ask questions about age.</span> 나이에 대해 물어보면 <b>안 된다</b>.</span>";
+TIPS[C1] = "31쪽 <b>여러 가지 조동사 2</b>를 공부할 때 선생님이 보라색으로 메모해 주신 곳이에요 ✍️<span class='ex'>처음에 <b>don't have to</b> 자리에 <s>must not</s> 이라고 적었어요.<br>→ 선생님 메모: '<b>have to 의 반대 → don't need to</b>, <b>꼭 그럴 필요 X</b>'</span><span class='ex'><b>Sentence Reading 2번</b> <span class='wordchip' data-say='She must be hungry right now.'>🔊 She must be hungry right now.</span><br>→ 여기의 must 는 '해야 한다'가 아니라 '<b>~임에 틀림없다</b>' (추측)예요!<br>→ 그녀는 지금 배고픈 것이 <b>틀림없다</b>. ✅</span><span class='ex'><b>Sentence Reading 4번</b> <span class='wordchip' data-say='You should treat your camera carefully.'>🔊 You should treat your camera carefully.</span><br>→ <b>treat</b> = (물건을) <b>다루다</b>. 너는 카메라를 조심스럽게 <b>다뤄야 한다</b>.</span>이번 영역 목표 ✅ <b>'하면 안 된다'(must not)</b> 와 <b>'할 필요 없다'(don't have to)</b> 를 확실히 나누기!";
+TIPS[C2] = "<span class='hear'>🔊 표시를 누르면 원어민 발음이 나와요. 따라 읽어 보세요!</span><span class='ex'><b>must</b> ① ~해야 한다 (= have to) 📌 ② ~임에 틀림없다 (추측) 🔍<br><span class='wordchip' data-say='Everybody must pay tax.'>🔊 Everybody must pay tax.</span> = <span class='wordchip' data-say='Everybody has to pay tax.'>🔊 Everybody has to pay tax.</span><br><span class='wordchip' data-say='There must be something wrong.'>🔊 There must be something wrong.</span> 뭔가 잘못된 게 <b>틀림없다</b>.</span><span class='ex'><b>must not</b> = ~하면 <b>안 된다</b> (금지) 🚫<br><span class='wordchip' data-say='We must not give up hope.'>🔊 We must not give up hope.</span> 우리는 희망을 포기하면 <b>안 된다</b>.</span><span class='ex'><b>don't have to</b> = need not = ~할 <b>필요가 없다</b> 😌<br><span class='wordchip' data-say='I don&#39;t have to get up early.'>🔊 I don't have to get up early.</span> 나는 일찍 일어날 <b>필요가 없다</b>. (해도 되고 안 해도 돼요)</span><span class='ex'><b>should</b> = ~해야 한다 (충고) 💡 · <b>should not</b> = ~하면 안 된다<br><span class='wordchip' data-say='We should recycle paper.'>🔊 We should recycle paper.</span> · <span class='wordchip' data-say='You should not play the piano at night.'>🔊 You should not play the piano at night.</span></span><span class='ex'>🔑 한 줄 정리: <b>must not</b> = 🚫 하지 마! &nbsp;/&nbsp; <b>don't have to</b> = 😌 안 해도 돼!</span>";
+TIPS[D1] = "뜻은 거의 다 알고 있었어요 👍 아쉬운 건 <b>해석을 영어 순서대로 적어서</b> 우리말이 어색해진 것뿐이에요.<span class='ex'>30쪽 · 31쪽 Sentence Reading 해석에서 선생님이 빨간 동그라미로 크게 묶어 주신 부분이에요 ⭕<br>'대부분의 사람들은 알지도 몰라 <u>그 웹사이트에 대해서</u>'<br>'너는 확인할 수 있다 <u>너의 이메일을</u>'</span><span class='ex'>우리말은 <b>'~한다 / ~할 수 있다 / ~해야 한다'</b> 같은 동사가 <b>맨 끝</b>에 와요.<br>→ 그래서 조동사 뜻도 <b>문장 끝</b>에 붙여 마무리해야 해요.</span>이번 영역 목표 ✅ 해석을 <b>끝까지, 우리말 순서로</b> 마무리하기!";
+TIPS[D2] = "<span class='hear'>🔊 표시를 누르면 원어민 발음이 나와요. 따라 읽어 보세요!</span><span class='ex'><b>1단계 · 누가?</b> 주어를 먼저 읽어요 👤<br><span class='wordchip' data-say='Most people may know about this website.'>🔊 Most people may know about this website.</span><br>→ <b>대부분의 사람들은</b></span><span class='ex'><b>2단계 · 무엇을 / 어디서?</b> 동사 뒤 덩어리를 가운데에 넣어요 📦<br>→ 대부분의 사람들은 <b>이 웹사이트에 대해</b></span><span class='ex'><b>3단계 · 조동사 + 동사 뜻은 맨 끝!</b> 🏁<br>→ 대부분의 사람들은 이 웹사이트에 대해 <b>알지도 모른다</b>. ✅</span><span class='ex'>한 번 더 연습 ✏️ <span class='wordchip' data-say='You must not show this photo to anybody.'>🔊 You must not show this photo to anybody.</span><br>→ 너는 / 이 사진을 / 아무에게도 / <b>보여 주면 안 된다</b>.</span>";
+TIPS[E1] = "VOCA EXPRESS 중등 Day 40 <b>모양과 질감</b> — 1쪽 객관식·문장 빈칸 20문제는 <b>전부 동그라미</b>예요! 🎉 2쪽 문장 빈칸(41~50번)도 아주 잘 했어요.<span class='ex'><b>뜻 쓰기</b>에서 아쉬웠던 곳<br>· <b>21번 journalist</b> → 뜻을 못 적었어요 (기자)<br>· <b>26번 wide</b> → '넓은' 으로 마무리<br>· <b>30번 square (정답 2개)</b> → 정사각형은 썼는데 <b>광장</b>을 빠뜨렸어요</span><span class='ex'><b>철자 쓰기</b>에서 아쉬웠던 곳 ✍️<br>· <b>31번 flexible</b> (유연한) · <b>36번 blunt</b> (무딘)<br>· <b>39번 steward</b> (승무원) · <b>40번 curve</b> (곡선)<br>→ 보면 아는데 <b>손으로 쓰면 미끄러지는</b> 단어들이에요. 조각을 직접 맞춰 보며 철자를 손에 익혀요!</span>이번 영역 목표 ✅ 뜻 7개 + 철자 4개 완전 정복!";
+TIPS[E2] = "<span class='hear'>🔊 표시를 누르면 원어민 발음이 나와요. 따라 읽어 보세요!</span><span class='ex'><b>사람·직업</b> 👩‍✈️<br><span class='wordchip' data-say='journalist'>🔊 journalist</span> 기자 · <span class='wordchip' data-say='steward'>🔊 steward</span> 승무원</span><span class='ex'><b>모양</b> 🔷<br><span class='wordchip' data-say='square'>🔊 square</span> ① 정사각형 ② 광장 · <span class='wordchip' data-say='curve'>🔊 curve</span> 곡선, 커브<br><span class='wordchip' data-say='town square'>🔊 town square</span> 마을 광장</span><span class='ex'><b>질감·성질</b> ✋<br><span class='wordchip' data-say='wide'>🔊 wide</span> 넓은 ↔ <span class='wordchip' data-say='narrow'>🔊 narrow</span> 좁은<br><span class='wordchip' data-say='flexible'>🔊 flexible</span> 유연한, 잘 구부러지는<br><span class='wordchip' data-say='blunt'>🔊 blunt</span> 무딘, 뭉툭한 ↔ <span class='wordchip' data-say='sharp'>🔊 sharp</span> 날카로운</span><span class='ex'><b>철자 쏙쏙</b> ✏️<br>fle·xi·<b>ble</b> (끝은 -ble) · b·l·<b>u</b>·n·t · st·e·<b>w</b>·ard · c·<b>u</b>·r·v·<b>e</b> (끝에 e!)</span>";
+var S1 = [
+{"tip": "코너 A · 규칙 카드 — 조동사 + 동사원형 · will · won't · would", "lv": "개념", "src": "Unit 06 A · 조동사 모양", "kor": "개념 확인", "q": "조동사(will, can, may, must) 바로 뒤에 오는 동사의 모양은?", "choices": ["동사원형", "동사 + s", "동사 + ing", "to + 동사"], "answer": "동사원형", "say": "She will bake a cake.", "exp": "정답은 <b>동사원형</b> 이에요 ✅ 조동사 + <b>동사원형</b> 은 짝꿍! 🧩<br>· <b>동사 + s</b> — He will <s>goes</s> ❌ 주어가 He 여도 -s 는 안 붙어요<br>· <b>동사 + ing</b> — I will <s>going</s> ❌<br>· <b>to + 동사</b> — I will <s>to go</s> ❌ (to 가 필요한 건 have to, be going to 예요)"},
+{"tip": "코너 A · 규칙 카드 — 조동사 + 동사원형 · will · won't · would", "lv": "기초", "src": "Unit 06 A · will 유형", "kor": "그녀는 내일 케이크를 구울 것이다.", "q": "She will <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span> a cake tomorrow.", "choices": ["bake", "bakes", "baking", "baked"], "answer": "bake", "say": "She will bake a cake tomorrow.", "exp": "정답은 <b>bake</b> 예요 ✅ will 뒤니까 <b>동사원형</b> 🎂<br>· <b>bakes</b> — 주어 She 를 보고 -s 를 붙이고 싶지만, will 이 있으면 원형!<br>· <b>baking</b> — will 뒤에 -ing 는 올 수 없어요<br>· <b>baked</b> — 과거형이에요. tomorrow(내일)와도 안 맞아요", "sayQ": "She will bake a cake tomorrow.", "spk": true},
+{"tip": "코너 A · 규칙 카드 — 조동사 + 동사원형 · will · won't · would", "lv": "기초", "src": "Sentence Reading 1번 유형 · will = be going to", "kor": "두 문장의 뜻이 같아지도록 고르세요.", "q": "I am going to visit my grandma. = I <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span> visit my grandma.", "choices": ["will", "can", "may", "must"], "answer": "will", "say": "I will visit my grandma.", "exp": "정답은 <b>will</b> 이에요 ✅ <b>be going to = will</b> (~할 것이다) 🔮 Sentence Reading 1번에서 아윤이가 적은 메모 그대로예요!<br>· <b>can</b> — '방문할 수 있다'(능력) 라서 뜻이 달라요<br>· <b>may</b> — '방문할지도 모른다'(추측)예요<br>· <b>must</b> — '방문해야 한다'(의무)예요", "sayQ": "I am going to visit my grandma.", "spk": true},
+{"tip": "코너 A · 규칙 카드 — 조동사 + 동사원형 · will · won't · would", "lv": "기초", "src": "Unit 06 A · won't 유형", "kor": "밑줄 친 부분의 뜻으로 알맞은 것은?", "q": "He <u>won't come</u> to the party.", "choices": ["그는 파티에 오지 않을 것이다.", "그는 파티에 오면 안 된다.", "그는 파티에 올 수 없었다.", "그는 파티에 올 필요가 없다."], "answer": "그는 파티에 오지 않을 것이다.", "say": "He won't come to the party.", "exp": "정답은 <b>오지 않을 것이다</b> 예요 ✅ <b>won't = will not</b> (~하지 않을 것이다) 🙅<br>· <b>오면 안 된다</b> — 그건 must not 이에요<br>· <b>올 수 없었다</b> — 그건 couldn't 예요<br>· <b>올 필요가 없다</b> — 그건 don't have to 예요", "sayQ": "He won't come to the party."},
+{"tip": "코너 A · 규칙 카드 — 조동사 + 동사원형 · will · won't · would", "lv": "개념", "src": "Unit 06 A · would", "kor": "개념 확인", "q": "<b>would</b> 는 어떤 조동사의 과거형일까요?", "choices": ["will", "can", "may", "must"], "answer": "will", "say": "He said he would travel to Egypt.", "exp": "정답은 <b>will</b> 이에요 ✅ will → <b>would</b> ⏪<br>· <b>can</b> 의 과거형은 could 예요<br>· <b>may</b> 의 과거형은 might 예요<br>· <b>must</b> 는 과거형이 따로 없어서 had to 를 써요"},
+{"tip": "코너 A · 규칙 카드 — 조동사 + 동사원형 · will · won't · would", "lv": "심화", "src": "Unit 06 A · would 유형", "kor": "그녀는 나중에 나에게 전화하겠다고 말했다.", "q": "She said she <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span> call me later.", "choices": ["would", "will", "can", "must"], "answer": "would", "say": "She said she would call me later.", "exp": "정답은 <b>would</b> 예요 ✅ 앞에 <b>said(말했다)</b> 가 과거니까 will 도 과거형 <b>would</b> 로 맞춰요 📞<br>· <b>will</b> — said 와 시간이 맞지 않아요<br>· <b>can</b> — '전화할 수 있다'라서 '전화하겠다'와 뜻이 달라요<br>· <b>must</b> — '전화해야 한다'(의무)예요", "sayQ": "She said she would call me later.", "spk": true},
+{"tip": "코너 A · 규칙 카드 — 조동사 + 동사원형 · will · won't · would", "lv": "심화", "src": "Unit 06 A · 조동사 모양 점검", "kor": "다음 중 <b>틀린 문장</b>을 고르세요.", "q": "조동사 모양을 잘 살펴보세요 🔍", "choices": ["He wills go to school.", "They are going to play soccer.", "I will help you.", "We won't be late."], "answer": "He wills go to school.", "say": "He will go to school.", "exp": "정답은 <b>He wills go to school.</b> 이에요 ✅ 조동사 will 에는 <b>-s 를 붙이지 않아요</b>. 바르게는 He <b>will</b> go to school.<br>· <b>They are going to play soccer.</b> — They 에 맞게 are ⭕<br>· <b>I will help you.</b> — will + 원형 help ⭕<br>· <b>We won't be late.</b> — won't + 원형 be ⭕"},
+{"tip": "코너 A · 규칙 카드 — 조동사 + 동사원형 · will · won't · would", "lv": "기초", "src": "Unit 06 A · be going to 유형", "kor": "우리는 영화를 볼 것이다.", "q": "We <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span> going to watch a movie.", "choices": ["are", "is", "am", "be"], "answer": "are", "say": "We are going to watch a movie.", "exp": "정답은 <b>are</b> 예요 ✅ be going to 의 be 는 <b>주어에 맞춰</b> 바꿔요. We → <b>are</b> 🎬<br>· <b>is</b> — He, She, It 일 때<br>· <b>am</b> — I 일 때<br>· <b>be</b> — 원형 그대로는 쓸 수 없어요", "sayQ": "We are going to watch a movie.", "spk": true},
+{"tip": "코너 A · 규칙 카드 — 조동사 + 동사원형 · will · won't · would", "lv": "영작", "src": "Unit 06 A 1번 문장 · 영작", "type": "ord", "kor": "낱말 조각을 눌러 우리말에 맞는 문장을 만드세요. <b>필요 없는 조각이 2개 섞여 있어요!</b>", "q": "나는 다음 모임에 카메라를 가져올 것이다.", "seq": ["I", "will", "bring", "a camera", "to the next meeting"], "extra": ["brings", "am"], "say": "I will bring a camera to the next meeting.", "exp": "정답은 <b>I will bring a camera to the next meeting.</b> 📷<br>· will 뒤에는 원형 <b>bring</b> — <s>brings</s> ❌<br>· will 이 있으니 am 은 필요 없어요"},
+{"tip": "코너 A · 규칙 카드 — 조동사 + 동사원형 · will · won't · would", "lv": "영작", "src": "Unit 06 A · won't · 영작", "type": "ord", "kor": "낱말 조각을 눌러 우리말에 맞는 문장을 만드세요. <b>필요 없는 조각이 2개 섞여 있어요!</b>", "q": "그는 여기에 오래 머물지 않을 것이다.", "seq": ["He", "won't", "stay", "here", "long"], "extra": ["stays", "not"], "say": "He won't stay here long.", "exp": "정답은 <b>He won't stay here long.</b> 🏠<br>· <b>won't</b> 안에 이미 not 이 들어 있어요 (will not)<br>· won't 뒤에는 원형 <b>stay</b> — <s>stays</s> ❌"}
+];
+var S2 = [
+{"tip": "코너 B · 규칙 카드 — can · could · may 두 가지 뜻", "lv": "개념", "src": "Unit 06 A · can", "kor": "개념 확인", "q": "'~할 수 있다'라는 뜻의 <b>can</b> 과 바꿔 쓸 수 있는 것은?", "choices": ["be able to", "be going to", "have to", "need to"], "answer": "be able to", "say": "I can swim. I am able to swim.", "exp": "정답은 <b>be able to</b> 예요 ✅ can = <b>be able to</b> (~할 수 있다) 💪<br>· <b>be going to</b> — will 과 같아요 (~할 것이다)<br>· <b>have to</b> — must 와 같아요 (~해야 한다)<br>· <b>need to</b> — ~할 필요가 있다"},
+{"tip": "코너 B · 규칙 카드 — can · could · may 두 가지 뜻", "lv": "기초", "src": "Unit 06 A · can 유형", "kor": "두 문장의 뜻이 같도록 고르세요.", "q": "Can you solve this puzzle? = <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span> you able to solve this puzzle?", "choices": ["Are", "Do", "Can", "Will"], "answer": "Are", "say": "Are you able to solve this puzzle?", "exp": "정답은 <b>Are</b> 예요 ✅ be able to 의 의문문은 <b>be동사를 앞으로</b>! You → <b>Are</b> you able to …? 🧩<br>· <b>Do</b> — be동사 문장에는 do 를 쓰지 않아요<br>· <b>Can</b> — Can you able to ❌ (can 과 able 이 겹쳐요)<br>· <b>Will</b> — Will you able ❌ (be 가 빠졌어요)", "sayQ": "Can you solve this puzzle?", "spk": true},
+{"tip": "코너 B · 규칙 카드 — can · could · may 두 가지 뜻", "lv": "기초", "src": "Sentence Reading · may 추측 유형", "kor": "밑줄 친 부분의 뜻으로 알맞은 것은?", "q": "It <u>may rain</u> this afternoon.", "choices": ["오늘 오후에 비가 올지도 모른다.", "오늘 오후에 비가 와야 한다.", "오늘 오후에 비가 올 수 없다.", "오늘 오후에 비가 오지 않을 것이다."], "answer": "오늘 오후에 비가 올지도 모른다.", "say": "It may rain this afternoon.", "exp": "정답은 <b>비가 올지도 모른다</b> 예요 ✅ 날씨는 확실하지 않으니 may = <b>~일지도 모른다</b> (추측) 🌧️<br>· <b>와야 한다</b> — must(의무)예요<br>· <b>올 수 없다</b> — can't 예요<br>· <b>오지 않을 것이다</b> — won't 예요", "sayQ": "It may rain this afternoon."},
+{"tip": "코너 B · 규칙 카드 — can · could · may 두 가지 뜻", "lv": "기초", "src": "Unit 06 A · may 허락 유형", "kor": "밑줄 친 부분의 뜻으로 알맞은 것은?", "q": "You <u>may use</u> my pencil.", "choices": ["너는 내 연필을 써도 좋다.", "너는 내 연필을 써야 한다.", "너는 내 연필을 쓰면 안 된다.", "너는 내 연필을 쓸 필요가 없다."], "answer": "너는 내 연필을 써도 좋다.", "say": "You may use my pencil.", "exp": "정답은 <b>써도 좋다</b> 예요 ✅ 친구에게 연필을 빌려주는 장면 → may = <b>~해도 좋다</b> (허락, = can) ✏️<br>· <b>써야 한다</b> — must / have to 예요<br>· <b>쓰면 안 된다</b> — may not / must not 이에요<br>· <b>쓸 필요가 없다</b> — don't have to 예요", "sayQ": "You may use my pencil."},
+{"tip": "코너 B · 규칙 카드 — can · could · may 두 가지 뜻", "lv": "개념", "src": "Unit 06 A · may not 유형", "kor": "밑줄 친 부분의 뜻으로 알맞은 것은?", "q": "You <u>may not eat</u> in the library.", "choices": ["도서관에서 먹으면 안 된다.", "도서관에서 먹을 필요가 없다.", "도서관에서 먹을 수 없었다.", "도서관에서 먹지 않을 것이다."], "answer": "도서관에서 먹으면 안 된다.", "say": "You may not eat in the library.", "exp": "정답은 <b>먹으면 안 된다</b> 예요 ✅ may(해도 좋다)의 반대 → <b>may not = ~하면 안 된다</b> 🚫📚<br>· <b>먹을 필요가 없다</b> — don't have to 예요<br>· <b>먹을 수 없었다</b> — couldn't 예요<br>· <b>먹지 않을 것이다</b> — won't 예요", "sayQ": "You may not eat in the library."},
+{"tip": "코너 B · 규칙 카드 — can · could · may 두 가지 뜻", "lv": "기초", "src": "Sentence Reading 2번 유형 · could", "kor": "어젯밤 나는 잠을 잘 잘 수 없었다.", "q": "Last night I <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span> not sleep well.", "choices": ["could", "can", "will", "may"], "answer": "could", "say": "Last night I could not sleep well.", "exp": "정답은 <b>could</b> 예요 ✅ <b>Last night(어젯밤)</b> = 과거 → can 의 과거형 <b>could</b> 🌙<br>· <b>can</b> — 현재라서 last night 과 안 맞아요<br>· <b>will</b> — 미래예요<br>· <b>may</b> — '자지 않을지도 모른다'가 되어 뜻이 달라요", "sayQ": "Last night I could not sleep well.", "spk": true},
+{"tip": "코너 B · 규칙 카드 — can · could · may 두 가지 뜻", "lv": "개념", "src": "Unit 06 A · can't", "kor": "개념 확인", "q": "<b>can't</b> 를 풀어 쓴 것으로 알맞은 것은?", "choices": ["cannot", "can not to", "don't can", "can no"], "answer": "cannot", "say": "I can't wake up without an alarm clock.", "exp": "정답은 <b>cannot</b> 이에요 ✅ can't = <b>cannot</b> (붙여서 한 단어로 써요) ⏰<br>· <b>can not to</b> — can 뒤에 to 는 안 와요<br>· <b>don't can</b> — 조동사는 do 의 도움을 받지 않아요<br>· <b>can no</b> — 이런 말은 없어요"},
+{"tip": "코너 B · 규칙 카드 — can · could · may 두 가지 뜻", "lv": "심화", "src": "Unit 06 A · can 두 가지 뜻", "kor": "밑줄 친 can 의 뜻이 <b>나머지 셋과 다른</b> 것은?", "q": "'할 수 있다'(능력)일까, '해도 좋다'(허락)일까? 🤔", "choices": ["You <u>can</u> go home now.", "I <u>can</u> swim very fast.", "She <u>can</u> speak Chinese.", "He <u>can</u> play the drums."], "answer": "You <u>can</u> go home now.", "say": "You can go home now.", "exp": "정답은 <b>You can go home now.</b> 예요 ✅ 선생님이 '이제 집에 가도 좋아' 하는 <b>허락</b>이에요 🏠<br>· <b>I can swim very fast.</b> — 빨리 수영할 수 있다 (능력)<br>· <b>She can speak Chinese.</b> — 중국어를 할 수 있다 (능력)<br>· <b>He can play the drums.</b> — 드럼을 칠 수 있다 (능력)"},
+{"tip": "코너 B · 규칙 카드 — can · could · may 두 가지 뜻", "lv": "영작", "src": "Unit 06 A · can 허락 · 영작", "type": "ord", "kor": "낱말 조각을 눌러 우리말에 맞는 문장을 만드세요. <b>필요 없는 조각이 2개 섞여 있어요!</b>", "q": "너는 언제든지 나를 방문해도 좋다.", "seq": ["You", "can", "visit", "me", "anytime"], "extra": ["visits", "to"], "say": "You can visit me anytime.", "exp": "정답은 <b>You can visit me anytime.</b> 🏡<br>· can 뒤에는 원형 <b>visit</b> — <s>visits</s> ❌<br>· can 뒤에 <s>to</s> 는 필요 없어요"},
+{"tip": "코너 B · 규칙 카드 — can · could · may 두 가지 뜻", "lv": "영작", "src": "Unit 06 A · may 허락 · 영작", "type": "ord", "kor": "낱말 조각을 눌러 우리말에 맞는 문장을 만드세요. <b>필요 없는 조각이 2개 섞여 있어요!</b>", "q": "너는 지금 TV를 봐도 좋다.", "seq": ["You", "may", "watch", "TV", "now"], "extra": ["watches", "are"], "say": "You may watch TV now.", "exp": "정답은 <b>You may watch TV now.</b> 📺<br>· may = ~해도 좋다 (허락)<br>· may 뒤에는 원형 <b>watch</b> — <s>watches</s> ❌, are 는 필요 없어요"}
+];
+var S3 = [
+{"tip": "코너 C · 규칙 카드 — must · have to · don't have to · must not · should", "lv": "개념", "src": "Unit 06 B · must", "kor": "개념 확인", "q": "'~해야 한다'라는 뜻의 <b>must</b> 와 바꿔 쓸 수 있는 것은?", "choices": ["have to", "be able to", "be going to", "may"], "answer": "have to", "say": "Everybody must pay tax. Everybody has to pay tax.", "exp": "정답은 <b>have to</b> 예요 ✅ must(의무) = <b>have to</b> 📌<br>· <b>be able to</b> — can 과 같아요<br>· <b>be going to</b> — will 과 같아요<br>· <b>may</b> — ~일지도 모른다 / ~해도 좋다"},
+{"tip": "코너 C · 규칙 카드 — must · have to · don't have to · must not · should", "lv": "개념", "src": "Unit 06 B · don't have to", "kor": "개념 확인", "q": "<b>don't have to</b> 의 뜻으로 알맞은 것은?", "choices": ["~할 필요가 없다", "~하면 안 된다", "~할 수 없다", "~하지 않을 것이다"], "answer": "~할 필요가 없다", "say": "You don't have to worry.", "exp": "정답은 <b>~할 필요가 없다</b> 예요 ✅ 31쪽 선생님 메모 그대로! '<b>꼭 그럴 필요 X</b>' = need not 😌<br>· <b>~하면 안 된다</b> — 그건 <b>must not</b> 이에요. 여기서 헷갈렸었죠!<br>· <b>~할 수 없다</b> — can't 예요<br>· <b>~하지 않을 것이다</b> — won't 예요"},
+{"tip": "코너 C · 규칙 카드 — must · have to · don't have to · must not · should", "lv": "기초", "src": "Unit 06 B · must not 유형", "kor": "밑줄 친 부분의 뜻으로 알맞은 것은?", "q": "You <u>must not run</u> in the hallway.", "choices": ["복도에서 뛰면 안 된다.", "복도에서 뛸 필요가 없다.", "복도에서 뛸 수 없었다.", "복도에서 뛰지 않을 것이다."], "answer": "복도에서 뛰면 안 된다.", "say": "You must not run in the hallway.", "exp": "정답은 <b>뛰면 안 된다</b> 예요 ✅ <b>must not = 금지 🚫</b> '하지 마!'<br>· <b>뛸 필요가 없다</b> — don't have to 예요<br>· <b>뛸 수 없었다</b> — couldn't 예요<br>· <b>뛰지 않을 것이다</b> — won't 예요", "sayQ": "You must not run in the hallway."},
+{"tip": "코너 C · 규칙 카드 — must · have to · don't have to · must not · should", "lv": "기초", "src": "Unit 06 B · don't have to 유형", "kor": "밑줄 친 부분의 뜻으로 알맞은 것은?", "q": "It's Sunday. You <u>don't have to get up</u> early.", "choices": ["일찍 일어날 필요가 없다.", "일찍 일어나면 안 된다.", "일찍 일어나야 한다.", "일찍 일어날 수 없다."], "answer": "일찍 일어날 필요가 없다.", "say": "It's Sunday. You don't have to get up early.", "exp": "정답은 <b>일찍 일어날 필요가 없다</b> 예요 ✅ 일요일이라 '안 일어나도 괜찮아' 😴<br>· <b>일어나면 안 된다</b> — must not 이에요. 일요일에도 일찍 일어나는 건 괜찮잖아요!<br>· <b>일어나야 한다</b> — have to (not 이 없을 때)<br>· <b>일어날 수 없다</b> — can't 예요", "sayQ": "It's Sunday. You don't have to get up early."},
+{"tip": "코너 C · 규칙 카드 — must · have to · don't have to · must not · should", "lv": "기초", "src": "Unit 06 B · must not 상황", "kor": "박물관 안에서 사진을 찍으면 안 된다.", "q": "You <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span> take pictures in the museum.", "choices": ["must not", "don't have to", "have to", "will"], "answer": "must not", "say": "You must not take pictures in the museum.", "exp": "정답은 <b>must not</b> 이에요 ✅ '찍으면 <b>안 된다</b>' = 금지 🚫📸<br>· <b>don't have to</b> — '찍을 필요가 없다'라서 금지가 아니에요<br>· <b>have to</b> — '찍어야 한다'예요<br>· <b>will</b> — '찍을 것이다'예요", "sayQ": "You must not take pictures in the museum.", "spk": true},
+{"tip": "코너 C · 규칙 카드 — must · have to · don't have to · must not · should", "lv": "기초", "src": "Unit 06 B · has to 유형", "kor": "그는 학교에서 교복을 입어야 한다.", "q": "He <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span> to wear a uniform at school.", "choices": ["has", "have", "must", "is"], "answer": "has", "say": "He has to wear a uniform at school.", "exp": "정답은 <b>has</b> 예요 ✅ 주어가 <b>He</b>(3인칭 단수)니까 have to → <b>has to</b> 👕<br>· <b>have</b> — I, You, We, They 일 때<br>· <b>must</b> — must to ❌ must 뒤에는 to 를 쓰지 않아요<br>· <b>is</b> — is to 는 다른 뜻이 돼요", "sayQ": "He has to wear a uniform at school.", "spk": true},
+{"tip": "코너 C · 규칙 카드 — must · have to · don't have to · must not · should", "lv": "기초", "src": "Sentence Reading 2번 유형 · must 추측", "kor": "밑줄 친 부분의 뜻으로 알맞은 것은?", "q": "She <u>must be tired</u> after the long trip.", "choices": ["그녀는 피곤한 것이 틀림없다.", "그녀는 피곤해야 한다.", "그녀는 피곤하면 안 된다.", "그녀는 피곤할 필요가 없다."], "answer": "그녀는 피곤한 것이 틀림없다.", "say": "She must be tired after the long trip.", "exp": "정답은 <b>피곤한 것이 틀림없다</b> 예요 ✅ 긴 여행 뒤라서 '분명 피곤할 거야' → must be = <b>~임에 틀림없다</b> (추측) 🔍<br>· <b>피곤해야 한다</b> — 피곤함은 의무가 될 수 없어요<br>· <b>피곤하면 안 된다</b> — must not 이에요<br>· <b>피곤할 필요가 없다</b> — don't have to 예요", "sayQ": "She must be tired after the long trip."},
+{"tip": "코너 C · 규칙 카드 — must · have to · don't have to · must not · should", "lv": "기초", "src": "Unit 06 B · should 유형", "kor": "너 아파 보여. 병원에 가 봐야 해.", "q": "You look sick. You <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span> see a doctor.", "choices": ["should", "should not", "don't have to", "won't"], "answer": "should", "say": "You look sick. You should see a doctor.", "exp": "정답은 <b>should</b> 예요 ✅ 친구에게 하는 <b>충고</b> '~해야 해' 💡🏥<br>· <b>should not</b> — '가면 안 돼'라서 아픈 친구에게 이상해요<br>· <b>don't have to</b> — '갈 필요 없어'라서 상황과 반대예요<br>· <b>won't</b> — '안 갈 거야'예요", "sayQ": "You look sick. You should see a doctor.", "spk": true},
+{"tip": "코너 C · 규칙 카드 — must · have to · don't have to · must not · should", "lv": "심화", "src": "Unit 06 B · need not", "kor": "두 문장의 뜻이 <b>같은</b> 것을 고르세요.", "q": "don't have to 는 무엇과 같을까요? 🤔", "choices": ["You don't have to hurry. = You need not hurry.", "You must not hurry. = You need not hurry.", "You must leave now. = You need not leave now.", "You should study. = You don't have to study."], "answer": "You don't have to hurry. = You need not hurry.", "say": "You don't have to hurry.", "exp": "정답은 <b>You don't have to hurry. = You need not hurry.</b> ✅ 둘 다 '서두를 <b>필요 없어</b>' 😌<br>· <b>must not ≠ need not</b> — '서두르면 안 돼' vs '서두를 필요 없어'<br>· <b>must leave ≠ need not leave</b> — '떠나야 해' vs '떠날 필요 없어' (반대!)<br>· <b>should study ≠ don't have to study</b> — '공부해야 해' vs '공부할 필요 없어'"},
+{"tip": "코너 C · 규칙 카드 — must · have to · don't have to · must not · should", "lv": "영작", "src": "Unit 06 B · don't have to · 영작", "type": "ord", "kor": "낱말 조각을 눌러 우리말에 맞는 문장을 만드세요. <b>필요 없는 조각이 2개 섞여 있어요!</b>", "q": "우리는 오늘 그 일을 끝낼 필요가 없다.", "seq": ["We", "don't", "have to", "finish", "the work", "today"], "extra": ["must", "not"], "say": "We don't have to finish the work today.", "exp": "정답은 <b>We don't have to finish the work today.</b> ✅<br>· '<b>필요가 없다</b>' = don't have to 😌<br>· must not 을 쓰면 '끝내면 <b>안 된다</b>'가 되어 뜻이 완전히 달라져요!"}
+];
+var S4 = [
+{"tip": "코너 D · 규칙 카드 — 조동사 문장 해석 3단계", "lv": "개념", "src": "Sentence Reading 해석 · 순서", "kor": "개념 확인", "q": "조동사 문장을 우리말로 옮길 때, <b>조동사 + 동사의 뜻</b>은 어디에 둘까요?", "choices": ["우리말 문장의 맨 끝", "우리말 문장의 맨 앞", "주어 바로 뒤", "아무 데나 상관없다"], "answer": "우리말 문장의 맨 끝", "say": "Most people may know about this website.", "exp": "정답은 <b>맨 끝</b> 이에요 ✅ 우리말은 동사가 마지막에 와요 🏁<br>예) 대부분의 사람들은 이 웹사이트에 대해 <b>알지도 모른다</b>.<br>· <b>맨 앞 / 주어 바로 뒤</b> — '알지도 모른다 이 웹사이트에 대해서'처럼 영어 순서가 돼서 어색해요<br>· <b>아무 데나</b> — 순서가 바뀌면 읽는 사람이 헷갈려요"},
+{"tip": "코너 D · 규칙 카드 — 조동사 문장 해석 3단계", "lv": "기초", "src": "Sentence Reading 4번 유형", "kor": "가장 자연스러운 해석을 고르세요.", "q": "Many students may know this song.", "choices": ["많은 학생들이 이 노래를 알지도 모른다.", "많은 학생들이 알지도 모른다 이 노래를.", "많은 학생들이 이 노래를 알아도 된다.", "많은 학생들이 이 노래를 알아야 한다."], "answer": "많은 학생들이 이 노래를 알지도 모른다.", "say": "Many students may know this song.", "exp": "정답은 <b>이 노래를 알지도 모른다</b> 예요 ✅ 누가 → 무엇을 → <b>조동사 뜻은 끝에</b> 🎵<br>· <b>알지도 모른다 이 노래를</b> — 뜻은 맞지만 영어 순서 그대로라 어색해요<br>· <b>알아도 된다</b> — 허락으로 읽으면 문장이 이상해져요 (추측이 자연스러워요)<br>· <b>알아야 한다</b> — must 예요", "sayQ": "Many students may know this song."},
+{"tip": "코너 D · 규칙 카드 — 조동사 문장 해석 3단계", "lv": "기초", "src": "Sentence Reading 5번 유형", "kor": "가장 자연스러운 해석을 고르세요.", "q": "You can check the weather on your phone.", "choices": ["너는 휴대폰으로 날씨를 확인할 수 있다.", "너는 확인할 수 있다 날씨를 휴대폰으로.", "너는 휴대폰으로 날씨를 확인해야 한다.", "너는 휴대폰으로 날씨를 확인했다."], "answer": "너는 휴대폰으로 날씨를 확인할 수 있다.", "say": "You can check the weather on your phone.", "exp": "정답은 <b>너는 휴대폰으로 날씨를 확인할 수 있다.</b> ✅ 📱<br>· <b>확인할 수 있다 날씨를 휴대폰으로</b> — 영어 순서 그대로라 뒤집혔어요<br>· <b>확인해야 한다</b> — must / should 예요<br>· <b>확인했다</b> — 과거예요. can 이 빠졌어요", "sayQ": "You can check the weather on your phone."},
+{"tip": "코너 D · 규칙 카드 — 조동사 문장 해석 3단계", "lv": "기초", "src": "Unit 06 B · should 해석", "kor": "가장 자연스러운 해석을 고르세요.", "q": "We should recycle plastic bottles.", "choices": ["우리는 플라스틱 병을 재활용해야 한다.", "우리는 재활용해야 한다 플라스틱 병을.", "우리는 플라스틱 병을 재활용할 수 있다.", "우리는 플라스틱 병을 재활용하면 안 된다."], "answer": "우리는 플라스틱 병을 재활용해야 한다.", "say": "We should recycle plastic bottles.", "exp": "정답은 <b>플라스틱 병을 재활용해야 한다</b> 예요 ✅ ♻️<br>· <b>재활용해야 한다 플라스틱 병을</b> — 뜻은 맞지만 순서가 뒤집혔어요<br>· <b>재활용할 수 있다</b> — can 이에요<br>· <b>재활용하면 안 된다</b> — should not 이에요", "sayQ": "We should recycle plastic bottles."},
+{"tip": "코너 D · 규칙 카드 — 조동사 문장 해석 3단계", "lv": "기초", "src": "Sentence Reading 2번 유형 · must 추측", "kor": "가장 자연스러운 해석을 고르세요.", "q": "The baby must be sleepy now.", "choices": ["그 아기는 지금 졸린 것이 틀림없다.", "그 아기는 지금 졸려야 한다.", "그 아기는 지금 졸리면 안 된다.", "그 아기는 틀림없다 지금 졸린."], "answer": "그 아기는 지금 졸린 것이 틀림없다.", "say": "The baby must be sleepy now.", "exp": "정답은 <b>졸린 것이 틀림없다</b> 예요 ✅ must + be = '~임에 <b>틀림없다</b>' (추측) 👶💤<br>· <b>졸려야 한다</b> — 졸린 건 의무가 아니에요<br>· <b>졸리면 안 된다</b> — must not 이에요<br>· <b>틀림없다 지금 졸린</b> — 영어 순서 그대로라 어색해요", "sayQ": "The baby must be sleepy now."},
+{"tip": "코너 D · 규칙 카드 — 조동사 문장 해석 3단계", "lv": "심화", "src": "Sentence Reading 4번 유형 · treat", "kor": "가장 자연스러운 해석을 고르세요.", "q": "You should treat old books carefully.", "choices": ["너는 오래된 책을 조심스럽게 다뤄야 한다.", "너는 오래된 책을 조심스럽게 대접해야 한다.", "너는 오래된 책을 조심스럽게 치료해야 한다.", "너는 오래된 책을 조심스럽게 다룰 수 있다."], "answer": "너는 오래된 책을 조심스럽게 다뤄야 한다.", "say": "You should treat old books carefully.", "exp": "정답은 <b>다뤄야 한다</b> 예요 ✅ 물건을 treat 하면 = <b>다루다</b> 📚 (Sentence Reading 4번 camera 와 같은 뜻!)<br>· <b>대접하다</b> — treat 에 이런 뜻도 있지만 손님(사람)에게 써요<br>· <b>치료하다</b> — 의사가 환자를 treat 할 때예요<br>· <b>다룰 수 있다</b> — should 가 아니라 can 의 뜻이에요", "sayQ": "You should treat old books carefully."},
+{"tip": "코너 D · 규칙 카드 — 조동사 문장 해석 3단계", "lv": "기초", "src": "Unit 06 A · won't 해석", "kor": "가장 자연스러운 해석을 고르세요.", "q": "I won't tell your secret to anybody.", "choices": ["나는 아무에게도 너의 비밀을 말하지 않을 것이다.", "나는 말하지 않을 것이다 너의 비밀을 아무에게도.", "나는 아무에게도 너의 비밀을 말하면 안 된다.", "나는 아무에게도 너의 비밀을 말할 수 없었다."], "answer": "나는 아무에게도 너의 비밀을 말하지 않을 것이다.", "say": "I won't tell your secret to anybody.", "exp": "정답은 <b>말하지 않을 것이다</b> 예요 ✅ won't = will not 🤫<br>· <b>말하지 않을 것이다 너의 비밀을 아무에게도</b> — 영어 순서 그대로예요<br>· <b>말하면 안 된다</b> — must not 이에요<br>· <b>말할 수 없었다</b> — couldn't 예요", "sayQ": "I won't tell your secret to anybody."},
+{"tip": "코너 D · 규칙 카드 — 조동사 문장 해석 3단계", "lv": "심화", "src": "Unit 06 A · could 해석", "kor": "가장 자연스러운 해석을 고르세요.", "q": "She listened carefully but could not hear any sound.", "choices": ["그녀는 주의 깊게 들었지만 아무 소리도 들을 수 없었다.", "그녀는 주의 깊게 들었지만 아무 소리도 들을 수 없다.", "그녀는 주의 깊게 들었지만 아무 소리도 듣지 않을 것이다.", "그녀는 들었다 주의 깊게 하지만 들을 수 없었다 아무 소리도."], "answer": "그녀는 주의 깊게 들었지만 아무 소리도 들을 수 없었다.", "say": "She listened carefully but could not hear any sound.", "exp": "정답은 <b>들을 수 없었다</b> 예요 ✅ could not = can 의 과거 → '~할 수 <b>없었다</b>' 👂<br>· <b>들을 수 없다</b> — 현재예요. listened 와 could 둘 다 과거예요<br>· <b>듣지 않을 것이다</b> — won't 예요<br>· 마지막 보기 — 뜻은 맞지만 영어 순서 그대로라 어색해요", "sayQ": "She listened carefully but could not hear any sound."},
+{"tip": "코너 D · 규칙 카드 — 조동사 문장 해석 3단계", "lv": "영작", "src": "Sentence Reading 5번(31쪽) 유형 · 해석 배열", "type": "ord", "kor": "조각을 눌러 <b>자연스러운 우리말 해석</b>을 만드세요. <b>필요 없는 조각이 2개 섞여 있어요!</b>", "q": "You must not show this photo to anybody.", "seq": ["너는", "이 사진을", "아무에게도", "보여 주면 안 된다."], "extra": ["보여 줄 필요가 없다.", "보여 줘야 한다."], "say": "You must not show this photo to anybody.", "exp": "정답은 <b>너는 이 사진을 아무에게도 보여 주면 안 된다.</b> ✅<br>· must not = <b>~하면 안 된다</b> 🚫<br>· '보여 줄 필요가 없다'는 don't have to, '보여 줘야 한다'는 must 예요"},
+{"tip": "코너 D · 규칙 카드 — 조동사 문장 해석 3단계", "lv": "영작", "src": "Sentence Reading 4번(30쪽) 유형 · 해석 배열", "type": "ord", "kor": "조각을 눌러 <b>자연스러운 우리말 해석</b>을 만드세요. <b>필요 없는 조각이 2개 섞여 있어요!</b>", "q": "Some kids may know about this game.", "seq": ["몇몇 아이들은", "이 게임에 대해", "알지도 모른다."], "extra": ["알아도 된다.", "알아야 한다."], "say": "Some kids may know about this game.", "exp": "정답은 <b>몇몇 아이들은 이 게임에 대해 알지도 모른다.</b> ✅ 🎮<br>· 누가 → 무엇에 대해 → <b>조동사 뜻은 끝에</b>!<br>· may 는 여기서 <b>추측</b>(~일지도 모른다)이에요"}
+];
+var S5 = [
+{"tip": "코너 E · 규칙 카드 — journalist · wide · square · flexible · blunt · steward · curve", "lv": "개념", "src": "VOCA Day 40 21번 · journalist", "kor": "개념 확인", "q": "<b>journalist</b> 의 뜻으로 알맞은 것은?", "choices": ["기자", "건축가", "기술자", "탐정"], "answer": "기자", "say": "journalist", "exp": "정답은 <b>기자</b> 예요 ✅ journal(신문·잡지)에 글을 쓰는 사람 → <b>기자</b> (저널리스트) 📰<br>· <b>건축가</b> — architect<br>· <b>기술자</b> — technician<br>· <b>탐정</b> — detective", "sayQ": "journalist"},
+{"tip": "코너 E · 규칙 카드 — journalist · wide · square · flexible · blunt · steward · curve", "lv": "기초", "src": "VOCA Day 40 26번 유형 · wide", "kor": "밑줄 친 낱말의 뜻으로 알맞은 것은?", "q": "The river is very <u>wide</u>.", "choices": ["넓은", "좁은", "두꺼운", "무딘"], "answer": "넓은", "say": "The river is very wide.", "exp": "정답은 <b>넓은</b> 이에요 ✅ wide = <b>넓은</b> 🏞️ 그 강은 아주 넓다.<br>· <b>좁은</b> — narrow (wide 의 반대말!)<br>· <b>두꺼운</b> — thick<br>· <b>무딘</b> — blunt", "sayQ": "The river is very wide."},
+{"tip": "코너 E · 규칙 카드 — journalist · wide · square · flexible · blunt · steward · curve", "lv": "개념", "src": "VOCA Day 40 30번 · square 정답 2개", "kor": "<b>square</b> 의 뜻 두 가지를 바르게 짝지은 것은?", "q": "square (뜻 2개) 🔷", "choices": ["정사각형 / 광장", "삼각형 / 광장", "정사각형 / 곡선", "원 / 광장"], "answer": "정사각형 / 광장", "say": "square", "exp": "정답은 <b>정사각형 / 광장</b> 이에요 ✅ 30번에서 <b>광장</b>을 빠뜨렸었죠! 🔷🏛️<br>· <b>삼각형</b> — triangle<br>· <b>곡선</b> — curve<br>· <b>원</b> — circle", "sayQ": "square"},
+{"tip": "코너 E · 규칙 카드 — journalist · wide · square · flexible · blunt · steward · curve", "lv": "기초", "src": "VOCA Day 40 30번 유형 · square", "kor": "밑줄 친 낱말의 뜻으로 알맞은 것은?", "q": "We met our friends at the town <u>square</u>.", "choices": ["광장", "정사각형", "곡선", "모양"], "answer": "광장", "say": "We met our friends at the town square.", "exp": "정답은 <b>광장</b> 이에요 ✅ 사람들이 만나는 장소니까 '정사각형'이 아니라 <b>광장</b> 🏛️ (town square = 마을 광장)<br>· <b>정사각형</b> — 모양을 말할 때의 square 예요<br>· <b>곡선</b> — curve<br>· <b>모양</b> — shape", "sayQ": "We met our friends at the town square."},
+{"tip": "코너 E · 규칙 카드 — journalist · wide · square · flexible · blunt · steward · curve", "lv": "기초", "src": "VOCA Day 40 31번 유형 · flexible", "kor": "이 고무 자는 잘 구부러진다.", "q": "This rubber ruler is <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span>.", "choices": ["flexible", "blunt", "hollow", "solid"], "answer": "flexible", "say": "This rubber ruler is flexible.", "exp": "정답은 <b>flexible</b> 이에요 ✅ 잘 구부러지는 = <b>flexible</b> (유연한) 📏<br>· <b>blunt</b> — 무딘, 뭉툭한<br>· <b>hollow</b> — 속이 빈<br>· <b>solid</b> — 단단한 (flexible 과 거의 반대!)", "sayQ": "This rubber ruler is flexible.", "spk": true},
+{"tip": "코너 E · 규칙 카드 — journalist · wide · square · flexible · blunt · steward · curve", "lv": "철자", "src": "VOCA Day 40 31번 · 철자 쓰기", "type": "ord", "kor": "조각을 눌러 <b>철자를 완성</b>하세요. <b>필요 없는 조각이 2개 섞여 있어요!</b>", "q": "유연한, 잘 구부러지는 — f________", "seq": ["fle", "xi", "ble"], "extra": ["fla", "bel"], "say": "flexible", "exp": "정답은 <b>fle · xi · ble</b> = <b>flexible</b> ✅<br>· 첫 조각은 fl<b>e</b> (fla ❌)<br>· 끝은 <b>-ble</b> (bel ❌) — 'able, possible' 처럼 -ble 로 끝나요"},
+{"tip": "코너 E · 규칙 카드 — journalist · wide · square · flexible · blunt · steward · curve", "lv": "기초", "src": "VOCA Day 40 36번 유형 · blunt", "kor": "이 칼은 무뎌서 빵을 자를 수 없다.", "q": "This knife is <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span>. It can't cut the bread.", "choices": ["blunt", "sharp", "smooth", "sticky"], "answer": "blunt", "say": "This knife is blunt. It can't cut the bread.", "exp": "정답은 <b>blunt</b> 예요 ✅ 잘 안 잘리는 칼 = <b>blunt</b> (무딘) 🔪<br>· <b>sharp</b> — 날카로운 (blunt 의 반대말!) 그러면 잘 잘려요<br>· <b>smooth</b> — 매끄러운<br>· <b>sticky</b> — 끈적끈적한", "sayQ": "This knife is blunt. It can't cut the bread.", "spk": true},
+{"tip": "코너 E · 규칙 카드 — journalist · wide · square · flexible · blunt · steward · curve", "lv": "철자", "src": "VOCA Day 40 36번 · 철자 쓰기", "type": "ord", "kor": "조각을 눌러 <b>철자를 완성</b>하세요. <b>필요 없는 조각이 2개 섞여 있어요!</b>", "q": "무딘, 뭉툭한 — b_____", "seq": ["b", "l", "u", "n", "t"], "extra": ["a", "d"], "say": "blunt", "exp": "정답은 <b>b · l · u · n · t</b> = <b>blunt</b> ✅<br>· 가운데 모음은 <b>u</b> (a ❌)<br>· 끝은 <b>-nt</b> (nd ❌)"},
+{"tip": "코너 E · 규칙 카드 — journalist · wide · square · flexible · blunt · steward · curve", "lv": "기초", "src": "VOCA Day 40 39번 유형 · steward", "kor": "비행기에서 승무원이 우리에게 물을 가져다주었다.", "q": "The <span class='blank'>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span> brought us water on the plane.", "choices": ["steward", "soldier", "author", "architect"], "answer": "steward", "say": "The steward brought us water on the plane.", "exp": "정답은 <b>steward</b> 예요 ✅ 비행기에서 도와주는 사람 = <b>steward</b> (승무원) ✈️ 철자 st-e-w-ard 기억!<br>· <b>soldier</b> — 군인<br>· <b>author</b> — 작가<br>· <b>architect</b> — 건축가", "sayQ": "The steward brought us water on the plane.", "spk": true},
+{"tip": "코너 E · 규칙 카드 — journalist · wide · square · flexible · blunt · steward · curve", "lv": "철자", "src": "VOCA Day 40 40번 · 철자 쓰기", "type": "ord", "kor": "조각을 눌러 <b>철자를 완성</b>하세요. <b>필요 없는 조각이 2개 섞여 있어요!</b>", "q": "곡선, 커브 — c____", "seq": ["c", "u", "r", "v", "e"], "extra": ["o", "b"], "say": "curve", "exp": "정답은 <b>c · u · r · v · e</b> = <b>curve</b> ✅<br>· 모음은 <b>u</b> (o ❌)<br>· v 자리에 b 를 쓰지 않게! 그리고 <b>끝에 e</b> 꼭 붙이기"}
+];
+var ALL = [].concat(S1, S2, S3, S4, S5);
+
+/* ══════ 결과 기록 (영핏 공통 · 조용히 전송) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+/* ══════ 낱말 배열 문항 준비 (필요 없는 조각 포함) ══════ */
+ALL.forEach(function (q) {
+  if (q.type === "ord") { q.words = q.seq.concat(q.extra || []); q.answer = q.seq.join(" "); }
+});
+
+var SECTIONS = [
+  { name: "1영역 · will · be going to", start: 0, end: 10, cards: [A1, A2] },
+  { name: "2영역 · can · could · may", start: 10, end: 20, cards: [B1, B2] },
+  { name: "3영역 · must · have to · should", start: 20, end: 30, cards: [C1, C2] },
+  { name: "4영역 · 조동사 문장 해석", start: 30, end: 40, cards: [D1, D2] },
+  { name: "5영역 · VOCA Day 40 뜻 · 철자", start: 40, end: 50, cards: [E1, E2] }
+];
+var CARD_AT = { 0: [A1, A2], 10: [B1, B2], 20: [C1, C2], 30: [D1, D2], 40: [E1, E2] };
+var NSEC = SECTIONS.length;
+function secIndex(i) {
+  for (var s = 0; s < NSEC; s++) { if (i < SECTIONS[s].end) return s; }
+  return NSEC - 1;
+}
+
+/* ══════ 정답 위치 균등 분산 셔플 (영역별 따로 + 같은 위치 3연속 금지) ══════ */
+function shuffleArr(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function hasTriple(arr) {
+  for (var i = 2; i < arr.length; i++) { if (arr[i] === arr[i - 1] && arr[i] === arr[i - 2]) return true; }
+  return false;
+}
+function balancedAssign(n, k) {
+  var pool, tries = 0;
+  do {
+    pool = [];
+    var base = Math.floor(n / k);
+    for (var p = 0; p < k; p++) { for (var c = 0; c < base; c++) pool.push(p); }
+    var remainder = n - pool.length;
+    var all = []; for (var z = 0; z < k; z++) all.push(z);
+    shuffleArr(all).slice(0, remainder).forEach(function (p) { pool.push(p); });
+    pool = shuffleArr(pool);
+    tries++;
+  } while (hasTriple(pool) && tries < 300);
+  return pool;
+}
+(function prepareShuffledChoices() {
+  SECTIONS.forEach(function (sec) {
+    var mcqIdx = [];
+    for (var idx = sec.start; idx < sec.end; idx++) { if (ALL[idx].type !== "ord") mcqIdx.push(idx); }
+    var targetPositions = balancedAssign(mcqIdx.length, 4);
+    mcqIdx.forEach(function (idx, mi) {
+      var q = ALL[idx];
+      var shuffled = shuffleArr(q.choices);
+      var curPos = shuffled.indexOf(q.answer);
+      var target = targetPositions[mi];
+      var tmp = shuffled[target]; shuffled[target] = shuffled[curPos]; shuffled[curPos] = tmp;
+      q.shuffled = shuffled;
+    });
+  });
+})();
+
+/* ══════ 진행 상태 ══════ */
+var studentName = "";
+var current = 0;
+var answersLog = new Array(ALL.length).fill(null);
+var elapsed = new Array(NSEC).fill(0);
+var sent = new Array(NSEC).fill(false);
+var lastTick = 0;
+var curSec = 0;
+var cardsShown = {};
+var pendingCard = 0;
+var pendingIdx = 0;
+
+/* ══════ 진행 자동 저장 ══════ */
+var SAVE_KEY = "clinic-oay-1018";
+function saveState() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      v: 1, name: studentName, current: current, log: answersLog, elapsed: elapsed, sent: sent,
+      cards: cardsShown,
+      choices: ALL.map(function (q) { return q.shuffled || null; })
+    }));
+  } catch (e) {}
+}
+function loadState() {
+  try {
+    var s = JSON.parse(localStorage.getItem(SAVE_KEY));
+    return (s && s.v === 1 && s.name && s.log) ? s : null;
+  } catch (e) { return null; }
+}
+function clearState() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+/* 화면 전환 — 다른 화면으로 바뀔 때(또는 새 카드)만 맨 위로. 문항끼리 넘어갈 때는 끌어올리지 않음 */
+function show(id) {
+  var target = document.getElementById(id);
+  var changed = target.classList.contains("hidden");
+  ["start-card", "resume-card", "cards-card", "quiz-card", "sec-result-card"].forEach(function (c) {
+    document.getElementById(c).classList.toggle("hidden", c !== id);
+  });
+  if (id === "start-card") refreshSectionButtons();
+  if (changed || id === "cards-card") window.scrollTo(0, 0);
+}
+
+/* ══════ 영역 완료 여부 ══════ */
+function secDone(si) {
+  var s = SECTIONS[si];
+  for (var i = s.start; i < s.end; i++) { if (!answersLog[i]) return false; }
+  return true;
+}
+function firstUndoneSec() {
+  for (var i = 0; i < NSEC; i++) { if (!secDone(i)) return i; }
+  return -1;
+}
+function refreshSectionButtons() {
+  var doneList = [];
+  for (var si = 0; si < NSEC; si++) {
+    var btn = document.getElementById("start-s" + (si + 1));
+    if (!btn) continue;
+    var done = secDone(si);
+    btn.classList.toggle("done", done);
+    if (done) doneList.push(si + 1);
+  }
+  var note = document.getElementById("sec-done-note");
+  if (note) {
+    note.textContent = doneList.length
+      ? "✓ " + doneList.join("영역, ") + "영역은 이미 다 풀었어요 (다시 눌러 복습할 수 있어요)"
+      : "";
+  }
+}
+
+/* ══════ 카드 → 문제 순서로 진행 ══════ */
+function step() {
+  curSec = secIndex(current);
+  if (CARD_AT[current] && !cardsShown[current]) { showCardScreen(current, 0); }
+  else { show("quiz-card"); showQuestion(); }
+}
+function showCardScreen(i, k) {
+  pendingCard = i;
+  pendingIdx = k;
+  var sec = SECTIONS[curSec];
+  var list = CARD_AT[i];
+  var title = list[k];
+  document.getElementById("card-num").textContent = "개념 카드 " + (k + 1) + " / " + list.length;
+  document.getElementById("card-sec").textContent = sec.name;
+  document.getElementById("card-bar").style.width = ((k + 1) / list.length * 100) + "%";
+  document.getElementById("cardbox").innerHTML = "<h2>" + title + "</h2>" + (TIPS[title] || "");
+  document.getElementById("card-next").textContent = (k + 1 < list.length)
+    ? "다음 카드 보기 (" + (k + 2) + " / " + list.length + ") →"
+    : "확인 끝! 문제 " + (sec.end - sec.start) + "개 풀러 가기 →";
+  show("cards-card");
+}
+document.getElementById("card-next").addEventListener("click", function () {
+  var list = CARD_AT[pendingCard];
+  if (list && pendingIdx + 1 < list.length) { showCardScreen(pendingCard, pendingIdx + 1); return; }
+  cardsShown[pendingCard] = true;
+  saveState();
+  show("quiz-card");
+  showQuestion();
+});
+document.getElementById("card-skip").addEventListener("click", function () {
+  cardsShown[pendingCard] = true;
+  saveState();
+  show("quiz-card");
+  showQuestion();
+});
+
+/* ══════ 시작 (영역 선택) / 이어하기 ══════ */
+var nameInput = document.getElementById("name-input");
+var secBtns = [].slice.call(document.querySelectorAll(".sec-start"));
+function syncNameGate() {
+  var ok = nameInput.value.trim().length > 0;
+  secBtns.forEach(function (b) { b.disabled = !ok; });
+}
+nameInput.addEventListener("input", syncNameGate);
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && nameInput.value.trim()) secBtns[0].click();
+});
+
+function startSection(si) {
+  var typed = nameInput.value.trim();
+  if (!typed) { nameInput.focus(); return; }
+  studentName = typed;
+  var s = SECTIONS[si];
+  for (var i = s.start; i < s.end; i++) { answersLog[i] = null; }
+  elapsed[si] = 0;
+  sent[si] = false;
+  Object.keys(CARD_AT).forEach(function (k) {
+    if (+k >= s.start && +k < s.end) delete cardsShown[k];
+  });
+  current = s.start;
+  curSec = si;
+  lastTick = Date.now();
+  saveState();
+  step();
+}
+secBtns.forEach(function (b) {
+  b.addEventListener("click", function () { startSection(parseInt(b.getAttribute("data-sec"), 10)); });
+});
+
+var savedState = loadState();
+function applySaved(s) {
+  studentName = s.name;
+  current = s.current;
+  answersLog = (s.log || []).slice(0, ALL.length);
+  while (answersLog.length < ALL.length) answersLog.push(null);
+  elapsed = s.elapsed || [];
+  while (elapsed.length < NSEC) elapsed.push(0);
+  sent = s.sent || [];
+  while (sent.length < NSEC) sent.push(false);
+  cardsShown = s.cards || {};
+  if (s.choices) {
+    ALL.forEach(function (q, i) { if (s.choices[i] && q.type !== "ord") q.shuffled = s.choices[i]; });
+  }
+}
+if (savedState && savedState.log && savedState.log.some(function (l) { return !!l; })) {
+  var doneCnt = savedState.log.filter(function (l) { return !!l; }).length;
+  document.getElementById("resume-info").textContent =
+    savedState.name + " · " + doneCnt + "문제까지 푼 기록이 있어요. 이어서 풀까요?";
+  show("resume-card");
+} else {
+  syncNameGate();
+}
+document.getElementById("resume-btn").addEventListener("click", function () {
+  applySaved(savedState);
+  nameInput.value = studentName;
+  syncNameGate();
+  lastTick = Date.now();
+  if (current >= ALL.length) current = ALL.length;
+  var prevSec = current > 0 ? secIndex(current - 1) : -1;
+  if (prevSec >= 0 && current === SECTIONS[prevSec].end && secDone(prevSec)) {
+    showSectionResult(prevSec);
+  } else {
+    curSec = secIndex(current);
+    step();
+  }
+});
+document.getElementById("restart-btn").addEventListener("click", function () {
+  clearState();
+  answersLog = new Array(ALL.length).fill(null);
+  elapsed = new Array(NSEC).fill(0); sent = new Array(NSEC).fill(false); cardsShown = {}; current = 0;
+  nameInput.value = "";
+  syncNameGate();
+  show("start-card");
+});
+document.getElementById("pick-sec-btn").addEventListener("click", function () {
+  stopSpeak();
+  nameInput.value = studentName;
+  syncNameGate();
+  show("start-card");
+});
+
+
+/* ══════ 문제 표시 ══════ */
+var CIRCLED = ["①", "②", "③", "④"];
+var ordPicked = [];
+var ordWarned = false;
+function lvClass(lv) { return lv === "심화" ? " hi" : (lv === "개념" ? " cp" : (lv === "영작" ? " wr" : "")); }
+function showQuestion() {
+  var q = ALL[current];
+  var si = secIndex(current);
+  curSec = si;
+  var sec = SECTIONS[si];
+  document.getElementById("prog-num").textContent =
+    sec.name.split(" · ")[0] + "  ·  " + (current - sec.start + 1) + " / " + (sec.end - sec.start);
+  document.getElementById("prog-pct").textContent = "전체 " + Math.round(current / ALL.length * 100) + "%";
+  document.getElementById("bar-fill").style.width = ((current - sec.start) / (sec.end - sec.start) * 100) + "%";
+  document.getElementById("srctag").innerHTML = "<span class='lv" + lvClass(q.lv) + "'>" + q.lv + "</span>" + q.src;
+  document.getElementById("tipinner").innerHTML = "<b>" + q.tip + "</b><br>" + (TIPS[q.tip] || "");
+  document.getElementById("tipbox").open = false;
+  document.getElementById("qtext").innerHTML = "<span class='kor'>Q" + (current + 1) + ". " + q.kor + "</span>" + q.q;
+
+  var sayBtn = document.getElementById("say-btn");
+  var canSayQ = !!(speechOK && q.sayQ);
+  sayBtn.classList.toggle("hidden", !canSayQ);
+  sayBtn.onclick = canSayQ ? function () { speak(q.sayQ); } : null;
+
+  var box = document.getElementById("choices");
+  var ordArea = document.getElementById("ord-area");
+  var keyhint = document.getElementById("keyhint");
+  var warn = document.getElementById("ord-warn");
+  box.innerHTML = "";
+  warn.classList.add("hidden");
+  ordWarned = false;
+
+  if (q.type === "ord") {
+    box.classList.add("hidden");
+    ordArea.classList.remove("hidden");
+    keyhint.textContent = "조각을 순서대로 눌러 문장을 만든 뒤 [다 만들었어요]를 누르세요 · 필요 없는 조각은 그대로 남겨 두세요";
+    ordPicked = [];
+    renderOrd(q);
+  } else {
+    box.classList.remove("hidden");
+    ordArea.classList.add("hidden");
+    keyhint.textContent = "숫자키 1~4로도 선택할 수 있어요";
+    q.shuffled.forEach(function (c, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "choice";
+      b.setAttribute("data-choice", c);
+      b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+      b.addEventListener("click", function () { pick(c); });
+      if (speechOK && q.spk) {
+        var sp = document.createElement("span");
+        sp.className = "say";
+        sp.textContent = "🔊";
+        sp.title = "발음 듣기";
+        sp.addEventListener("click", function (ev) { ev.stopPropagation(); ev.preventDefault(); speak(c); });
+        b.appendChild(sp);
+      }
+      box.appendChild(b);
+    });
+  }
+  lastTick = Date.now();
+  var qc = document.getElementById("quiz-card");
+  var topY = qc.getBoundingClientRect().top + (window.pageYOffset || 0) - 12;
+  if ((window.pageYOffset || 0) > topY) window.scrollTo(0, topY < 0 ? 0 : topY);
+}
+
+/* ══════ 낱말 배열 (필요 없는 조각 섞기) ══════ */
+function renderOrd(q) {
+  if (!q.tileOrder) {
+    var idxs = q.words.map(function (w, i) { return i; });
+    do { q.tileOrder = shuffleArr(idxs); } while (q.words.length > 2 && q.tileOrder.slice(0, q.seq.length).join() === idxs.slice(0, q.seq.length).join());
+  }
+  var slot = document.getElementById("ord-slot");
+  var tiles = document.getElementById("ord-tiles");
+  slot.innerHTML = "";
+  tiles.innerHTML = "";
+  if (ordPicked.length === 0) {
+    var ph = document.createElement("span");
+    ph.className = "ph";
+    ph.textContent = "여기에 문장이 만들어져요";
+    slot.appendChild(ph);
+  }
+  ordPicked.forEach(function (wi) {
+    var t = document.createElement("span");
+    t.className = "tile";
+    t.textContent = q.words[wi];
+    slot.appendChild(t);
+  });
+  q.tileOrder.forEach(function (wi) {
+    var used = ordPicked.indexOf(wi) >= 0;
+    var t = document.createElement("button");
+    t.type = "button";
+    t.className = "tile" + (used ? " used" : "");
+    t.textContent = q.words[wi];
+    if (!used) {
+      t.addEventListener("click", function () {
+        ordPicked.push(wi);
+        document.getElementById("ord-warn").classList.add("hidden");
+        ordWarned = false;
+        renderOrd(q);
+      });
+    }
+    tiles.appendChild(t);
+  });
+}
+document.getElementById("ord-undo").addEventListener("click", function () {
+  var q = ALL[current];
+  if (!q || q.type !== "ord") return;
+  ordPicked.pop();
+  document.getElementById("ord-warn").classList.add("hidden");
+  ordWarned = false;
+  renderOrd(q);
+});
+document.getElementById("ord-check").addEventListener("click", function () {
+  var q = ALL[current];
+  if (!q || q.type !== "ord") return;
+  var warn = document.getElementById("ord-warn");
+  if (ordPicked.length === 0) {
+    warn.textContent = "※ 먼저 조각을 눌러서 문장을 만들어 주세요!";
+    warn.classList.remove("hidden");
+    return;
+  }
+  if (ordPicked.length < q.seq.length && !ordWarned) {
+    ordWarned = true;
+    warn.textContent = "※ 문장이 아직 덜 만들어진 것 같아요. and 뒤나 문장 끝에 빠뜨린 조각이 없는지 확인해 보세요. (그래도 제출하려면 한 번 더 누르세요)";
+    warn.classList.remove("hidden");
+    return;
+  }
+  var made = ordPicked.map(function (wi) { return q.words[wi]; }).join(" ");
+  pick(made);
+});
+
+document.addEventListener("keydown", function (e) {
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  var q = ALL[current];
+  if (!q || q.type === "ord" || !q.shuffled) return;
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= q.shuffled.length) pick(q.shuffled[n - 1]);
+});
+
+/* ══════ 소리 — 선택 효과음 없음 · 영역 완료 팡파르만 · 원어민 발음 ══════ */
+var SOUND_KEY = "engfit-sound";
+var soundOn = true;
+try { soundOn = localStorage.getItem(SOUND_KEY) !== "off"; } catch (e) {}
+var audioCtx = null;
+function ac() {
+  try {
+    if (!audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === "suspended") { audioCtx.resume(); }
+    return audioCtx;
+  } catch (e) { return null; }
+}
+function tone(freq, startAt, dur, vol) {
+  var c = ac(); if (!c) return;
+  try {
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = "sine"; o.frequency.value = freq;
+    var t0 = c.currentTime + startAt;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(t0); o.stop(t0 + dur + 0.06);
+  } catch (e) {}
+}
+function playFinish() {
+  if (!soundOn) return;
+  [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) { tone(f, i * 0.11, 0.34, 0.19); });
+}
+function paintSoundBtn() {
+  var b = document.getElementById("sound-toggle");
+  if (b) { b.textContent = soundOn ? "🔊 소리 켜짐" : "🔇 소리 꺼짐"; b.className = soundOn ? "" : "off"; }
+}
+document.getElementById("sound-toggle").addEventListener("click", function () {
+  soundOn = !soundOn;
+  try { localStorage.setItem(SOUND_KEY, soundOn ? "on" : "off"); } catch (e) {}
+  paintSoundBtn();
+  if (soundOn) { pickVoice(); speak("Hello", 0.9); } else { stopSpeak(); }
+});
+paintSoundBtn();
+
+/* 원어민 발음 (미국 여성 목소리 고정) — 목소리 목록이 오기 전에는 절대 읽지 않음 */
+var speechOK = (typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined");
+var enVoice = null, pendingSay = null;
+var FEMALE_US = ["google us english", "zira", "aria", "jenny", "michelle", "ava", "samantha", "allison", "susan", "joanna", "salli", "kimberly", "nanci", "emma", "eva", "female"];
+var MALE_ANY = ["david", "mark", "guy", "alex", "fred", "eric", "christopher", "roger", "steffan", "tony", "brandon", "daniel", "james", "male"];
+function isMaleName(n) { n = (n || "").toLowerCase(); if (n.indexOf("female") !== -1) return false; for (var i = 0; i < MALE_ANY.length; i++) { if (n.indexOf(MALE_ANY[i]) !== -1) return true; } return false; }
+function femaleRank(n) { n = (n || "").toLowerCase(); for (var i = 0; i < FEMALE_US.length; i++) { if (n.indexOf(FEMALE_US[i]) !== -1) return i; } return 999; }
+function pickVoice() {
+  if (!speechOK) return;
+  try {
+    var vs = window.speechSynthesis.getVoices() || [], us = [], en = [];
+    for (var i = 0; i < vs.length; i++) {
+      var lg = (vs[i].lang || "").replace("_", "-");
+      if (/^en-US/i.test(lg)) us.push(vs[i]); else if (/^en/i.test(lg)) en.push(vs[i]);
+    }
+    function best(list) {
+      var pool = list.filter(function (v) { return !isMaleName(v.name); });
+      if (!pool.length) return null;
+      pool = pool.slice().sort(function (a, b) { return femaleRank(a.name) - femaleRank(b.name); });
+      return pool[0];
+    }
+    enVoice = best(us) || best(en) || null;
+  } catch (e) { enVoice = null; }
+}
+function onVoicesReady() { pickVoice(); if (enVoice && pendingSay) { var t = pendingSay; pendingSay = null; speak(t); } }
+if (speechOK) {
+  pickVoice();
+  try { window.speechSynthesis.onvoiceschanged = onVoicesReady; } catch (e) {}
+  var voiceTries = 0;
+  var voiceTimer = setInterval(function () {
+    voiceTries++;
+    if (!enVoice) onVoicesReady();
+    if (enVoice || voiceTries > 60) clearInterval(voiceTimer);
+  }, 250);
+} else {
+  document.body.className += " nospeech";
+}
+function speak(text, rate) {
+  if (!soundOn || !speechOK) return;
+  var t = String(text == null ? "" : text).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (!t) return;
+  try {
+    if (!enVoice) pickVoice();
+    if (!enVoice || !/^en/i.test((enVoice.lang || "").replace("_", "-"))) { pendingSay = t; return; }
+    window.speechSynthesis.cancel();
+    var u = new window.SpeechSynthesisUtterance(t);
+    u.lang = "en-US";
+    u.voice = enVoice;
+    u.rate = rate || 0.85;
+    u.pitch = 1;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+function stopSpeak() { pendingSay = null; try { if (speechOK) window.speechSynthesis.cancel(); } catch (e) {} }
+/* 개념 카드 낱말 칩 · 해설의 [정답 문장 듣기] */
+document.addEventListener("click", function (e) {
+  var el = e.target;
+  while (el && el !== document.body) {
+    if (el.classList && (el.classList.contains("wordchip") || el.classList.contains("listen"))) {
+      speak(el.getAttribute("data-say"));
+      return;
+    }
+    el = el.parentNode;
+  }
+});
+
+/* ══════ 답 고르기 → 정답 영어 읽어 주기 → 0.25초 뒤 다음 문항 ══════ */
+function plain(s) { return String(s == null ? "" : s).replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim(); }
+var locked = false;
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = ALL[current];
+  var si = secIndex(current);
+  var ok = (choice === q.answer);
+  if (q.say) speak(q.say);
+  answersLog[current] = { no: current + 1, ok: ok, chosen: plain(choice) || "(빈칸)", answer: plain(q.answer) };
+  elapsed[si] += Math.min(180, Math.round((Date.now() - lastTick) / 1000));
+  current++;
+  saveState();
+  setTimeout(function () {
+    locked = false;
+    if (current === SECTIONS[si].end) {
+      showSectionResult(si);
+      setTimeout(function () { try { playFinish(); } catch (e) {} }, 180);
+    } else step();
+  }, 250);
+}
+
+
+/* ══════ 영역 결과 ══════ */
+function secStats(si) {
+  var sec = SECTIONS[si];
+  var slice = answersLog.slice(sec.start, sec.end).filter(function (l) { return !!l; });
+  var score = slice.filter(function (l) { return l.ok; }).length;
+  var wrong = slice.filter(function (l) { return !l.ok; }).map(function (l) { return l.no; });
+  return { slice: slice, score: score, total: sec.end - sec.start, wrong: wrong };
+}
+function sectionMsg(si) {
+  var st = secStats(si);
+  return "[영핏 조동사 + 단어 숙제 " + (si + 1) + "/" + NSEC + " 결과]\n학생: " + studentName +
+         "\n영역: " + SECTIONS[si].name +
+         "\n점수: " + st.score + "/" + st.total +
+         "\n풀이 시간: " + Math.max(1, Math.round(elapsed[si] / 60)) + "분" +
+         "\n틀린 문항: " + (st.wrong.length ? st.wrong.join(", ") : "없음 👏") +
+         "\n- 영핏 지나티처";
+}
+function totalMsg() {
+  var parts = SECTIONS.map(function (s, si) {
+    var st = secStats(si);
+    return (si + 1) + "영역 " + st.score + "/" + st.total;
+  });
+  var done = answersLog.filter(function (l) { return !!l; });
+  var totalScore = done.filter(function (l) { return l.ok; }).length;
+  var allWrong = done.filter(function (l) { return !l.ok; }).map(function (l) { return l.no; });
+  return "[영핏 조동사 + 단어 숙제 최종 결과]\n학생: " + studentName +
+         "\n퀴즈: 오아윤 조동사 + 단어 숙제 (will · can/may · must/have to · 해석 · VOCA Day 40 · 50문항)" +
+         "\n" + parts.join(" / ") +
+         "\n총점: " + totalScore + "/" + ALL.length +
+         "\n틀린 문항: " + (allWrong.length ? allWrong.join(", ") : "없음 👏") +
+         "\n- 영핏 지나티처";
+}
+function copyText(btn, text, doneLabel) {
+  function fallback() {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.top = "-1000px";
+      document.body.appendChild(ta); ta.select();
+      var ok = document.execCommand && document.execCommand("copy");
+      document.body.removeChild(ta);
+      if (ok) { btn.textContent = doneLabel; return; }
+    } catch (e) {}
+    prompt("아래 내용을 길게 눌러 복사하세요", text);
+  }
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { btn.textContent = doneLabel; }).catch(fallback);
+    } else { fallback(); }
+  } catch (e) { fallback(); }
+}
+
+function showSectionResult(si) {
+  var st = secStats(si);
+  var allDone = firstUndoneSec() === -1;
+  document.getElementById("sec-result-title").textContent =
+    allDone ? "모든 영역 완료! 정말 수고했어요 🎉" : (si + 1) + "영역 완료! 잘했어요 👏";
+  document.getElementById("sec-score").textContent = st.score + " / " + st.total;
+  document.getElementById("sec-wrong").textContent =
+    st.wrong.length ? "다시 볼 문항: " + st.wrong.join(", ") + "번 — 아래 해설을 꼭 읽어 봐요!" : "이 영역 전부 정답! 최고예요! 🏆";
+
+  var copyBtn = document.getElementById("sec-copy-btn");
+  copyBtn.textContent = (si + 1) + "영역 결과 복사 (카톡용)";
+  copyBtn.onclick = function () { copyText(copyBtn, sectionMsg(si), "복사 완료! 카톡에 붙여넣기 하세요 ✓"); };
+
+  var nextBtn = document.getElementById("next-sec-btn");
+  var nextSi = firstUndoneSec();
+  if (allDone) {
+    nextBtn.classList.add("hidden");
+    var totalScore = answersLog.filter(function (l) { return l && l.ok; }).length;
+    document.getElementById("total-block").classList.remove("hidden");
+    document.getElementById("total-score").textContent = totalScore + " / " + ALL.length;
+    document.getElementById("total-detail").textContent =
+      SECTIONS.map(function (s, idx) { var t = secStats(idx); return (idx + 1) + "영역 " + t.score + "/" + t.total; }).join("  ·  ");
+    var totalBtn = document.getElementById("total-copy-btn");
+    totalBtn.textContent = "전체 결과 복사 (카톡용)";
+    totalBtn.onclick = function () { copyText(totalBtn, totalMsg(), "복사 완료! 카톡에 붙여넣기 하세요 ✓"); };
+  } else {
+    nextBtn.classList.remove("hidden");
+    document.getElementById("total-block").classList.add("hidden");
+    nextBtn.textContent = "쉬었다가 " + (nextSi + 1) + "영역 풀러 가기 →";
+    nextBtn.onclick = function () {
+      stopSpeak();
+      current = SECTIONS[nextSi].start; curSec = nextSi; lastTick = Date.now();
+      var s = SECTIONS[nextSi];
+      for (var i = s.start; i < s.end; i++) { answersLog[i] = null; }
+      elapsed[nextSi] = 0; sent[nextSi] = false;
+      saveState(); step();
+    };
+  }
+
+  var expBox = document.getElementById("sec-explanations");
+  expBox.innerHTML = "";
+  st.slice.forEach(function (log) {
+    var q = ALL[log.no - 1];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    var ansLine = log.ok ? "" : '<span class="ans-line">내가 고른 답: ' + plain(log.chosen) + " → 정답: " + plain(q.answer) + "</span>";
+    d.innerHTML = '<div class="exp-head"><b>Q' + log.no + " " +
+      (log.ok ? "정답! ✓" : "다시 보기 ✎") + "</b> <span style='color:#6B7B7E;font-size:0.82rem'>" + plain(q.src) + "</span></div>" + ansLine + q.exp;
+    if (q.say && speechOK) {
+      var lb = document.createElement("button");
+      lb.type = "button";
+      lb.className = "listen";
+      lb.setAttribute("data-say", q.say);
+      lb.textContent = "🔊 정답 문장 듣고 따라 읽기";
+      d.appendChild(document.createElement("br"));
+      d.appendChild(lb);
+    }
+    expBox.appendChild(d);
+  });
+
+  if (!sent[si]) {
+    sent[si] = true;
+    saveState();
+    engfitSubmit({
+      quizId: "clinic-oay-1018-p" + (si + 1),
+      quizTitle: "오아윤 조동사 + 단어 숙제 " + (si + 1) + "영역",
+      student: studentName,
+      score: st.score,
+      total: st.total,
+      wrong: st.wrong,
+      durationSec: elapsed[si],
+      detail: st.slice
+    });
+  }
+  show("sec-result-card");
+}
+
+</script>
+</body>
+</html>
