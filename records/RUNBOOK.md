@@ -28,6 +28,8 @@ Claude 루틴(예약 실행)과 채팅 요청이 따르는 절차예요. 사람�
 
 `WORK` = 스크래치 폴더. `T` = `records/tools/engfit_records.py`.
 
+> **동기화는 묻지 않고 끝까지 진행한다** (선생님 지시, 10/19). 새 기록 넣기·검증·강점약점·리포트·백업 모두 확인 질문 없이 바로 하고, 끝난 뒤 보고만 한다.
+
 1. **도구 준비**: 저장소에 `records/tools/engfit_records.py`가 없으면
    `git fetch origin claude/student-learning-record-repo-5hhxm2 && git checkout FETCH_HEAD -- records/`
 2. **시트 읽기**: Drive `read_file_content(fileId=위 시트)`. 결과가 커서 파일로 저장되면 그 파일 경로를 그대로 쓴다 (`{fileContent: ...}` JSON도 도구가 읽을 수 있음) → `$WORK/sheet.txt`
