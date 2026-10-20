@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>곽서형 · 영핏 사진 클리닉 10/20</title>
+<meta property="og:title" content="곽서형 클리닉 · 10/20 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>곽서형 학생 클리닉 · 10/20 🌱</h1>
+    <p class="sub">10문항 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="곽서형" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "다음 중 밑줄 친 It이 <b>가주어<\/b>인 것을 고르세요.",
+  "choices": [
+   "<u>It<\/u> is foggy on the mountain this morning.",
+   "<u>It<\/u> is a quarter to nine now.",
+   "<u>It<\/u> is exciting to learn magic tricks.",
+   "<u>It<\/u> is my brother's new laptop."
+  ],
+  "answer": "<u>It<\/u> is exciting to learn magic tricks.",
+  "exp": "<b>가주어 It<\/b> 뒤에는 <b>to + 동사원형<\/b>(진주어)이 따라와요. 'to learn magic tricks'가 진짜 주어라서 It은 해석하지 않아요. 날씨(foggy)·시간(a quarter to nine)은 <b>비인칭 It<\/b>, my brother's new laptop은 앞의 물건을 가리키는 <b>대명사 It<\/b>이에요.",
+  "part": "Part 1 · It의 세 얼굴"
+ },
+ {
+  "q": "다음 중 밑줄 친 It의 쓰임이 <b>나머지 셋과 다른<\/b> 것을 고르세요.",
+  "choices": [
+   "<u>It<\/u> is Friday today.",
+   "<u>It<\/u> is dark in the tunnel.",
+   "<u>It<\/u> is my cousin's umbrella.",
+   "<u>It<\/u> is eight kilometers to the airport."
+  ],
+  "answer": "<u>It<\/u> is my cousin's umbrella.",
+  "exp": "요일(Friday)·밝기(dark)·거리(eight kilometers)는 모두 <b>비인칭 주어 It<\/b>(해석 ×)이에요. my cousin's umbrella는 앞에 나온 물건을 가리키는 <b>대명사 It(그것)<\/b>이라 혼자 달라요. 'to the airport'는 뒤에 <b>동사가 아니라 명사<\/b>가 와서 가주어가 아니에요!"
+ },
+ {
+  "q": "'그녀는 저녁 식사 전에 단 것을 먹지 않기로 결심했다.'를 바르게 영작한 것은?",
+  "choices": [
+   "She decided not to eat sweets before dinner.",
+   "She decided not eat sweets before dinner.",
+   "She decided to don't eat sweets before dinner.",
+   "She not decided to eat sweets before dinner."
+  ],
+  "answer": "She decided not to eat sweets before dinner.",
+  "exp": "to부정사의 부정은 <b>not to + 동사원형<\/b>이에요. not은 to 바로 앞에! 'not eat'처럼 to를 빼거나 'to don't'처럼 do를 쓰면 안 돼요. '결심했다(decided)'는 과거형이니 decide가 아니라 <b>decided<\/b>를 써요.",
+  "part": "Part 2 · not to 부정형"
+ },
+ {
+  "q": "그는 친구들에게 깜짝 파티에 대해 아무에게도 말하지 말라고 부탁했다. → He asked his friends ______ anyone about the surprise party.",
+  "choices": [
+   "not to tell",
+   "not tell",
+   "don't tell",
+   "not telling"
+  ],
+  "answer": "not to tell",
+  "exp": "ask / tell + 사람 + <b>not to + 동사원형<\/b> = '~하지 말라고 부탁(말)하다'. 'don't tell'은 직접 명령문 모양이라 간접적으로 전할 때는 쓸 수 없어요. not은 꼭 <b>to 앞<\/b>에!"
+ },
+ {
+  "q": "다음 문장과 같은 뜻이 되도록 바꾼 것을 고르세요.<div class='pass'>To repair a bicycle requires special tools.<\/div>",
+  "choices": [
+   "It requires special tools to repair a bicycle.",
+   "This requires special tools to repair a bicycle.",
+   "It is requires special tools to repair a bicycle.",
+   "It requires to repair a bicycle special tools."
+  ],
+  "answer": "It requires special tools to repair a bicycle.",
+  "exp": "긴 주어(To repair a bicycle)를 뒤로 보내고 자리에 <b>가주어 It<\/b>을 넣어요. 동사(requires)는 그대로 두고 <b>It requires ~ to V<\/b>가 돼요. This는 '이것'이라는 대명사라 뜻이 달라지고, 'It is requires'처럼 be동사를 또 넣으면 동사가 두 개가 돼요.",
+  "part": "Part 3 · 문장 바꾸기"
+ },
+ {
+  "q": "다음 중 <b>어법상 틀린<\/b> 문장을 고르세요.",
+  "choices": [
+   "It is natural to feel nervous before a test.",
+   "It is boring wait for the bus alone.",
+   "It takes two hours to go to the airport.",
+   "It was generous of him to share his lunch with me."
+  ],
+  "answer": "It is boring wait for the bus alone.",
+  "exp": "가주어 It 문장의 순서는 <b>It → is → 형용사 → to → 동사원형<\/b>이에요. ②는 <b>to<\/b>가 빠졌어요 → It is boring <b>to<\/b> wait for the bus alone. 나머지는 모두 올바른 문장이에요."
+ },
+ {
+  "q": "'폭우가 내린 뒤에 강에서 수영하는 것은 위험하다.' 우리말에 맞게 단어를 배열한 것은?<div class='pass'>(it / is / risky / to / swim / in the river / after / a heavy rain)<\/div>",
+  "choices": [
+   "It is risky to swim in the river after a heavy rain.",
+   "It is risky to swim after the river in a heavy rain.",
+   "It risky is to swim in the river after a heavy rain.",
+   "It is risky swim to in the river after a heavy rain."
+  ],
+  "answer": "It is risky to swim in the river after a heavy rain.",
+  "exp": "순서는 <b>It → is → 형용사 → to → 동사원형 → 나머지<\/b>! '폭우가 내린 뒤에'는 <b>after a heavy rain<\/b>처럼 덩어리째 뒤에 붙여요. 'a cold swimming day'처럼 단어를 낱개로 끼워 넣으면 뜻이 이상해져요.",
+  "part": "Part 4 · It + 배열 영작"
+ },
+ {
+  "q": "'눈 오는 아침에 학교까지 걸어가는 것은 힘들다.' 우리말에 맞게 단어를 배열한 것은?<div class='pass'>(it / is / hard / to / walk / to school / on / a snowy morning)<\/div>",
+  "choices": [
+   "It is hard to walk to school on a snowy morning.",
+   "It hard is to walk to school on a snowy morning.",
+   "It is to hard walk to school on a snowy morning.",
+   "It is hard to walk to a snowy school on morning."
+  ],
+  "answer": "It is hard to walk to school on a snowy morning.",
+  "exp": "<b>It is hard to walk<\/b>까지가 뼈대예요. to는 <b>형용사(hard) 뒤<\/b>에 와야 해요. '눈 오는 아침에'는 덩어리 <b>on a snowy morning<\/b>이고, 장소 <b>to school<\/b>이 먼저 나옵니다."
+ },
+ {
+  "q": "'이른 기차에서 빈 자리를 찾는 것은 쉽다.' 우리말에 맞게 단어를 배열한 것은?<div class='pass'>(it / is / easy / to / find / a seat / on / the early train)<\/div>",
+  "choices": [
+   "It is easy to find a seat on the early train.",
+   "It is easy find to a seat on the early train.",
+   "It easy is to find a seat on the early train.",
+   "It is easy to find the early train on a seat."
+  ],
+  "answer": "It is easy to find a seat on the early train.",
+  "exp": "가주어 문장은 <b>It is easy to find ~<\/b>의 틀이 고정이에요. to 다음엔 바로 <b>동사원형(find)<\/b>! 'find to'처럼 순서를 바꾸지 않도록 조심해요. 마지막 보기는 '기차를 자리 위에서 찾는다'는 뜻이 되어 우리말과 달라요."
+ },
+ {
+  "q": "'겨울에 따뜻한 물로 샤워하는 것은 기분이 좋다.' 우리말에 맞게 단어를 배열한 것은?<div class='pass'>(it / feels / good / to / take / a hot shower / in winter)<\/div>",
+  "choices": [
+   "It feels good to take a hot shower in winter.",
+   "It feels good take to a hot shower in winter.",
+   "This feels good to take a hot shower in winter.",
+   "It feels to good take a hot shower in winter."
+  ],
+  "answer": "It feels good to take a hot shower in winter.",
+  "exp": "be동사 대신 <b>feels<\/b>가 와도 틀은 같아요: <b>It + 동사 + 형용사 + to + 동사원형<\/b>. 가주어는 항상 <b>It<\/b>이고, to는 형용사 뒤에서 동사원형을 이끌어요. 'This'는 가주어 자리에 쓸 수 없어요."
+ }
+];
+
+var QUIZ_ID = "clinic-kwaksh-1020";
+var QUIZ_TITLE = "곽서형 사진 클리닉 10/20";
+var KEEP = false;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/20 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
