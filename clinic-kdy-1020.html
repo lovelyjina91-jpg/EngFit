@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>김대윤 · 영핏 사진 클리닉 10/20</title>
+<meta property="og:title" content="김대윤 클리닉 · 10/20 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>김대윤 학생 클리닉 · 10/20 🌱</h1>
+    <p class="sub">12문항 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="김대윤" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "다음 중 어법상 <b>알맞은<\/b> 문장을 고르세요.",
+  "choices": [
+   "We found a quiet cafe to study in.",
+   "She has no friends to talk.",
+   "He bought a small chair to sit.",
+   "They need a bigger house to live."
+  ],
+  "answer": "We found a quiet cafe to study in.",
+  "exp": "명사를 꾸미는 <b>형용사적 to부정사<\/b>에서, 꾸며지는 명사가 to-v 뒤 <b>전치사의 목적어<\/b>이면 전치사를 빼먹으면 안 돼요. a cafe to study <b>in<\/b>(카페 <b>안에서<\/b> 공부하다), friends to talk <b>to<\/b>, a chair to sit <b>on<\/b>, a house to live <b>in<\/b>처럼 전치사를 꼭 남겨야 해요.",
+  "part": "Part 1 · 형용사적 to부정사(명사 뒤 수식)"
+ },
+ {
+  "q": "다음 중 밑줄 친 to부정사가 <b>앞의 명사를 꾸미는<\/b> 형용사적 용법인 것을 고르세요.",
+  "choices": [
+   "She has a lot of homework <u>to finish<\/u> tonight.",
+   "Mina visited her aunt <u>to return<\/u> an umbrella.",
+   "I was glad <u>to hear<\/u> the good news.",
+   "My sister grew up <u>to be<\/u> a pilot."
+  ],
+  "answer": "She has a lot of homework <u>to finish<\/u> tonight.",
+  "exp": "homework <b>to finish<\/b>는 '끝내야 할 숙제'처럼 <b>명사 뒤에서 꾸미는<\/b> 형용사적 용법이에요. to borrow는 <b>목적<\/b>(~하기 위해), to hear는 감정의 <b>원인<\/b>(~해서), to be a pilot은 <b>결과<\/b>(자라서 ~가 되다)로, 모두 동사·형용사를 꾸미는 부사적 용법이에요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 것을 고르세요.<br>Look at the boy ______ the guitar on the stage.",
+  "choices": [
+   "playing",
+   "played",
+   "to be played",
+   "plays"
+  ],
+  "answer": "playing",
+  "exp": "명사(the boy)와 분사의 관계가 <b>능동<\/b>(소년이 연주한다)이면 <b>v-ing<\/b>를 써요. 이미 동사 look이 있으므로 또 다른 동사 plays를 쓸 수 없고, 분사가 꾸미는 형태가 되어야 해요.",
+  "part": "Part 2 · 분사의 명사 수식(v-ing / p.p.)"
+ },
+ {
+  "q": "다음 빈칸에 알맞은 것을 고르세요.<br>The window ______ by the storm last night must be repaired.",
+  "choices": [
+   "broken",
+   "breaking",
+   "broke",
+   "to break"
+  ],
+  "answer": "broken",
+  "exp": "창문은 폭풍에 의해 <b>깨진<\/b> 것이므로 <b>수동<\/b> 관계 → <b>과거분사(p.p.)<\/b>예요. 뒤에 by the storm(행위자)이 붙어 있다면 수동의 신호! broke는 동사 과거형이라 must be repaired와 한 문장에 동사가 두 번 들어가 틀려요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 것을 고르세요.<br>My little brother was ______ when he lost his new toy.",
+  "choices": [
+   "disappointed",
+   "disappointing",
+   "disappoint",
+   "disappointment"
+  ],
+  "answer": "disappointed",
+  "exp": "감정을 <b>느끼는<\/b> 사람이 주어이면 <b>p.p.(-ed)<\/b>, 감정을 <b>일으키는<\/b> 사람·사물이면 <b>v-ing<\/b>예요. 동생이 장난감을 잃어서 <b>실망한<\/b> 것이므로 disappointed가 알맞아요.",
+  "part": "Part 3 · 감정을 나타내는 분사"
+ },
+ {
+  "q": "다음 중 어법상 <b>알맞은<\/b> 문장을 고르세요.",
+  "choices": [
+   "It was an exhausting hike, so we felt exhausted.",
+   "The long speech was really bored.",
+   "The kids were frightening at the thunder.",
+   "She looked embarrassing when she forgot her lines.",
+   "The excited news made us jump."
+  ],
+  "answer": "It was an exhausting hike, so we felt exhausted.",
+  "exp": "<b>hike(하이킹)가 사람을 지치게 하므로 exhausting<\/b>, <b>우리가 지친 것이므로 exhausted<\/b>가 맞아요. speech는 지루하게 <b>하는<\/b> 쪽 → boring, 나는 놀란 <b>쪽<\/b> → surprised, 그녀는 당황한 쪽 → embarrassed, 소식이 신나게 <b>하는<\/b> 쪽 → exciting으로 고쳐야 해요."
+ },
+ {
+  "q": "다음 중 밑줄 친 to부정사의 쓰임이 <b>감정의 원인<\/b>(~해서)인 것을 고르세요.",
+  "choices": [
+   "Dad was proud <u>to watch<\/u> his daughter dance.",
+   "She saved money <u>to buy<\/u> a new bike.",
+   "He has a lot of work <u>to do<\/u>.",
+   "The boy grew up <u>to be<\/u> a doctor."
+  ],
+  "answer": "Dad was proud <u>to watch<\/u> his daughter dance.",
+  "exp": "happy, glad, sorry 같은 <b>감정 형용사 뒤의 to-v<\/b>는 감정의 <b>원인<\/b>(~해서)을 나타내요. to buy는 <b>목적<\/b>, to do는 명사를 꾸미는 <b>형용사적<\/b> 용법, to be a doctor는 <b>결과<\/b>예요.",
+  "part": "Part 4 · 부사적 to부정사(목적·감정의 원인)"
+ },
+ {
+  "q": "다음 빈칸에 알맞은 것을 고르세요.<br>She turned off her phone so as ______ disturbed during the class.",
+  "choices": [
+   "not to be",
+   "to be not",
+   "no to be",
+   "not be"
+  ],
+  "answer": "not to be",
+  "exp": "to부정사의 부정은 <b>not to-v<\/b>(to 바로 앞에 not)예요. so as not to ~ = <b>~하지 않기 위해서<\/b>. 'to be not'처럼 not을 뒤에 두거나 to를 빼면 틀려요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 것을 고르세요.<br>The detective ran to the station, only ______ that the last train had already left.",
+  "choices": [
+   "to find",
+   "find",
+   "finding",
+   "found"
+  ],
+  "answer": "to find",
+  "exp": "<b>only to-v<\/b>는 '(~했지만) 결국 …하게 되었다'는 <b>뜻밖의 결과<\/b>를 나타내요. 앞 행동 뒤에 일어난 일이라 ' , only to find'로 써요. 접속사가 없는데 finding·found를 쓰면 문장 구조가 맞지 않아요.",
+  "part": "Part 5 · 결과의 to부정사(only to / never to)"
+ },
+ {
+  "q": "다음 우리말과 같은 뜻이 되도록 빈칸에 알맞은 것을 고르세요.<br>그는 마침내 정상에 올랐지만, 다시는 가족을 보지 못했다.<br>→ The climber finally got to the peak, ______ his family again.",
+  "choices": [
+   "never to see",
+   "never see",
+   "never saw",
+   "never seen"
+  ],
+  "answer": "never to see",
+  "exp": "<b>never to-v<\/b>는 '(~했지만) 결국 <b>다시는 ~하지 못했다<\/b>'는 결과를 나타내요. 쉼표 뒤에서 별도의 동사(saw)를 쓰면 접속사 없이 동사가 두 개가 되어 틀려요."
+ },
+ {
+  "q": "다음 우리말과 같은 뜻이 되도록 주어진 어구를 알맞게 배열한 것을 고르세요.<br>학교 식당에서 제공되는 음식은 건강에 좋다.<br>(is, the food, in the cafeteria, served, good for health)",
+  "choices": [
+   "The food served in the cafeteria is good for health.",
+   "The food in the cafeteria served is good for health.",
+   "Served the food in the cafeteria is good for health.",
+   "The food is served in the cafeteria good for health."
+  ],
+  "answer": "The food served in the cafeteria is good for health.",
+  "exp": "'제공되는 음식'은 음식이 <b>제공되는<\/b> 것이므로 <b>수동<\/b> → <b>the food + served(p.p.) + in the cafeteria<\/b> 순서로 명사 뒤에서 꾸며요. 분사 하나만 있으면 앞에서, <b>수식어구(in the cafeteria)가 붙으면 뒤에서<\/b> 꾸민다는 점을 기억하세요.",
+  "part": "Part 6 · 조건 영작·수 일치"
+ },
+ {
+  "q": "다음 중 어법상 <b>알맞은<\/b> 문장을 고르세요.",
+  "choices": [
+   "The tickets sold at the gate cost twenty dollars each.",
+   "The books written by that author is popular among teens.",
+   "Guests joining the tour needs to bring an ID card.",
+   "A boy wearing red shoes are waiting outside.",
+   "The letter sent from my cousins were lost in the mail."
+  ],
+  "answer": "The tickets sold at the gate cost twenty dollars each.",
+  "exp": "<b>분사구(sold at the gate)는 꾸며 주는 말<\/b>일 뿐, 동사의 수는 <b>진짜 주어<\/b>(tickets)에 맞춰요. tickets가 복수라서 cost가 맞아요. 나머지는 books → <b>are<\/b>, Guests → <b>need<\/b>, A boy → <b>is<\/b>, The letter → <b>was<\/b>로 고쳐야 해요. 분사 바로 앞 단어(author, tour, shoes, cousins)에 속지 마세요."
+ }
+];
+
+var QUIZ_ID = "clinic-kdy-1020";
+var QUIZ_TITLE = "김대윤 사진 클리닉 10/20";
+var KEEP = false;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/20 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

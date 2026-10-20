@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>박지효 · 영핏 사진 클리닉 10/20</title>
+<meta property="og:title" content="박지효 클리닉 · 10/20 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>박지효 학생 클리닉 · 10/20 🌱</h1>
+    <p class="sub">12문항 · 이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="박지효" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "빈칸에 알맞은 단어는?<div class='pass'>A good referee must be ______ to both teams.<\/div>",
+  "choices": [
+   "fair",
+   "fare",
+   "far",
+   "amateur"
+  ],
+  "answer": "fair",
+  "exp": "'공정한'은 <b>fair<\/b>예요. 소리가 같은 <b>fare<\/b>(요금)와 헷갈리기 쉬워요! 심판(referee)은 두 팀에게 공정해야 하니까 fair가 정답이에요. far는 '먼', amateur는 '아마추어(비전문가)'예요.",
+  "part": "Part 1 · fair (공정한 / 박람회)"
+ },
+ {
+  "q": "빈칸에 알맞은 단어는?<div class='pass'>Our school will hold a science ______ next month, and many students will show their projects.<\/div>",
+  "choices": [
+   "fair",
+   "coach",
+   "champion",
+   "stadium"
+  ],
+  "answer": "fair",
+  "exp": "fair에는 '공정한' 말고도 <b>'박람회, 전시회'<\/b>라는 뜻이 있어요. science fair = 과학 박람회! 한 단어의 <b>두 가지 뜻<\/b>을 같이 외워 두세요."
+ },
+ {
+  "q": "빈칸에 알맞은 단어는?<div class='pass'>The runners are standing at the starting line of the ______.<\/div>",
+  "choices": [
+   "race",
+   "face",
+   "place",
+   "rice"
+  ],
+  "answer": "race",
+  "exp": "<b>race<\/b>는 '경주, 달리기 시합'이에요. <b>face(얼굴)<\/b>와 철자가 비슷해서 race를 face로 잘못 쓰는 실수가 많아요. r과 f를 구분해서 또박또박 써요!",
+  "part": "Part 2 · race (경주 / 인종)"
+ },
+ {
+  "q": "빈칸에 알맞은 단어는?<div class='pass'>Everyone in our country has equal rights, regardless of age, gender, or ______.<\/div>",
+  "choices": [
+   "race",
+   "face",
+   "team",
+   "gym"
+  ],
+  "answer": "race",
+  "exp": "race에는 '경주' 외에 <b>'인종'<\/b>이라는 뜻도 있어요. 나이·성별·<b>인종<\/b>에 관계없이 평등하다는 문장이에요. face(얼굴)로 쓰지 않도록 주의!"
+ },
+ {
+  "q": "빈칸에 알맞은 단어는?<div class='pass'>Our swimming ______ told us to warm up before getting into the pool.<\/div>",
+  "choices": [
+   "coach",
+   "regular",
+   "champion",
+   "stadium"
+  ],
+  "answer": "coach",
+  "exp": "선수들을 가르치고 이끄는 사람은 <b>coach(코치, 감독)<\/b>예요. <b>regular<\/b>는 '규칙적인, 정기적인'이라는 형용사라서 사람을 가리킬 수 없어요. champion은 '우승자', stadium은 '경기장'이에요.",
+  "part": "Part 3 · coach (코치 / 지도하다)"
+ },
+ {
+  "q": "빈칸에 알맞은 단어는?<div class='pass'>Mr. Park ______ the girls' volleyball team every Friday.<\/div>",
+  "choices": [
+   "coaches",
+   "wins",
+   "tosses",
+   "swims"
+  ],
+  "answer": "coaches",
+  "exp": "coach는 명사(코치)뿐 아니라 동사 <b>'지도하다, 가르치다'<\/b>로도 써요. 주어가 3인칭 단수(Mr. Park)이고 현재형이라 <b>coaches<\/b>가 돼요. wins(이기다)·tosses(던지다)·swims(수영하다)는 team을 목적어로 쓸 수 없어요."
+ },
+ {
+  "q": "다음 글의 목적으로 가장 적절한 것은?<div class='pass'>Dear Customer Service,<br>I ordered a desk lamp from your website two weeks ago, but it has not arrived yet. I called your office twice, and nobody answered the phone. I am very disappointed with your slow service. Please send my order as soon as possible or give me a refund.<br>Sincerely,<br>Mina Kim<\/div>",
+  "choices": [
+   "환불 규정을 문의하려고",
+   "주문 취소 방법을 알아보려고",
+   "주문한 물건의 배송 지연에 항의하려고",
+   "새 상품 출시를 홍보하려고",
+   "친절한 서비스에 감사하려고"
+  ],
+  "answer": "주문한 물건의 배송 지연에 항의하려고",
+  "exp": "글쓴이는 물건이 2주째 도착하지 않았고 전화도 안 받는다며 <b>I am very disappointed with ~(~에 실망했다)<\/b>라고 불만을 표현해요. 불만 표현(disappointed, dissatisfaction 등)이 나오면 <b>항의·불평이 목적<\/b>이에요. 환불(refund)은 요구 사항 중 하나일 뿐 '규정을 문의'하는 글은 아니에요. 단어 하나만 보고 고르지 말고 글 전체의 흐름을 보세요!",
+  "part": "Part 4 · 글의 목적 (항의·불만)"
+ },
+ {
+  "q": "다음 글의 목적으로 가장 적절한 것은?<div class='pass'>Dear Manager,<br>I visited your restaurant last Saturday with my family. The food was delicious, but the live band was so loud that we could not talk to each other. I also found that our table was not clean. I hope you will take these problems seriously and make some changes.<br>Sincerely,<br>Daniel Park<\/div>",
+  "choices": [
+   "식당 예약 시간을 변경하려고",
+   "음식 맛을 칭찬하려고",
+   "라이브 공연을 홍보하려고",
+   "식당 이용 중 불편한 점의 개선을 요구하려고",
+   "종업원 채용 일정을 문의하려고"
+  ],
+  "answer": "식당 이용 중 불편한 점의 개선을 요구하려고",
+  "exp": "앞부분에 칭찬(The food was delicious)이 나오지만 <b>but 뒤<\/b>가 진짜 하고 싶은 말이에요. 소음과 청결 문제를 말하고 마지막에 <b>I hope you will ~ make some changes<\/b>로 개선을 요구해요. 글의 목적은 보통 <b>but, 마지막 문장<\/b>에 나타나요."
+ },
+ {
+  "q": "다음 안내문의 내용과 일치하는 것은?<div class='pass'><b>Family Cooking Day<\/b><br>• Place: Greenfield Community Center<br>• Date: Saturday, May 10<br>• Time: 10:00 a.m. – 1:00 p.m.<br>• Please bring your own apron, but we also have aprons to borrow.<br>• Fee: $15 per person (ingredients are included, but drinks are not)<br>• The first 20 families get a free recipe book.<br>• Menu: pasta, salad, and fruit pudding<\/div>",
+  "choices": [
+   "행사는 이틀 동안 진행된다.",
+   "오후 늦게 시작한다.",
+   "앞치마를 빌릴 수 있다.",
+   "참가비에 재료비가 포함되지 않는다.",
+   "모든 가족에게 요리책을 무료로 준다."
+  ],
+  "answer": "앞치마를 빌릴 수 있다.",
+  "exp": "<b>we also have aprons to borrow<\/b> = 앞치마를 빌릴 수 있다 → ③이 정답이에요. ①은 Saturday, May 10 하루뿐, ②는 오전 10시 시작, ④는 ingredients are included(재료비 포함), ⑤는 <b>The first 20 families<\/b>(선착순 20가족)만이에요. 숫자·<b>all / only / first<\/b> 같은 표현을 꼭 확인하세요!",
+  "part": "Part 5 · 안내문 내용 일치"
+ },
+ {
+  "q": "다음 안내문의 내용과 <b>일치하지 않는 것<\/b>은?<div class='pass'><b>Night Sky Camp for Kids<\/b><br>• Place: Hillside Park (If it rains, we will move to the school gym.)<br>• Date: Friday, August 8 – Saturday, August 9 (one night)<br>• Who: Students in grades 4–6<br>• Fee: $30 per student (dinner and breakfast are included)<br>• Bring: a sleeping bag and a flashlight. Tents are provided.<br>• Sign up at the school office by August 1. Only 40 students can join.<\/div>",
+  "choices": [
+   "4~6학년 학생이 참가 대상이다.",
+   "비가 오면 학교 체육관으로 장소를 옮긴다.",
+   "참가비에 저녁과 아침 식사가 포함된다.",
+   "텐트는 각자 가져와야 한다.",
+   "최대 40명까지만 참가할 수 있다."
+  ],
+  "answer": "텐트는 각자 가져와야 한다.",
+  "exp": "<b>Tents are provided<\/b>(텐트는 제공된다)라서 ④가 틀린 설명이에요. 가져올 것은 sleeping bag과 flashlight뿐! '일치하지 <b>않는<\/b> 것'을 고르는 문제에서는 보기를 하나씩 <b>O/X<\/b>로 표시하며 풀면 실수가 줄어요."
+ },
+ {
+  "q": "다음 도표의 내용과 <b>일치하지 않는 것<\/b>은?<div class='pass'><table style='border-collapse:collapse;width:100%;text-align:center' border='1'><tr><th colspan='3'>Number of Visitors to Four Museums (thousands)<\/th><\/tr><tr><th><\/th><th>2023<\/th><th>2024<\/th><\/tr><tr><td>Museum A<\/td><td>40<\/td><td>32<\/td><\/tr><tr><td>Museum B<\/td><td>15<\/td><td>18<\/td><\/tr><tr><td>Museum C<\/td><td>30<\/td><td>33<\/td><\/tr><tr><td>Museum D<\/td><td>35<\/td><td>30<\/td><\/tr><\/table>The table above shows the number of visitors to four museums in 2023 and 2024.<\/div>",
+  "choices": [
+   "In 2023, Museum A had the most visitors of the four.",
+   "Museum B had the fewest visitors in both years.",
+   "In 2024, the number of visitors to Museum A was more than twice that of Museum B.",
+   "Museum C had more visitors in 2024 than in 2023.",
+   "Museum D lost 5 thousand visitors from 2023 to 2024."
+  ],
+  "answer": "In 2024, the number of visitors to Museum A was more than twice that of Museum B.",
+  "exp": "2024년 A는 32, B는 18이에요. 18의 두 배는 36이므로 32는 <b>more than twice<\/b>가 아니에요 → ③이 틀린 보기! 도표 문제는 <b>숫자를 직접 계산·비교<\/b>해서 '대략 맞겠지' 하고 넘어가지 않는 게 핵심이에요. most / fewest / twice / increase 같은 표현에 밑줄을 치세요.",
+  "part": "Part 6 · 도표 (일치하지 않는 것)"
+ },
+ {
+  "q": "다음 도표의 내용과 <b>일치하지 않는 것<\/b>은?<div class='pass'><table style='border-collapse:collapse;width:100%;text-align:center' border='1'><tr><th colspan='3'>Favorite After-School Activities of Middle School Students (%)<\/th><\/tr><tr><th><\/th><th>2022<\/th><th>2023<\/th><\/tr><tr><td>Sports<\/td><td>38<\/td><td>35<\/td><\/tr><tr><td>Music<\/td><td>20<\/td><td>25<\/td><\/tr><tr><td>Reading<\/td><td>15<\/td><td>15<\/td><\/tr><tr><td>Games<\/td><td>27<\/td><td>25<\/td><\/tr><\/table>The table above shows middle school students' favorite after-school activities in 2022 and 2023.<\/div>",
+  "choices": [
+   "Sports was the most popular activity in both years.",
+   "The percentage of students who liked music rose by 5 percentage points.",
+   "The percentage for reading stayed the same in both years.",
+   "In 2023, more students chose games than music.",
+   "In 2022, sports and games together made up 65 percent."
+  ],
+  "answer": "In 2023, more students chose games than music.",
+  "exp": "2023년 Games와 Music은 <b>둘 다 25%<\/b>로 같아요. 게임을 고른 학생이 <b>더 많다(more ~ than)<\/b>가 아니라 <b>the same<\/b>이에요 → ④가 틀린 보기! 마지막 ⑤는 38 + 27 = 65(%)로 맞아요. 숫자가 같은데 비교급으로 속이는 보기를 조심하세요."
+ }
+];
+
+var QUIZ_ID = "clinic-pjh-1020";
+var QUIZ_TITLE = "박지효 사진 클리닉 10/20";
+var KEEP = false;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")") + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/20 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
