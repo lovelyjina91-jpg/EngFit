@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>김하율 · 영핏 사진 클리닉 10/21</title>
+<meta property="og:title" content="김하율 클리닉 · 10/21 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.55; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 8px; }
+  .bar { height: 6px; background: #e2efec; border-radius: 4px; margin-bottom: 12px; overflow: hidden; } .bar > i { display: block; height: 100%; background: #2e7d6e; width: 0; }
+  .part { font-size: 0.85rem; font-weight: bold; color: #fff; background: #2e7d6e; border-radius: 8px; padding: 5px 10px; margin-bottom: 12px; display: inline-block; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; color: #2d3436; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .unknown { display: block; width: 100%; padding: 11px; margin-top: 4px; font-size: 0.95rem; background: #fff; border: 1.5px dashed #b8c4c2; border-radius: 10px; color: #667; cursor: pointer; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0 4px; }
+  .unk-line { text-align: center; font-size: 0.95rem; color: #667; margin-bottom: 6px; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 시작 화면 -->
+  <div class="card" id="start-card">
+    <h1>김하율 학생 클리닉 · 10/21</h1>
+    <p class="sub">능률VOCA Day12 어휘와 Unscramble(배열 영작) 16문제예요.<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!<br><b>이름 확인 후 시작하세요</b></p>
+    <input type="text" id="name-input" value="김하율" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <!-- 문제 화면 -->
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="unknown" id="unknown-btn">🤔 모름</button>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div class="unk-line" id="unk-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════ */
+var QUIZ_ID = "clinic-khy-1021";
+var QUIZ_TITLE = "김하율 사진 클리닉 10/21";
+var QUESTIONS = [
+ {
+  "q": "It is ______ to leave a dog alone in a hot car. (잔인한)",
+  "choices": [
+   "cruel",
+   "kind",
+   "polite",
+   "gentle"
+  ],
+  "answer": "cruel",
+  "exp": "<b>cruel<\/b>은 '잔인한'이에요. 반대말은 kind(친절한). 개를 뜨거운 차에 두는 건 친절한 일이 아니겠죠?",
+  "part": "Part 1 · 능률VOCA Day12"
+ },
+ {
+  "q": "After the coach's speech, the players felt ______ to win. (동기부여가 된)",
+  "choices": [
+   "motivated",
+   "tired",
+   "bored",
+   "confused"
+  ],
+  "answer": "motivated",
+  "exp": "<b>motivated<\/b> = 의욕이 생긴, 동기부여가 된. 선수들이 '이기려는 마음이 생겼다'는 뜻이에요."
+ },
+ {
+  "q": "The doctor is ______ on a patient in the next room. (수술하고 있다)",
+  "choices": [
+   "operating",
+   "operated",
+   "operation",
+   "operator"
+  ],
+  "answer": "operating",
+  "exp": "<b>operate<\/b>(수술하다)의 진행형: is + <b>operating<\/b>. operation은 명사(수술), operator는 사람(조작자)이에요."
+ },
+ {
+  "q": "That actor is ______ respected by young people. (매우 존경받는)",
+  "choices": [
+   "highly",
+   "high",
+   "higher",
+   "highness"
+  ],
+  "answer": "highly",
+  "exp": "<b>highly<\/b>는 '매우, 높이 평가하여'라는 부사예요. respected(형용사 역할)를 꾸며 줘요. high는 '높은' 형용사!"
+ },
+ {
+  "q": "Large cars ______ more fuel than small ones. (더 많은 연료를 소비한다)",
+  "choices": [
+   "consume",
+   "produce",
+   "collect",
+   "protect"
+  ],
+  "answer": "consume",
+  "exp": "<b>consume<\/b> = 소비하다, 먹다. 연료를 '쓰는' 것이라 consume. produce는 '만들어 내다'(반대 의미)!"
+ },
+ {
+  "q": "Cherry trees ______ in April in Korea. (꽃이 피다)",
+  "choices": [
+   "bloom",
+   "blow",
+   "bleed",
+   "block"
+  ],
+  "answer": "bloom",
+  "exp": "<b>bloom<\/b> = (꽃이) 피다. 비슷하게 생긴 blow(불다), block(막다)와 구별해요."
+ },
+ {
+  "q": "Bulguksa is ______ a famous temple in Gyeongju. (~로 알려져 있다)",
+  "choices": [
+   "known as",
+   "known for",
+   "known to",
+   "knowing as"
+  ],
+  "answer": "known as",
+  "exp": "<b>be known as ~<\/b> = ~로 알려져 있다(자격·이름). known for는 '~때문에 유명한'이라 뒤에 이유가 와요."
+ },
+ {
+  "q": "She helped me with math, so I bought her lunch ______. (답례로)",
+  "choices": [
+   "in return",
+   "in front",
+   "in time",
+   "in need"
+  ],
+  "answer": "in return",
+  "exp": "<b>in return<\/b> = 답례로, 보답으로. 도움을 받았으니 점심으로 보답한 거예요."
+ },
+ {
+  "q": "I didn't know the meaning, so I ______ the word online. (검색해서 찾아보았다)",
+  "choices": [
+   "looked up",
+   "looked after",
+   "looked like",
+   "looked out"
+  ],
+  "answer": "looked up",
+  "exp": "<b>look up<\/b> = (사전·인터넷에서) 찾아보다. look after(돌보다), look like(~처럼 보이다)와 구별!"
+ },
+ {
+  "q": "My school is not ______ my house. I can walk there. (집에서 멀지 않다)",
+  "choices": [
+   "far from",
+   "far of",
+   "far at",
+   "far to"
+  ],
+  "answer": "far from",
+  "exp": "<b>far from ~<\/b> = ~에서 멀리 떨어진. 뒤에 from을 써요."
+ },
+ {
+  "q": "우리말에 맞게 배열한 문장은? 우리는 가운데에 큰 나무가 있는 마당에서 축구를 한다.<br>(a big tree / we / in a yard / soccer / play / with / in the middle)",
+  "choices": [
+   "We play soccer in a yard with a big tree in the middle.",
+   "We play soccer with a big tree in a yard in the middle.",
+   "We play in a yard soccer with a big tree in the middle.",
+   "We in a yard play soccer in the middle with a big tree."
+  ],
+  "answer": "We play soccer in a yard with a big tree in the middle.",
+  "exp": "<b>장소(in a yard) + with + 명사 + 위치(in the middle)<\/b> 순서로 꾸며 줘요. 'with ~'는 바로 앞의 명사(yard)를 설명해요.",
+  "part": "Part 2 · Unscramble (배열 영작)"
+ },
+ {
+  "q": "우리말에 맞게 배열한 문장은? 그 학교에는 양쪽에 창문이 있는 긴 복도가 있다.<br>(has / a long hall / the school / windows / with / on both sides)",
+  "choices": [
+   "The school has a long hall with windows on both sides.",
+   "The school has windows a long hall with on both sides.",
+   "The school with a long hall has windows on both sides.",
+   "The school has a long hall on both sides with windows."
+  ],
+  "answer": "The school has a long hall with windows on both sides.",
+  "exp": "<b>a long hall<\/b>(명사) + <b>with windows<\/b>(함께 있는 것) + <b>on both sides<\/b>(위치). 전치사구를 명사 뒤에 차례로 붙여요."
+ },
+ {
+  "q": "우리말에 맞게 배열한 문장은? 나는 친구들과 함께 놀 시간이 필요하다.<br>(need / time / I / to play / with my friends)",
+  "choices": [
+   "I need time to play with my friends.",
+   "I need to play time with my friends.",
+   "I time need to play with my friends.",
+   "I need with my friends time to play."
+  ],
+  "answer": "I need time to play with my friends.",
+  "exp": "<b>명사(time) + to부정사(to play)<\/b>: '~할 시간'은 명사 뒤에 to부정사를 붙여요. 그 뒤에 with my friends!"
+ },
+ {
+  "q": "우리말에 맞게 배열한 문장은? 그녀는 금요일에 책을 빌리려고 도서관에 갔다.<br>(went / to borrow / the library / She / to / some books / on Friday)",
+  "choices": [
+   "She went to the library to borrow some books on Friday.",
+   "She went to borrow some books to the library on Friday.",
+   "She went on Friday to the library some books to borrow.",
+   "She to the library went to borrow on Friday some books."
+  ],
+  "answer": "She went to the library to borrow some books on Friday.",
+  "exp": "<b>went to the library<\/b>(어디에 갔다) + <b>to borrow ~<\/b>(~하려고, 목적) + <b>on Friday<\/b>(때). to부정사는 목적을 나타내요."
+ },
+ {
+  "q": "우리말에 맞게 배열한 문장은? 너는 나가서 놀기 위해 먼저 숙제를 끝내야 한다.<br>(must / finish / your homework / You / first / to go out and play)",
+  "choices": [
+   "You must finish your homework first to go out and play.",
+   "You must to finish your homework first to go out and play.",
+   "You finish must your homework first to go out and play.",
+   "You must finish first your homework play to go out and."
+  ],
+  "answer": "You must finish your homework first to go out and play.",
+  "exp": "<b>must + 동사원형<\/b>(must finish) 뒤에 <b>목적어(your homework)<\/b>, 그다음 first, 마지막에 목적을 나타내는 <b>to go out and play<\/b>.",
+  "part": "Part 3 · must ~ first to ~"
+ },
+ {
+  "q": "우리말에 맞게 배열한 문장은? 선수들은 경주에서 이기려면 먼저 빨간 선을 통과해야 한다.<br>(Runners / pass / must / the red line / first / to win / the race)",
+  "choices": [
+   "Runners must pass the red line first to win the race.",
+   "Runners must first the red line pass to win the race.",
+   "Runners pass must the red line first to win the race.",
+   "Runners must pass the red line to first win the race."
+  ],
+  "answer": "Runners must pass the red line first to win the race.",
+  "exp": "<b>주어 + must + 동사원형 + 목적어 + first + to win ~(~하기 위해)<\/b>. must 뒤에는 동사원형 pass가 바로 와요."
+ }
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var locked = false;
+
+function $(id) { return document.getElementById(id); }
+var nameInput = $("name-input");
+var startBtn = $("start-btn");
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) { nameInput.focus(); return; }
+  startTime = Date.now();
+  $("start-card").classList.add("hidden");
+  $("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  $("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  $("bar").style.width = (current / QUESTIONS.length * 100) + "%";
+  var pe = $("part");
+  if (q.part) { pe.textContent = q.part; pe.classList.remove("hidden"); } else { pe.classList.add("hidden"); }
+  $("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = $("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+function advance() {
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  advance();
+}
+
+$("unknown-btn").addEventListener("click", function () {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  wrongNumbers.push(current + 1);
+  unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: false, chosen: "모름", answer: q.answer, unknown: true });
+  advance();
+});
+
+function unkText() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  $("quiz-card").classList.add("hidden");
+  $("result-card").classList.remove("hidden");
+  $("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+  $("unk-line").textContent = unkText();
+
+  var expBox = $("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    var head = log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+$("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/21 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unkText();
+  navigator.clipboard.writeText(msg).then(function () {
+    $("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
