@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>최솔립 · 영핏 사진 클리닉 10/22</title>
+<meta property="og:title" content="최솔립 주말 클리닉 50문제 · 10/22 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unk { display:block; width:100%; margin-top:6px; padding:11px; font-size:.95rem; color:#7a5a00; background:#fff8e1; border:1.5px dashed #e0b84a; border-radius:10px; cursor:pointer; }
+  .unk:active { background:#ffefb8; }
+  .guide { font-size:.88rem; color:#5a6a68; background:#f3f8f7; border-radius:10px; padding:10px 12px; margin-top:12px; line-height:1.55; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>최솔립 학생 클리닉 · 10/22 🌱</h1>
+    <p class="sub">주말 숙제 50문제 · 나눠 풀어도 돼요<br>이름 확인 후 시작하세요</p>
+    <input type="text" id="name-input" value="최솔립" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <div class="guide">모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!<br>중간에 창을 닫아도 같은 기기에서 이어 풀 수 있어요.</div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="unk" id="unk-btn" type="button">🤔 모름</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="unknown-line" class="sub" style="text-align:center"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "part": "Part 1 · one / ones / it / them",
+  "q": "빈칸에 알맞은 말을 고르세요.<br>I don't have a pencil. Can you lend me ______?",
+  "choices": [
+   "one",
+   "it",
+   "ones",
+   "them"
+  ],
+  "answer": "one",
+  "exp": "앞에 나온 명사와 <b>같은 종류의 아무거나</b> 하나를 말할 때는 <b>one</b>이에요. 내 연필이 없으니 '어떤 연필이든 하나'를 빌리는 거죠. <b>it</b>은 앞에서 말한 바로 그 물건 자체를 가리켜요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>My phone is on the desk. Can you hand ______ to me?",
+  "choices": [
+   "it",
+   "one",
+   "ones",
+   "another"
+  ],
+  "answer": "it",
+  "exp": "책상 위에 있는 <b>바로 내 휴대폰</b>(특정한 그 물건)이므로 <b>it</b>이에요. one은 같은 종류의 '다른 아무거나'를 뜻해서 이 문장에는 맞지 않아요. 특정한 것 = it, 불특정한 것 = one!"
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장을 고르세요.",
+  "choices": [
+   "I want a sandwich. Can I have one?",
+   "I left my scarf at the bus stop, so I went back to get it.",
+   "I need a new notebook. I will buy it tomorrow.",
+   "These tomatoes are fresh. I'll take them."
+  ],
+  "answer": "I need a new notebook. I will buy it tomorrow.",
+  "exp": "아직 갖고 있지 않은 <b>새 공책(불특정)</b>을 살 거라면 it이 아니라 <b>one</b>(I will buy one)이에요. it은 이미 정해진 그 물건을 가리킬 때만 써요. 나머지 문장은 특정한 물건(scarf)이거나 복수(them)라서 맞아요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>I like these shoes, but I don't like those ______.",
+  "choices": [
+   "ones",
+   "one",
+   "it",
+   "them"
+  ],
+  "answer": "ones",
+  "exp": "앞에 나온 shoes가 <b>복수</b>이므로 대신 쓰는 말도 복수형 <b>ones</b>예요. one은 단수 명사 대신 써요. 'those ones'처럼 that/those 뒤에서는 it·them을 쓰지 않는 것도 기억하세요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Those lemons are too sour. I want sweeter ______.",
+  "choices": [
+   "ones",
+   "one",
+   "them",
+   "another"
+  ],
+  "answer": "ones",
+  "exp": "lemons(복수) 대신 쓰므로 <b>sweeter ones</b>(더 단 것들)이에요. <b>형용사 + ones</b>의 형태로 써요. 'sweeter them'처럼 형용사 뒤에 them을 붙일 수는 없어요."
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>미나의 장갑은 너무 얇아서, 미나는 가게에서 두꺼운 것들을 골랐다.",
+  "choices": [
+   "Mina's gloves were too thin, so she chose thick ones at the shop.",
+   "Mina's gloves were too thin, so she chose a thick one at the shop.",
+   "Mina's gloves were too thin, so she chose thick one at the shop.",
+   "Mina's gloves were too thin, so she chose thick them at the shop."
+  ],
+  "answer": "Mina's gloves were too thin, so she chose thick ones at the shop.",
+  "exp": "gloves가 복수라서 <b>thick ones</b>예요. 단수 one을 쓰거나 'thick them'처럼 쓰면 틀려요. <b>형용사 + ones</b> 짝을 기억하세요."
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>이 재킷은 너무 꽉 껴요. 큰 것을 보여 주세요.",
+  "choices": [
+   "This jacket is too tight. Show me a big one.",
+   "This jacket is too tight. Show me big one.",
+   "This jacket is too tight. Show me a big it.",
+   "This jacket is too tight. Show me a big ones."
+  ],
+  "answer": "This jacket is too tight. Show me a big one.",
+  "exp": "'큰 재킷 하나'이므로 <b>a + 형용사 + one</b>이에요. 형용사가 붙어도 <b>단수 명사 자리에는 a(n)이 필요</b>해요. 'big one'처럼 a를 빼먹는 실수가 잦아요. it은 형용사와 함께 쓸 수 없어요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장을 고르세요.",
+  "choices": [
+   "He broke his cup, so he bought a new one.",
+   "His jeans are torn, so he needs new ones.",
+   "The boys have red caps, and the girls have blue one.",
+   "I like this color, but I don't like that one."
+  ],
+  "answer": "The boys have red caps, and the girls have blue one.",
+  "exp": "앞에 나온 caps가 복수이므로 <b>blue ones</b>가 되어야 해요. 대신 받는 명사가 단수면 one, 복수면 ones! 이 문장처럼 앞 명사의 수를 확인하지 않으면 틀려요."
+ },
+ {
+  "q": "다음 중 밑줄 친 one의 쓰임이 나머지와 <b>다른</b> 것을 고르세요.",
+  "choices": [
+   "I lost my pen, so I bought a new <u>one</u>.",
+   "Do you have a spare <u>one</u>?",
+   "<u>One</u> should respect old people.",
+   "She likes the red <u>one</u>."
+  ],
+  "answer": "<u>One</u> should respect old people.",
+  "exp": "①②④의 one은 앞에 나온 명사를 대신하는 <b>대명사 one</b>(pen, 물건 등)이에요. ③의 One은 <b>'사람은, 누구나'</b>라는 <b>일반인</b>을 뜻해요. 같은 one이어도 쓰임이 두 가지!"
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>My boots are wet. I will dry ______ by the heater.",
+  "choices": [
+   "them",
+   "it",
+   "ones",
+   "one"
+  ],
+  "answer": "them",
+  "exp": "my boots(복수) 그 자체이므로 복수 대명사 <b>them</b>이에요. 특정한 복수는 them, 특정한 단수는 it, 불특정은 one/ones로 구분하세요."
+ },
+ {
+  "part": "Part 2 · another",
+  "q": "빈칸에 알맞은 말을 고르세요.<br>This movie is fun. Let's watch ______ episode tonight.",
+  "choices": [
+   "another",
+   "other",
+   "others",
+   "one"
+  ],
+  "answer": "another",
+  "exp": "'또 다른 한 편'이므로 <b>another + 단수 명사</b>예요. other는 앞에 the나 복수 명사가 와야 하고, others는 뒤에 명사를 못 붙여요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>I broke a plate, so I took ______ one from the shelf.",
+  "choices": [
+   "another",
+   "other",
+   "others",
+   "the others"
+  ],
+  "answer": "another",
+  "exp": "깨진 것과 <b>다른 하나</b>를 꺼냈으니 <b>another one</b>이에요. 'another = an + other'라서 단수 명사나 one 앞에 써요."
+ },
+ {
+  "q": "밑줄 친 부분을 바르게 고친 것을 고르세요.<br>I already ate an egg, but I want <u>other</u> egg.",
+  "choices": [
+   "another",
+   "others",
+   "the other",
+   "ones"
+  ],
+  "answer": "another",
+  "exp": "단수 명사 egg 앞에서 '또 하나의'를 뜻하려면 <b>another egg</b>이에요. <b>other 뒤에는 복수 명사</b>(other eggs)가 와야 하므로 단수와는 같이 쓰지 못해요."
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>우리는 또 다른 팀이 필요하다.",
+  "choices": [
+   "We need another team.",
+   "We need other team.",
+   "We need another teams.",
+   "We need the another team."
+  ],
+  "answer": "We need another team.",
+  "exp": "<b>another + 단수 명사</b>(another team)예요. another에는 이미 an이 들어 있어서 the나 a를 더 붙이지 않고, 뒤에 복수 -s도 붙이지 않아요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Are there any ______ questions about the school trip?",
+  "choices": [
+   "other",
+   "another",
+   "the other",
+   "others"
+  ],
+  "answer": "other",
+  "exp": "questions는 복수 명사이므로 <b>other + 복수 명사</b>예요. another는 단수 명사 앞에서만 써요. others는 혼자 쓰는 대명사라서 뒤에 명사가 올 수 없어요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장을 고르세요.",
+  "choices": [
+   "I have three apples. One is red, and another is green.",
+   "He doesn't like this bag. Please show him another.",
+   "Do you have another plans for tonight?",
+   "Let's meet another day."
+  ],
+  "answer": "Do you have another plans for tonight?",
+  "exp": "plans는 복수인데 another는 단수 명사 앞에만 쓰므로 틀렸어요. <b>other plans</b> 또는 <b>another plan</b>으로 고쳐요. 나머지 문장은 another의 쓰임이 올바라요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>We need ______ two days to finish the poster.",
+  "choices": [
+   "another",
+   "other",
+   "others",
+   "the other"
+  ],
+  "answer": "another",
+  "exp": "<b>another + 기간·수량(two days)</b>은 '또 ~만큼 더'라는 뜻으로 써요. 복수여도 하나의 덩어리로 보기 때문에 예외적으로 another를 쓸 수 있어요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>She didn't like the first song, so she asked the DJ to play ______.",
+  "choices": [
+   "another",
+   "other",
+   "the others",
+   "others"
+  ],
+  "answer": "another",
+  "exp": "앞에서 말한 노래와 다른 <b>또 하나</b>를 틀어 달라는 뜻이므로 <b>another</b>(= another one)예요. other는 뒤에 명사가 필요해서 혼자 쓰지 못해요."
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>이 펜은 잘 안 써져요. 다른 걸 주세요.",
+  "choices": [
+   "This pen doesn't write well. Please give me another.",
+   "This pen doesn't write well. Please give me other.",
+   "This pen doesn't write well. Please give me anothers.",
+   "This pen doesn't write well. Please give me others one."
+  ],
+  "answer": "This pen doesn't write well. Please give me another.",
+  "exp": "뒤에 명사 없이 '다른 하나'를 말할 때 <b>another</b>를 대명사로 써요. 'other'는 단독으로 못 쓰고, 'anothers'라는 형태도 없어요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>I like this scarf, but I want to see ______ one.",
+  "choices": [
+   "another",
+   "other",
+   "others",
+   "the others"
+  ],
+  "answer": "another",
+  "exp": "one(단수) 앞에는 <b>another one</b>이에요. 'the other one'처럼 the가 있을 때만 other를 쓸 수 있어요."
+ },
+ {
+  "part": "Part 3 · the other / others / the others",
+  "q": "빈칸에 알맞은 말을 고르세요.<br>I have two dogs. One is white, and ______ is black.",
+  "choices": [
+   "the other",
+   "another",
+   "others",
+   "other"
+  ],
+  "answer": "the other",
+  "exp": "<b>딱 둘</b> 중 하나를 말하고 나머지 하나는 <b>the other</b>예요. 둘뿐이니 '나머지'가 정해져 있어서 the를 붙여요. another는 셋 이상일 때 '또 다른 하나'예요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Some kids play soccer. ______ play baseball.",
+  "choices": [
+   "Others",
+   "The others",
+   "Another",
+   "The other"
+  ],
+  "answer": "Others",
+  "exp": "<b>Some ~, others ...</b>는 '어떤 사람들은 ~, 또 어떤 사람들은 ...'이에요. 전체의 일부만 말할 때(나머지 전부가 아닐 때)는 <b>others</b>를 써요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Five students left early. ______ stayed to clean the room.",
+  "choices": [
+   "The others",
+   "Others",
+   "Another",
+   "The other"
+  ],
+  "answer": "The others",
+  "exp": "일부가 떠나고 <b>남은 사람 모두</b>를 가리킬 때는 <b>the others</b>예요. 나머지 전부가 정해져 있으므로 the를 붙여요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Tom is holding a ball in one hand and a bottle in ______ hand.",
+  "choices": [
+   "the other",
+   "another",
+   "other",
+   "others"
+  ],
+  "answer": "the other",
+  "exp": "손은 <b>두 개</b>뿐이라 한쪽을 말하고 나머지는 <b>the other</b>예요. 'the other hand'처럼 단수 명사 앞에도 쓸 수 있어요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장을 고르세요.",
+  "choices": [
+   "I have two sisters. One is a nurse, and the other is a pilot.",
+   "Some people love spicy food. Others don't.",
+   "Three girls came. One was Amy, and the others were her friends.",
+   "I have two keys. One opens the door, and another opens the gate."
+  ],
+  "answer": "I have two keys. One opens the door, and another opens the gate.",
+  "exp": "열쇠가 <b>딱 두 개</b>이므로 나머지 하나는 <b>the other</b>가 되어야 해요. 둘뿐인데 another를 쓰면 틀려요. 셋 이상일 때만 'one, another, the other'로 이어져요."
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>어떤 학생들은 일찍 오고, 또 어떤 학생들은 늦게 온다.",
+  "choices": [
+   "Some students come early, and others come late.",
+   "Some students come early, and the other come late.",
+   "Some students come early, and another come late.",
+   "Some students come early, and other come late."
+  ],
+  "answer": "Some students come early, and others come late.",
+  "exp": "<b>Some ~, others ...</b> 구문이에요. others는 복수 대명사라서 동사도 복수(come)와 맞아요. another·the other는 단수라서 복수 주어 자리에 어울리지 않고, other는 혼자 쓰이지 못해요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>One should listen to ______ carefully.",
+  "choices": [
+   "others",
+   "another",
+   "the other",
+   "other"
+  ],
+  "answer": "others",
+  "exp": "'다른 사람들'을 막연하게 가리킬 때 <b>others</b>를 써요. 'other'는 뒤에 명사(other people)가 있어야 해서 혼자 쓰면 틀려요. 'listen to other'처럼 쓰는 실수를 조심하세요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>I have three pets: a cat, a dog, and a bird. The cat is gray. ______ are brown.",
+  "choices": [
+   "The others",
+   "Others",
+   "Another",
+   "The other"
+  ],
+  "answer": "The others",
+  "exp": "세 마리 중 고양이를 빼고 <b>나머지 둘 전부</b>를 말하므로 <b>the others</b>예요. 남은 것이 정해져 있을 때는 the others!"
+ },
+ {
+  "q": "다음 빈칸에 들어갈 수 <b>없는</b> 것을 고르세요.<br>She likes this color, but I like ______ colors.",
+  "choices": [
+   "another",
+   "other",
+   "some other",
+   "many other"
+  ],
+  "answer": "another",
+  "exp": "colors는 복수 명사인데 <b>another는 단수 명사 앞에만</b> 쓸 수 있어요. other·some other·many other는 모두 복수 명사 앞에 올 수 있어요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Two buses came. I took one, and my brother took ______.",
+  "choices": [
+   "the other",
+   "another",
+   "others",
+   "other"
+  ],
+  "answer": "the other",
+  "exp": "버스가 <b>딱 두 대</b>였으므로 하나는 내가, 나머지 하나는 <b>the other</b>예요. 뒤에 명사가 없으니 대명사로 쓰인 the other!"
+ },
+ {
+  "part": "Part 4 · 영작 종합 (one · a · the)",
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>나는 우산이 필요해. 너는 우산이 하나 있니?",
+  "choices": [
+   "I need an umbrella. Do you have one?",
+   "I need umbrella. Do you have one?",
+   "I need an umbrella. Do you have it?",
+   "I need an umbrella. Do you have ones?"
+  ],
+  "answer": "I need an umbrella. Do you have one?",
+  "exp": "첫 문장은 <b>an umbrella</b>(셀 수 있는 단수 명사 앞에 a/an), 둘째 문장은 불특정한 '하나'라서 <b>one</b>이에요. 'I need umbrella'처럼 관사를 빼먹거나 one 대신 it을 쓰면 틀려요."
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>내 시계가 멈췄어. 나는 새것을 하나 구해야 해.",
+  "choices": [
+   "My watch has stopped. I should get a new one.",
+   "My watch has stopped. I should get new one.",
+   "My watch has stopped. I should get a new it.",
+   "My watch has stopped. I should get a new ones."
+  ],
+  "answer": "My watch has stopped. I should get a new one.",
+  "exp": "<b>a + new + one</b>이에요. 새 시계는 아직 정해지지 않은 단수 물건이라 one을 쓰고, 앞에 a를 꼭 붙여요. 'new one'만 쓰면 a가 빠져서 틀려요."
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>그 두 시계 중 파란 것이 더 싸다.",
+  "choices": [
+   "The blue one is cheaper.",
+   "Blue one is cheaper.",
+   "The blue ones is cheaper.",
+   "The blue it is cheaper."
+  ],
+  "answer": "The blue one is cheaper.",
+  "exp": "두 시계 중 <b>특정한 하나</b>를 가리키므로 <b>the + 형용사 + one</b>이에요. 'Blue one is ...'처럼 the를 빼먹기 쉬워요. 특정한 것에는 the, 아무거나는 a!"
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>이 장난감들은 너무 비싸요. 더 싼 것들을 보여 주세요.",
+  "choices": [
+   "These toys are too expensive. Show me cheaper ones.",
+   "These toys are too expensive. Show me cheaper one.",
+   "These toys are too expensive. Show me cheaper them.",
+   "These toys are too expensive. Show me a cheaper ones."
+  ],
+  "answer": "These toys are too expensive. Show me cheaper ones.",
+  "exp": "toys는 복수이므로 <b>cheaper ones</b>예요. 복수 ones에는 a를 붙이지 않아요(a cheaper ones ✗)."
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>나는 오빠가 둘 있다. 한 명은 의사이고 다른 한 명은 선생님이다.",
+  "choices": [
+   "I have two brothers. One is a doctor, and the other is a teacher.",
+   "I have two brothers. One is a doctor, and another is a teacher.",
+   "I have two brothers. One is a doctor, and others are a teacher.",
+   "I have two brothers. One is a doctor, and other is a teacher."
+  ],
+  "answer": "I have two brothers. One is a doctor, and the other is a teacher.",
+  "exp": "오빠가 <b>딱 둘</b>이므로 나머지 한 명은 <b>the other</b>예요. 둘뿐일 때 another를 쓰는 것이 흔한 실수예요."
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>나는 우유를 한 잔 더 마시고 싶다.",
+  "choices": [
+   "I want to drink another glass of milk.",
+   "I want to drink another glasses of milk.",
+   "I want to drink other glass of milk.",
+   "I want to drink the another glass of milk."
+  ],
+  "answer": "I want to drink another glass of milk.",
+  "exp": "<b>another + 단수 명사</b>(another glass)예요. glasses처럼 복수를 쓰거나 other·the another로 쓰면 틀려요."
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>그는 빨간 스쿠터가 있고, 나는 낡은 것이 있다.",
+  "choices": [
+   "He has a red scooter, and I have an old one.",
+   "He has a red scooter, and I have old one.",
+   "He has a red scooter, and I have an old it.",
+   "He has a red scooter, and I have a old one."
+  ],
+  "answer": "He has a red scooter, and I have an old one.",
+  "exp": "<b>an old one</b>이에요. old는 모음 소리로 시작하니 a가 아니라 <b>an</b>이고, one 앞의 관사(a/an)를 빼면 안 돼요. 'a old one'은 an으로 고쳐야 해요."
+ },
+ {
+  "q": "밑줄 친 부분을 바르게 고친 것을 고르세요.<br>I forgot my raincoat, so I borrowed <u>it</u> from Jake.",
+  "choices": [
+   "one",
+   "ones",
+   "them",
+   "that"
+  ],
+  "answer": "one",
+  "exp": "내 우비는 두고 왔으니 제이크에게 빌린 것은 <b>같은 종류의 다른 우비</b>(불특정)예요. 그래서 it이 아니라 <b>one</b>이에요."
+ },
+ {
+  "q": "다음 중 어법상 <b>옳은</b> 문장을 고르세요.",
+  "choices": [
+   "I need a ruler. Can you lend me it?",
+   "Her shoes are old, so she wants new one.",
+   "Some are tall, and other are short.",
+   "I ate an orange, and I want another one.",
+   "I like the striped mug, but I don't like the dotted ones."
+  ],
+  "answer": "I ate an orange, and I want another one.",
+  "exp": "<b>another one</b>은 맞아요. ①불특정한 펜은 one, ②shoes가 복수라 new ones, ③some ~ <b>others</b>, ⑤mug이 단수라 the dotted one으로 써야 해요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장을 고르세요.",
+  "choices": [
+   "This kettle is leaking, so Dad will get a new one.",
+   "These kettles are leaking, so Dad will get new ones.",
+   "My kettle is leaking, so Dad will get a new ones.",
+   "I lost my kettle. I have to find it.",
+   "I need a kettle. Do you have one?"
+  ],
+  "answer": "My kettle is leaking, so Dad will get a new ones.",
+  "exp": "a가 붙었으니 단수 <b>one</b>(a new one)이 되어야 해요. 복수 ones에는 a를 붙이지 않아요. one/ones는 앞의 수에 맞추고, it은 특정한 물건일 때만 쓰는 게 정리 포인트!"
+ },
+ {
+  "part": "Part 5 · 일반인 one · this/it · 단어 복습",
+  "q": "빈칸에 알맞은 말을 고르세요.<br>______ should wash hands before meals. (사람은 식사 전에 손을 씻어야 한다)",
+  "choices": [
+   "One",
+   "It",
+   "Another",
+   "Ones"
+  ],
+  "answer": "One",
+  "exp": "'사람은, 누구나'라는 일반인을 말할 때 <b>One</b>이 주어가 돼요. 단수 취급해서 'One should ...'처럼 쓰고, Ones는 이 뜻으로 쓰지 않아요."
+ },
+ {
+  "q": "우리말에 맞게 영작한 문장을 고르세요.<br>사람은 자신의 실수에서 배워야 한다.",
+  "choices": [
+   "One should learn from one's mistakes.",
+   "One should learn from its mistakes.",
+   "Another should learn from one's mistakes.",
+   "Ones should learn from one's mistakes."
+  ],
+  "answer": "One should learn from one's mistakes.",
+  "exp": "일반인 <b>One</b>의 소유격은 <b>one's</b>예요. its는 사물에 쓰는 말이라 사람 일반에는 맞지 않아요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>(전화 통화) Hi, ______ is Dana. May I speak to Mr. Kim?",
+  "choices": [
+   "this",
+   "it",
+   "that",
+   "she"
+  ],
+  "answer": "this",
+  "exp": "전화로 <b>나를 소개</b>할 때는 <b>This is ~</b>예요. 상대를 확인할 때만 Is that ~?를 써요. It is ~는 전화에서 쓰지 않아요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Mina, ______ is my friend Hana. (소개할 때)",
+  "choices": [
+   "this",
+   "it",
+   "he",
+   "one"
+  ],
+  "answer": "this",
+  "exp": "가까이 있는 사람을 <b>소개</b>할 때는 <b>This is ~</b>예요. it은 사람을 소개할 때 쓰지 않아요. 최근에 'this'를 'it'으로 쓴 실수가 있었으니 꼭 구분해 두세요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Heavy fog ______ the plane from taking off.",
+  "choices": [
+   "prevented",
+   "provided",
+   "produced",
+   "protected"
+  ],
+  "answer": "prevented",
+  "exp": "<b>prevent A from -ing</b>는 'A가 ~하지 못하게 막다'예요. provide(제공하다)·produce(생산하다)·protect(보호하다)는 철자가 비슷해도 뜻이 달라요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>The loud noise prevented me ______ sleeping.",
+  "choices": [
+   "from",
+   "to",
+   "for",
+   "of"
+  ],
+  "answer": "from",
+  "exp": "<b>prevent A from + -ing</b> 짝으로 외워요. from 뒤에는 동명사(sleeping)가 와요. 'prevented me to sleep'처럼 to를 쓰면 틀려요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>She felt ______ when she forgot her lines on stage and everyone looked at her.",
+  "choices": [
+   "embarrassed",
+   "relieved",
+   "proud",
+   "curious"
+  ],
+  "answer": "embarrassed",
+  "exp": "무대에서 대사를 잊어 모두가 쳐다봤으니 <b>embarrassed(당황한, 창피한)</b>예요. relieved(안도한), proud(자랑스러운), curious(궁금한)와 구분하세요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>He was so ______ after he finally finished the hard exam.",
+  "choices": [
+   "relieved",
+   "jealous",
+   "furious",
+   "embarrassed"
+  ],
+  "answer": "relieved",
+  "exp": "어려운 시험을 끝내고 마음을 놓은 기분이므로 <b>relieved(안도한)</b>예요. jealous(질투하는), furious(몹시 화난)는 어울리지 않아요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>I felt ______ when my best friend won the prize and I didn't.",
+  "choices": [
+   "jealous",
+   "grateful",
+   "relaxed",
+   "relieved"
+  ],
+  "answer": "jealous",
+  "exp": "친구는 상을 받고 나는 못 받았을 때의 마음은 <b>jealous(질투하는)</b>예요. grateful(고마운)과 relaxed(느긋한)는 상황과 맞지 않아요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>My parents were ______ of me when I helped the lost child.",
+  "choices": [
+   "proud",
+   "afraid",
+   "bored",
+   "ashamed"
+  ],
+  "answer": "proud",
+  "exp": "길 잃은 아이를 도운 나를 보고 부모님은 <b>proud of(~을 자랑스러워하는)</b>해요. 'be proud of'를 덩어리로 외워 두세요."
+ }
+];
+
+var QUIZ_ID = "clinic-csl-1022";
+var QUIZ_TITLE = "최솔립 사진 클리닉 10/22 (주말 숙제 50문제)";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var unknownNumbers = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function pick(choice, mark) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === null;
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) {
+    unknownNumbers.push(current + 1);
+    answersLog.push({ no: current + 1, ok: false, chosen: "모름", answer: q.answer, unknown: true });
+  } else {
+    answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  }
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.getElementById("unk-btn").addEventListener("click", function () { pick(null, ""); });
+
+function unknownLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+  document.getElementById("unknown-line").textContent = unknownLine();
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 (정답: " + q.answer + ")" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/22 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
