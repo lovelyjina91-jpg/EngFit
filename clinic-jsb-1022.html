@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>장새봄 · 영핏 사진 클리닉 10/22</title>
+<meta property="og:title" content="장새봄 주말 클리닉 50문제 · 10/22 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.55; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .unknown { display: block; width: 100%; margin-top: 4px; padding: 11px 14px; font-size: 0.95rem; color: #7a6a2a; background: #fff8e1; border: 1.5px dashed #e0c860; border-radius: 10px; cursor: pointer; }
+  .unknown:active { background: #fdefb8; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  .unknown-line { text-align: center; font-size: 0.95rem; color: #7a6a2a; margin-bottom: 6px; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp.unk { border-left-color: #d4a017; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .exp.unk b { color: #9a7400; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>장새봄 학생 클리닉 · 10/22</h1>
+    <p class="sub">주말 숙제 50문제 · 나눠 풀어도 돼요<br>이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="장새봄" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="unknown" id="unknown-btn">🤔 모름</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div class="unknown-line" id="unknown-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "part": "Part 1 · be able to 기본 형태 (현재·과거·부정)",
+  "q": "'그 소년은 그 문제를 풀 수 없었다'를 바르게 영작한 것을 고르세요.",
+  "choices": [
+   "The boy wasn't able to solve the problem.",
+   "The boy not able to solve the problem.",
+   "The boy wasn't able solve the problem.",
+   "The boy isn't able to solved the problem."
+  ],
+  "answer": "The boy wasn't able to solve the problem.",
+  "exp": "과거의 '~할 수 없었다'는 <b>was/were + not able to + 동사원형<\/b>이에요. <b>to를 빼먹거나<\/b> <b>be동사를 빼먹으면<\/b> 틀려요. 주어가 The boy(단수)이므로 was를 써요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>My little brothers ______ able to open the jar yesterday, so I helped them.",
+  "choices": [
+   "were not",
+   "was not",
+   "is not",
+   "did not"
+  ],
+  "answer": "were not",
+  "exp": "yesterday는 과거, 주어 My little brothers는 <b>복수<\/b>라서 <b>were not able to<\/b>가 돼요. 단수용 was를 쓰는 실수(수일치)에 주의!"
+ },
+ {
+  "q": "다음 중 <b>어법상 틀린<\/b> 문장을 고르세요.",
+  "choices": [
+   "Our dog is able to open the gate.",
+   "The twins weren't able to find the key.",
+   "My aunt was able to bake a cake for us.",
+   "The farmers are able to finish the work early.",
+   "Ms. Park is able to speaks four languages."
+  ],
+  "answer": "Ms. Park is able to speaks four languages.",
+  "exp": "<b>be able to 뒤에는 동사원형<\/b>이 와요. 주어가 3인칭 단수여도 able to <b>speaks<\/b>가 아니라 <b>speak<\/b>이에요. -s는 be동사(is)가 이미 맡고 있어요."
+ },
+ {
+  "q": "'Dad can fix the old radio.'를 <b>be able to<\/b>로 바꿔 쓴 문장을 고르세요.",
+  "choices": [
+   "Dad is able to fix the old radio.",
+   "Dad is able fix the old radio.",
+   "Dad are able to fix the old radio.",
+   "Dad is able to fixes the old radio."
+  ],
+  "answer": "Dad is able to fix the old radio.",
+  "exp": "can = <b>am/is/are able to<\/b>. Dad는 3인칭 단수라 is, 그리고 to 뒤에는 동사원형 fix! 'is able fix'처럼 to를 빼면 틀려요."
+ },
+ {
+  "q": "'Tom couldn't catch the bus.'와 같은 뜻의 문장을 고르세요.",
+  "choices": [
+   "Tom wasn't able to catch the bus.",
+   "Tom isn't able to catch the bus.",
+   "Tom wasn't able catch the bus.",
+   "Tom didn't able to catch the bus.",
+   "Tom weren't able to catch the bus."
+  ],
+  "answer": "Tom wasn't able to catch the bus.",
+  "exp": "couldn't(과거 부정) = <b>wasn't/weren't able to<\/b>. 일반동사처럼 <b>didn't able<\/b>이라고 쓰면 안 돼요. able 앞에는 be동사가 와야 해요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Our grandparents ______ able to climb the hill now because it is too steep.",
+  "choices": [
+   "aren't",
+   "isn't",
+   "wasn't",
+   "doesn't"
+  ],
+  "answer": "aren't",
+  "exp": "now는 현재, 주어 Our grandparents는 복수이므로 <b>aren't able to<\/b>예요. isn't는 단수, wasn't는 과거, doesn't는 일반동사용이라 안 맞아요."
+ },
+ {
+  "q": "밑줄 친 부분을 바르게 고친 것을 고르세요.<br>Jenny was able to <u>ran<\/u> five kilometers last weekend.",
+  "choices": [
+   "ran → run",
+   "ran → runs",
+   "was → is",
+   "able → can"
+  ],
+  "answer": "ran → run",
+  "exp": "<b>to 뒤에는 동사원형<\/b>! 과거를 나타내는 건 was가 이미 하고 있으니 동사는 ran이 아니라 <b>run<\/b>이에요. (was able to <b>ran<\/b> ✕)"
+ },
+ {
+  "q": "단어를 바르게 배열한 문장을 고르세요.<br>(able / wasn't / to / Mia / hear / the bell)",
+  "choices": [
+   "Mia wasn't able to hear the bell.",
+   "Mia able wasn't to hear the bell.",
+   "Mia wasn't to able hear the bell.",
+   "Mia to wasn't able hear the bell."
+  ],
+  "answer": "Mia wasn't able to hear the bell.",
+  "exp": "순서는 <b>주어 + wasn't + able + to + 동사원형<\/b>이에요. 'able to'는 한 덩어리로 붙어 다닌다고 생각하세요."
+ },
+ {
+  "q": "다음 중 <b>어법상 올바른<\/b> 문장을 고르세요.",
+  "choices": [
+   "Dan doesn't able to swim.",
+   "Dan isn't able to swim.",
+   "Dan not is able to swim.",
+   "Dan isn't able swim.",
+   "Dan isn't able to swims."
+  ],
+  "answer": "Dan isn't able to swim.",
+  "exp": "be able to의 부정은 <b>be동사 + not<\/b>이에요. doesn't를 쓰면 안 되고, to와 동사원형(swim)도 꼭 필요해요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>The workers ______ finish the bridge last month.",
+  "choices": [
+   "were able to",
+   "was able to",
+   "are able to",
+   "will be able to"
+  ],
+  "answer": "were able to",
+  "exp": "last month는 과거, The workers는 복수 → <b>were able to<\/b>. '주어가 복수인데 was'를 쓰는 실수를 조심하세요."
+ },
+ {
+  "part": "Part 2 · 미래 표현 (will be able to · be going to)",
+  "q": "'우리는 내일 해변에 갈 수 있을 것이다'를 바르게 영작한 것을 고르세요.",
+  "choices": [
+   "We will be able to go to the beach tomorrow.",
+   "We will able to go to the beach tomorrow.",
+   "We will can go to the beach tomorrow.",
+   "We will be able go to the beach tomorrow.",
+   "We are able will to go to the beach tomorrow."
+  ],
+  "answer": "We will be able to go to the beach tomorrow.",
+  "exp": "미래의 '~할 수 있을 것이다'는 <b>will be able to + 동사원형<\/b>이에요. will 뒤에 can을 같이 쓸 수 없어서 can 대신 be able to를 쓰고, will 뒤 be동사는 <b>원형 be<\/b>예요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Next summer, my cousin ______ to drive a car.",
+  "choices": [
+   "will be able",
+   "will able",
+   "will can",
+   "was able"
+  ],
+  "answer": "will be able",
+  "exp": "will 뒤에는 동사원형이 와야 해서 <b>will be able to<\/b>예요. 'will able'처럼 be가 빠지면 틀려요."
+ },
+ {
+  "q": "다음 중 <b>어법상 틀린<\/b> 문장을 고르세요.",
+  "choices": [
+   "I will be able to see you soon.",
+   "She won't be able to join the trip.",
+   "They will be able to win the match.",
+   "He will can finish the report by Friday.",
+   "We won't be able to hear the speaker."
+  ],
+  "answer": "He will can finish the report by Friday.",
+  "exp": "<b>will can ✕<\/b> — 조동사 두 개는 나란히 쓸 수 없어요. 미래의 능력은 <b>will be able to<\/b>로 바꿔 써요. (He will be able to finish ~)"
+ },
+ {
+  "q": "'내 남동생은 내일 학교에 갈 수 없을 것이다'를 바르게 영작한 것을 고르세요.",
+  "choices": [
+   "My brother won't be able to go to school tomorrow.",
+   "My brother won't able to go to school tomorrow.",
+   "My brother will not be able go to school tomorrow.",
+   "My brother wasn't able to go to school tomorrow.",
+   "My brother won't be able to goes to school tomorrow."
+  ],
+  "answer": "My brother won't be able to go to school tomorrow.",
+  "exp": "미래 부정은 <b>won't be able to + 동사원형<\/b>이에요. be 빼먹기, to 빼먹기, 동사에 -s 붙이기, tomorrow인데 과거(wasn't)로 쓰기를 모두 피해야 해요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>I broke my wrist, so I ______ play tennis next week.",
+  "choices": [
+   "won't be able to",
+   "wasn't able to",
+   "can't to",
+   "didn't able to"
+  ],
+  "answer": "won't be able to",
+  "exp": "next week는 미래 → <b>won't be able to<\/b>. wasn't는 과거, 'can't to'는 can 뒤에 to를 붙인 오류, 'didn't able'은 be동사가 빠진 오류예요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Look at the dark sky! It ______ rain soon.",
+  "choices": [
+   "is going to",
+   "are going to",
+   "is going",
+   "going to",
+   "will to"
+  ],
+  "answer": "is going to",
+  "exp": "be going to는 <b>be동사 + going to + 동사원형<\/b>이에요. 주어 It은 단수라 is! 'is going rain'처럼 to를 빼거나 be동사를 빼도 틀려요."
+ },
+ {
+  "q": "다음 중 <b>어법상 틀린<\/b> 문장을 고르세요.",
+  "choices": [
+   "We are going to visit Busan.",
+   "She is going to buy a new bag.",
+   "They is going to open a shop.",
+   "I am going to study tonight.",
+   "Is he going to call you?"
+  ],
+  "answer": "They is going to open a shop.",
+  "exp": "주어 They는 복수이므로 <b>are going to<\/b>예요. be going to에서도 be동사는 주어에 맞게 am/is/are로 바꿔요."
+ },
+ {
+  "q": "'토요일에 날씨가 맑을 예정이니?'를 바르게 영작한 것을 고르세요.",
+  "choices": [
+   "Is it going to be sunny on Saturday?",
+   "Is it going to sunny on Saturday?",
+   "Is going it to be sunny on Saturday?",
+   "Does it going to be sunny on Saturday?",
+   "Is it go to be sunny on Saturday?"
+  ],
+  "answer": "Is it going to be sunny on Saturday?",
+  "exp": "형용사(sunny) 앞에는 꼭 <b>be<\/b>가 필요해요: going to <b>be<\/b> sunny. 의문문은 be동사를 주어 앞으로 보내서 <b>Is it going to ~?<\/b>가 돼요."
+ },
+ {
+  "q": "대화의 빈칸에 알맞은 말을 고르세요.<br>A: Will you be able to come to my party?<br>B: Yes, I ______.",
+  "choices": [
+   "will",
+   "am",
+   "do",
+   "was"
+  ],
+  "answer": "will",
+  "exp": "Will ~?로 물으면 <b>will<\/b>로 대답해요. (Yes, I will. / No, I won't.) be able to가 있어도 대답은 처음 나온 조동사 will을 따라가요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Last Friday, Ben (A) ______ come to the party because he was sick. But next Friday, he (B) ______ come.",
+  "choices": [
+   "(A) wasn't able to — (B) will be able to",
+   "(A) won't be able to — (B) wasn't able to",
+   "(A) isn't able to — (B) was able to",
+   "(A) will be able to — (B) wasn't able to",
+   "(A) wasn't able to — (B) was able to"
+  ],
+  "answer": "(A) wasn't able to — (B) will be able to",
+  "exp": "Last Friday는 과거 → <b>wasn't able to<\/b>, next Friday는 미래 → <b>will be able to<\/b>. 시간 표현(last / next)을 먼저 확인하면 시제가 보여요."
+ },
+ {
+  "part": "Part 3 · 의문문·대답·can의 의미",
+  "q": "대화의 빈칸에 알맞은 말을 고르세요.<br>A: Were you able to hear the announcement?<br>B: No, I ______.",
+  "choices": [
+   "wasn't",
+   "weren't",
+   "didn't",
+   "can't"
+  ],
+  "answer": "wasn't",
+  "exp": "Were you ~?의 대답은 <b>were/weren't<\/b>를 쓰는데, 대답하는 주어가 <b>I<\/b>이므로 <b>wasn't<\/b>예요. 질문에 나온 주어(you)가 아니라 대답하는 사람(I)을 보세요."
+ },
+ {
+  "q": "대화의 빈칸에 알맞은 말을 고르세요.<br>A: Is your sister able to drive?<br>B: Yes, she ______.",
+  "choices": [
+   "is",
+   "does",
+   "can able",
+   "was"
+  ],
+  "answer": "is",
+  "exp": "Is ~ able to ~?로 물으면 <b>be동사<\/b>로 대답해요: Yes, she <b>is<\/b>. does는 일반동사용이라 안 맞아요."
+ },
+ {
+  "q": "'Hana was able to ride a horse.'를 의문문으로 바르게 바꾼 것을 고르세요.",
+  "choices": [
+   "Was Hana able to ride a horse?",
+   "Did Hana able to ride a horse?",
+   "Was Hana able ride a horse?",
+   "Hana was able to ride a horse?",
+   "Is Hana able to ride a horse?"
+  ],
+  "answer": "Was Hana able to ride a horse?",
+  "exp": "be동사가 있는 문장은 <b>be동사를 주어 앞으로<\/b> 보내면 의문문이 돼요. did를 새로 넣으면 안 되고, 시제도 과거(Was) 그대로 유지해요."
+ },
+ {
+  "q": "다음 중 대화가 <b>어색한<\/b> 것을 고르세요.",
+  "choices": [
+   "A: Can you swim? — B: Yes, I can.",
+   "A: Were they able to win? — B: Yes, they were.",
+   "A: Will you be able to join us? — B: No, I won't.",
+   "A: Is Jack able to come? — B: No, he doesn't.",
+   "A: Was she able to find it? — B: No, she wasn't."
+  ],
+  "answer": "A: Is Jack able to come? — B: No, he doesn't.",
+  "exp": "Is ~ able to ~?는 <b>No, he isn't.<\/b>로 대답해야 해요. be동사 질문에 doesn't로 답하면 어색해요."
+ },
+ {
+  "q": "밑줄 친 can의 의미가 <b>나머지 넷과 다른<\/b> 것을 고르세요.",
+  "choices": [
+   "Whales <u>can<\/u> hold their breath for an hour.",
+   "My uncle <u>can<\/u> play the drums well.",
+   "Birds <u>can<\/u> find their way home.",
+   "You <u>can<\/u> use my pen if you need it.",
+   "Our robot <u>can<\/u> climb the stairs."
+  ],
+  "answer": "You <u>can<\/u> use my pen if you need it.",
+  "exp": "나머지는 모두 <b>능력(~할 수 있다)<\/b>이지만, 'You can use my pen'은 <b>허락(~해도 좋다)<\/b>이에요. 허락의 can은 be able to로 바꿀 수 없어요."
+ },
+ {
+  "q": "다음 중 can't가 <b>'~일 리가 없다'<\/b>라는 뜻인 것을 고르세요.",
+  "choices": [
+   "You can't park here.",
+   "I can't open this old lock.",
+   "He can't be a doctor; he is only twelve.",
+   "We can't swim in this lake.",
+   "She can't hear the radio."
+  ],
+  "answer": "He can't be a doctor; he is only twelve.",
+  "exp": "'can't be ~'는 <b>강한 추측(~일 리가 없다)<\/b>이에요. 나머지는 금지·불가능의 can't라서 wasn't/isn't able to로 바꿔 쓸 수 있지만, 이 문장은 바꿀 수 없어요."
+ },
+ {
+  "q": "다음 중 <b>어법상 틀린<\/b> 문장을 고르세요.",
+  "choices": [
+   "When I was young, I could run very fast.",
+   "Last night, I was able to finish all my homework.",
+   "She wasn't able to open the door yesterday.",
+   "Max could to swim when he was four.",
+   "They couldn't find the key."
+  ],
+  "answer": "Max could to swim when he was four.",
+  "exp": "<b>could 뒤에는 to 없이 동사원형<\/b>이 바로 와요. (could swim) to가 붙는 건 be able to일 때만이에요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Two years ago, Sora (A) ______ ride a bike. After lots of practice, she (B) ______ ride it fast now.",
+  "choices": [
+   "(A) couldn't — (B) is able to",
+   "(A) can't — (B) was able to",
+   "(A) wasn't able to — (B) couldn't",
+   "(A) can — (B) can't",
+   "(A) isn't able to — (B) will can"
+  ],
+  "answer": "(A) couldn't — (B) is able to",
+  "exp": "Two years ago는 과거 → <b>couldn't<\/b>, now는 현재 → <b>is able to<\/b>. 시간 표현을 먼저 찾으면 시제 실수를 막을 수 있어요."
+ },
+ {
+  "q": "'The kids can't carry the big box.'를 <b>be able to<\/b>를 써서 바꾼 문장을 고르세요.",
+  "choices": [
+   "The kids aren't able to carry the big box.",
+   "The kids isn't able to carry the big box.",
+   "The kids don't able to carry the big box.",
+   "The kids not able to carry the big box.",
+   "The kids aren't able to carrying the big box."
+  ],
+  "answer": "The kids aren't able to carry the big box.",
+  "exp": "can't = <b>be동사 + not able to<\/b>. The kids는 복수라서 <b>aren't<\/b>이고, to 뒤는 동사원형 carry예요."
+ },
+ {
+  "q": "다음 중 <b>어법상 올바른<\/b> 문장을 고르세요.",
+  "choices": [
+   "Were they able to saw the movie?",
+   "Is the teacher able to answer it?",
+   "Did Hojin able to run fast?",
+   "Will you can come with us?",
+   "Are you able to went there?"
+  ],
+  "answer": "Is the teacher able to answer it?",
+  "exp": "<b>Is + 주어 + able to + 동사원형 ~?<\/b>가 맞아요. 다른 문장은 saw/went(과거형), did able, will can처럼 형태가 어긋나 있어요."
+ },
+ {
+  "part": "Part 4 · 'Their job is to ~' 문장 + 꿀벌 단어·문장",
+  "q": "다음 중 <b>어법상 틀린<\/b> 문장을 고르세요.",
+  "choices": [
+   "Our goal is to win the cup.",
+   "His dream is to become a pilot.",
+   "Her job is to protect the garden.",
+   "Their mission is find the lost puppy.",
+   "My plan is to study abroad."
+  ],
+  "answer": "Their mission is find the lost puppy.",
+  "exp": "'~하는 것이다'라고 말할 때는 <b>is + to + 동사원형<\/b>이에요. is 뒤에 <b>to<\/b>가 빠지면 틀려요. (Their mission is <b>to<\/b> find ~)"
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>The queen's main job is ______ many eggs in the hive.",
+  "choices": [
+   "to lay",
+   "to lays",
+   "to laying",
+   "for lay"
+  ],
+  "answer": "to lay",
+  "exp": "'~하는 것이다'는 <b>be동사 + to + 동사원형<\/b>. 주어가 3인칭이어도 to 뒤에는 <b>lay<\/b>처럼 원형을 써요. (lay: 알을 낳다)"
+ },
+ {
+  "q": "단어를 바르게 배열한 문장을 고르세요.<br>(goal / finish / is / Their / to / the project early)",
+  "choices": [
+   "Their goal is to finish the project early.",
+   "Their goal to is finish the project early.",
+   "Their goal is finish to the project early.",
+   "Their is goal to finish the project early.",
+   "Their goal is to finishing the project early."
+  ],
+  "answer": "Their goal is to finish the project early.",
+  "exp": "<b>주어(Their goal) + is + to + 동사원형 ~<\/b> 순서예요. to와 동사원형은 붙어 있어야 하고, 동사는 -ing가 아니라 원형이에요."
+ },
+ {
+  "q": "'protect'의 뜻으로 알맞은 것을 고르세요.",
+  "choices": [
+   "보호하다",
+   "모으다",
+   "쫓아내다",
+   "낳다",
+   "거대한"
+  ],
+  "answer": "보호하다",
+  "exp": "<b>protect = 보호하다<\/b>. (collect 모으다 / kick out 쫓아내다 / lay 알을 낳다 / huge 거대한)"
+ },
+ {
+  "q": "'수벌'을 뜻하는 단어의 철자가 <b>맞는<\/b> 것을 고르세요.",
+  "choices": [
+   "drone",
+   "dron",
+   "droan",
+   "drown"
+  ],
+  "answer": "drone",
+  "exp": "수벌은 <b>drone<\/b>이에요. drown(익사하다)은 철자가 비슷한 다른 단어이니 헷갈리지 마세요."
+ },
+ {
+  "q": "빈칸에 알맞은 단어를 고르세요.<br>The worker bees ______ pollen from many flowers every day.",
+  "choices": [
+   "collect",
+   "protect",
+   "lay",
+   "kick"
+  ],
+  "answer": "collect",
+  "exp": "꽃가루를 <b>모으는<\/b> 것이므로 <b>collect<\/b>예요. (protect 보호하다 / lay 알을 낳다)"
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>A drone flies out to mate ______ a young queen.",
+  "choices": [
+   "with",
+   "to",
+   "at",
+   "on"
+  ],
+  "answer": "with",
+  "exp": "mate는 <b>mate with ~<\/b>(~와 짝짓기하다)로 써요. 우리말 '~와'에 맞는 전치사 with를 기억하세요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>The hive is small, ______ there are many bees inside it.",
+  "choices": [
+   "but",
+   "so",
+   "because",
+   "or"
+  ],
+  "answer": "but",
+  "exp": "앞은 '작다', 뒤는 '많다'로 <b>내용이 반대<\/b>이므로 <b>but<\/b>이에요. there are 뒤에 복수 명사(many bees)가 오는 것도 함께 확인해요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>The bees clean the cells. In this way, ______ home stays healthy.",
+  "choices": [
+   "their",
+   "they",
+   "them",
+   "theirs"
+  ],
+  "answer": "their",
+  "exp": "명사(home) 바로 앞에는 <b>소유격 their<\/b>가 와요. they는 주어 자리, them은 목적어 자리, theirs는 뒤에 명사가 없을 때 써요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>Workers collect nectar ______ the hive can make honey.",
+  "choices": [
+   "so",
+   "but",
+   "than",
+   "or"
+  ],
+  "answer": "so",
+  "exp": "'~하도록, ~할 수 있게'라는 목적은 <b>so (that) 주어 + can ~<\/b>으로 표현해요. 앞 문장이 이유, 뒤 문장이 목적이라서 so가 맞아요."
+ },
+ {
+  "part": "Part 5 · 비교급 · 철자 · 종합",
+  "q": "빈칸에 알맞은 말을 고르세요.<br>The harder you practice, ______ you get.",
+  "choices": [
+   "the better",
+   "better",
+   "the best",
+   "best than"
+  ],
+  "answer": "the better",
+  "exp": "<b>the + 비교급, the + 비교급<\/b> (~할수록 더 …하다) 구문이에요. 두 덩어리 모두 the가 꼭 있어야 해요. 'the best'는 최상급이라 안 맞아요."
+ },
+ {
+  "q": "다음 중 <b>어법상 틀린<\/b> 문장을 고르세요.",
+  "choices": [
+   "The darker it gets, the colder it feels.",
+   "The warmer the weather gets, the happier we become.",
+   "The more he studied, the more he learned.",
+   "The more it rains, the more muddy the road gets.",
+   "The older she got, the wiser she became."
+  ],
+  "answer": "The more it rains, the more muddy the road gets.",
+  "exp": "better는 이미 good의 비교급이라 <b>more를 또 붙이면 안 돼요<\/b>(이중 비교급). 정답은 the harder you try, <b>the better<\/b> you do예요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>The new game is much ______ than the old one.",
+  "choices": [
+   "more interesting",
+   "interesting",
+   "most interesting",
+   "more interestinger"
+  ],
+  "answer": "more interesting",
+  "exp": "긴 형용사(interesting)의 비교급은 <b>more + 형용사<\/b>예요. much는 비교급을 강조하는 말이라 비교급(more interesting) 앞에 놓여요."
+ },
+ {
+  "q": "다음 중 <b>어법상 틀린<\/b> 문장을 고르세요.",
+  "choices": [
+   "This puzzle is even harder than that one.",
+   "My bag is much heavier than yours.",
+   "Today is a lot warmer than yesterday.",
+   "Her room is very cleaner than mine.",
+   "The soup is far saltier than I expected."
+  ],
+  "answer": "Her room is very cleaner than mine.",
+  "exp": "비교급을 강조할 때는 <b>much, even, a lot, far, still<\/b>을 써요. <b>very는 비교급 강조에 쓸 수 없어요<\/b>. (very clean / much cleaner)"
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>The cheetah can run very ______.",
+  "choices": [
+   "fast",
+   "fastly",
+   "fasting",
+   "faster"
+  ],
+  "answer": "fast",
+  "exp": "fast는 <b>형용사와 부사가 같은 모양<\/b>이에요. 'fastly'라는 단어는 없어요! very가 앞에 있으니 비교급 faster도 안 돼요."
+ },
+ {
+  "q": "다음 중 <b>어법상 올바른<\/b> 문장을 고르세요.",
+  "choices": [
+   "She takes bus to the library.",
+   "She takes the bus to the library.",
+   "She takes the bus to library.",
+   "She take the bus to the library.",
+   "She takes the bus the library."
+  ],
+  "answer": "She takes the bus to the library.",
+  "exp": "교통수단 앞에는 보통 <b>the<\/b>를 붙여 <b>take the bus<\/b>라고 해요. 주어가 She라서 take → <b>takes<\/b>, 목적지 앞에는 <b>to the<\/b>가 필요해요."
+ },
+ {
+  "q": "빈칸에 알맞은 말을 고르세요.<br>There are three ______ on the shelf.",
+  "choices": [
+   "boxes",
+   "boxs",
+   "box",
+   "boxies"
+  ],
+  "answer": "boxes",
+  "exp": "three처럼 둘 이상이면 명사를 <b>복수형<\/b>으로 써요. x로 끝나는 단어는 <b>-es<\/b>를 붙여 boxes가 돼요."
+ },
+ {
+  "q": "'나눗셈, 분할'이라는 뜻의 단어를 철자가 <b>맞게<\/b> 쓴 것을 고르세요.",
+  "choices": [
+   "division",
+   "divition",
+   "divission",
+   "divizion",
+   "divisoin"
+  ],
+  "answer": "division",
+  "exp": "divide(나누다) → <b>division<\/b>. -ide로 끝나는 동사는 e를 빼고 <b>-ision<\/b>을 붙여요. (decide → decision, collide → collision)"
+ },
+ {
+  "q": "빈칸에 알맞은 단어를 고르세요.<br>Mina finished her ______ of the report last night.",
+  "choices": [
+   "revision",
+   "revission",
+   "revizion",
+   "revition"
+  ],
+  "answer": "revision",
+  "exp": "revise(고치다) → <b>revision<\/b>(수정). 동사에서 -se를 빼고 <b>-sion<\/b>을 붙인 모양이에요. 소리만 듣고 쓰면 tion/ssion으로 틀리기 쉬워요."
+ },
+ {
+  "q": "다음 글에서 <b>어법상 틀린<\/b> 부분을 고르세요.<br>Last winter, our heater <u>(A) wasn't working<\/u>. Dad <u>(B) was able to fix<\/u> it in the end. This year, he <u>(C) is going to buy<\/u> a new one, so we <u>(D) will be able to feel<\/u> warm. My little sister <u>(E) is able to wears<\/u> thick socks at home.",
+  "choices": [
+   "(A) wasn't working",
+   "(B) was able to fix",
+   "(C) is going to buy",
+   "(D) will be able to feel",
+   "(E) is able to wears"
+  ],
+  "answer": "(E) is able to wears",
+  "exp": "<b>be able to 뒤에는 동사원형<\/b>이라서 is able to <b>wear<\/b>가 맞아요. 나머지 (B) was able to fix, (C) is going to buy, (D) will be able to feel은 시제와 형태가 모두 맞아요."
+ }
+];
+
+var QUIZ_ID = "clinic-jsb-1022";
+var QUIZ_TITLE = "장새봄 사진 클리닉 10/22 (주말 숙제 50문제)";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, false); });
+    box.appendChild(b);
+  });
+}
+
+document.getElementById("unknown-btn").addEventListener("click", function () { pick("모름", true); });
+
+var locked = false;
+function pick(choice, isUnknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !isUnknown && choice === q.answer;
+  var entry;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (isUnknown) {
+    unknownNumbers.push(current + 1);
+    entry = { no: current + 1, ok: false, chosen: "모름", answer: q.answer, unknown: true };
+  } else {
+    entry = { no: current + 1, ok: ok, chosen: choice, answer: q.answer };
+  }
+  answersLog.push(entry);
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unknownText() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+  document.getElementById("unknown-line").textContent = unknownText();
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : (log.unknown ? " unk" : " wrong"));
+    var head = log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/22 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownText();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
