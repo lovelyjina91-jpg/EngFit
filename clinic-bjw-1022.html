@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>반정욱 · 영핏 사진 클리닉 10/22</title>
+<meta property="og:title" content="반정욱 클리닉 · 10/22 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unknown { display:block; width:100%; padding:11px; margin-top:4px; font-size:.95rem; background:#fff; border:1.5px dashed #b8c4c2; border-radius:10px; color:#667; cursor:pointer; }
+  .unk-line { text-align:center; font-size:.95rem; color:#667; margin-bottom:6px; }
+  .exp.idk { border-left-color:#d99a2b; background:#fffaf0; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>반정욱 학생 클리닉 · 10/22 🌱</h1>
+    <p class="sub">16문항 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="반정욱" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div class="unk-line" id="unk-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "part": "Part 1 · be made to + 동사원형 (사역동사 수동태)",
+  "q": "The boys ______ clean the gym by the coach.",
+  "choices": [
+   "were made to",
+   "were made",
+   "was made to",
+   "were make to"
+  ],
+  "answer": "were made to",
+  "exp": "능동 'The coach <b>made<\/b> the boys <b>clean<\/b>…'을 수동태로 바꾸면 <b>were made to clean<\/b>이에요. 능동에서는 to가 없던 동사원형 앞에 수동태에서는 <b>to를 되살려야<\/b> 해요. 'were made clean'처럼 to를 빼먹는 것이 정욱이가 자주 하는 실수! 주어(The boys)가 복수라 was가 아니라 were예요."
+ },
+ {
+  "q": "My sister was made ______ the dishes by Mom.",
+  "choices": [
+   "to wash",
+   "wash",
+   "washing",
+   "washed"
+  ],
+  "answer": "to wash",
+  "exp": "<b>be made + to + 동사원형<\/b>. 'was made wash'는 to가 빠져서 틀려요. 'Mom made my sister wash the dishes'를 수동태로 쓰면 <b>was made to wash<\/b>예요."
+ },
+ {
+  "q": "'Mr. Kim made us sweep the yard.'를 수동태로 바르게 바꾼 것은?",
+  "choices": [
+   "We were made to sweep the yard by Mr. Kim.",
+   "We were made sweep the yard by Mr. Kim.",
+   "We made to sweep the yard by Mr. Kim.",
+   "We were made sweeping the yard by Mr. Kim."
+  ],
+  "answer": "We were made to sweep the yard by Mr. Kim.",
+  "exp": "목적어 us는 수동태 주어가 되면서 <b>We<\/b>로 바뀌어요. 동사는 <b>were made to + 동사원형(sweep)<\/b>. 'We made to…'처럼 be동사를 빼먹거나 -ing를 붙이면 틀려요."
+ },
+ {
+  "q": "The sad speech made everyone cry. → Everyone ______ by the speech.",
+  "choices": [
+   "was made to cry",
+   "was made cry",
+   "were made to cry",
+   "was made to crying"
+  ],
+  "answer": "was made to cry",
+  "exp": "Everyone은 <b>단수 취급<\/b>이라 were가 아니라 <b>was<\/b>! 그리고 <b>to + 동사원형(cry)<\/b>이 필요해요. 'was made to crying'처럼 to 뒤에 -ing를 붙이는 것도 흔한 오답이에요."
+ },
+ {
+  "q": "다음 중 어법상 틀린 문장은?",
+  "choices": [
+   "The workers were made work late by the boss.",
+   "The girl was made to apologize to her friend.",
+   "My brother was made to wait outside by Mom.",
+   "The players were made to run ten laps by the coach."
+  ],
+  "answer": "The workers were made work late by the boss.",
+  "exp": "틀린 문장은 'were made <b>work<\/b>' — 수동태에서는 <b>were made to work<\/b>처럼 to를 꼭 넣어야 해요. 나머지 세 문장은 모두 <b>was/were made to + 동사원형<\/b>으로 맞아요."
+ },
+ {
+  "q": "Yesterday, the villagers ______ leave their homes because of the flood.",
+  "choices": [
+   "were made to",
+   "are made to",
+   "is made to",
+   "were made"
+  ],
+  "answer": "were made to",
+  "exp": "Yesterday(어제)가 있으니 <b>과거<\/b>수동태 were made to예요. 주어 villagers는 복수라 is가 아니고, to가 빠진 were made도 틀려요."
+ },
+ {
+  "part": "Part 2 · be seen / be heard + -ing 또는 to 동사원형 (지각동사 수동태)",
+  "q": "I saw Jane jogging in the park. → Jane was seen ______ in the park by me.",
+  "choices": [
+   "jogging",
+   "to jogging",
+   "jog to",
+   "jogged"
+  ],
+  "answer": "jogging",
+  "exp": "지각동사(see)의 수동태는 <b>be seen + -ing<\/b> 또는 <b>be seen + to 동사원형<\/b>이에요. 여기서는 <b>jogging<\/b>이 알맞아요. 'to jogging'처럼 to와 -ing를 같이 쓰면 틀려요(정욱이의 'to shopping' 실수와 같은 유형)!"
+ },
+ {
+  "q": "We saw the man enter the bank. → The man was seen ______ the bank by us.",
+  "choices": [
+   "to enter",
+   "enter",
+   "entered",
+   "to entering"
+  ],
+  "answer": "to enter",
+  "exp": "능동에서 <b>동사원형(enter)<\/b>이었던 자리는 수동태에서 <b>to enter<\/b>가 돼요. 'was seen enter'처럼 to를 빼면 틀려요. (-ing를 쓰고 싶으면 was seen entering)"
+ },
+ {
+  "q": "'그 소녀는 길을 건너는 것이 목격되었다.'에 맞는 영어 문장은?",
+  "choices": [
+   "The girl was seen crossing the street.",
+   "The girl was seen cross the street.",
+   "The girl saw crossing the street.",
+   "The girl was seen to crossing the street."
+  ],
+  "answer": "The girl was seen crossing the street.",
+  "exp": "'목격되었다' = <b>was seen<\/b>, 그 뒤에 <b>-ing<\/b>(crossing). 'The girl saw …'는 '그 소녀가 봤다'는 능동이라 뜻이 달라요. was seen 뒤에 원형(cross)만 쓰는 것도 틀려요."
+ },
+ {
+  "q": "We heard a girl play the cello. → A girl ______ the cello by us.",
+  "choices": [
+   "was heard to play",
+   "was heard play",
+   "heard to play",
+   "was heard played"
+  ],
+  "answer": "was heard to play",
+  "exp": "hear의 수동태도 <b>be heard + to 동사원형 / -ing<\/b>예요. 'was heard play'처럼 원형만 쓰면 안 돼요. be동사(was)를 빼고 'heard to play'라고 쓰는 것도 틀려요."
+ },
+ {
+  "q": "I heard the baby cry. → The baby was heard ______ by me.",
+  "choices": [
+   "crying",
+   "cry",
+   "cried",
+   "to cried"
+  ],
+  "answer": "crying",
+  "exp": "was heard 뒤에는 <b>-ing(crying)<\/b>나 <b>to cry<\/b>가 와요. 원형 cry만 쓰거나 과거형 cried를 쓰면 틀려요."
+ },
+ {
+  "q": "Someone was heard ______ outside the door last night.",
+  "choices": [
+   "to knock",
+   "knock",
+   "knocked",
+   "to knocking"
+  ],
+  "answer": "to knock",
+  "exp": "<b>be heard + to 동사원형<\/b>: was heard to knock. last night이라고 해서 knocked(과거형)를 쓰는 게 아니라, 시제는 was heard가 이미 나타내요. 뒤에는 <b>to + 동사원형<\/b>!"
+ },
+ {
+  "part": "Part 3 · be allowed to (let의 수동태)",
+  "q": "Our teacher lets us use tablets in class. → We ______ use tablets in class by our teacher.",
+  "choices": [
+   "are allowed to",
+   "are let to",
+   "are allowed",
+   "allow to"
+  ],
+  "answer": "are allowed to",
+  "exp": "let은 수동태를 만들 수 없어서 <b>be allowed to + 동사원형<\/b>으로 바꿔요. 'are let to'는 틀린 표현이고, to가 빠진 'are allowed'도 틀려요."
+ },
+ {
+  "q": "My dad lets me play games after homework. → I ______ play games after homework by my dad.",
+  "choices": [
+   "am allowed to",
+   "am let to",
+   "am let",
+   "was allowing to"
+  ],
+  "answer": "am allowed to",
+  "exp": "주어가 I라서 <b>am allowed to<\/b>. let → allowed로 바뀌고 to가 따라와요. 'allowing'(-ing)을 쓰면 '허락하는' 능동 느낌이 되어 틀려요."
+ },
+ {
+  "q": "Visitors ______ take photos inside the museum.",
+  "choices": [
+   "are allowed to",
+   "is allowed to",
+   "are allowed",
+   "are let to"
+  ],
+  "answer": "are allowed to",
+  "exp": "Visitors는 복수이므로 <b>are allowed to<\/b>! 'is'는 수일치 오답, 'are allowed'는 to 빠짐, 'are let to'는 let을 수동태로 쓴 오답이에요."
+ },
+ {
+  "q": "다음 중 어법상 틀린 문장은?",
+  "choices": [
+   "The guests were made to wait for an hour.",
+   "Ann was seen carrying a large box.",
+   "We are not allowed to bring pets here.",
+   "A strange noise was heard come from the attic."
+  ],
+  "answer": "A strange noise was heard come from the attic.",
+  "exp": "틀린 문장은 'was heard <b>come<\/b>' — 수동태에서는 <b>was heard coming<\/b> 또는 <b>was heard to come<\/b>이 되어야 해요. 나머지는 made to / seen + -ing / not allowed to로 모두 맞아요."
+ }
+];
+
+var QUIZ_ID = "clinic-bjw-1022";
+var QUIZ_TITLE = "반정욱 사진 클리닉 10/22";
+var KEEP = false;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+  var u = document.createElement("button");
+  u.className = "unknown"; u.id = "unknown-btn";
+  u.textContent = "🤔 모름";
+  u.addEventListener("click", function () { pick("모름", "", true); });
+  box.appendChild(u);
+}
+
+var locked = false;
+function pick(choice, mark, isUnknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !isUnknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (isUnknown) {
+    unknownNumbers.push(current + 1);
+    answersLog.push({ no: current + 1, ok: false, chosen: "모름", answer: q.answer, unknown: true });
+  } else {
+    answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  }
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unkLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+  document.getElementById("unk-line").textContent = unkLine();
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : (log.unknown ? " idk" : " wrong"));
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/22 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unkLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
