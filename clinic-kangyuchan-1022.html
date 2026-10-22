@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>강유찬 · 영핏 사진 클리닉 10/22</title>
+<meta property="og:title" content="강유찬 클리닉 · 10/22 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 1rem; background: #fff; color: #7a6a2f; border: 1.5px dashed #d9c77a; border-radius: 10px; cursor: pointer; }
+  .unk:active { background: #fbf3d0; }
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 시작 화면 -->
+  <div class="card" id="start-card">
+    <h1>강유찬 학생 클리닉 · 10/22 🌱</h1>
+    <p class="sub">12문항 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="강유찬" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <!-- 문제 화면 -->
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="unk" id="unk-btn">🤔 모름</button>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div class="sub" id="unk-line" style="text-align:center"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "We sang songs and wished everyone a <u>______<\/u> Christmas.",
+  "choices": [
+   "merry",
+   "marry",
+   "mary",
+   "merri"
+  ],
+  "answer": "merry",
+  "exp": "<b>merry<\/b>(즐거운)는 Merry Christmas에 쓰는 단어예요. marry(결혼하다)와 소리가 비슷해서 헷갈리기 쉬워요. 철자는 m-e-r-r-y!"
+ },
+ {
+  "q": "I help my mom with the household <u>______<\/u> every Sunday.",
+  "choices": [
+   "chores",
+   "chors",
+   "choirs",
+   "chorus"
+  ],
+  "answer": "chores",
+  "exp": "<b>chores<\/b>(집안일)는 c-h-o-r-e-s. 끝의 e를 빼먹기 쉬워요. choirs/chorus는 '합창'이라는 전혀 다른 뜻이에요."
+ },
+ {
+  "q": "The new game has a lot of exciting <u>______<\/u> scenes.",
+  "choices": [
+   "action",
+   "acsion",
+   "actoin",
+   "axion"
+  ],
+  "answer": "action",
+  "exp": "<b>action<\/b>(액션, 행동)은 act + ion 이에요. 소리로 들리는 대로 쓰면 'axion'처럼 틀리기 쉬워서 act부터 떠올리세요."
+ },
+ {
+  "q": "The <u>______<\/u> of our school play told us to speak loudly.",
+  "choices": [
+   "director",
+   "derector",
+   "directer",
+   "dairector"
+  ],
+  "answer": "director",
+  "exp": "<b>director<\/b>(감독)는 direct(지휘하다) + or 이에요. direct를 먼저 쓰고 끝에 -or를 붙이면 돼요."
+ },
+ {
+  "q": "Cooking and swimming are useful <u>______<\/u> for life.",
+  "choices": [
+   "skills",
+   "skill",
+   "skilles",
+   "scills"
+  ],
+  "answer": "skills",
+  "exp": "앞에 are가 있고 여러 가지(cooking, swimming)를 말하니 복수형 <b>skills<\/b>(기술)가 필요해요. 철자도 s-k-i-l-l-s, 첫 글자는 sk예요."
+ },
+ {
+  "q": "Please <u>______<\/u> the old messages from your phone.",
+  "choices": [
+   "delete",
+   "doctor",
+   "deliver",
+   "direct"
+  ],
+  "answer": "delete",
+  "exp": "<b>delete<\/b>(삭제하다)는 d-e-l-e-t-e. doctor(의사)와 철자가 비슷해 보여도 뜻이 전혀 달라요. 문장 속 뜻(메시지를 지우다)으로 판단하세요."
+ },
+ {
+  "q": "Let's <u>______<\/u> the prices of these two bags before we buy one.",
+  "choices": [
+   "compare",
+   "comper",
+   "compair",
+   "comare"
+  ],
+  "answer": "compare",
+  "exp": "<b>compare<\/b>(비교하다)는 com + pare. 끝이 -are로 끝나는 점에 주의하세요. 두 가지를 견주어 볼 때 써요."
+ },
+ {
+  "q": "<u>______<\/u>, I don't like this movie. It is too long.",
+  "choices": [
+   "Frankly",
+   "Franky",
+   "Frankley",
+   "Frankily"
+  ],
+  "answer": "Frankly",
+  "exp": "<b>frankly<\/b>(솔직히)는 frank(솔직한) + ly 예요. frank 끝의 k 뒤에 ly를 그대로 붙이면 돼요. '솔직히 말해서'라는 말을 꺼낼 때 써요."
+ },
+ {
+  "q": "The boy tried to <u>______<\/u> the heavy lid to close the box.",
+  "choices": [
+   "push down",
+   "pull up",
+   "pick up",
+   "put on"
+  ],
+  "answer": "push down",
+  "exp": "<b>push down<\/b>은 '아래로 눌러 내리다'예요. 뚜껑을 닫으려면 아래로 눌러야 하니까 push down! pull up(끌어올리다)은 반대 방향이에요."
+ },
+ {
+  "q": "Sora <u>______<\/u> the dark, so she sleeps with a small light.",
+  "choices": [
+   "is afraid of",
+   "is befraid of",
+   "afraid of",
+   "is afraid for"
+  ],
+  "answer": "is afraid of",
+  "exp": "<b>be afraid of<\/b>(~을 무서워하다)는 be동사 + afraid + of 세 덩어리예요. 'befraid'처럼 붙여 쓰지 않고, 주어 Sora에 맞게 <b>is<\/b>를 써야 해요. be동사가 빠진 'afraid of'는 문장이 안 돼요."
+ },
+ {
+  "q": "Minho is <u>______<\/u> the school radio club this year, so he leads the meetings.",
+  "choices": [
+   "in charge of",
+   "in change of",
+   "on charge of",
+   "in charge for"
+  ],
+  "answer": "in charge of",
+  "exp": "<b>be in charge of<\/b>(~을 맡고 있다)는 charge(책임)를 써요. change(변화)로 바꿔 쓰는 실수가 많아요. 전치사도 in ... of 짝을 기억하세요."
+ },
+ {
+  "q": "Jisu will wash the dishes after she <u>______<\/u> dinner tonight.",
+  "choices": [
+   "finishes",
+   "will finish",
+   "finished",
+   "is going to finish"
+  ],
+  "answer": "finishes",
+  "exp": "<b>시간 부사절(after/before/when)<\/b>에서는 미래의 일이라도 현재 시제를 써요. 주어가 she라서 finish에 -es를 붙인 <b>finishes<\/b>가 정답이에요. will을 넣고 싶어지는 게 흔한 함정이에요."
+ }
+];
+var QUIZ_ID = "clinic-kangyuchan-1022";
+var QUIZ_TITLE = "강유찬 사진 클리닉 10/22";
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var answersLog = [];
+var unknownNumbers = [];
+var startTime = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+document.getElementById("unk-btn").addEventListener("click", function () { pick("모름", "", true); });
+function pick(choice, mark, unknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) { unknownNumbers.push(current + 1); answersLog.push({ no: current + 1, ok: false, chosen: "모름", answer: q.answer, unknown: true }); }
+  else answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unkLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+  document.getElementById("unk-line").textContent = unkLine();
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "모름 (정답: " + q.answer + ")" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    unknown: unknownNumbers,
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[" + QUIZ_TITLE + " 결과]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unkLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
