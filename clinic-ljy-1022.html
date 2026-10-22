@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>이주연 · 영핏 사진 클리닉 10/22</title>
+<meta property="og:title" content="이주연 주말 클리닉 50문제 · 10/22 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.55; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .idk { display: block; width: 100%; text-align: center; padding: 11px 14px; margin-top: 6px; font-size: 0.95rem; color: #7a6a2e; background: #fff8e1; border: 1.5px dashed #e0c76a; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #ffefb8; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #unknown-line { text-align: center; font-size: 0.95rem; color: #7a6a2e; margin-bottom: 6px; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>이주연 학생 클리닉 · 10/22 🌱</h1>
+    <p class="sub">이름 확인 후 시작하세요<br>주말 숙제 50문제 · 나눠 풀어도 돼요 (같은 기기에서 이어 풀 수 있어요)<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="이주연" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="idk" id="idk-btn">🤔 모름</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="unknown-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "I want ______ a new bike for my birthday.",
+  "choices": [
+   "to get",
+   "get",
+   "getting",
+   "to getting"
+  ],
+  "answer": "to get",
+  "exp": "want 뒤에는 <b>to + 동사원형<\/b>이 와요. getting처럼 -ing를 붙이거나 to getting처럼 to 뒤에 -ing를 쓰면 안 돼요.",
+  "part": "Part 1 · to + 동사원형"
+ },
+ {
+  "q": "My brother decided ______ the guitar.",
+  "choices": [
+   "to learn",
+   "to learns",
+   "learning",
+   "learned"
+  ],
+  "answer": "to learn",
+  "exp": "decide는 <b>to + 동사원형<\/b>을 써요. 주어가 3인칭 단수(My brother)여도 <b>to 뒤 동사는 -s 없이 원형<\/b>이에요. to learns ✕."
+ },
+ {
+  "q": "We hope ______ the museum next week.",
+  "choices": [
+   "to visit",
+   "to visited",
+   "visits",
+   "to visiting"
+  ],
+  "answer": "to visit",
+  "exp": "hope 뒤에도 <b>to + 동사원형<\/b>! to 뒤에는 과거형(visited)이나 -ing도 올 수 없어요."
+ },
+ {
+  "q": "Ben needs ______ his room before dinner.",
+  "choices": [
+   "to clean",
+   "to cleans",
+   "to cleaned",
+   "to cleaning"
+  ],
+  "answer": "to clean",
+  "exp": "need + <b>to + 동사원형<\/b>. to 뒤에 -s, -ed, -ing를 붙이지 않아요."
+ },
+ {
+  "q": "다음 중 어법상 올바른 문장은?",
+  "choices": [
+   "Mina wants to drink some water.",
+   "Mina wants to drinks some water.",
+   "Mina wants drink some water.",
+   "Mina want to drink some water."
+  ],
+  "answer": "Mina wants to drink some water.",
+  "exp": "Mina가 3인칭 단수라서 <b>want에 -s<\/b>(wants)를 붙이고, 뒤의 <b>to drink는 원형<\/b>으로 써요. 둘을 거꾸로 하면 틀려요."
+ },
+ {
+  "q": "다음 중 어법상 틀린 문장은?",
+  "choices": [
+   "Jisu planned to go to the beach.",
+   "We learned to swim last summer.",
+   "My dad tried to fix the old radio.",
+   "I hope to meets him at the station."
+  ],
+  "answer": "I hope to meets him at the station.",
+  "exp": "<b>to meets<\/b>가 틀렸어요. to 뒤에는 항상 동사원형(<b>to meet<\/b>)!"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>'나는 오늘 밤 영화를 보고 싶다.'",
+  "choices": [
+   "I want to watch a movie tonight.",
+   "I want watch a movie tonight.",
+   "I want to watching a movie tonight.",
+   "I wants to watch a movie tonight."
+  ],
+  "answer": "I want to watch a movie tonight.",
+  "exp": "주어가 I라서 want에는 -s가 없고, <b>want to watch<\/b>(to + 동사원형)가 맞아요."
+ },
+ {
+  "q": "They plan ______ a picnic on Sunday.",
+  "choices": [
+   "to have",
+   "to has",
+   "having",
+   "to had"
+  ],
+  "answer": "to have",
+  "exp": "plan to + 동사원형. have의 3인칭 형태 has도, 과거형 had도 to 뒤에는 쓰지 않아요."
+ },
+ {
+  "q": "Sam wants to ______ a pilot.",
+  "choices": [
+   "be",
+   "is",
+   "being",
+   "been"
+  ],
+  "answer": "be",
+  "exp": "to 뒤에는 동사원형이 오니까 <b>to be<\/b>예요. 'to is'나 'to being'은 쓰지 않아요. (be finish처럼 be 뒤에 동사를 또 붙이는 것도 조심!)"
+ },
+ {
+  "q": "Minho decided ______ the party early.",
+  "choices": [
+   "to leave",
+   "to left",
+   "to leaves",
+   "leaving"
+  ],
+  "answer": "to leave",
+  "exp": "leave의 과거형은 left지만, <b>to 뒤에는 과거형을 쓰지 않아요<\/b>. to left ✕ → <b>to leave<\/b>."
+ },
+ {
+  "q": "______ is pleasant to see snow in October.",
+  "choices": [
+   "It",
+   "They",
+   "There",
+   "He"
+  ],
+  "answer": "It",
+  "exp": "<b>It is + 형용사 + to + 동사원형<\/b>에서 문장 맨 앞의 It은 '가주어'예요. 진짜 주어는 뒤의 to see snow(눈을 보는 것)이고, 해석은 안 해요.",
+  "part": "Part 2 · 가주어 It ... to"
+ },
+ {
+  "q": "It is easy ______ a paper airplane.",
+  "choices": [
+   "to make",
+   "make",
+   "to makes",
+   "made"
+  ],
+  "answer": "to make",
+  "exp": "가주어 It 문장에서 진짜 주어는 <b>to + 동사원형<\/b>이에요. 'It is easy to make ~' = 종이비행기를 만드는 것은 쉽다."
+ },
+ {
+  "q": "다음 중 가주어 It이 쓰인 문장은?",
+  "choices": [
+   "It is important to drink water every day.",
+   "It is cloudy and windy today.",
+   "It is my brother's blue hat.",
+   "I found it under the sofa."
+  ],
+  "answer": "It is important to drink water every day.",
+  "exp": "뒤에 <b>to drink water<\/b>(진짜 주어)가 있는 첫 문장이 가주어 It이에요. 날씨의 It(비인칭 주어), '그것'을 뜻하는 It/it과 구분해요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>'매일 아침 일찍 일어나는 것은 어렵다.'",
+  "choices": [
+   "It is hard to get up early every morning.",
+   "Is hard to get up early every morning.",
+   "It is hard to gets up early every morning.",
+   "It hard is to get up early every morning."
+  ],
+  "answer": "It is hard to get up early every morning.",
+  "exp": "빈칸마다 <b>It부터<\/b> 써야 해요. 'Is hard ~'처럼 It을 빼먹거나 어순을 바꾸면 틀려요. to 뒤는 원형(get up)!"
+ },
+ {
+  "q": "It is difficult ______ children to sit still for an hour.",
+  "choices": [
+   "for",
+   "of",
+   "to",
+   "by"
+  ],
+  "answer": "for",
+  "exp": "to부정사의 행동을 하는 사람(의미상 주어)은 <b>for + 사람<\/b>으로 나타내요. 'It is difficult for children to ~' = 아이들이 ~하는 것은 어렵다."
+ },
+ {
+  "q": "다음 중 어법상 틀린 문장은?",
+  "choices": [
+   "It is good to eat breakfast.",
+   "It is boring to wait in a long line.",
+   "Is exciting to travel by train.",
+   "It is useful to learn a second language."
+  ],
+  "answer": "Is exciting to travel by train.",
+  "exp": "<b>Is exciting ~<\/b>은 문장 맨 앞에 가주어 <b>It<\/b>이 빠졌어요. 'It is exciting to travel by train.'이 맞아요."
+ },
+ {
+  "q": "It is risky ______ that old tree.",
+  "choices": [
+   "to climb",
+   "climb",
+   "to climbs",
+   "climbed"
+  ],
+  "answer": "to climb",
+  "exp": "가주어 It 뒤의 진짜 주어는 <b>to + 동사원형<\/b>(to climb)이에요. 'to climbs', 'climbed'는 안 돼요."
+ },
+ {
+  "q": "다음 중 어법상 올바른 문장은?",
+  "choices": [
+   "It is nice to have lunch with my grandparents.",
+   "It is nice have lunch with my grandparents.",
+   "It nice is to have lunch with my grandparents.",
+   "Is nice to have lunch with my grandparents."
+  ],
+  "answer": "It is nice to have lunch with my grandparents.",
+  "exp": "<b>It is + 형용사 + to + 동사원형<\/b> 순서를 지켜야 해요. to가 빠지거나(have lunch) It이 빠지면 틀려요."
+ },
+ {
+  "q": "다음 중 바르게 쓴 문장은?",
+  "choices": [
+   "It is safe to ride a bike with a helmet.",
+   "It is to safe ride a bike with a helmet.",
+   "To is safe it ride a bike with a helmet.",
+   "It safe is to ride a bike with a helmet.",
+   "it is safe to ride a bike with a helmet."
+  ],
+  "answer": "It is safe to ride a bike with a helmet.",
+  "exp": "어순은 <b>It is safe to ride ~<\/b>! 그리고 <b>문장의 첫 글자는 대문자<\/b>로 써야 해서 소문자 it으로 시작한 문장도 틀려요."
+ },
+ {
+  "q": "'It is interesting to watch birds in the park.'의 알맞은 해석은?",
+  "choices": [
+   "공원에서 새를 관찰하는 것은 흥미롭다.",
+   "그것은 공원에서 새를 흥미롭게 본다.",
+   "공원의 새들은 그것을 보는 것이 흥미롭다.",
+   "나는 공원에서 새를 보면 흥미롭다고 말한다."
+  ],
+  "answer": "공원에서 새를 관찰하는 것은 흥미롭다.",
+  "exp": "가주어 It은 해석하지 않고, <b>to watch birds = 새를 관찰하는 것<\/b>이 진짜 주어예요."
+ },
+ {
+  "q": "My mom told me ______ late.",
+  "choices": [
+   "not to be",
+   "to be not",
+   "be not to",
+   "not be to"
+  ],
+  "answer": "not to be",
+  "exp": "to부정사의 부정은 <b>not to + 동사원형<\/b>이에요. <b>not은 to 바로 앞<\/b>에 와요.",
+  "part": "Part 3 · not to (부정형)"
+ },
+ {
+  "q": "Please try ______ the window.",
+  "choices": [
+   "not to break",
+   "to break not",
+   "not break",
+   "don't to break"
+  ],
+  "answer": "not to break",
+  "exp": "'~하지 않으려고 하다'는 <b>try not to + 동사원형<\/b>. 'don't to ~'처럼 do 동사를 쓰지 않아요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>'나는 학교에 늦지 않으려고 노력했다.'",
+  "choices": [
+   "I tried not to be late for school.",
+   "I tried to be not late for school.",
+   "I tried not be late for school.",
+   "I not tried to be late for school."
+  ],
+  "answer": "I tried not to be late for school.",
+  "exp": "부정형은 <b>not to be<\/b>! to를 빼면(not be) 틀리고, not을 be 뒤로 보내도 틀려요."
+ },
+ {
+  "q": "The teacher told us ______ in the hallway.",
+  "choices": [
+   "not to run",
+   "not running",
+   "not to ran",
+   "to run not"
+  ],
+  "answer": "not to run",
+  "exp": "'told us not to + 동사원형' = ~하지 말라고 말했다. not to 뒤에는 원형(run)이에요."
+ },
+ {
+  "q": "다음 문장을 '~하지 않기로 결정했다'로 바르게 바꾼 것은?<br>Mina decided to eat snacks before bed.",
+  "choices": [
+   "Mina decided not to eat snacks before bed.",
+   "Mina decided to eat not snacks before bed.",
+   "Mina didn't decided to eat snacks before bed.",
+   "Mina decided to eat snacks before bed not."
+  ],
+  "answer": "Mina decided not to eat snacks before bed.",
+  "exp": "부정문으로 바꿀 때 <b>not을 빠뜨리지 마세요<\/b>. 위치는 to 바로 앞: <b>decided not to eat<\/b>."
+ },
+ {
+  "q": "다음 중 어법상 틀린 문장은?",
+  "choices": [
+   "He promised not to tell the secret.",
+   "We agreed not to use phones in class.",
+   "She asked me not to open the box.",
+   "The doctor asked him not to eating too many sweets."
+  ],
+  "answer": "The doctor asked him not to eating too many sweets.",
+  "exp": "<b>not to eating<\/b>이 틀렸어요. not to 뒤에도 동사원형: <b>not to eat<\/b>."
+ },
+ {
+  "q": "Jiho was careful ______ the glass.",
+  "choices": [
+   "not to drop",
+   "to drop not",
+   "not drop",
+   "no to drop"
+  ],
+  "answer": "not to drop",
+  "exp": "'조심해서 ~하지 않다' = be careful <b>not to + 동사원형<\/b>. no는 쓰지 않고 not을 써요."
+ },
+ {
+  "q": "I hope not to ______ the bus.",
+  "choices": [
+   "miss",
+   "missing",
+   "to miss",
+   "misses"
+  ],
+  "answer": "miss",
+  "exp": "not to 뒤에는 동사원형(<b>miss<\/b>)이에요. 'not to to miss'처럼 to를 또 쓰지 않아요."
+ },
+ {
+  "q": "She tells her little brother ______ the cat's tail.",
+  "choices": [
+   "not to pull",
+   "not to pulls",
+   "not pull",
+   "to pull not"
+  ],
+  "answer": "not to pull",
+  "exp": "주어가 She라서 tells에는 -s가 붙지만, <b>not to 뒤 동사는 원형(pull)<\/b>이에요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>'그는 시험에서 실수하지 않기를 바란다.'",
+  "choices": [
+   "He hopes not to make mistakes on the test.",
+   "He hopes to make not mistakes on the test.",
+   "He hope not to make mistakes on the test.",
+   "He hopes not make mistakes on the test."
+  ],
+  "answer": "He hopes not to make mistakes on the test.",
+  "exp": "주어 He → <b>hopes<\/b>(-s). 그리고 <b>not to make<\/b>(to를 빼먹지 않기). 둘 다 지켜야 해요."
+ },
+ {
+  "q": "I went to the store ______ some milk.",
+  "choices": [
+   "to buy",
+   "buy",
+   "to buys",
+   "bought"
+  ],
+  "answer": "to buy",
+  "exp": "'~하기 위해서'(목적)는 <b>to + 동사원형<\/b>으로 나타내요. 우유를 사기 위해 가게에 갔다.",
+  "part": "Part 4 · to부정사의 쓰임"
+ },
+ {
+  "q": "She got up early ______ the first bus.",
+  "choices": [
+   "to catch",
+   "catching",
+   "catches",
+   "caught"
+  ],
+  "answer": "to catch",
+  "exp": "목적을 나타내는 to부정사예요. <b>to catch<\/b> = 첫 버스를 타기 위해."
+ },
+ {
+  "q": "I was glad ______ my old friend at the mall.",
+  "choices": [
+   "to see",
+   "see",
+   "sees",
+   "to sees"
+  ],
+  "answer": "to see",
+  "exp": "기쁜(glad) 이유를 나타내는 <b>to + 동사원형<\/b>이에요. 'to see my old friend' = 옛 친구를 봐서."
+ },
+ {
+  "q": "We have a lot of homework ______ today.",
+  "choices": [
+   "to do",
+   "do",
+   "to does",
+   "did"
+  ],
+  "answer": "to do",
+  "exp": "명사 뒤에서 '~할'이라는 뜻으로 꾸미는 to부정사예요. <b>homework to do<\/b> = 해야 할 숙제."
+ },
+ {
+  "q": "Mom gave me something ______.",
+  "choices": [
+   "to drink",
+   "drink",
+   "drinks",
+   "to drinking"
+  ],
+  "answer": "to drink",
+  "exp": "<b>something to drink<\/b> = 마실 것. 꾸며 주는 to부정사도 뒤는 동사원형이에요."
+ },
+ {
+  "q": "다음 밑줄 친 to부정사의 쓰임이 나머지와 다른 것은?",
+  "choices": [
+   "I stopped by the bank <u>to get<\/u> some cash.",
+   "He studies hard <u>to pass<\/u> the exam.",
+   "She went out <u>to walk<\/u> her dog.",
+   "We were surprised <u>to hear<\/u> the news."
+  ],
+  "answer": "We were surprised <u>to hear<\/u> the news.",
+  "exp": "나머지는 모두 '~하기 위해'(목적)이고, <b>surprised to hear<\/b>는 놀란 이유(감정의 원인)를 나타내요."
+ },
+ {
+  "q": "My goal this year is ______ ten books.",
+  "choices": [
+   "to read",
+   "read",
+   "reads",
+   "to reads"
+  ],
+  "answer": "to read",
+  "exp": "'My goal is <b>to + 동사원형<\/b>' = 내 목표는 ~하는 것이다. 이때 to부정사는 보어(명사 역할)예요."
+ },
+ {
+  "q": "To ______ a diary every day takes time.",
+  "choices": [
+   "keep",
+   "keeps",
+   "keeping",
+   "kept"
+  ],
+  "answer": "keep",
+  "exp": "문장 맨 앞의 <b>To + 동사원형<\/b>은 '~하는 것'이라는 주어 역할이에요. to 뒤라서 원형(keep)!"
+ },
+ {
+  "q": "다음 중 어법상 틀린 문장은?",
+  "choices": [
+   "She was sad to hear the bad news.",
+   "I use this app to learn English words.",
+   "We need some chairs to sits on.",
+   "He saved money to buy a new phone."
+  ],
+  "answer": "We need some chairs to sits on.",
+  "exp": "<b>to sits<\/b>가 틀렸어요. <b>chairs to sit on<\/b>(앉을 의자)처럼 to 뒤는 동사원형이에요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>'나는 사진을 찍기 위해 공원에 갔다.'",
+  "choices": [
+   "I went to the park to take pictures.",
+   "I went to the park take pictures.",
+   "I went to the park to takes pictures.",
+   "I went to the park to taking pictures."
+  ],
+  "answer": "I went to the park to take pictures.",
+  "exp": "목적(~하기 위해)은 <b>to + 동사원형<\/b>. to를 빼거나 takes/taking으로 바꾸면 틀려요."
+ },
+ {
+  "q": "My sister ______ to join the dance club.",
+  "choices": [
+   "wants",
+   "want",
+   "wanting",
+   "to want"
+  ],
+  "answer": "wants",
+  "exp": "주어가 My sister(3인칭 단수)니까 <b>wants<\/b>! 뒤의 to join은 원형 그대로예요. (want -s + to 원형)",
+  "part": "Part 5 · 종합 + 3인칭 -s 복습"
+ },
+ {
+  "q": "Jimin always ______ to help her neighbors.",
+  "choices": [
+   "tries",
+   "try",
+   "trys",
+   "trying"
+  ],
+  "answer": "tries",
+  "exp": "try는 <b>y를 i로 고치고 -es<\/b>를 붙여 tries가 돼요. (study → studies와 같은 규칙)"
+ },
+ {
+  "q": "My grandfather ______ to take a walk after lunch.",
+  "choices": [
+   "likes",
+   "like",
+   "liking",
+   "is like"
+  ],
+  "answer": "likes",
+  "exp": "일반동사 문장에는 be동사(is)를 같이 쓰지 않아요. 3인칭 단수 → <b>likes + to 동사원형<\/b>."
+ },
+ {
+  "q": "Does your brother want ______ with us?",
+  "choices": [
+   "to come",
+   "comes",
+   "coming",
+   "to comes"
+  ],
+  "answer": "to come",
+  "exp": "Does가 이미 -s를 담당해서 뒤 동사는 원형이에요. want 뒤에는 <b>to come<\/b>(to + 동사원형)!"
+ },
+ {
+  "q": "Tom doesn't like ______ up early.",
+  "choices": [
+   "to get",
+   "gets",
+   "to gets",
+   "got"
+  ],
+  "answer": "to get",
+  "exp": "doesn't 뒤에는 동사원형 like가 오고, like 뒤에는 <b>to + 동사원형<\/b>(to get)을 써요."
+ },
+ {
+  "q": "다음 중 어법상 올바른 문장은?",
+  "choices": [
+   "Tina studies English to talk with her pen pal.",
+   "Tina studys English to talk with her pen pal.",
+   "Tina studies English to talks with her pen pal.",
+   "Tina is study English to talk with her pen pal."
+  ],
+  "answer": "Tina studies English to talk with her pen pal.",
+  "exp": "study는 3인칭 단수에서 <b>studies<\/b>, 목적의 to 뒤는 원형(talk). 'is study'처럼 be동사와 일반동사를 같이 쓰지 않아요."
+ },
+ {
+  "q": "다음 중 문장을 바르게 쓴 것은?",
+  "choices": [
+   "It is not easy to speak in front of many people.",
+   "it is not easy to speak in front of many people.",
+   "It is not easy to speaks in front of many people.",
+   "It is not easy speak in front of many people."
+  ],
+  "answer": "It is not easy to speak in front of many people.",
+  "exp": "첫 글자는 <b>대문자 It<\/b>, 그리고 <b>to + 동사원형<\/b>(to speak)이에요. 소문자 시작, to speaks, to 빠짐은 모두 오답!"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>'그녀는 아침을 거르지 않으려고 노력한다.'",
+  "choices": [
+   "She tries not to skip breakfast.",
+   "She try not to skip breakfast.",
+   "She tries to not skipping breakfast.",
+   "She is tries not to skip breakfast."
+  ],
+  "answer": "She tries not to skip breakfast.",
+  "exp": "주어 She → <b>tries<\/b>, 부정형 → <b>not to skip<\/b>. is tries처럼 be동사를 끼워 넣지 않아요."
+ },
+ {
+  "q": "Mom asked me ______ the dishes.",
+  "choices": [
+   "to wash",
+   "wash",
+   "washing",
+   "washes"
+  ],
+  "answer": "to wash",
+  "exp": "ask + 사람 + <b>to + 동사원형<\/b> = ~해 달라고 부탁하다. 'asked me to wash'가 맞아요."
+ },
+ {
+  "q": "다음 중 어법상 틀린 문장은?",
+  "choices": [
+   "My mom wants me to eat vegetables.",
+   "She decided not to buy the red shoes.",
+   "It is fun to play with my little cousin.",
+   "He try to be kind to everyone."
+  ],
+  "answer": "He try to be kind to everyone.",
+  "exp": "주어가 He(3인칭 단수)라서 <b>try → tries<\/b>로 써야 해요. 나머지 문장은 to + 동사원형, not to, 가주어 It이 모두 바른 문장이에요."
+ }
+];
+
+var QUIZ_ID = "clinic-ljy-1022";
+var QUIZ_TITLE = "이주연 주말 클리닉 50문제 10/22";
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function plain(s) { return String(s).replace(/<[^>]*>/g, ""); }
+
+function loadSaved() {
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      name: studentName, current: current, correctCount: correctCount,
+      wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog,
+      elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000)
+    }));
+  } catch (e) {}
+}
+function clearSaved() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers;
+    unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+function advance() {
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: plain(choice), answer: plain(q.answer) });
+  advance();
+}
+
+document.getElementById("idk-btn").addEventListener("click", function () {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  wrongNumbers.push(current + 1);
+  unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: false, chosen: "모름", answer: plain(q.answer), unknown: true });
+  advance();
+});
+
+function unknownText() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+  document.getElementById("unknown-line").textContent = unknownText();
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    var head = log.ok ? "정답!" : (log.unknown ? "🤔 모름 (정답: " + plain(q.answer) + ")" : "오답 (내 답: " + log.chosen + " → 정답: " + plain(q.answer) + ")");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/22 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownText();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
