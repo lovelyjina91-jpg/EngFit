@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>위화랑 · 영핏 사진 클리닉 10/23</title>
+<meta property="og:title" content="위화랑 주말 클리닉 40문제 · 10/23 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unknown { display:block; width:100%; margin-top:6px; padding:12px; font-size:1rem; font-weight:bold; color:#8a6d00; background:#fff8e1; border:1.5px dashed #e0b84c; border-radius:10px; cursor:pointer; }
+  .unknown:active { background:#ffefb3; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>위화랑 학생 클리닉 · 10/23 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="위화랑" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "<b>take turns</b>의 뜻으로 알맞은 것은?",
+  "choices": [
+   "번갈아 하다, 교대로 하다",
+   "길을 돌아가다",
+   "방향을 바꾸다",
+   "순서를 빼앗다"
+  ],
+  "answer": "번갈아 하다, 교대로 하다",
+  "exp": "turn은 '차례'라는 뜻이라서 <b>take turns</b>는 '차례를 가지다 → 번갈아 하다'예요. 항상 turns 에 s 를 붙여요.",
+  "part": "Part 1 · Day 26 단어"
+ },
+ {
+  "q": "우리말에 맞게 알맞은 표현을 고르세요.<br>수백만의 ( ) 별들",
+  "choices": [
+   "millions of",
+   "million of",
+   "millions off",
+   "milions of"
+  ],
+  "answer": "millions of",
+  "exp": "수백만은 <b>millions of</b>예요. million 에 s 를 붙이고 of 를 꼭 써요. 철자는 mi<b>ll</b>ions (l 이 두 개)."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>This new medicine can ______ many serious diseases.",
+  "choices": [
+   "cure",
+   "hold",
+   "raise",
+   "review"
+  ],
+  "answer": "cure",
+  "exp": "cure는 '(병을) 치료하다'예요. hold(잡다), raise(올리다), review(복습하다)는 병을 낫게 한다는 뜻이 될 수 없어요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>Dad will ______ the broken chair this weekend.",
+  "choices": [
+   "fix",
+   "tell",
+   "cure",
+   "take turns"
+  ],
+  "answer": "fix",
+  "exp": "fix는 '고치다, 수리하다'예요. 철자는 f-i-x 세 글자! tell(말하다), cure(병을 치료하다)는 의자에 쓸 수 없어요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>Please ______ the window open for fresh air.",
+  "choices": [
+   "keep",
+   "take",
+   "tell",
+   "cure"
+  ],
+  "answer": "keep",
+  "exp": "<b>keep + 목적어 + 형용사</b>는 '~한 상태로 유지하다'예요. keep the window open = 창문을 열어 둔 채로 두다."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>Could you ______ me your new phone number?",
+  "choices": [
+   "tell",
+   "talk",
+   "speak",
+   "say"
+  ],
+  "answer": "tell",
+  "exp": "<b>tell + 사람 + 내용</b> 형태로 써요(tell me the number). talk, speak, say 는 바로 뒤에 사람(me)을 붙여 쓸 수 없어요. talk 와 tell 을 헷갈리지 않기!"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>수백만 명의 사람들이 그 경기를 보았다.",
+  "choices": [
+   "Millions of people watched the game.",
+   "Million of people watched the game.",
+   "Millions people watched the game.",
+   "Millions of peoples watched the game."
+  ],
+  "answer": "Millions of people watched the game.",
+  "exp": "'수백만의'는 <b>millions of</b>, 뒤에는 복수 명사. 단, people 은 이미 복수라서 peoples 로 쓰지 않아요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>A person who plays or writes music is a ______.",
+  "choices": [
+   "musician",
+   "magician",
+   "physician",
+   "politician"
+  ],
+  "answer": "musician",
+  "exp": "music(음악)에 사람을 뜻하는 -ian 이 붙은 <b>musician</b>(음악가). magician 은 마술사, physician 은 내과 의사예요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>This shirt was only five dollars. It was very ______.",
+  "choices": [
+   "cheap",
+   "expensive",
+   "heavy",
+   "lucky"
+  ],
+  "answer": "cheap",
+  "exp": "5달러밖에 안 하니까 <b>cheap(값싼)</b>이에요. expensive 는 반대말(비싼)."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>Let's ______ today's lesson before the test.",
+  "choices": [
+   "review",
+   "cure",
+   "raise",
+   "tell"
+  ],
+  "answer": "review",
+  "exp": "review 는 '복습하다, 검토하다'예요. 시험 전에 오늘 수업을 다시 살펴본다는 뜻이 되어 문맥에 맞아요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>Look! The rocket is going to ______ in a few seconds.",
+  "choices": [
+   "take off",
+   "get on",
+   "put on",
+   "run away"
+  ],
+  "answer": "take off",
+  "exp": "<b>take off</b>는 비행기·로켓이 '이륙하다'예요. get on 은 (버스·기차에) 타다, put on 은 입다, run away 는 도망가다.",
+  "part": "Part 2 · 구동사 뜻과 쓰임"
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>Hurry up! We have to ______ the bus before it leaves.",
+  "choices": [
+   "get on",
+   "get off",
+   "take off",
+   "give up"
+  ],
+  "answer": "get on",
+  "exp": "버스가 떠나기 전에 <b>타야</b> 하니까 get on(타다). get off 는 '내리다'로 반대 뜻이에요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>Excuse me, I'd like to ______ at the next stop.",
+  "choices": [
+   "get off",
+   "get on",
+   "give up",
+   "pick up"
+  ],
+  "answer": "get off",
+  "exp": "다음 정류장에서 <b>내리고</b> 싶다는 뜻이므로 get off. 탈 때는 get on, 내릴 때는 get off 예요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>My brother never ______ even when the puzzle is very hard.",
+  "choices": [
+   "gives up",
+   "goes away",
+   "puts off",
+   "turns off"
+  ],
+  "answer": "gives up",
+  "exp": "<b>give up</b> = 포기하다. 주어가 My brother(3인칭 단수)라서 gives up 이에요. never 뒤에서 '절대 포기하지 않는다'가 돼요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>The cat wouldn't ______, so I gave it some fish.",
+  "choices": [
+   "go away",
+   "get along",
+   "turn on",
+   "pick up"
+  ],
+  "answer": "go away",
+  "exp": "<b>go away</b> = (떠나서) 가 버리다. 고양이가 가지 않아서 생선을 주었다는 흐름이에요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>Tom and his cousin ______ well, so they never fight.",
+  "choices": [
+   "get along",
+   "go away",
+   "put off",
+   "try on"
+  ],
+  "answer": "get along",
+  "exp": "<b>get along (well)</b> = 사이좋게 지내다. 싸우지 않는다는 뒷부분과 연결돼요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>We had to ______ the picnic because of the heavy rain.",
+  "choices": [
+   "put off",
+   "try on",
+   "go on",
+   "run away"
+  ],
+  "answer": "put off",
+  "exp": "<b>put off</b> = 미루다, 연기하다. 비가 많이 와서 소풍을 미뤘다는 뜻이에요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>Mom will ______ me at the school gate at four.",
+  "choices": [
+   "pick up",
+   "turn off",
+   "give up",
+   "take off"
+  ],
+  "answer": "pick up",
+  "exp": "<b>pick up</b> = (차로) 데리러 가다, 집어 올리다. 엄마가 교문에서 나를 데리러 올 거라는 뜻이에요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>It is dark in here. Please ______ the light.",
+  "choices": [
+   "turn on",
+   "turn off",
+   "put off",
+   "take off"
+  ],
+  "answer": "turn on",
+  "exp": "어두우니까 불을 <b>켜야</b> 해요: turn on. turn off 는 '끄다'예요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>May I ______ these sneakers in a larger size?",
+  "choices": [
+   "try on",
+   "turn on",
+   "put off",
+   "run away"
+  ],
+  "answer": "try on",
+  "exp": "<b>try on</b> = (옷·신발을) 입어 보다, 신어 보다. 가게에서 쓰는 표현이에요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>It was hot, so he ______ his jacket.",
+  "choices": [
+   "took off",
+   "put on",
+   "got on",
+   "gave up"
+  ],
+  "answer": "took off",
+  "exp": "더워서 재킷을 <b>벗었다</b>: took off. take off 는 비행기가 이륙할 때뿐 아니라 옷을 벗을 때도 써요. put on 은 반대로 '입다'.",
+  "part": "Part 3 · 문장 속 구동사"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그 소년은 개를 보고 도망쳤다.",
+  "choices": [
+   "The boy ran away when he saw the dog.",
+   "The boy runs away when he saw the dog.",
+   "The boy ran away the dog when he saw it.",
+   "The boy ran up when he saw the dog."
+  ],
+  "answer": "The boy ran away when he saw the dog.",
+  "exp": "<b>run away</b> = 도망치다. 과거 이야기라서 ran away, when 절도 saw 와 시제를 맞춰요. run up 은 '달려가다(다가가다)'라서 뜻이 달라요."
+ },
+ {
+  "q": "다음 문장의 뜻으로 알맞은 것은?<br>The concert went on for three hours.",
+  "choices": [
+   "그 콘서트는 세 시간 동안 계속되었다.",
+   "그 콘서트는 세 시간 만에 끝났다.",
+   "그 콘서트는 세 시간 뒤에 시작되었다.",
+   "그 콘서트는 세 시간 전에 취소되었다."
+  ],
+  "answer": "그 콘서트는 세 시간 동안 계속되었다.",
+  "exp": "<b>go on</b> = 계속되다, 계속하다. 끝나다(end)나 취소되다와 헷갈리지 않기!"
+ },
+ {
+  "q": "다음 문장의 뜻으로 알맞은 것은?<br>She picked up a shell on the beach.",
+  "choices": [
+   "그녀는 해변에서 조개껍데기를 주웠다.",
+   "그녀는 해변에서 조개껍데기를 팔았다.",
+   "그녀는 해변에서 조개껍데기를 던졌다.",
+   "그녀는 해변에서 조개껍데기를 숨겼다."
+  ],
+  "answer": "그녀는 해변에서 조개껍데기를 주웠다.",
+  "exp": "<b>pick up</b>은 바닥에 있는 것을 '집어 올리다, 줍다'예요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?<br>① We turned on the heater.<br>② I put off my homework until night.<br>③ He gave up to swim.<br>④ She got off the bus at the museum.<br>⑤ They went away yesterday.",
+  "choices": [
+   "He gave up to swim.",
+   "We turned on the heater.",
+   "I put off my homework until night.",
+   "She got off the bus at the museum.",
+   "They went away yesterday."
+  ],
+  "answer": "He gave up to swim.",
+  "exp": "<b>give up</b> 뒤에는 to 부정사가 아니라 <b>동명사(-ing)</b>가 와요. 바른 문장: He gave up swimming. 나머지 문장은 모두 맞아요."
+ },
+ {
+  "q": "다음 중 올바른 문장은?",
+  "choices": [
+   "Pick it up, please.",
+   "Pick up it, please.",
+   "Up pick it, please.",
+   "Pick it, up please."
+  ],
+  "answer": "Pick it up, please.",
+  "exp": "구동사의 목적어가 <b>대명사(it, them)</b>이면 동사와 부사 <b>사이</b>에 넣어요: pick it up. (명사일 때는 pick up the box / pick the box up 둘 다 가능)"
+ },
+ {
+  "q": "다음 문장의 뜻으로 알맞은 것은?<br>Please turn off your phones during the movie.",
+  "choices": [
+   "영화를 보는 동안에는 휴대전화를 꺼 주세요.",
+   "영화를 보는 동안에는 휴대전화를 켜 주세요.",
+   "영화를 보는 동안에는 휴대전화를 바꿔 주세요.",
+   "영화를 보는 동안에는 휴대전화를 두고 가 주세요."
+  ],
+  "answer": "영화를 보는 동안에는 휴대전화를 꺼 주세요.",
+  "exp": "turn off = 끄다, turn on = 켜다. 영화관 안내문이니까 '꺼 주세요'가 자연스러워요."
+ },
+ {
+  "q": "다음 문장의 뜻으로 알맞은 것은?<br>The two kids take turns on the swing.",
+  "choices": [
+   "두 아이는 번갈아 그네를 탄다.",
+   "두 아이는 그네를 돌린다.",
+   "두 아이는 함께 그네를 만든다.",
+   "두 아이는 서로 그네를 빼앗는다."
+  ],
+  "answer": "두 아이는 번갈아 그네를 탄다.",
+  "exp": "<b>take turns</b>는 '번갈아 하다'예요. 한 명이 타면 다른 한 명은 기다리는 사이좋은 모습이에요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>She kept ______ even when she was tired.",
+  "choices": [
+   "walking",
+   "to walk",
+   "walk",
+   "walks"
+  ],
+  "answer": "walking",
+  "exp": "<b>keep + 동명사(-ing)</b> = 계속 ~하다. keep 뒤에 to walk, walk 는 쓰지 않아요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>Please ______ with your story. I'm listening.",
+  "choices": [
+   "go on",
+   "go away",
+   "give up",
+   "run away"
+  ],
+  "answer": "go on",
+  "exp": "<b>go on</b> = 계속하다. 듣고 있으니 이야기를 계속하라는 뜻이에요. go away(가 버려), give up(포기하다)은 어색해요."
+ },
+ {
+  "q": "다음 문장의 뜻으로 알맞은 것은?<br>The game must go on even if it rains.",
+  "choices": [
+   "비가 와도 경기는 계속되어야 한다.",
+   "비가 오면 경기는 취소되어야 한다.",
+   "비가 오기 전에 경기가 끝나야 한다.",
+   "경기를 해서 비가 오면 안 된다."
+  ],
+  "answer": "비가 와도 경기는 계속되어야 한다.",
+  "exp": "must go on = 계속되어야 한다. even if 는 '~하더라도'라는 뜻이에요.",
+  "part": "Part 4 · Sentence Reading 해석"
+ },
+ {
+  "q": "다음 문장의 뜻으로 알맞은 것은?<br>Because the road was icy, we put off our trip until Sunday.",
+  "choices": [
+   "길이 얼어서 우리는 여행을 일요일로 미뤘다.",
+   "길이 얼어서 우리는 일요일에 여행을 떠났다.",
+   "길이 얼어서 우리는 여행을 취소해 버렸다.",
+   "길이 얼어서 우리는 여행을 일요일에서 앞당겼다."
+  ],
+  "answer": "길이 얼어서 우리는 여행을 일요일로 미뤘다.",
+  "exp": "<b>put off ~ until ...</b> = ~을 ...까지 미루다. Because 절은 이유를 나타내요. 취소와 연기는 달라요."
+ },
+ {
+  "q": "다음 문장의 뜻으로 알맞은 것은?<br>After two hours of searching, he gave up looking for his key.",
+  "choices": [
+   "두 시간 동안 찾은 뒤, 그는 열쇠 찾기를 포기했다.",
+   "두 시간 동안 찾은 뒤, 그는 열쇠를 찾아냈다.",
+   "두 시간 동안 찾은 뒤, 그는 열쇠를 계속 찾았다.",
+   "두 시간 동안 찾은 뒤, 그는 열쇠를 남에게 주었다."
+  ],
+  "answer": "두 시간 동안 찾은 뒤, 그는 열쇠 찾기를 포기했다.",
+  "exp": "<b>give up -ing</b> = ~하는 것을 포기하다. 두 시간이나 찾았지만 포기했다는 뜻이에요."
+ },
+ {
+  "q": "다음 문장의 뜻으로 알맞은 것은?<br>He went away without taking his umbrella.",
+  "choices": [
+   "그는 우산을 가져가지 않고 가 버렸다.",
+   "그는 우산을 들고 돌아왔다.",
+   "그는 우산을 사러 갔다.",
+   "그는 우산을 빌려주고 떠났다."
+  ],
+  "answer": "그는 우산을 가져가지 않고 가 버렸다.",
+  "exp": "<b>without + -ing</b> = ~하지 않고. without taking his umbrella = 우산을 가져가지 않고."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그 선생님은 우리에게 수백만 개의 별에 대해 이야기해 주셨다.",
+  "choices": [
+   "The teacher told us about millions of stars.",
+   "The teacher talked us about millions of stars.",
+   "The teacher told us about million of stars.",
+   "The teacher said us about millions of stars."
+  ],
+  "answer": "The teacher told us about millions of stars.",
+  "exp": "<b>tell + 사람 + about ~</b>. talk 와 say 는 바로 뒤에 us 를 쓸 수 없어요(talked to us 는 가능). million of 가 아니라 <b>millions of</b>."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>나는 새 친구들과 잘 지낸다.",
+  "choices": [
+   "I get along well with my new friends.",
+   "I get along well to my new friends.",
+   "I get along well my new friends.",
+   "I get along my well new friends."
+  ],
+  "answer": "I get along well with my new friends.",
+  "exp": "<b>get along well with + 사람</b> = ~와 잘 지내다. 전치사는 with 를 써요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>He ______ his coat and went outside.",
+  "choices": [
+   "put on",
+   "put off",
+   "gave up",
+   "got off"
+  ],
+  "answer": "put on",
+  "exp": "코트를 <b>입고</b> 밖으로 나갔다는 흐름이므로 put on. put off 는 '미루다'라서 뜻이 달라요."
+ },
+ {
+  "q": "다음 문장의 뜻으로 알맞은 것은?<br>Although it was raining, they didn't give up the match.",
+  "choices": [
+   "비가 왔지만 그들은 시합을 포기하지 않았다.",
+   "비가 와서 그들은 시합을 포기했다.",
+   "비가 오기 전에 그들은 시합을 끝냈다.",
+   "비가 와서 그들은 시합을 미루었다."
+  ],
+  "answer": "비가 왔지만 그들은 시합을 포기하지 않았다.",
+  "exp": "<b>Although</b> = ~이긴 하지만(양보). didn't give up = 포기하지 않았다. 따라서 비가 와도 계속 했다는 뜻이에요."
+ },
+ {
+  "q": "다음 빈칸에 알맞은 말은?<br>My uncle is a mechanic. He ______ cars for a living.",
+  "choices": [
+   "fixes",
+   "fix",
+   "fixing",
+   "to fix"
+  ],
+  "answer": "fixes",
+  "exp": "He 는 3인칭 단수 현재라서 동사 끝에 -es: <b>fixes</b>. fix 는 x 로 끝나서 -es 를 붙여요."
+ },
+ {
+  "q": "다음 글의 내용으로 알맞은 것은?<br><div class=\"pass\">Sam wanted to learn the guitar. At first it was very hard, and he almost gave up. But his sister told him to keep practicing. Now he plays well and goes on stage with his band.</div>Why did Sam keep learning the guitar?",
+  "choices": [
+   "His sister told him to keep practicing.",
+   "The guitar was very cheap.",
+   "His band gave up the music.",
+   "He could already play well."
+  ],
+  "answer": "His sister told him to keep practicing.",
+  "exp": "글에서 '누나가 계속 연습하라고 말해 주었다(his sister told him to keep practicing)'고 했어요. 처음엔 어려워서 거의 포기할 뻔했고, 기타를 이미 잘 친 것도 아니에요."
+ }
+];
+
+var QUIZ_ID = "clinic-whr-1023";
+var QUIZ_TITLE = "위화랑 주말 사진 클리닉 40문제 10/23";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+  var u = document.createElement("button");
+  u.className = "unknown"; u.id = "unknown-btn";
+  u.textContent = "🤔 모름";
+  u.addEventListener("click", function () { pick("모름", "", true); });
+  box.appendChild(u);
+}
+
+var locked = false;
+function pick(choice, mark, unknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  var entry = { no: current + 1, ok: ok, chosen: choice, answer: q.answer };
+  if (unknown) { entry.unknown = true; unknownNumbers.push(current + 1); }
+  answersLog.push(entry);
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unknownLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var ul = document.createElement("div");
+  ul.className = "sub"; ul.id = "unknown-line"; ul.style.textAlign = "center";
+  ul.textContent = unknownLine();
+  document.getElementById("score-line").insertAdjacentElement("afterend", ul);
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/23 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

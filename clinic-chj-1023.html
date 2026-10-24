@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>차호진 · 영핏 사진 클리닉 10/23</title>
+<meta property="og:title" content="차호진 주말 클리닉 40문제 · 10/23 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unknown { display:block; width:100%; margin-top:6px; padding:12px; font-size:1rem; font-weight:bold; color:#8a6d00; background:#fff8e1; border:1.5px dashed #e0b84c; border-radius:10px; cursor:pointer; }
+  .unknown:active { background:#ffefb3; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>차호진 학생 클리닉 · 10/23 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="차호진" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "빈칸에 알맞은 말은?<br>My sister ______ a song in the shower. (sing)",
+  "choices": [
+   "sings",
+   "sing",
+   "singes",
+   "singing"
+  ],
+  "answer": "sings",
+  "exp": "주어가 <b>My sister(3인칭 단수)</b>이고 현재 습관을 말하니 동사 끝에 <b>-s</b>를 붙여요. 대부분의 동사는 그냥 s만 붙이면 끝!",
+  "part": "Part 1 · 3인칭 단수 동사 만들기 (-s / -es / -ies)"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>Our teacher ______ English to us. (teach)",
+  "choices": [
+   "teaches",
+   "teachs",
+   "teach",
+   "teachies"
+  ],
+  "answer": "teaches",
+  "exp": "teach처럼 <b>-ch로 끝나는 동사</b>는 -s가 아니라 <b>-es</b>를 붙여요: teach → teaches. (watch → watches, 같은 규칙!)"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>The bus ______ at the school gate. (stop)",
+  "choices": [
+   "stops",
+   "stop",
+   "stopes",
+   "stopies"
+  ],
+  "answer": "stops",
+  "exp": "The bus는 3인칭 단수예요. stop은 특별한 규칙이 없는 동사라서 <b>그냥 -s</b>만 붙여요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>The old horse ______ under a tree after lunch. (rest)",
+  "choices": [
+   "rests",
+   "rest",
+   "restes",
+   "resting"
+  ],
+  "answer": "rests",
+  "exp": "The old horse = 3인칭 단수 → <b>rests</b>. 동사 앞에 is가 없는데 resting(-ing)을 쓰면 문장이 틀려져요."
+ },
+ {
+  "q": "다음 중 <b>carry</b>의 3인칭 단수 현재형으로 알맞은 것은?",
+  "choices": [
+   "carries",
+   "carrys",
+   "carryes",
+   "carryies"
+  ],
+  "answer": "carries",
+  "exp": "<b>자음 + y</b>로 끝나는 동사는 <b>y를 i로 바꾸고 -es</b>: carry → carries. (study → studies 와 같은 규칙!)"
+ },
+ {
+  "q": "다음 중 <b>fix</b>의 3인칭 단수 현재형으로 알맞은 것은?",
+  "choices": [
+   "fixes",
+   "fixs",
+   "fixies",
+   "fixing"
+  ],
+  "answer": "fixes",
+  "exp": "<b>-x, -s, -ch, -sh, -o</b>로 끝나는 동사는 <b>-es</b>를 붙여요: fix → fixes. fixs처럼 s만 붙이면 발음하기 어려워서 틀려요."
+ },
+ {
+  "q": "다음 중 <b>enjoy</b>의 3인칭 단수 현재형으로 알맞은 것은?",
+  "choices": [
+   "enjoys",
+   "enjoies",
+   "enjoyes",
+   "enjoyies"
+  ],
+  "answer": "enjoys",
+  "exp": "enjoy는 y 앞이 <b>모음(o)</b>이에요. <b>모음 + y</b>는 y를 바꾸지 않고 <b>그냥 -s</b>! (play → plays 도 같아요. plaies ✕) 자음 + y 일 때만 ies예요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>The little girl ______ when she is sad. (cry)",
+  "choices": [
+   "cries",
+   "crys",
+   "cryes",
+   "crying"
+  ],
+  "answer": "cries",
+  "exp": "cry는 y 앞이 자음(r)이에요 → <b>y를 i로 바꾸고 -es</b>: cries. crys 처럼 y를 그대로 두고 s만 붙이면 틀려요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>My uncle ______ to work by subway. (go)",
+  "choices": [
+   "goes",
+   "gos",
+   "goies",
+   "go"
+  ],
+  "answer": "goes",
+  "exp": "<b>go는 -es</b>를 붙여요: go → goes. My uncle은 3인칭 단수라서 원형 go를 그대로 쓸 수 없어요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>Her room ______ a big window. (have)",
+  "choices": [
+   "has",
+   "haves",
+   "have",
+   "having"
+  ],
+  "answer": "has",
+  "exp": "<b>have</b>의 3인칭 단수형은 <b>has</b>예요 (haves ✕). Her room은 단수라서 have도 쓸 수 없어요."
+ },
+ {
+  "q": "다음 중 어법상 <b>올바른</b> 문장은?",
+  "choices": [
+   "Lucy likes pizza with cheese.",
+   "Lucy like pizza with cheese.",
+   "Lucy liking pizza with cheese.",
+   "Lucy are like pizza with cheese."
+  ],
+  "answer": "Lucy likes pizza with cheese.",
+  "exp": "Lucy는 3인칭 단수이므로 동사에 <b>-s</b>를 붙인 <b>likes</b>가 맞아요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>My cousins ______ in a small town. (live)",
+  "choices": [
+   "live",
+   "lives",
+   "livies",
+   "living"
+  ],
+  "answer": "live",
+  "exp": "My cousins는 <b>복수</b>예요. 주어가 복수이면 동사에 s를 붙이지 않고 <b>원형(live)</b>을 써요. 3인칭 단수 규칙은 주어가 한 명/하나일 때만!"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>The farmer and his son ______ the cows every morning. (feed)",
+  "choices": [
+   "feed",
+   "feeds",
+   "feedes",
+   "feeding"
+  ],
+  "answer": "feed",
+  "exp": "<b>The farmer and his son</b>은 두 사람이니 복수 주어예요 → 동사 원형 feed. and 로 연결된 주어는 '복수'!"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>Does your aunt ______ a bicycle to the park? (ride)",
+  "choices": [
+   "ride",
+   "rides",
+   "riding",
+   "rode"
+  ],
+  "answer": "ride",
+  "exp": "<b>Does가 있으면 동사는 항상 원형</b>이에요. Does가 이미 3인칭 단수 표시를 해 주기 때문에 동사에 또 s를 붙이면 안 돼요 (Does ... rides ✕)."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>Mina doesn't ______ spicy food.",
+  "choices": [
+   "eat",
+   "eats",
+   "eating",
+   "ate"
+  ],
+  "answer": "eat",
+  "exp": "<b>doesn't(does not) 뒤에도 동사원형</b>이에요. doesn't가 s의 역할을 대신 해 줘서 eats로 쓰면 틀려요."
+ },
+ {
+  "q": "다음 중 어법상 <b>올바른</b> 문장은?",
+  "choices": [
+   "Does he need an umbrella today?",
+   "Do he need an umbrella today?",
+   "Does he needs an umbrella today?",
+   "Is he need an umbrella today?"
+  ],
+  "answer": "Does he need an umbrella today?",
+  "exp": "주어가 he(3인칭 단수)이므로 <b>Does + 주어 + 동사원형</b>. Do he ✕, needs ✕, Is + 일반동사 ✕."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?<br>① The monkey climbs the tall tree.<br>② My brother does his homework at six.<br>③ Her father catchs a fish every Sunday.<br>④ The students study in the library.<br>⑤ Ben misses his grandma.",
+  "choices": [
+   "③ Her father catchs a fish every Sunday.",
+   "① The monkey climbs the tall tree.",
+   "② My brother does his homework at six.",
+   "④ The students study in the library.",
+   "⑤ Ben misses his grandma."
+  ],
+  "answer": "③ Her father catchs a fish every Sunday.",
+  "exp": "catch는 <b>-ch로 끝나서 -es</b>를 붙여요 → catch<b>es</b>. (④는 students가 복수라서 study가 맞아요.)"
+ },
+ {
+  "q": "다음 중 어법상 <b>올바른</b> 문장은?",
+  "choices": [
+   "My dog does not like cold water.",
+   "My dog do not like cold water.",
+   "My dog does not likes cold water.",
+   "My dog not like cold water."
+  ],
+  "answer": "My dog does not like cold water.",
+  "exp": "부정문은 <b>주어 + does not + 동사원형</b>. 주어가 단수이므로 do가 아니라 <b>does</b>, 그리고 does not 뒤에는 likes가 아니라 like!"
+ },
+ {
+  "q": "대화의 빈칸에 알맞은 말은?<br>A: Does Emma walk to school?<br>B: No, she ______. She takes the bus.",
+  "choices": [
+   "doesn't",
+   "don't",
+   "isn't",
+   "aren't"
+  ],
+  "answer": "doesn't",
+  "exp": "Does로 물어봤으니 대답도 <b>does</b>로! 주어 she(3인칭 단수)이므로 No, she <b>doesn't</b>."
+ },
+ {
+  "q": "대화의 빈칸에 알맞은 말은?<br>A: Do your friends play baseball?<br>B: Yes, they ______.",
+  "choices": [
+   "do",
+   "does",
+   "are",
+   "play"
+  ],
+  "answer": "do",
+  "exp": "Do로 물어보면 Do로 대답해요. they는 복수이므로 Yes, they <b>do</b>."
+ },
+ {
+  "q": "밑줄 친 부분을 바르게 고친 것은?<br>My cousin <u>studys</u> science on weekends.",
+  "choices": [
+   "studies",
+   "studyes",
+   "studying",
+   "study"
+  ],
+  "answer": "studies",
+  "exp": "study는 <b>자음 + y</b>이므로 <b>y → i + es</b>: studies. 'studys'처럼 s만 붙이는 실수가 많아요!",
+  "part": "Part 3 · 고쳐 쓰기 · 영작"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그녀는 토요일마다 할머니를 방문한다. (visit, her grandma)",
+  "choices": [
+   "She visits her grandma on Saturdays.",
+   "She visit her grandma on Saturdays.",
+   "She visites her grandma on Saturdays.",
+   "She visits she grandma on Saturdays."
+  ],
+  "answer": "She visits her grandma on Saturdays.",
+  "exp": "주어 She(3인칭 단수) → <b>visits</b>. '그녀의'는 소유격 <b>her</b>이지 she가 아니에요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>나의 삼촌은 노란 우산을 가지고 있다. (my uncle, have, a yellow umbrella)",
+  "choices": [
+   "My uncle has a yellow umbrella.",
+   "My uncle have a yellow umbrella.",
+   "My uncle haves a yellow umbrella.",
+   "My uncle is have a yellow umbrella."
+  ],
+  "answer": "My uncle has a yellow umbrella.",
+  "exp": "My uncle은 3인칭 단수이므로 have → <b>has</b>. 일반동사 앞에 is를 같이 쓰지 않아요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그는 일요일마다 자기 자전거를 닦는다. (clean, his bike)",
+  "choices": [
+   "He cleans his bike on Sundays.",
+   "His bike cleans on Sundays.",
+   "He clean his bike on Sundays.",
+   "He cleans he bike on Sundays."
+  ],
+  "answer": "He cleans his bike on Sundays.",
+  "exp": "'~는(은) ~한다'에서 <b>누가 하는지(주어 He)</b>를 먼저 쓰고, 동사(cleans) 뒤에 목적어(his bike)를 써요. His bike를 맨 앞에 쓰면 '자전거가 닦는다'가 되어 버려요!"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그 소년은 오렌지 주스를 마시지 않는다. (drink orange juice)",
+  "choices": [
+   "The boy does not drink orange juice.",
+   "The boy does not drinks orange juice.",
+   "The boy not drinks orange juice.",
+   "The boy do not drink orange juice."
+  ],
+  "answer": "The boy does not drink orange juice.",
+  "exp": "단수 주어의 부정문은 <b>does not + 동사원형</b>이에요. does not 뒤에서는 drinks가 아니라 drink!"
+ },
+ {
+  "q": "다음 중 철자와 어법이 모두 <b>올바른</b> 문장은?",
+  "choices": [
+   "The boy worries about the test.",
+   "The boy worrys about the test.",
+   "The boy worryes about the test.",
+   "The boy worrees about the test."
+  ],
+  "answer": "The boy worries about the test.",
+  "exp": "worry는 자음 + y → <b>worries</b>. y를 그대로 두고 s만 붙이거나(worrys) es만 붙이면(worryes) 안 돼요."
+ },
+ {
+  "q": "다음 중 어법상 <b>올바른</b> 문장은?",
+  "choices": [
+   "Our school has a big garden.",
+   "Our school have a big garden.",
+   "Our school haves a big garden.",
+   "Our school is have a big garden."
+  ],
+  "answer": "Our school has a big garden.",
+  "exp": "Our school은 단수 주어이므로 <b>has</b>. have의 3인칭 단수형을 haves로 만들면 안 돼요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>Jisu ______ her homework and ______ TV. (finish / watch)",
+  "choices": [
+   "finishes, watches",
+   "finish, watch",
+   "finishs, watchs",
+   "finishes, watchies"
+  ],
+  "answer": "finishes, watches",
+  "exp": "finish(-sh)와 watch(-ch)는 모두 <b>-es</b>를 붙여요. 주어가 Jisu 한 명이니 두 동사 모두 3인칭 단수 형태로!"
+ },
+ {
+  "q": "다음 중 동사의 3인칭 단수 현재형이 <b>틀린</b> 것은?<br>① pass → passes<br>② kiss → kisses<br>③ mix → mixes<br>④ stay → stayes<br>⑤ try → tries",
+  "choices": [
+   "④ stay → stayes",
+   "① pass → passes",
+   "② kiss → kisses",
+   "③ mix → mixes",
+   "⑤ try → tries"
+  ],
+  "answer": "④ stay → stayes",
+  "exp": "stay는 <b>모음(a) + y</b>이므로 그냥 <b>stays</b>예요 (stayes ✕). try는 자음 + y라서 tries가 맞아요."
+ },
+ {
+  "q": "대화의 빈칸에 알맞은 말은?<br>A: What does Jenny do after lunch?<br>B: She ______ chess with her grandpa. (play)",
+  "choices": [
+   "plays",
+   "plaies",
+   "play",
+   "playes"
+  ],
+  "answer": "plays",
+  "exp": "play는 <b>모음(a) + y</b> 이므로 y를 바꾸지 않고 <b>-s</b>만 붙여요: play → <b>plays</b>. plaies는 흔한 실수예요!"
+ },
+ {
+  "q": "우리말에 맞는 단어의 철자가 <b>올바른</b> 것은?<br>나는 그냥 피곤해. → I just feel ______.",
+  "choices": [
+   "tired",
+   "tierd",
+   "tirde",
+   "tyred"
+  ],
+  "answer": "tired",
+  "exp": "tired(피곤한)는 <b>t-i-r-e-d</b> 순서! 발음은 '타이어드'지만 철자는 ire 가 들어가요.",
+  "part": "Part 4 · Feelings 감정 낱말 · 철자 · 독해"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>Nick is ______ for a test now. (공부하고 있는 중)",
+  "choices": [
+   "studying",
+   "studing",
+   "studyng",
+   "studiing"
+  ],
+  "answer": "studying",
+  "exp": "study에 -ing를 붙일 때는 y를 바꾸지 않고 <b>그대로 -ing</b>: study → <b>studying</b>. (3인칭 단수 -ies와 헷갈리지 않기!)"
+ },
+ {
+  "q": "우리말에 맞는 단어의 철자가 <b>올바른</b> 것은?<br>나는 오늘 매우 행복해. → I feel very ______ today.",
+  "choices": [
+   "happy",
+   "hapy",
+   "haapy",
+   "happie"
+  ],
+  "answer": "happy",
+  "exp": "happy(행복한)는 <b>p가 두 개</b>: h-a-p-p-y. 감정을 말할 때 <b>feel + 형용사</b>로 써요."
+ },
+ {
+  "q": "다음 단어의 뜻으로 알맞은 것은?<br><b>nervous</b>",
+  "choices": [
+   "긴장한",
+   "화가 난",
+   "지루한",
+   "슬픈"
+  ],
+  "answer": "긴장한",
+  "exp": "nervous는 시험이나 발표 전에 느끼는 <b>긴장한, 불안한</b> 감정이에요. 화난 = angry, 지루한 = bored, 슬픈 = sad."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>He looks very ______. He is afraid of the dark. (무서워하는)",
+  "choices": [
+   "scared",
+   "excited",
+   "bored",
+   "angry"
+  ],
+  "answer": "scared",
+  "exp": "어둠이 두려운 감정은 <b>scared(무서워하는)</b>예요. excited는 '신이 난', bored는 '지루한', angry는 '화난'."
+ },
+ {
+  "q": "우리말에 맞는 단어의 철자가 <b>올바른</b> 것은?<br>아이들은 소풍 때문에 매우 신이 났다. → The kids are so ______ about the picnic.",
+  "choices": [
+   "excited",
+   "exicted",
+   "excitted",
+   "excided"
+  ],
+  "answer": "excited",
+  "exp": "excited(신이 난)는 <b>e-x-c-i-t-e-d</b>. c가 있고 t는 하나, -ed로 끝나요."
+ },
+ {
+  "q": "다음 중 영어 단어와 우리말 뜻이 <b>틀린</b> 것은?<br>① angry – 화난<br>② bored – 지루한<br>③ surprised – 무서워하는<br>④ sick – 아픈<br>⑤ sad – 슬픈",
+  "choices": [
+   "③ surprised – 무서워하는",
+   "① angry – 화난",
+   "② bored – 지루한",
+   "④ sick – 아픈",
+   "⑤ sad – 슬픈"
+  ],
+  "answer": "③ surprised – 무서워하는",
+  "exp": "surprised는 <b>놀란</b>이에요. '무서워하는'은 scared! 철자 s-u-r-p-r-i-s-e-d 도 꼭 확인해요."
+ },
+ {
+  "q": "대화의 빈칸에 알맞은 말은?<br>A: Why are you ______, Jina?<br>B: My dog is sick. (슬픈)",
+  "choices": [
+   "sad",
+   "excited",
+   "bored",
+   "surprised"
+  ],
+  "answer": "sad",
+  "exp": "강아지가 아파서 하는 감정이라 <b>sad(슬픈)</b>. Why are you ~? 로 이유를 물을 때 감정 형용사를 써요."
+ },
+ {
+  "q": "다음 글을 읽고 물음에 답하세요.<div class=\"pass\">Tom has a test tomorrow. He is studying English now. He feels nervous, but his mom says, \"You can do it!\" Then Tom smiles. Now he feels happy.</div>How does Tom feel at the end?",
+  "choices": [
+   "He feels happy.",
+   "He feels nervous.",
+   "He feels tired.",
+   "He feels bored."
+  ],
+  "answer": "He feels happy.",
+  "exp": "질문이 <b>끝(at the end / now)</b>의 기분이라서 마지막 문장 <b>Now he feels happy</b>를 봐요. nervous는 처음 기분이라 오답!"
+ },
+ {
+  "q": "다음 글의 내용과 일치하는 것은?<div class=\"pass\">Mina's father works at a bank. He wakes up at six and drives to work. At night, he studies English because he feels nervous about his trip to Canada. Mina is excited for him.</div>",
+  "choices": [
+   "Mina's father drives to work.",
+   "Mina's father works at a school.",
+   "Mina's father studies English in the morning.",
+   "Mina's father feels bored about his trip."
+  ],
+  "answer": "Mina's father drives to work.",
+  "exp": "본문의 <b>drives to work</b>와 같아요. 직장은 bank(은행), 영어 공부는 at night, 여행 기분은 nervous예요. 3인칭 단수 동사(works, wakes, drives, studies)도 눈여겨보세요!"
+ }
+];
+
+var QUIZ_ID = "clinic-chj-1023";
+var QUIZ_TITLE = "차호진 주말 사진 클리닉 40문제 10/23";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+  var u = document.createElement("button");
+  u.className = "unknown"; u.id = "unknown-btn";
+  u.textContent = "🤔 모름";
+  u.addEventListener("click", function () { pick("모름", "", true); });
+  box.appendChild(u);
+}
+
+var locked = false;
+function pick(choice, mark, unknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  var entry = { no: current + 1, ok: ok, chosen: choice, answer: q.answer };
+  if (unknown) { entry.unknown = true; unknownNumbers.push(current + 1); }
+  answersLog.push(entry);
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unknownLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var ul = document.createElement("div");
+  ul.className = "sub"; ul.id = "unknown-line"; ul.style.textAlign = "center";
+  ul.textContent = unknownLine();
+  document.getElementById("score-line").insertAdjacentElement("afterend", ul);
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/23 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

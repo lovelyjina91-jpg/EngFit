@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>유정완 · 영핏 사진 클리닉 10/23</title>
+<meta property="og:title" content="유정완 주말 클리닉 40문제 · 10/23 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unknown { display:block; width:100%; margin-top:6px; padding:12px; font-size:1rem; font-weight:bold; color:#8a6d00; background:#fff8e1; border:1.5px dashed #e0b84c; border-radius:10px; cursor:pointer; }
+  .unknown:active { background:#ffefb3; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>유정완 학생 클리닉 · 10/23 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="유정완" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The window ______ by a ball yesterday. (그 창문은 어제 공에 맞아 깨졌다.)",
+  "choices": [
+   "was broken",
+   "broke",
+   "was break",
+   "were broken"
+  ],
+  "answer": "was broken",
+  "exp": "창문은 '깨짐을 당한' 쪽이라 수동태 <b>be + 과거분사</b>. 주어가 하나(The window)이고 yesterday 라서 <b>was broken</b>. 'was break'처럼 원형을 쓰는 실수를 조심!",
+  "part": "Part 1 · 수동태 기본"
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>Many letters ______ in this box. (이 상자에는 편지가 많이 보관되어 있다.)",
+  "choices": [
+   "are kept",
+   "keep",
+   "is kept",
+   "are keep"
+  ],
+  "answer": "are kept",
+  "exp": "편지는 '보관되는' 것이므로 수동태. letters 는 복수라 <b>are kept</b> (keep-kept-kept). is 는 단수에만 써요."
+ },
+ {
+  "q": "다음 문장의 알맞은 해석을 고르세요.<br>The cake was made by my aunt.",
+  "choices": [
+   "그 케이크는 우리 이모가 만드셨다.",
+   "그 케이크는 우리 이모를 만들었다.",
+   "우리 이모는 케이크를 만들고 있다.",
+   "우리 이모는 케이크를 만들 것이다."
+  ],
+  "answer": "그 케이크는 우리 이모가 만드셨다.",
+  "exp": "<b>was made by ~</b> = '~에 의해 만들어졌다' → '~가 만들었다'로 자연스럽게 해석해요. 주어(케이크)가 만든 게 아니라 만들어진 쪽이에요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>Our classroom ______ every day. (우리 교실은 매일 청소된다.)",
+  "choices": [
+   "is cleaned",
+   "cleans",
+   "cleaning",
+   "are cleaned"
+  ],
+  "answer": "is cleaned",
+  "exp": "교실이 '청소되는' 쪽이므로 수동태. 현재 습관(every day) + 단수 주어 → <b>is cleaned</b>. cleans 는 교실이 스스로 청소한다는 뜻이 돼요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The song ______ by many children. (그 노래는 많은 아이들이 부른다.)",
+  "choices": [
+   "is sung",
+   "sings",
+   "is sing",
+   "sung"
+  ],
+  "answer": "is sung",
+  "exp": "노래는 '불리는' 것. <b>is sung</b> (sing-sang-sung). sung 만 쓰거나 is sing 처럼 원형을 쓰면 틀려요."
+ },
+ {
+  "q": "다음 중 <b>수동태</b> 문장을 고르세요.",
+  "choices": [
+   "The cookies were baked by my grandmother.",
+   "My grandmother bakes cookies.",
+   "Grandmother is baking cookies now.",
+   "Grandmother baked cookies yesterday."
+  ],
+  "answer": "The cookies were baked by my grandmother.",
+  "exp": "수동태는 <b>be + 과거분사 (+ by 행위자)</b> 모양이에요. were baked by ~ 가 수동태, 나머지는 할머니가 직접 하는 능동태예요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>This story was ______ by a famous writer. (이 이야기는 유명한 작가가 썼다.)",
+  "choices": [
+   "written",
+   "wrote",
+   "write",
+   "writing"
+  ],
+  "answer": "written",
+  "exp": "was 뒤에는 <b>과거분사</b>. write-wrote-<b>written</b>. wrote 는 과거형이라 수동태에 쓸 수 없어요."
+ },
+ {
+  "q": "우리말에 맞는 영어 문장을 고르세요.<br>(이 사진은 내 동생이 찍었다.)",
+  "choices": [
+   "This picture was taken by my brother.",
+   "This picture took my brother.",
+   "My brother was taken this picture.",
+   "This picture is take by my brother."
+  ],
+  "answer": "This picture was taken by my brother.",
+  "exp": "사진은 '찍힌' 쪽 → <b>This picture was taken by ~</b>. take-took-taken. 'took'은 능동, 'take'는 원형이라 수동태가 안 돼요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The lights ______ at ten o'clock every night. (불은 매일 밤 10시에 꺼진다.)",
+  "choices": [
+   "are turned off",
+   "is turned off",
+   "are turn off",
+   "are turns off"
+  ],
+  "answer": "are turned off",
+  "exp": "lights 는 복수 → <b>are</b> + 과거분사 turned. is 는 단수용, turn/turns 는 과거분사가 아니라 틀려요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The museum ______ ten years ago. (그 박물관은 10년 전에 세워졌다.)",
+  "choices": [
+   "was built",
+   "is built",
+   "were built",
+   "was building"
+  ],
+  "answer": "was built",
+  "exp": "ten years ago 는 과거 → <b>was</b>, 박물관은 '세워진' 것 → built (build-built-built). is 는 현재, were 는 복수, building 은 '짓고 있었다'가 돼요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>Food ______ allowed in this room. (이 방에서는 음식이 허용되지 않는다.)",
+  "choices": [
+   "is not",
+   "does not",
+   "not is",
+   "are not"
+  ],
+  "answer": "is not",
+  "exp": "수동태의 부정은 <b>be 동사 + not + 과거분사</b>. Food 는 셀 수 없는 단수 취급이라 is not. does not allowed 는 틀린 모양이에요.",
+  "part": "Part 2 · 수동태 심화"
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>______ this room cleaned last week? (이 방은 지난주에 청소되었나요?)",
+  "choices": [
+   "Was",
+   "Did",
+   "Were",
+   "Is"
+  ],
+  "answer": "Was",
+  "exp": "수동태 의문문은 <b>be 동사를 문장 앞으로</b>. 방은 하나 + 지난주(과거) → Was. 'Did this room cleaned'는 did 뒤에 p.p.를 쓸 수 없어서 틀려요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The letter was written ______ my grandmother. (그 편지는 우리 할머니가 쓰셨다.)",
+  "choices": [
+   "by",
+   "with",
+   "for",
+   "at"
+  ],
+  "answer": "by",
+  "exp": "수동태에서 '하는 사람(행위자)'은 <b>by</b> 로 나타내요. by my grandmother = 할머니에 의해(할머니가)."
+ },
+ {
+  "q": "능동태를 수동태로 바꾼 문장을 완성하세요.<br>A farmer grows these apples.<br>→ These apples ______ by a farmer.",
+  "choices": [
+   "are grown",
+   "grow",
+   "is grown",
+   "are growing"
+  ],
+  "answer": "are grown",
+  "exp": "능동의 목적어(these apples)가 주어가 되고 <b>be + 과거분사</b>. apples 는 복수 → are grown. 현재 시제를 그대로 유지해요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>This old tower must be ______. (이 오래된 탑은 보호되어야 한다.)",
+  "choices": [
+   "protected",
+   "protect",
+   "protecting",
+   "protects"
+  ],
+  "answer": "protected",
+  "exp": "<b>must be + 과거분사</b> = ~되어야 한다. 조동사 뒤에서도 수동태는 be + p.p. 모양을 지켜요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>Instead of being ______ away, the old toys were sent to a children's hospital. (낡은 장난감들은 버려지지 않고 어린이 병원으로 보내졌다.)",
+  "choices": [
+   "thrown",
+   "throw",
+   "throwing",
+   "threw"
+  ],
+  "answer": "thrown",
+  "exp": "<b>instead of + being + 과거분사</b> = ~되는 대신에. throw-threw-<b>thrown</b>. 전치사 뒤라서 being 을 쓰고 그 뒤는 과거분사예요."
+ },
+ {
+  "q": "<b>틀린</b> 문장을 고르세요.",
+  "choices": [
+   "The pie was ate by my uncle.",
+   "The gate was closed at six.",
+   "These shoes were made in Italy.",
+   "The test is given every Friday."
+  ],
+  "answer": "The pie was ate by my uncle.",
+  "exp": "was 뒤에는 과거분사가 와야 해요. eat-ate-<b>eaten</b> 이므로 'was eaten'이 맞아요. 나머지 세 문장은 모두 올바른 수동태입니다."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>Her bag is made ______ leather. (그녀의 가방은 가죽으로 만들어진다.)",
+  "choices": [
+   "of",
+   "by",
+   "at",
+   "on"
+  ],
+  "answer": "of",
+  "exp": "재료가 눈에 보이게 남아 있으면 <b>be made of ~</b> (~로 만들어지다). by 는 만든 '사람'에게 써요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>Mina ______ the door and left. (미나는 문을 닫고 떠났다.)",
+  "choices": [
+   "closed",
+   "was closed",
+   "is closed",
+   "was closing"
+  ],
+  "answer": "closed",
+  "exp": "문을 닫은 사람이 미나이므로 <b>능동태</b> closed. 수동태(was closed)는 문이 주어일 때 써요. 주어가 '하는 쪽'인지 '당하는 쪽'인지 먼저 확인!"
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>I ______ by a tiny spider on my arm. (나는 팔을 작은 거미에게 물렸다.)",
+  "choices": [
+   "was bitten",
+   "bit",
+   "was bit",
+   "am biting"
+  ],
+  "answer": "was bitten",
+  "exp": "내가 '물린' 쪽 + by a spider → 수동태. bite-bit-<b>bitten</b>. was bit 은 과거분사 자리에 과거형을 쓴 실수예요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>I wanted to go to the zoo. ______, it rained all day, so we stayed home.",
+  "choices": [
+   "However",
+   "Soon",
+   "For example",
+   "Also"
+  ],
+  "answer": "However",
+  "exp": "동물원에 가고 싶었다 ↔ 하루 종일 비가 왔다: 앞뒤 내용이 반대라서 <b>However(하지만)</b>. For example 은 예를 들 때, Also 는 내용을 더할 때 써요.",
+  "part": "Part 3 · 문장 넣기 · 순서 배열"
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>We had no money for a bus. ______, we walked to the market.",
+  "choices": [
+   "So",
+   "However",
+   "Although",
+   "Because"
+  ],
+  "answer": "So",
+  "exp": "버스비가 없다 → (그래서) 걸어갔다: 결과를 이끄는 <b>So</b>. However 는 반대, Because/Although 는 뒤에 이어지는 문장 구조가 달라서 안 돼요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>At first, the soup tasted too salty. ______, Dad added water, and it got better.",
+  "choices": [
+   "Then",
+   "However",
+   "For example",
+   "Instead of"
+  ],
+  "answer": "Then",
+  "exp": "처음엔 짰다 → <b>그 다음에</b> 물을 넣었다: 순서를 이어 주는 Then. 'At first' 와 짝이 되는 Then / Later 를 기억해요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>Many animals sleep in winter. ______, bears and frogs stay quiet until spring.",
+  "choices": [
+   "For example",
+   "However",
+   "Soon",
+   "At last"
+  ],
+  "answer": "For example",
+  "exp": "앞 문장을 구체적으로 보여 주는 <b>For example(예를 들어)</b>. 곰과 개구리가 겨울잠 자는 동물의 예예요."
+ },
+ {
+  "q": "주어진 문장이 들어가기에 가장 알맞은 곳을 고르세요.<br><b>Soon, a girl called and said, \"That is my dog!\"</b><div class=\"pass\">Min-ho found a lost puppy near the park. (①) It was shivering in the cold. (②) He took it home and gave it warm milk. (③) The next day, he put up signs on the street. (④)</div>",
+  "choices": [
+   "④",
+   "①",
+   "②",
+   "③"
+  ],
+  "answer": "④",
+  "exp": "'Soon(곧)' 은 앞 사건의 결과를 이어 줘요. 거리에 안내문을 붙인 <b>다음에</b> 주인이 전화한 것이 자연스러우므로 ④. 안내문이 나오기 전엔 주인이 알 수 없어요."
+ },
+ {
+  "q": "주어진 문장이 들어가기에 가장 알맞은 곳을 고르세요.<br><b>Then she put the cookies in the oven.</b><div class=\"pass\">Yuna wanted to bake cookies for her friends. (①) First, she mixed flour, eggs, and sugar in a big bowl. (②) She made small round shapes with the dough. (③) After twenty minutes, the whole house smelled sweet. (④)</div>",
+  "choices": [
+   "③",
+   "①",
+   "②",
+   "④"
+  ],
+  "answer": "③",
+  "exp": "요리 순서를 따라가요: 섞기 → 모양 만들기 → <b>오븐에 넣기</b> → 20분 뒤 냄새. 'Then(그다음에)' 은 모양을 만든 뒤이므로 ③."
+ },
+ {
+  "q": "주어진 문장이 들어가기에 가장 알맞은 곳을 고르세요.<br><b>In fall, he sells them at the town market.</b><div class=\"pass\">My grandfather has a small farm. (①) He grows corn, beans, and potatoes. (②) Every summer, my cousins and I help him. (③) We pick vegetables and feed the chickens. (④)</div>",
+  "choices": [
+   "②",
+   "①",
+   "③",
+   "④"
+  ],
+  "answer": "②",
+  "exp": "주어진 문장의 <b>them</b> 은 바로 앞에 나온 복수 명사(corn, beans, potatoes)를 가리켜요. 그래서 채소가 소개된 문장 바로 뒤인 ②에 들어가요."
+ },
+ {
+  "q": "글의 흐름에 맞게 (A)~(C)를 배열하세요.<br><div class=\"pass\">It was Jisu's birthday party.<br>(A) Then she made a wish and blew out the candles.<br>(B) Her family sang a birthday song.<br>(C) Her mom brought in a cake with ten candles.</div>",
+  "choices": [
+   "(C) - (B) - (A)",
+   "(B) - (C) - (A)",
+   "(A) - (B) - (C)",
+   "(C) - (A) - (B)"
+  ],
+  "answer": "(C) - (B) - (A)",
+  "exp": "케이크가 들어옴(C) → 노래(B) → 소원을 빌고 촛불을 끔(A). 'Then' 이 있는 문장은 앞 동작 다음에 와요. 촛불을 끄는 건 맨 마지막이에요."
+ },
+ {
+  "q": "글의 흐름에 맞게 (A)~(C)를 배열하세요.<br><div class=\"pass\">I wanted to make a paper airplane.<br>(A) Finally, it flew across the room.<br>(B) First, I folded the paper in half.<br>(C) Next, I folded the two top corners to the middle.</div>",
+  "choices": [
+   "(B) - (C) - (A)",
+   "(C) - (B) - (A)",
+   "(A) - (B) - (C)",
+   "(B) - (A) - (C)"
+  ],
+  "answer": "(B) - (C) - (A)",
+  "exp": "순서 표시 단어를 찾아요: <b>First → Next → Finally</b>. 그래서 (B) - (C) - (A)."
+ },
+ {
+  "q": "글의 흐름에 맞게 (A)~(C)를 배열하세요.<br><div class=\"pass\">Ms. Kim bought a small plant for her desk.<br>(A) After a month, it grew taller than the pot.<br>(B) She watered it every morning and put it near the window.<br>(C) Her students liked it so much that they gave it a name.</div>",
+  "choices": [
+   "(B) - (A) - (C)",
+   "(A) - (B) - (C)",
+   "(C) - (A) - (B)",
+   "(B) - (C) - (A)"
+  ],
+  "answer": "(B) - (A) - (C)",
+  "exp": "식물을 산다 → 물 주고 창가에 둠(B) → 한 달 뒤 자람(A) → 학생들이 이름을 지어 줌(C). (A)의 it, (B)의 it 은 모두 plant 를 가리키지만, 'After a month' 가 시간 순서의 단서예요."
+ },
+ {
+  "q": "낱말의 뜻을 고르세요.<br><b>discover</b>",
+  "choices": [
+   "발견하다",
+   "잃어버리다",
+   "기부하다",
+   "모으다"
+  ],
+  "answer": "발견하다",
+  "exp": "discover = <b>발견하다</b> (처음으로 찾아내다). discovery(발견)와 함께 외워요. 기부하다는 donate, 모으다는 gather.",
+  "part": "Part 4 · 어휘 · 글 이해"
+ },
+ {
+  "q": "낱말의 뜻을 고르세요.<br><b>donate</b>",
+  "choices": [
+   "기부하다",
+   "모으다",
+   "던지다",
+   "파괴하다"
+  ],
+  "answer": "기부하다",
+  "exp": "donate = <b>기부하다</b>. donation(기부)도 같이! 모으다는 gather/collect, 파괴하다는 destroy."
+ },
+ {
+  "q": "낱말의 뜻을 고르세요.<br><b>destroy</b>",
+  "choices": [
+   "파괴하다",
+   "만들다",
+   "보호하다",
+   "모으다"
+  ],
+  "answer": "파괴하다",
+  "exp": "destroy = <b>파괴하다</b>. 반대말은 build/protect. 'The books were destroyed'는 책이 없어졌다는 뜻이에요."
+ },
+ {
+  "q": "낱말의 뜻을 고르세요.<br><b>gather</b>",
+  "choices": [
+   "모으다",
+   "숨기다",
+   "닫다",
+   "놓치다"
+  ],
+  "answer": "모으다",
+  "exp": "gather = <b>모으다, 모이다</b>. 수동태로 'were gathered' 처럼 자주 나와요."
+ },
+ {
+  "q": "낱말의 뜻을 고르세요.<br><b>public</b>",
+  "choices": [
+   "공공의, 일반 대중의",
+   "개인의",
+   "비밀의",
+   "낡은"
+  ],
+  "answer": "공공의, 일반 대중의",
+  "exp": "public = <b>공공의</b>. 'open to the public' = 일반 사람들에게 열려 있는. 반대말은 private(개인의)."
+ },
+ {
+  "q": "낱말의 뜻을 고르세요.<br><b>unique</b>",
+  "choices": [
+   "독특한, 유일한",
+   "평범한",
+   "위험한",
+   "느린"
+  ],
+  "answer": "독특한, 유일한",
+  "exp": "unique = <b>독특한</b> (세상에 하나뿐인). 평범한은 ordinary/common."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>The scientist ______ a new star last night. (그 과학자는 어젯밤 새로운 별을 발견했다.)",
+  "choices": [
+   "discovered",
+   "donated",
+   "destroyed",
+   "gathered"
+  ],
+  "answer": "discovered",
+  "exp": "새로운 별을 찾아냈으니 <b>discovered</b>. donated(기부), destroyed(파괴), gathered(모았다)는 별과 어울리지 않아요."
+ },
+ {
+  "q": "빈칸에 알맞은 것을 고르세요.<br>Mr. Han ______ his old books to the school library for free. (한 선생님은 낡은 책을 학교 도서관에 무료로 기증했다.)",
+  "choices": [
+   "donated",
+   "discovered",
+   "destroyed",
+   "decided"
+  ],
+  "answer": "donated",
+  "exp": "'도서관에 주었다'이므로 <b>donated(기증했다)</b>. 'to the school library' 가 단서예요."
+ },
+ {
+  "q": "글을 읽고 알맞은 것을 고르세요.<div class=\"pass\">The Eiffel Tower was built in 1889. At first, many people did not like it, and some of them wanted it to be taken down. However, it was kept, and today it is visited by millions of people every year.</div>이 글의 내용과 일치하는 것은?",
+  "choices": [
+   "Today millions of people visit the tower.",
+   "The tower was destroyed in 1889.",
+   "Everyone liked the tower at first.",
+   "The tower was moved to another city."
+  ],
+  "answer": "Today millions of people visit the tower.",
+  "exp": "마지막 문장 'it is visited by millions of people' = 지금은 수백만 명이 찾는다. At first 에는 싫어한 사람이 많았고, However 뒤에서 탑은 철거되지 않고 남았어요."
+ },
+ {
+  "q": "글을 읽고 알맞은 것을 고르세요.<div class=\"pass\">In 1928, a doctor named Fleming left some dishes on his table for two weeks. When he came back, a strange mold was growing on one of them. He saw that the germs around the mold had died. Later, doctors learned to use it as a medicine, and many sick people were saved.</div>이 글의 내용과 일치하는 것은?",
+  "choices": [
+   "Doctors later used the mold as a medicine.",
+   "Fleming made the mold on purpose.",
+   "The germs killed the mold.",
+   "The mold was thrown away at once."
+  ],
+  "answer": "Doctors later used the mold as a medicine.",
+  "exp": "'doctors learned to use it as a medicine' 에서 곰팡이가 약으로 쓰였음을 알 수 있어요. 곰팡이 주변의 균이 죽었다고 했으니 '균이 곰팡이를 죽였다'는 반대예요. 'were saved' = 구해졌다(수동태)."
+ }
+];
+
+var QUIZ_ID = "clinic-yjw-1023";
+var QUIZ_TITLE = "유정완 주말 사진 클리닉 40문제 10/23";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+  var u = document.createElement("button");
+  u.className = "unknown"; u.id = "unknown-btn";
+  u.textContent = "🤔 모름";
+  u.addEventListener("click", function () { pick("모름", "", true); });
+  box.appendChild(u);
+}
+
+var locked = false;
+function pick(choice, mark, unknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  var entry = { no: current + 1, ok: ok, chosen: choice, answer: q.answer };
+  if (unknown) { entry.unknown = true; unknownNumbers.push(current + 1); }
+  answersLog.push(entry);
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unknownLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var ul = document.createElement("div");
+  ul.className = "sub"; ul.id = "unknown-line"; ul.style.textAlign = "center";
+  ul.textContent = unknownLine();
+  document.getElementById("score-line").insertAdjacentElement("afterend", ul);
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/23 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
