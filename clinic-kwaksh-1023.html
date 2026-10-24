@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>곽서형 · 영핏 사진 클리닉 10/23</title>
+<meta property="og:title" content="곽서형 주말 클리닉 40문제 · 10/23 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unknown { display:block; width:100%; margin-top:6px; padding:12px; font-size:1rem; font-weight:bold; color:#8a6d00; background:#fff8e1; border:1.5px dashed #e0b84c; border-radius:10px; cursor:pointer; }
+  .unknown:active { background:#ffefb3; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>곽서형 학생 클리닉 · 10/23 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="곽서형" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그녀가 길을 잃은 아이를 도와준 것은 친절했다.",
+  "choices": [
+   "It was kind of her to help the lost child.",
+   "It was kind for her to help the lost child.",
+   "It was kind of her help the lost child.",
+   "It was kind of she to help the lost child.",
+   "It kind of her to help the lost child."
+  ],
+  "answer": "It was kind of her to help the lost child.",
+  "exp": "사람의 <b>성격·태도(kind)</b>를 평가할 때는 <b>It was kind <b>of</b> + 목적격(her) + to + 동사원형</b>! for는 '쉽다/어렵다' 같은 난이도 형용사에 써요. 과거 이야기라 was, 그리고 of 뒤는 she가 아니라 her예요.",
+  "part": "Part 1 · It was 성격형용사 of 사람 to"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>It was thoughtful of her to call ______ last night.",
+  "choices": [
+   "us",
+   "we",
+   "our",
+   "ours",
+   "ourselves"
+  ],
+  "answer": "us",
+  "exp": "call은 <b>목적어가 꼭 필요한 동사</b>예요. to call 뒤에서 '우리를'은 목적격 <b>us</b>. 영작할 때 'to help'처럼 동사만 쓰고 목적어(me, us...)를 빼먹지 않았는지 꼭 확인!"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그가 줄을 서지 않고 새치기한 것은 무례했다.",
+  "choices": [
+   "It was rude of him to cut in line.",
+   "It was rude for him to cut in line.",
+   "It is rude of him to cut in line.",
+   "It was rude of him cut in line.",
+   "It was rude of he to cut in line."
+  ],
+  "answer": "It was rude of him to cut in line.",
+  "exp": "rude(무례한)는 사람의 태도를 평가하는 성격형용사 → <b>of him</b>. '무례했다'가 과거라서 was, 그리고 <b>to + 동사원형(cut)</b>까지 빠짐없이!"
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?<br>① It was wise of Jisu to ask for help.<br>② It was brave of the boy to enter the dark cave.<br>③ It was foolish for her to trust the stranger.<br>④ It was generous of the owner to give us free drinks.<br>⑤ It was careless of Mina to leave the window open.",
+  "choices": [
+   "③ It was foolish for her to trust the stranger.",
+   "① It was wise of Jisu to ask for help.",
+   "② It was brave of the boy to enter the dark cave.",
+   "④ It was generous of the owner to give us free drinks.",
+   "⑤ It was careless of Mina to leave the window open."
+  ],
+  "answer": "③ It was foolish for her to trust the stranger.",
+  "exp": "foolish(어리석은)는 성격을 나타내므로 for가 아니라 <b>of her</b>가 맞아요. 나머지는 모두 of + 사람이 바르게 쓰였어요."
+ },
+ {
+  "q": "빈칸에 알맞은 전치사는?<br>It was silly ______ Tom to forget his own password.",
+  "choices": [
+   "of",
+   "for",
+   "to",
+   "with",
+   "by"
+  ],
+  "answer": "of",
+  "exp": "silly(어리석은)는 사람의 행동을 평가하는 성격형용사라 <b>of Tom</b>. '쉽다·어렵다·중요하다'가 오면 for, '친절한·어리석은·무례한'이 오면 of!"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그들이 우리에게 길을 알려 준 것은 친절했다.",
+  "choices": [
+   "It was kind of them to show us the way.",
+   "It was of them kind to show us the way.",
+   "It was kind of them to show we the way.",
+   "It was kind of them to us show the way.",
+   "It was kind them of to show us the way."
+  ],
+  "answer": "It was kind of them to show us the way.",
+  "exp": "순서는 <b>It was + 형용사 + of + 목적격 + to + 동사원형 + 목적어</b>. 'show us the way'에서 show 뒤 '우리에게'는 we가 아니라 목적격 us예요."
+ },
+ {
+  "q": "다음 중 빈칸에 <b>of</b>가 들어가는 문장은?<br>① It is hard ______ me to remember all the names.<br>② It was clever ______ the dog to open the door.<br>③ It is important ______ students to listen carefully.<br>④ It is possible ______ us to arrive before noon.<br>⑤ It was difficult ______ them to carry the box.",
+  "choices": [
+   "② It was clever ______ the dog to open the door.",
+   "① It is hard ______ me to remember all the names.",
+   "③ It is important ______ students to listen carefully.",
+   "④ It is possible ______ us to arrive before noon.",
+   "⑤ It was difficult ______ them to carry the box."
+  ],
+  "answer": "② It was clever ______ the dog to open the door.",
+  "exp": "clever(영리한)는 성격형용사 → <b>of the dog</b>. hard·important·possible·difficult는 난이도·상황 형용사라 for를 써요."
+ },
+ {
+  "q": "다음 문장의 의미로 알맞은 것은?<br>It was selfish of him to take all the cookies.",
+  "choices": [
+   "그가 쿠키를 전부 가져간 것은 이기적이었다.",
+   "그는 쿠키를 전부 가져가고 싶어 했다.",
+   "쿠키를 전부 가져가는 것은 그에게 어려웠다.",
+   "그에게 쿠키를 전부 가져가라고 말했다.",
+   "이기적인 사람은 쿠키를 좋아한다."
+  ],
+  "answer": "그가 쿠키를 전부 가져간 것은 이기적이었다.",
+  "exp": "<b>It was 성격형용사 of 사람 to ~</b>는 'a 사람이 ~한 것은 (성격형용사)했다'로 해석해요. of him 이 행동한 사람이고 selfish는 그 행동에 대한 평가!"
+ },
+ {
+  "q": "빈칸에 알맞은 형용사는?<br>It was ______ of her to lie to us.",
+  "choices": [
+   "dishonest",
+   "possible",
+   "necessary",
+   "easy",
+   "difficult"
+  ],
+  "answer": "dishonest",
+  "exp": "of her가 있으면 사람의 성격을 말하는 형용사가 와야 해요. <b>dishonest(정직하지 못한)</b>만 성격형용사! possible·necessary·easy·difficult는 for + 사람과 함께 써요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그가 그 상자를 열어 본 것은 어리석었다. (foolish, open the box)",
+  "choices": [
+   "It was foolish of him to open the box.",
+   "It was foolish for him to open the box.",
+   "It was foolish of him open the box.",
+   "It is foolish of him to open the box.",
+   "It foolish of him to open the box."
+  ],
+  "answer": "It was foolish of him to open the box.",
+  "exp": "성격형용사 foolish → <b>of him</b>, 뒤에 <b>to + 동사원형(open)</b>. 과거를 말하니 was를 쓰고 <b>was를 빼먹지 않기</b>!"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그들이 그 규칙을 이해하는 것은 어렵다. (hard, understand)",
+  "choices": [
+   "It is hard for them to understand the rule.",
+   "It is hard they understand the rule.",
+   "It is hard of them to understand the rule.",
+   "It is hard for them understand the rule.",
+   "It hard for them to understand the rule."
+  ],
+  "answer": "It is hard for them to understand the rule.",
+  "exp": "to부정사의 행동을 하는 사람은 <b>for + 목적격(them)</b>으로 써요. 'It is hard they ~'처럼 주어를 그대로 쓰면 틀려요. 그리고 It <b>is</b> 를 빼먹지 말기!",
+  "part": "Part 2 · It is 형용사 for 사람 to · find it 형용사 to"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>It is necessary for ______ to wear helmets here.",
+  "choices": [
+   "them",
+   "they",
+   "their",
+   "theirs",
+   "themselves"
+  ],
+  "answer": "them",
+  "exp": "<b>for 뒤에는 목적격</b>을 써요: for them. they(주격), their(소유격)은 안 돼요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?<br>① It is dangerous for kids to touch the hot stove.<br>② It is necessary for us to bring our ID cards.<br>③ It is tiring for him to climb the stairs every day.<br>④ It is impossible of her to finish the report in an hour.<br>⑤ It is boring for me to wait in a long line.",
+  "choices": [
+   "④ It is impossible of her to finish the report in an hour.",
+   "① It is dangerous for kids to touch the hot stove.",
+   "② It is necessary for us to bring our ID cards.",
+   "③ It is tiring for him to climb the stairs every day.",
+   "⑤ It is boring for me to wait in a long line."
+  ],
+  "answer": "④ It is impossible of her to finish the report in an hour.",
+  "exp": "impossible은 '가능하다/불가능하다'를 말하는 형용사라서 <b>for her</b>가 맞아요. of는 사람의 성격(kind, rude...)일 때만!"
+ },
+ {
+  "q": "'for her'를 넣어 <b>올바른 문장</b>을 만든 것은?<br>(It is difficult to open this jar.)",
+  "choices": [
+   "It is difficult for her to open this jar.",
+   "It is for her difficult to open this jar.",
+   "It is difficult to for her open this jar.",
+   "It for her is difficult to open this jar.",
+   "It is difficult to open for her this jar."
+  ],
+  "answer": "It is difficult for her to open this jar.",
+  "exp": "<b>for + 사람은 형용사 바로 뒤, to 바로 앞</b>에 와요: It is difficult <b>for her</b> to open ~."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>내가 하루 만에 그 책을 다 읽는 것은 불가능하다.",
+  "choices": [
+   "It is impossible for me to read the whole book in a day.",
+   "It is impossible of me to read the whole book in a day.",
+   "It is impossible me to read the whole book in a day.",
+   "It is impossible for me read the whole book in a day.",
+   "It impossible for me to read the whole book in a day."
+  ],
+  "answer": "It is impossible for me to read the whole book in a day.",
+  "exp": "불가능하다(impossible)는 상황의 난이도 → <b>for me</b>. to 뒤에는 동사원형(read)! be동사(is)도 꼭 쓰기."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>나는 비 오는 날 운동하는 것이 힘들다는 것을 알게 되었다. (find, tough, exercise on rainy days)",
+  "choices": [
+   "I found it tough to exercise on rainy days.",
+   "I found tough to exercise on rainy days.",
+   "I found that tough to exercise on rainy days.",
+   "I found it tough to exercising on rainy days.",
+   "I found it to tough exercise on rainy days."
+  ],
+  "answer": "I found it tough to exercise on rainy days.",
+  "exp": "<b>found + it + 형용사 + to + 동사원형</b>. 진짜 목적어(to get up...)가 길어서 가짜 목적어 <b>it</b>을 먼저 놓아요. 'found tough'처럼 it을 빼면 안 돼요!"
+ },
+ {
+  "q": "다음 우리말에 맞게 <b>빠짐없이</b> 쓴 문장은?<br>나는 한여름에 두꺼운 코트를 입는 것이 어색하다고 느꼈다. (find, it, awkward, wear a thick coat in midsummer)",
+  "choices": [
+   "I found it awkward to wear a thick coat in midsummer.",
+   "I found it awkward to a thick coat in midsummer.",
+   "I found awkward to wear a thick coat in midsummer.",
+   "I found it awkwardly to wear a thick coat in midsummer.",
+   "I found it awkward wearing to a thick coat in midsummer."
+  ],
+  "answer": "I found it awkward to wear a thick coat in midsummer.",
+  "exp": "괄호 속 <b>주어진 말(동사 wear)을 하나도 빼먹지 않는 것</b>이 영작의 기본이에요. to 뒤에 동사원형이 빠지면 문장이 완성되지 않아요. 또 it 뒤에는 부사(awkwardly)가 아니라 <b>형용사(awkward)</b>!"
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?<br>① I think it fun to learn card tricks.<br>② He found it difficult to say goodbye.<br>③ The new bridge made it possible to cross the river by bike.<br>④ We found important to turn off the lights.<br>⑤ They thought it rude to talk loudly on the bus.",
+  "choices": [
+   "④ We found important to turn off the lights.",
+   "① I think it fun to learn card tricks.",
+   "② He found it difficult to say goodbye.",
+   "③ The new bridge made it possible to cross the river by bike.",
+   "⑤ They thought it rude to talk loudly on the bus."
+  ],
+  "answer": "④ We found important to turn off the lights.",
+  "exp": "found important 뒤에 바로 to가 오면 <b>가목적어 it</b>이 빠진 거예요 → We found <b>it</b> important to ~."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그 안내판은 도서관을 찾는 것을 쉽게 만들어 주었다. (sign, make, easy, find the library)",
+  "choices": [
+   "The sign made it easy to find the library.",
+   "The sign made easy to find the library.",
+   "The sign made it easily to find the library.",
+   "The sign made it easy finding to the library.",
+   "The sign made it to easy find the library."
+  ],
+  "answer": "The sign made it easy to find the library.",
+  "exp": "<b>made it easy to find</b> 순서를 기억! it 다음에 형용사(easy), 그다음 to + 동사원형. easily(부사)는 쓸 수 없어요."
+ },
+ {
+  "q": "빈칸에 공통으로 알맞은 말은?<br>• It is difficult ______ Mina to speak in front of people.<br>• I think it hard ______ Mina to speak in front of people.",
+  "choices": [
+   "for",
+   "of",
+   "to",
+   "by",
+   "with"
+  ],
+  "answer": "for",
+  "exp": "둘 다 <b>to부정사의 행동을 하는 사람(Mina)</b>을 나타내는 의미상 주어 → <b>for + 사람</b>. 'think it hard for Mina to ~'처럼 가목적어 문장에서도 for를 써요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>My grandfather enjoys ______ in the garden every morning.",
+  "choices": [
+   "walking",
+   "to walk",
+   "walk",
+   "walked",
+   "to walking"
+  ],
+  "answer": "walking",
+  "exp": "<b>enjoy</b> 뒤에는 to부정사가 아니라 <b>동명사(-ing)</b>만 와요. want·hope·decide는 to, enjoy·finish·stop·mind는 -ing!",
+  "part": "Part 3 · enjoy·finish·stop + -ing · 동명사 주어 + is"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>I finished ______ my science report at nine.",
+  "choices": [
+   "writing",
+   "to write",
+   "write",
+   "wrote",
+   "to writing"
+  ],
+  "answer": "writing",
+  "exp": "<b>finish + 동명사(-ing)</b>. finish 뒤에 to write를 쓰면 틀려요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>Kevin은 휴대폰 게임을 하던 것을 그만두었다.",
+  "choices": [
+   "Kevin stopped playing the phone game.",
+   "Kevin stopped to play the phone game.",
+   "Kevin stopped play the phone game.",
+   "Kevin stopped to playing the phone game.",
+   "Kevin stop playing the phone game."
+  ],
+  "answer": "Kevin stopped playing the phone game.",
+  "exp": "<b>stop + -ing</b> = ~하던 것을 멈추다. (stop to play는 '~하려고 멈추다'로 뜻이 달라져요.) 과거 이야기이니 stopped!"
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?<br>① Mina enjoys drawing cartoons in her free time.<br>② We finished cleaning the classroom before lunch.<br>③ He enjoyed to swim in the cold river.<br>④ Did you finish reading the novel?<br>⑤ The boys stopped fighting when the teacher came in.",
+  "choices": [
+   "③ He enjoyed to swim in the cold river.",
+   "① Mina enjoys drawing cartoons in her free time.",
+   "② We finished cleaning the classroom before lunch.",
+   "④ Did you finish reading the novel?",
+   "⑤ The boys stopped fighting when the teacher came in."
+  ],
+  "answer": "③ He enjoyed to swim in the cold river.",
+  "exp": "enjoyed 뒤에 <b>to swim</b>은 틀려요 → enjoyed <b>swimming</b>. enjoy는 동명사만 목적어로 써요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>나의 언니는 요리 프로그램 보는 것을 즐긴다.",
+  "choices": [
+   "My sister enjoys watching cooking shows.",
+   "My sister enjoys to watch cooking shows.",
+   "My sister enjoys watch cooking shows.",
+   "My sister enjoying watching cooking shows.",
+   "My sister enjoys watching to cooking shows."
+  ],
+  "answer": "My sister enjoys watching cooking shows.",
+  "exp": "<b>enjoy + -ing</b>. 주어가 3인칭 단수라 enjoy<b>s</b>, 그리고 enjoy 자체는 동사라서 -ing로 바꾸면 안 돼요(enjoying ✕)."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>______ new words every day is helpful for your vocabulary.",
+  "choices": [
+   "Learning",
+   "Learn",
+   "To learning",
+   "Learned",
+   "Learns"
+  ],
+  "answer": "Learning",
+  "exp": "문장 맨 앞 주어 자리에 '~하는 것'이 오면 <b>동명사(Learning)</b>로 시작해요. 동사원형(Learn)을 주어로 쓸 수 없어요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>Playing computer games ______ my hobby.",
+  "choices": [
+   "is",
+   "are",
+   "being",
+   "be",
+   "does"
+  ],
+  "answer": "is",
+  "exp": "<b>동명사 주어 + is</b>! Playing computer games는 games가 있어도 '게임하는 것' 하나이므로 <b>단수 취급 → is</b>예요. 그리고 동사 is를 빼먹으면 문장이 끝나지 않아요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>매일 아침 신문을 읽는 것은 좋은 습관이다.",
+  "choices": [
+   "Reading the newspaper every morning is a good habit.",
+   "Reading the newspaper every morning a good habit.",
+   "Reading the newspaper every morning are a good habit.",
+   "Read the newspaper every morning is a good habit.",
+   "Reading the newspaper every morning be a good habit."
+  ],
+  "answer": "Reading the newspaper every morning is a good habit.",
+  "exp": "<b>Reading ~ (동명사 주어) + is + 명사/형용사</b>. is가 빠지거나 are/be로 바뀌면 틀려요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?<br>① Swimming in the sea is dangerous in winter.<br>② Eating breakfast helps you focus in class.<br>③ Taking pictures of birds is my uncle's hobby.<br>④ Cleaning my room very boring to me.<br>⑤ Sleeping well makes you feel better.",
+  "choices": [
+   "④ Cleaning my room very boring to me.",
+   "① Swimming in the sea is dangerous in winter.",
+   "② Eating breakfast helps you focus in class.",
+   "③ Taking pictures of birds is my uncle's hobby.",
+   "⑤ Sleeping well makes you feel better."
+  ],
+  "answer": "④ Cleaning my room very boring to me.",
+  "exp": "④는 주어(Cleaning my room) 뒤에 <b>동사 is</b>가 없어요 → Cleaning my room <b>is</b> very boring to me. ②·⑤는 helps, makes가 동사라서 is가 없어도 돼요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>식사 후에 이를 닦는 것은 건강에 중요하다. (brush your teeth after meals, important)",
+  "choices": [
+   "Brushing your teeth after meals is important for your health.",
+   "Brushing your teeth after meals important for your health.",
+   "Brush your teeth after meals is important for your health.",
+   "Brushing your teeth after meals are important for your health.",
+   "To brushing your teeth after meals is important for your health."
+  ],
+  "answer": "Brushing your teeth after meals is important for your health.",
+  "exp": "주어는 <b>Brushing your teeth after meals</b>(동명사구), 동사는 <b>is</b>, 보어는 important. is를 빼먹지 않고 단수로 쓰기!"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>We decided ______ the earlier train.",
+  "choices": [
+   "to take",
+   "to taking",
+   "taking",
+   "to took",
+   "took"
+  ],
+  "answer": "to take",
+  "exp": "decide는 <b>to + 동사원형</b>을 써요. <b>to 뒤에는 항상 동사원형</b>(taking, took ✕).",
+  "part": "Part 4 · to 뒤 동사원형 · 종합 · 독해 3문제"
+ },
+ {
+  "q": "다음 중 어법상 <b>올바른</b> 문장은?",
+  "choices": [
+   "It is important to be honest with friends.",
+   "It important to be honest with friends.",
+   "It is important to being honest with friends.",
+   "It is important to honest with friends.",
+   "It is important be honest with friends."
+  ],
+  "answer": "It is important to be honest with friends.",
+  "exp": "<b>to 뒤에는 동사원형</b>이고, '~이다'라는 뜻이 들어가면 <b>be</b>를 꼭 써야 해요(to be honest). It <b>is</b>도 빼먹지 말기!"
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?<br>① I hope to see you again soon.<br>② He promised to call me tonight.<br>③ They plan to visits the museum on Friday.<br>④ We need to leave before six.<br>⑤ My mom wants to buy a new bike.",
+  "choices": [
+   "③ They plan to visits the museum on Friday.",
+   "① I hope to see you again soon.",
+   "② He promised to call me tonight.",
+   "④ We need to leave before six.",
+   "⑤ My mom wants to buy a new bike."
+  ],
+  "answer": "③ They plan to visits the museum on Friday.",
+  "exp": "주어가 They여도 <b>to 뒤는 항상 동사원형</b>이에요 → to <b>visit</b>. to visits처럼 -s를 붙이면 안 돼요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>나는 이번 겨울에 스키를 배우기로 계획했다.",
+  "choices": [
+   "I planned to learn skiing this winter.",
+   "I planned learning skiing this winter.",
+   "I planned to learning skiing this winter.",
+   "I planned learn skiing this winter.",
+   "I planned to learned skiing this winter."
+  ],
+  "answer": "I planned to learn skiing this winter.",
+  "exp": "plan은 <b>to + 동사원형</b>을 목적어로 써요. 과거(planned)는 앞 동사에서 표현하고 to 뒤는 원형 그대로 learn!"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그녀가 그 문을 잠그는 것을 잊은 것은 부주의했다. (careless, forget, lock the door)",
+  "choices": [
+   "It was careless of her to forget to lock the door.",
+   "It was careless for her to forget to lock the door.",
+   "It was careless of she to forget to lock the door.",
+   "It was careless of her to forget lock the door.",
+   "It was careless of her to forgot to lock the door."
+  ],
+  "answer": "It was careless of her to forget to lock the door.",
+  "exp": "careless는 성격형용사 → <b>of her</b>. forget(잊다)이 to 뒤 동사원형이고, forget의 목적어 <b>to lock</b>도 to를 빠뜨리면 안 돼요."
+ },
+ {
+  "q": "다음 문장에서 어법상 <b>틀린 부분</b>을 바르게 고친 것은?<br>It is hard of my brother to repair the old radio by himself.",
+  "choices": [
+   "of my brother → for my brother",
+   "hard → hardly",
+   "to carry → carrying",
+   "heavy → heavily",
+   "is → were"
+  ],
+  "answer": "of my brother → for my brother",
+  "exp": "hard(힘든)는 난이도 형용사 → <b>for my brother</b>. of는 kind·rude 같은 성격형용사일 때만 써요."
+ },
+ {
+  "q": "다음 중 어법상 <b>올바른</b> 문장끼리 짝지은 것은?<br>(a) Running every day is good for health.<br>(b) My little brother enjoys to draw robots.<br>(c) It was brave of the girl to speak first.<br>(d) He found interesting to read old maps.",
+  "choices": [
+   "(a), (c)",
+   "(a), (b)",
+   "(b), (d)",
+   "(c), (d)",
+   "(a), (d)"
+  ],
+  "answer": "(a), (c)",
+  "exp": "(b)는 enjoy 뒤에 to draw ✕ → drawing. (d)는 found 뒤 가목적어 it이 빠졌어요 → found it interesting. (a)(c)가 맞아요."
+ },
+ {
+  "q": "다음 글의 목적으로 가장 알맞은 것은?<br><div class=\"pass\">Dear Mr. Park,<br>I am writing about the school trip next Friday. Many students want to visit the science museum, but our bus has only 40 seats. Could you tell us if we can use a second bus? Please let us know by Wednesday.<br>Sincerely,<br>Hana Lee, Class 2-3</div>",
+  "choices": [
+   "버스를 한 대 더 이용할 수 있는지 문의하려고",
+   "과학관 입장료를 환불받으려고",
+   "체험학습 날짜를 취소하려고",
+   "학급 반장 선거를 안내하려고",
+   "버스 기사에게 감사하려고"
+  ],
+  "answer": "버스를 한 대 더 이용할 수 있는지 문의하려고",
+  "exp": "글의 목적은 첫 인사나 배경이 아니라 <b>요청 문장(Could you tell us if ~?)</b>에 나와요. 과학관은 배경 정보일 뿐, 핵심 부탁은 '버스를 더 쓸 수 있는지'예요."
+ },
+ {
+  "q": "다음 글의 밑줄 친 ⓐ~ⓔ 중 가리키는 대상이 <b>나머지 넷과 다른</b> 것은?<br><div class=\"pass\">Minho bought a used bike from his cousin. At first, <u>ⓐ it</u> looked old and dirty, so he washed <u>ⓑ it</u> all afternoon. There was a lot of mud on the wheels, but <u>ⓒ it</u> came off easily. When he finished, his mother said, \"<u>ⓓ It</u> looks like a new bike!\" Minho was happy to ride <u>ⓔ it</u> to school the next day.</div>",
+  "choices": [
+   "ⓒ it",
+   "ⓐ it",
+   "ⓑ it",
+   "ⓓ It",
+   "ⓔ it"
+  ],
+  "answer": "ⓒ it",
+  "exp": "ⓐ·ⓑ·ⓓ·ⓔ는 모두 <b>a used bike</b>(자전거)예요. ⓒ는 'mud(진흙)가 쉽게 떨어졌다'에서 <b>진흙</b>을 가리켜요. it은 바로 앞 문장·절의 명사를 확인!"
+ },
+ {
+  "q": "다음 글의 빈칸에 들어갈 말로 가장 알맞은 것은?<br><div class=\"pass\">Jina is 14, but she is already 175 cm tall. Strangers often talk to her as if she were an adult. A bus driver once asked, \"Are you a high school teacher?\" Jina doesn't mind being tall, but she sometimes wants people to ______.</div>",
+  "choices": [
+   "treat her like a girl her age",
+   "cook food for her",
+   "give her a free ticket",
+   "ask her for the time",
+   "teach her math"
+  ],
+  "answer": "treat her like a girl her age",
+  "exp": "앞 내용(어른 취급을 받아 불편함) → 그래서 바라는 것은 <b>'나이에 맞게 대해 주는 것'</b>이에요. 빈칸은 글 전체 흐름의 결론을 찾는 문제!"
+ }
+];
+
+var QUIZ_ID = "clinic-kwaksh-1023";
+var QUIZ_TITLE = "곽서형 주말 사진 클리닉 40문제 10/23";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+  var u = document.createElement("button");
+  u.className = "unknown"; u.id = "unknown-btn";
+  u.textContent = "🤔 모름";
+  u.addEventListener("click", function () { pick("모름", "", true); });
+  box.appendChild(u);
+}
+
+var locked = false;
+function pick(choice, mark, unknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  var entry = { no: current + 1, ok: ok, chosen: choice, answer: q.answer };
+  if (unknown) { entry.unknown = true; unknownNumbers.push(current + 1); }
+  answersLog.push(entry);
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unknownLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var ul = document.createElement("div");
+  ul.className = "sub"; ul.id = "unknown-line"; ul.style.textAlign = "center";
+  ul.textContent = unknownLine();
+  document.getElementById("score-line").insertAdjacentElement("afterend", ul);
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/23 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
