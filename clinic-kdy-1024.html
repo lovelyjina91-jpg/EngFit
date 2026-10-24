@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>김대윤 · 영핏 사진 클리닉 10/24</title>
+<meta property="og:title" content="김대윤 클리닉 · 10/24 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unknown { display:block; width:100%; margin-top:6px; padding:12px; font-size:1rem; font-weight:bold; color:#8a6d00; background:#fff8e1; border:1.5px dashed #e0b84c; border-radius:10px; cursor:pointer; }
+  .unknown:active { background:#ffefb3; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>김대윤 학생 클리닉 · 10/24 🌱</h1>
+    <p class="sub">12문항 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="김대윤" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "다음 글의 제목으로 가장 적절한 것은?<div class=\"pass\">Every autumn, squirrels bury thousands of acorns in the ground. They plan to eat them in winter, but they often forget where they put many of them. The forgotten acorns slowly grow into young oak trees. In this way, squirrels help new forests grow without even trying.</div>",
+  "choices": [
+   "Squirrels: Accidental Forest Makers",
+   "How to Cook Acorns for Winter",
+   "Why Oak Trees Lose Leaves in Fall",
+   "Squirrels Have Poor Eyesight",
+   "The Best Food for Cold Seasons"
+  ],
+  "answer": "Squirrels: Accidental Forest Makers",
+  "exp": "다람쥐가 <b>잊어버린 도토리</b>가 나무로 자라 숲이 만들어진다는 내용 전체를 담은 제목은 'Accidental Forest Makers'예요. 오답은 글의 일부 단어(acorns, winter)만 이용한 것들이에요."
+ },
+ {
+  "q": "다음 글의 제목으로 가장 적절한 것은?<div class=\"pass\">Many people think the best way to study is to read the same page again and again. However, scientists found that students remember more when they test themselves with questions. Trying to recall an answer makes the brain work harder, and that effort makes memory stronger.</div>",
+  "choices": [
+   "Quiz Yourself to Remember More",
+   "Why Reading Is Boring",
+   "Teachers Who Love Tests",
+   "The Danger of Late-Night Study",
+   "Tips for Writing Clearly"
+  ],
+  "answer": "Quiz Yourself to Remember More",
+  "exp": "<b>However</b> 뒤가 글쓴이의 핵심이에요: 스스로 문제를 내면 기억이 더 잘 된다 → 'Quiz Yourself to Remember More'."
+ },
+ {
+  "q": "다음 글의 주제로 가장 적절한 것은?<div class=\"pass\">Colors affect how we feel. Blue rooms often make people calm, while yellow ones can make them cheerful. Because of this, many hospitals paint their walls in soft colors, and some restaurants use red to make guests feel hungry.</div>",
+  "choices": [
+   "색깔이 사람의 기분에 영향을 준다",
+   "병원은 항상 파란색으로 칠해야 한다",
+   "식당 인테리어 비용을 줄이는 방법",
+   "밝은 색은 눈 건강에 해롭다",
+   "색깔 이름은 나라마다 다르다"
+  ],
+  "answer": "색깔이 사람의 기분에 영향을 준다",
+  "exp": "첫 문장 <b>Colors affect how we feel</b>이 주제문이고, 나머지는 파랑·노랑·빨강의 예시예요. 예시 하나(병원, 식당)만 고르면 범위가 너무 좁아져요."
+ },
+ {
+  "q": "다음 글의 주제로 가장 적절한 것은?<div class=\"pass\">Sharing a meal with family has more benefits than just good food. Children who often eat with their parents tend to talk more about their day and feel closer to them. Even a ten-minute dinner without phones can make a big difference.</div>",
+  "choices": [
+   "가족과 함께 식사하면 유대감이 깊어진다",
+   "아이들은 편식하지 않아야 한다",
+   "저녁 식사 시간은 길수록 좋다",
+   "부모가 직접 요리해야 한다",
+   "스마트폰은 아이에게 해롭다"
+  ],
+  "answer": "가족과 함께 식사하면 유대감이 깊어진다",
+  "exp": "<b>talk more, feel closer</b>가 핵심 결과예요. 'phones'는 보조 정보일 뿐 글 전체의 주제가 아니에요."
+ },
+ {
+  "q": "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것은?<div class=\"pass\">Last Saturday, Eun-ji joined a beach clean-up with her neighbors.<br><br>(A) After two hours, the beach was clean, and everyone took a photo together.<br>(B) First, each person got a bag and a pair of gloves from the volunteer leader.<br>(C) Then they walked along the sand and picked up bottles and plastic pieces.</div>",
+  "choices": [
+   "(A)-(C)-(B)",
+   "(B)-(A)-(C)",
+   "(B)-(C)-(A)",
+   "(C)-(A)-(B)",
+   "(C)-(B)-(A)"
+  ],
+  "answer": "(B)-(C)-(A)",
+  "exp": "<b>First → Then → After two hours</b>의 시간 순서로 연결해요. 도구를 받고(B) → 줍고(C) → 끝난 뒤 사진(A)."
+ },
+ {
+  "q": "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것은?<div class=\"pass\">Some animals sleep through the winter, and this long sleep is called hibernation.<br><br>(A) Before winter comes, bears eat a huge amount of food to gain weight.<br>(B) Their heartbeat slows down, so their bodies use very little energy.<br>(C) Then they find a quiet cave and lie down for the long sleep.</div>",
+  "choices": [
+   "(A)-(C)-(B)",
+   "(A)-(B)-(C)",
+   "(B)-(A)-(C)",
+   "(B)-(C)-(A)",
+   "(C)-(A)-(B)"
+  ],
+  "answer": "(A)-(C)-(B)",
+  "exp": "(B)의 <b>Their</b>는 앞에서 먼저 나온 bears를 받아요. 그러므로 (B)는 맨 앞이 될 수 없고, 먹기(A) → 동굴에서 눕기(C) → 심장 박동 느려짐(B) 순서예요."
+ },
+ {
+  "q": "글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳은?<div class=\"pass\"><b>Because of this, a cactus can live for months without any rain.</b></div><div class=\"pass\">Cactuses grow in deserts where it rarely rains. (①) Their thick stems store a lot of water inside, and their roots spread wide just under the ground. (②) The sharp spines protect them from hungry animals. (③) Many people keep small cactuses on their desks. (④)</div>",
+  "choices": [
+   "①",
+   "②",
+   "③",
+   "④"
+  ],
+  "answer": "②",
+  "exp": "<b>Because of this</b>의 'this'는 앞 문장의 <b>물을 저장하고 뿌리를 넓게 뻗는 특징</b>이에요. 그 결과(몇 달간 비 없이 산다)가 바로 뒤인 ②에 와야 자연스러워요."
+ },
+ {
+  "q": "글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳은?<div class=\"pass\"><b>However, she soon discovered that the hardest part was not the cooking itself.</b></div><div class=\"pass\">Hana always dreamed of opening a small café. (①) She saved money for three years and finally rented a tiny shop near the station. (②) Every morning she baked bread and cakes before the sun came up. (③) Handling difficult customers and tired evenings took more energy than she had expected. (④) Still, she smiled whenever someone said the cake was delicious.</div>",
+  "choices": [
+   "①",
+   "②",
+   "③",
+   "④"
+  ],
+  "answer": "③",
+  "exp": "'요리 자체가 가장 힘든 일이 아니었다'는 <b>요리(baked bread…)가 먼저 나온 뒤</b>에야 말이 돼요. 그리고 곧바로 힘든 점(고객 응대)이 이어지는 ③이 알맞아요."
+ },
+ {
+  "q": "빈칸에 들어갈 말로 가장 적절한 것은?<div class=\"pass\">A habit becomes automatic when you repeat it ______. For example, brushing your teeth every night after dinner feels natural because you have done it so many times. In the same way, reading ten pages a day will become easy if you keep doing it.</div>",
+  "choices": [
+   "again and again",
+   "only once",
+   "just before bed",
+   "with other people",
+   "in a hurry"
+  ],
+  "answer": "again and again",
+  "exp": "예시의 <b>so many times / keep doing it</b>이 힌트예요. 습관은 '반복해서' 자동이 되므로 again and again."
+ },
+ {
+  "q": "빈칸에 들어갈 말로 가장 적절한 것은?<div class=\"pass\">Good leaders do not just give orders. They ______. When team members feel that their ideas are heard, they work harder and trust the leader more.</div>",
+  "choices": [
+   "listen carefully to others",
+   "avoid every meeting",
+   "work alone all day",
+   "change plans without telling anyone",
+   "compete with team members"
+  ],
+  "answer": "listen carefully to others",
+  "exp": "빈칸 뒤 <b>their ideas are heard</b>가 단서예요. 의견이 '들린다'는 것은 리더가 귀 기울여 듣는다는 뜻이에요."
+ },
+ {
+  "q": "다음 글에서 전체 흐름과 관계 <b>없는</b> 문장은?<div class=\"pass\">Learning to ride a bike takes patience and practice. (①) At first, many children use small training wheels to keep their balance. (②) Some parents run beside the bike and hold the seat from behind. (③) Electric scooters are becoming more popular in big cities. (④) After a few falls, the children slowly learn to steer and stop by themselves. (⑤) When they finally ride alone, they feel proud of their effort.</div>",
+  "choices": [
+   "①",
+   "②",
+   "③",
+   "④",
+   "⑤"
+  ],
+  "answer": "③",
+  "exp": "글은 <b>자전거 타기를 배우는 과정</b>이에요. ③ 전동 킥보드의 인기는 이 흐름과 상관이 없어요. 소재(탈것)만 비슷하고 주제는 달라진 문장이 '무관한 문장'의 단골 유형이에요."
+ },
+ {
+  "q": "다음 글에서 전체 흐름과 관계 <b>없는</b> 문장은?<div class=\"pass\">Volunteering at a library can teach teenagers useful skills. (①) They learn how to organize books so that visitors can find them easily. (②) Reading stories aloud helps them speak clearly in front of others. (③) Some famous painters sold their first pictures at a very young age. (④) By working with a team, they also learn to share responsibility. (⑤) These experiences prepare them for jobs in the future.</div>",
+  "choices": [
+   "①",
+   "②",
+   "③",
+   "④",
+   "⑤"
+  ],
+  "answer": "③",
+  "exp": "주제는 <b>도서관 봉사활동으로 배우는 기술</b>이에요. ③ 화가의 일화는 도서관·봉사와 연결되지 않아요."
+ }
+];
+
+var QUIZ_ID = "clinic-kdy-1024";
+var QUIZ_TITLE = "김대윤 사진 클리닉 10/24";
+var KEEP = false;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+  var u = document.createElement("button");
+  u.className = "unknown"; u.id = "unknown-btn";
+  u.textContent = "🤔 모름";
+  u.addEventListener("click", function () { pick("모름", "", true); });
+  box.appendChild(u);
+}
+
+var locked = false;
+function pick(choice, mark, unknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  var entry = { no: current + 1, ok: ok, chosen: choice, answer: q.answer };
+  if (unknown) { entry.unknown = true; unknownNumbers.push(current + 1); }
+  answersLog.push(entry);
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unknownLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var ul = document.createElement("div");
+  ul.className = "sub"; ul.id = "unknown-line"; ul.style.textAlign = "center";
+  ul.textContent = unknownLine();
+  document.getElementById("score-line").insertAdjacentElement("afterend", ul);
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/24 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
