@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>한승주 · 영핏 사진 클리닉 10/23</title>
+<meta property="og:title" content="한승주 주말 클리닉 40문제 · 10/23 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unknown { display:block; width:100%; margin-top:6px; padding:12px; font-size:1rem; font-weight:bold; color:#8a6d00; background:#fff8e1; border:1.5px dashed #e0b84c; border-radius:10px; cursor:pointer; }
+  .unknown:active { background:#ffefb3; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>한승주 학생 클리닉 · 10/23 🌱</h1>
+    <p class="sub">주말 숙제 40문제 · 나눠 풀어도 돼요 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="한승주" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "q": "빈칸에 알맞은 말은?<br>There is too ______ noise in this room.",
+  "choices": [
+   "much",
+   "many",
+   "few",
+   "a few"
+  ],
+  "answer": "much",
+  "exp": "noise(소음)는 셀 수 없는 명사라서 <b>much</b>를 써요. many·few·a few는 셀 수 있는 명사(복수형) 앞에만 와요.",
+  "part": "Part 1 · much / many / a lot of · any"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>We didn't buy ______ apples at the market.",
+  "choices": [
+   "many",
+   "much",
+   "little",
+   "a little"
+  ],
+  "answer": "many",
+  "exp": "apples는 셀 수 있는 복수 명사 → <b>many</b>. much·little·a little은 셀 수 없는 명사 앞에 써요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>My uncle drinks too ______ coffee every day.",
+  "choices": [
+   "much",
+   "many",
+   "few",
+   "a few"
+  ],
+  "answer": "much",
+  "exp": "coffee는 셀 수 없는 명사예요. 셀 수 없는 명사 앞에는 <b>much</b>! (정답노트의 'too many dessert'처럼 many를 쓰면 틀려요.)"
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?<br>① I don't have much time today.<br>② How many students are in your class?<br>③ He ate too many rice at dinner.<br>④ She has a lot of friends in Busan.<br>⑤ There isn't much traffic this morning.",
+  "choices": [
+   "③ He ate too many rice at dinner.",
+   "① I don't have much time today.",
+   "② How many students are in your class?",
+   "④ She has a lot of friends in Busan.",
+   "⑤ There isn't much traffic this morning."
+  ],
+  "answer": "③ He ate too many rice at dinner.",
+  "exp": "rice(쌀·밥)는 셀 수 없는 명사라서 many가 아니라 <b>too much rice</b>가 맞아요. students(셀 수 있음)는 many, time·traffic(셀 수 없음)은 much!"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>Did you take ______ pictures at the zoo?",
+  "choices": [
+   "any",
+   "much",
+   "a little",
+   "little"
+  ],
+  "answer": "any",
+  "exp": "의문문·부정문에서 '조금이라도, 어떤'의 뜻은 <b>any</b>예요. pictures는 복수이므로 much·a little·little은 쓸 수 없어요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>I can't find ______ mistakes in your essay.",
+  "choices": [
+   "any",
+   "some",
+   "much",
+   "a little"
+  ],
+  "answer": "any",
+  "exp": "부정문(can't find)에서는 some 대신 <b>any</b>를 써요. mistakes가 복수라서 much, a little도 안 돼요."
+ },
+ {
+  "q": "다음 중 빈칸에 <b>much를 쓸 수 없는</b> 것은?<br>① He didn't get ______ snow.<br>② She bought ______ cookies.<br>③ We didn't have ______ rain.<br>④ I don't have ______ homework.<br>⑤ Is there ______ juice left?",
+  "choices": [
+   "② She bought ______ cookies.",
+   "① He didn't get ______ snow.",
+   "③ We didn't have ______ rain.",
+   "④ I don't have ______ homework.",
+   "⑤ Is there ______ juice left?"
+  ],
+  "answer": "② She bought ______ cookies.",
+  "exp": "cookies는 셀 수 있는 복수 명사라서 much가 아니라 many를 써요. snow·rain·homework·juice는 셀 수 없는 명사라 much가 가능해요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그는 이번 주에 시험이 많지 않다.",
+  "choices": [
+   "He doesn't have many tests this week.",
+   "He doesn't have much tests this week.",
+   "He doesn't has many tests this week.",
+   "He don't have many tests this week."
+  ],
+  "answer": "He doesn't have many tests this week.",
+  "exp": "tests는 셀 수 있는 복수 명사 → <b>many</b>. 그리고 주어 He(3인칭 단수)의 부정은 <b>doesn't + 동사원형(have)</b>예요. 'doesn't has'는 틀려요!"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>I have ______ books, so my shelf is full.",
+  "choices": [
+   "a lot of",
+   "much",
+   "a little",
+   "little"
+  ],
+  "answer": "a lot of",
+  "exp": "긍정문에서 '많은'은 <b>a lot of</b>가 자연스러워요. much는 주로 부정문·의문문에서 쓰고, a little·little은 셀 수 없는 명사 앞에 오는 '적은' 뜻이라 books와 맞지 않아요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>How ______ cookies did you bake for the party?",
+  "choices": [
+   "many",
+   "much",
+   "a little",
+   "little"
+  ],
+  "answer": "many",
+  "exp": "'몇 개'를 물을 때 셀 수 있는 명사(cookies) 앞에서는 <b>How many</b>. How much는 셀 수 없는 명사나 가격을 물을 때!"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>We have ______ rice left, so we can cook dinner.",
+  "choices": [
+   "a little",
+   "a few",
+   "few",
+   "many"
+  ],
+  "answer": "a little",
+  "exp": "rice는 셀 수 없고, '조금 있다'는 긍정의 뜻이므로 <b>a little</b>이에요. a few는 셀 수 있는 명사 앞!",
+  "part": "Part 2 · a few / few · a little / little · 수량형용사 영작"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그녀는 치즈를 조금 주문했다.",
+  "choices": [
+   "She ordered a little cheese.",
+   "She ordered a few cheese.",
+   "She ordered few cheese.",
+   "She ordered many cheese."
+  ],
+  "answer": "She ordered a little cheese.",
+  "exp": "cheese는 셀 수 없는 명사 → <b>a little</b>(조금). a few와 few·many는 셀 수 있는 명사 앞에서만 써요. (little cheese는 '거의 없는 치즈'라 뜻도 달라요.)"
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>나는 이 동네에 아는 이웃이 거의 없다.",
+  "choices": [
+   "I know few neighbors in this town.",
+   "I know a few neighbors in this town.",
+   "I know little neighbors in this town.",
+   "I don't know few neighbors in this town."
+  ],
+  "answer": "I know few neighbors in this town.",
+  "exp": "'거의 없다'는 <b>few</b> + 셀 수 있는 명사(neighbors). a few는 '조금 있다'의 긍정 뜻이고, little은 셀 수 없는 명사에만 써요. few 문장에 not을 또 붙이면 안 돼요."
+ },
+ {
+  "q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그는 지갑에 현금이 거의 없었다.",
+  "choices": [
+   "He had little cash in his wallet.",
+   "He had few cash in his wallet.",
+   "He had a little cash in his wallet.",
+   "He had a few cash in his wallet."
+  ],
+  "answer": "He had little cash in his wallet.",
+  "exp": "cash는 셀 수 없는 명사이고 '거의 없다'이므로 <b>little</b>. few·a few는 셀 수 있는 명사에, a little은 '조금 있다'는 긍정 뜻이에요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?<br>① I saw few birds near the lake.<br>② There is a little honey in the jar.<br>③ She has a few pens in her bag.<br>④ We have a few time before the bus comes.<br>⑤ He has little interest in sports.",
+  "choices": [
+   "④ We have a few time before the bus comes.",
+   "① I saw few birds near the lake.",
+   "② There is a little honey in the jar.",
+   "③ She has a few pens in her bag.",
+   "⑤ He has little interest in sports."
+  ],
+  "answer": "④ We have a few time before the bus comes.",
+  "exp": "time은 셀 수 없는 명사라서 a few가 아니라 <b>a little time</b>이 맞아요. birds·pens는 셀 수 있으니 few / a few, honey·interest는 셀 수 없으니 a little / little!"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>Do you have ______ plans for the weekend?",
+  "choices": [
+   "any",
+   "much",
+   "a little",
+   "little"
+  ],
+  "answer": "any",
+  "exp": "의문문에서 '어떤 ~라도'를 물을 때는 <b>any</b>. plans는 복수 명사라서 much·a little·little은 쓸 수 없어요."
+ },
+ {
+  "q": "우리말에 맞게 알맞게 배열한 것은?<br>그녀는 책을 몇 권 가지고 있다. (a / books / has / few / she)",
+  "choices": [
+   "She has a few books.",
+   "She has few a books.",
+   "She a few has books.",
+   "A few she has books."
+  ],
+  "answer": "She has a few books.",
+  "exp": "'몇 개 있다'는 <b>a few + 복수 명사</b>. a와 few는 떨어지지 않고 'a few'가 한 덩어리로 books 앞에 와요."
+ },
+ {
+  "q": "다음 문장을 올바르게 고친 것은?<br>Tom put too many sugar in his tea.",
+  "choices": [
+   "Tom put too much sugar in his tea.",
+   "Tom put too few sugar in his tea.",
+   "Tom put too a lot of sugar in his tea.",
+   "Tom put to much sugar in his tea."
+  ],
+  "answer": "Tom put too much sugar in his tea.",
+  "exp": "sugar는 셀 수 없는 명사 → many를 <b>much</b>로 고쳐요. 'too a lot of'는 쓸 수 없고, too(너무)와 to(~하기 위해)도 철자가 달라요."
+ },
+ {
+  "q": "다음 문장의 뜻으로 알맞은 것은?<br>There is little hope of finding the lost dog.",
+  "choices": [
+   "잃어버린 개를 찾을 희망이 거의 없다.",
+   "잃어버린 개를 찾을 희망이 조금 있다.",
+   "잃어버린 개를 찾을 희망이 많다.",
+   "잃어버린 개를 찾는 일은 쉽다."
+  ],
+  "answer": "잃어버린 개를 찾을 희망이 거의 없다.",
+  "exp": "<b>little</b>(관사 없음)은 '거의 없는', a little은 '조금 있는'이에요. 그래서 희망이 거의 없다는 뜻!"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>Jina has ______ friends in her new class, so she feels lonely at lunch.",
+  "choices": [
+   "few",
+   "a few",
+   "a little",
+   "much"
+  ],
+  "answer": "few",
+  "exp": "외롭다는 문맥 → '거의 없다'이므로 <b>few</b> + 복수 명사. a few는 '몇 명 있다'는 긍정이라 문맥과 안 맞아요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>The girl ______ I met at the library is my cousin.",
+  "choices": [
+   "who, whom, that 모두 가능",
+   "which만 가능",
+   "whose만 가능",
+   "what만 가능"
+  ],
+  "answer": "who, whom, that 모두 가능",
+  "exp": "선행사가 사람(The girl)이고 관계대명사가 met의 <b>목적어</b> 역할이므로 who(m) 또는 that을 쓸 수 있어요. which는 사물, whose는 소유, what은 선행사가 없을 때!",
+  "part": "Part 3 · 목적격 관계대명사 who(m) · which"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>The bag ______ my aunt gave me is very light.",
+  "choices": [
+   "which, that 모두 가능",
+   "who, whom 모두 가능",
+   "whose만 가능",
+   "what만 가능"
+  ],
+  "answer": "which, that 모두 가능",
+  "exp": "선행사가 사물(The bag)이고 gave의 목적어가 빠진 자리이므로 <b>which 또는 that</b>이 가능해요. who(m)은 사람에게만!"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>The movie ______ we saw yesterday was boring.",
+  "choices": [
+   "which",
+   "who",
+   "whose",
+   "whom"
+  ],
+  "answer": "which",
+  "exp": "선행사가 사물(The movie)이고 saw의 목적어 → <b>which</b>. who(m)은 사람이 선행사일 때만 쓰고, whose는 소유 관계일 때예요."
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>The teacher ______ the students respect is Mr. Park.",
+  "choices": [
+   "whom",
+   "which",
+   "whose",
+   "what"
+  ],
+  "answer": "whom",
+  "exp": "선행사가 사람(The teacher)이고 respect의 목적어가 빠졌으니 <b>whom</b>. 사람 선행사에 which는 쓸 수 없어요."
+ },
+ {
+  "q": "두 문장을 한 문장으로 바르게 연결한 것은?<br>I know a boy. + You met him yesterday.",
+  "choices": [
+   "I know a boy whom you met yesterday.",
+   "I know a boy whom you met him yesterday.",
+   "I know a boy which you met yesterday.",
+   "I know a boy whom met you yesterday."
+  ],
+  "answer": "I know a boy whom you met yesterday.",
+  "exp": "관계대명사가 목적어(him) 역할을 대신하므로 <b>him을 지워야</b> 해요. 'whom ... him'처럼 목적어를 또 쓰면 틀려요. 사람이므로 which가 아니라 whom!"
+ },
+ {
+  "q": "두 문장을 한 문장으로 바르게 연결한 것은?<br>This is the cake. + My mom baked it for my birthday.",
+  "choices": [
+   "This is the cake which my mom baked for my birthday.",
+   "This is the cake which my mom baked it for my birthday.",
+   "This is the cake who my mom baked for my birthday.",
+   "This is the cake what my mom baked for my birthday."
+  ],
+  "answer": "This is the cake which my mom baked for my birthday.",
+  "exp": "사물 선행사(the cake)에는 <b>which</b>를 쓰고, 목적어 it은 관계대명사가 대신하므로 반드시 삭제! what은 앞에 선행사가 있으면 쓸 수 없어요."
+ },
+ {
+  "q": "다음 중 어법상 <b>틀린</b> 문장은?<br>① The man whom she married is a pilot.<br>② The song which I listened to was great.<br>③ The dog which he keeps it is friendly.<br>④ The novel which Mina wrote became popular.<br>⑤ The friends whom I invited came early.",
+  "choices": [
+   "③ The dog which he keeps it is friendly.",
+   "① The man whom she married is a pilot.",
+   "② The song which I listened to was great.",
+   "④ The novel which Mina wrote became popular.",
+   "⑤ The friends whom I invited came early."
+  ],
+  "answer": "③ The dog which he keeps it is friendly.",
+  "exp": "③은 which가 keeps의 목적어를 이미 대신하는데 <b>it</b>이 또 있어서 틀려요 → The dog which he keeps is friendly. 목적격 관계대명사 문장에서는 목적어 자리가 비어 있어야 해요."
+ },
+ {
+  "q": "다음 밑줄 친 which 중 쓰임이 <b>다른</b> 하나는? (주격 / 목적격)<br>① Look at the bird <u>which</u> sits on the roof.<br>② I lost the umbrella <u>which</u> my dad bought me.<br>③ The soup <u>which</u> Jin cooked smells good.<br>④ The pictures <u>which</u> you took are beautiful.<br>⑤ Tom read the book <u>which</u> I recommended.",
+  "choices": [
+   "① Look at the bird which sits on the roof.",
+   "② I lost the umbrella which my dad bought me.",
+   "③ The soup which Jin cooked smells good.",
+   "④ The pictures which you took are beautiful.",
+   "⑤ Tom read the book which I recommended."
+  ],
+  "answer": "① Look at the bird which sits on the roof.",
+  "exp": "①은 which 바로 뒤에 동사(sits)가 와서 <b>주격</b>이에요. 나머지는 which 뒤에 '주어 + 동사'(my dad bought, Jin cooked, you took, I recommended)가 와서 모두 <b>목적격</b>!"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>The woman ______ I talked about is a famous writer.",
+  "choices": [
+   "whom",
+   "which",
+   "whose",
+   "what"
+  ],
+  "answer": "whom",
+  "exp": "talked about의 목적어 자리가 빠졌고 선행사가 사람이므로 <b>whom</b>. 전치사 about이 뒤에 남아 있어도 선행사가 사람이면 whom!"
+ },
+ {
+  "q": "빈칸에 알맞은 말은?<br>I have a friend ______ father is a chef.",
+  "choices": [
+   "whose",
+   "whom",
+   "which",
+   "who"
+  ],
+  "answer": "whose",
+  "exp": "빈칸 뒤에 <b>명사(father)</b>가 바로 오면 '~의'라는 소유격 <b>whose</b>를 써요. 목적격 whom 뒤에는 '주어 + 동사'가 오는 것과 구분하세요."
+ },
+ {
+  "q": "밑줄 친 관계대명사 중 <b>생략할 수 있는</b> 것은?<br>① The girl <u>who</u> lives next door is kind.<br>② The salad <u>which</u> I made was fresh.<br>③ I know a man <u>who</u> works at the bank.<br>④ This is the road <u>which</u> leads to the beach.<br>⑤ She has a dog <u>which</u> barks all night.",
+  "choices": [
+   "② The salad which I made was fresh.",
+   "① The girl who lives next door is kind.",
+   "③ I know a man who works at the bank.",
+   "④ This is the road which leads to the beach.",
+   "⑤ She has a dog which barks all night."
+  ],
+  "answer": "② The salad which I made was fresh.",
+  "exp": "생략은 <b>목적격</b>만 가능해요. ②는 which 뒤에 'I made'(주어+동사)가 와서 목적격 → 생략 가능. 나머지는 뒤에 바로 동사(lives, works, leads, barks)가 와서 주격이라 생략할 수 없어요.",
+  "part": "Part 4 · 생략 · 배열 · 영작 · 어법 종합"
+ },
+ {
+  "q": "밑줄 친 관계대명사 중 <b>생략할 수 없는</b> 것은?<br>① The pizza <u>which</u> we ordered was cold.<br>② The boy <u>whom</u> I helped smiled at me.<br>③ The book <u>which</u> I borrowed is on the desk.<br>④ The man <u>who</u> sells vegetables is my uncle.<br>⑤ The coat <u>which</u> she wore was red.",
+  "choices": [
+   "④ The man who sells vegetables is my uncle.",
+   "① The pizza which we ordered was cold.",
+   "② The boy whom I helped smiled at me.",
+   "③ The book which I borrowed is on the desk.",
+   "⑤ The coat which she wore was red."
+  ],
+  "answer": "④ The man who sells vegetables is my uncle.",
+  "exp": "④는 who 바로 뒤에 동사(sells)가 와서 <b>주격</b>이므로 생략할 수 없어요. ①②③⑤는 '주어 + 동사'가 이어지는 목적격이라 생략 가능!"
+ },
+ {
+  "q": "다음 문장에서 관계대명사를 생략한 문장은?<br>The shoes which he bought online were too small.",
+  "choices": [
+   "The shoes he bought online were too small.",
+   "The shoes he bought them online were too small.",
+   "The shoes bought he online were too small.",
+   "The shoes he buy online were too small."
+  ],
+  "answer": "The shoes he bought online were too small.",
+  "exp": "목적격 관계대명사는 생략해도 '명사 + 주어 + 동사' 순서와 시제(bought)는 <b>그대로</b> 유지돼요. 목적어를 새로 쓰거나(them) 어순·시제를 바꾸면 틀려요."
+ },
+ {
+  "q": "우리말에 맞게 배열한 문장은?<br>그는 모두가 사랑하는 의사가 되고 싶어 한다.<br>(a doctor / wants / everyone / he / be / whom / to / loves)",
+  "choices": [
+   "He wants to be a doctor whom everyone loves.",
+   "He wants a doctor to be whom everyone loves.",
+   "He wants to be whom a doctor everyone loves.",
+   "He wants to be everyone a doctor whom loves."
+  ],
+  "answer": "He wants to be a doctor whom everyone loves.",
+  "exp": "<b>wants to be</b> 다음에 <b>a doctor</b>, 그 뒤에 <b>whom + 주어 + 동사(everyone loves)</b>가 이어져요. 관계대명사절은 꾸며 주는 명사 바로 뒤에 둬요."
+ },
+ {
+  "q": "우리말에 맞게 쓴 문장은?<br>Smith 씨는 그가 키운 토마토를 팔았다. (the tomatoes, he, which, grow)",
+  "choices": [
+   "Mr. Smith sold the tomatoes which he grew.",
+   "Mr. Smith sold the tomatoes which he grew them.",
+   "Mr. Smith sold which the tomatoes he grew.",
+   "Mr. Smith sold the tomatoes he which grew."
+  ],
+  "answer": "Mr. Smith sold the tomatoes which he grew.",
+  "exp": "<b>sold the tomatoes which he grew</b>: 명사 바로 뒤에 which, 그 뒤에 '주어 + 동사'. grow의 목적어(them)는 which가 대신하므로 쓰면 안 돼요. 과거 이야기라서 grew!"
+ },
+ {
+  "q": "다음 대화의 빈칸에 알맞은 문장은?<br>A: Why is Emma sad?<br>B: ______",
+  "choices": [
+   "She lost the necklace which her grandmother gave her.",
+   "She lost the necklace which gave her grandmother her.",
+   "She lost the necklace which her grandmother gave it her.",
+   "She lost the necklace whom her grandmother gave her."
+  ],
+  "answer": "She lost the necklace which her grandmother gave her.",
+  "exp": "목걸이(사물)는 <b>which</b>, 그 뒤에는 '주어 + 동사(her grandmother gave)' 순서예요. 목적어 it을 또 쓰거나 whom을 쓰면 틀려요."
+ },
+ {
+  "q": "우리말을 영작한 문장은? (관계대명사 that은 사용하지 않음)<br>우리는 그가 추천한 식당에 갔다. (the restaurant, recommend)",
+  "choices": [
+   "We went to the restaurant which he recommended.",
+   "We went to the restaurant who he recommended.",
+   "We went to the restaurant which he recommended it.",
+   "We went to the restaurant which recommended he."
+  ],
+  "answer": "We went to the restaurant which he recommended.",
+  "exp": "that을 쓰지 않으면 사물 선행사에는 <b>which</b>. recommend의 목적어가 which이므로 it은 쓰지 않고, 어순은 which + <b>he recommended</b>!"
+ },
+ {
+  "q": "다음 글의 밑줄 친 부분 중 어법상 <b>어색한</b> 것은?<br><div class=\"pass\">My uncle runs a small bakery. There are <u>① many customers</u> who visit it every day. The bread <u>② which he bakes</u> <u>③ it</u> every morning sells out fast. He doesn't have <u>④ much time</u> to rest. <u>⑤ The people whom he hires</u> are very kind.</div>",
+  "choices": [
+   "③ it",
+   "① many customers",
+   "② which he bakes",
+   "④ much time",
+   "⑤ The people whom he hires"
+  ],
+  "answer": "③ it",
+  "exp": "The bread which he bakes ~에서 which가 bakes의 목적어이므로 <b>it은 필요 없어요</b>. customers는 복수라 many, time은 셀 수 없어서 much, 사람 선행사 people에는 whom이 맞아요."
+ },
+ {
+  "q": "우리말을 영작한 문장은?<br>그녀가 찍은 사진은 많지 않았다. (photos, take)",
+  "choices": [
+   "There weren't many photos which she took.",
+   "There weren't much photos which she took.",
+   "There weren't many photos who she took.",
+   "There weren't many photos which she took them."
+  ],
+  "answer": "There weren't many photos which she took.",
+  "exp": "photos는 셀 수 있으니 <b>many</b>, 사물이므로 <b>which</b>, 그리고 took의 목적어는 which가 대신하니 them은 쓰지 않아요."
+ },
+ {
+  "q": "다음 중 어법상 <b>올바른</b> 문장은?",
+  "choices": [
+   "The students whom I teach have much homework this week.",
+   "The students whom I teach have many homework this week.",
+   "The students whom I teach them have much homework this week.",
+   "The students which I teach have much homework this week."
+  ],
+  "answer": "The students whom I teach have much homework this week.",
+  "exp": "사람 선행사(students)에는 whom, 목적어 them은 삭제, 그리고 셀 수 없는 homework에는 <b>much</b>. 세 가지를 모두 지킨 문장만 맞아요."
+ }
+];
+
+var QUIZ_ID = "clinic-hsj-1023";
+var QUIZ_TITLE = "한승주 주말 사진 클리닉 40문제 10/23";
+var KEEP = true;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+  var u = document.createElement("button");
+  u.className = "unknown"; u.id = "unknown-btn";
+  u.textContent = "🤔 모름";
+  u.addEventListener("click", function () { pick("모름", "", true); });
+  box.appendChild(u);
+}
+
+var locked = false;
+function pick(choice, mark, unknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  var entry = { no: current + 1, ok: ok, chosen: choice, answer: q.answer };
+  if (unknown) { entry.unknown = true; unknownNumbers.push(current + 1); }
+  answersLog.push(entry);
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unknownLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var ul = document.createElement("div");
+  ul.className = "sub"; ul.id = "unknown-line"; ul.style.textAlign = "center";
+  ul.textContent = unknownLine();
+  document.getElementById("score-line").insertAdjacentElement("afterend", ul);
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/23 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
