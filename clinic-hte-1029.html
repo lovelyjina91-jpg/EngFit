@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>한태은 · 영핏 사진 클리닉 10/29</title>
+<meta property="og:title" content="한태은 클리닉 · 10/29 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unknown { display:block; width:100%; margin-top:6px; padding:12px; font-size:1rem; font-weight:bold; color:#8a6d00; background:#fff8e1; border:1.5px dashed #e0b84c; border-radius:10px; cursor:pointer; }
+  .unknown:active { background:#ffefb3; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>한태은 학생 클리닉 · 10/29 🌱</h1>
+    <p class="sub">틀린 이유를 천천히 읽고 쌍둥이 문제를 풀어요 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="한태은" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+{"q": "<b>converse</b> 의 뜻으로 알맞은 것은?", "choices": ["대화하다", "주문하다", "변하다", "방해하다"], "answer": "대화하다", "exp": "converse는 <b>대화하다</b>. (예: converse with a friend) 핵심: converse = 서로 이야기를 주고받다.", "pre": [{"html": "<div style=\"font-weight:700;font-size:1.05em;margin:4px 0 6px\">단어 Step1 Day4 · 틀린 단어 정리 ①</div><div>단어시험 88/100, 틀린 12개 중 앞의 6개예요. 뜻이 비슷하거나 느낌이 닮은 단어끼리 묶어서 보면 덜 헷갈려요.</div><table style=\"width:100%;border-collapse:collapse;font-size:.95em\"><tr><th style=\"text-align:left;border-bottom:2px solid #2e7d6e;padding:4px\">단어</th><th style=\"text-align:left;border-bottom:2px solid #2e7d6e;padding:4px\">뜻</th><th style=\"text-align:left;border-bottom:2px solid #2e7d6e;padding:4px\">예문</th></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">converse</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">(동) 대화하다</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">We conversed for an hour about our favorite books.</td></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">tease</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">(동) 놀리다, 장난으로 괴롭히다</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">Don't tease your little brother about his haircut.</td></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">arise from</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">~에서 생기다 (arise-arose-arisen)</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">Many accidents arise from carelessness.</td></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">spring from</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">~에서 비롯되다 (spring-sprang-sprung)</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">Her courage springs from her mother's love.</td></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">frustrated</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">(형) 좌절한, 답답한</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">He felt frustrated when the game kept freezing.</td></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">disheartened</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">(형) 낙담한, 의욕을 잃은</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">She was disheartened by her bad result.</td></tr></table><div style=\"background:#f3f8f6;border-left:4px solid #2e7d6e;padding:10px 12px;margin:10px 0;border-radius:6px\"><b>헷갈리는 포인트</b><br>① <b style=\"color:#2e7d6e\">arise from</b> 과 <b style=\"color:#2e7d6e\">spring from</b> 은 둘 다 \"~에서 생기다/비롯되다\"예요. 한 묶음으로 외워요.<br>② <b style=\"color:#2e7d6e\">frustrated</b>(일이 안 풀려 답답함)와 <b style=\"color:#2e7d6e\">disheartened</b>(힘이 빠져 낙담함)는 둘 다 기분이 안 좋은 상태라 뜻이 섞이기 쉬워요.<br>③ converse는 \"대화하다\"예요. 뒤집힌(converse)이라는 다른 뜻과 헷갈리지 않게, 이번엔 동사 뜻만 기억해요.</div><div style=\"font-size:.9em;color:#555\">왜 틀렸을까? 단어를 영어-한국어 하나씩만 보고 외우면 비슷한 느낌의 단어에서 보기가 섞여요. 예문 한 줄과 함께 외우면 쓰임이 떠올라서 훨씬 오래 가요.</div>", "part": "Part 1 · 단어 개념 ①"}]},
+{"q": "<b>tease</b> 의 뜻으로 알맞은 것은?", "choices": ["놀리다", "칭찬하다", "가르치다", "숨기다"], "answer": "놀리다", "exp": "tease는 장난으로 <b>놀리다, 괴롭히다</b>. 핵심: Don't tease your brother. = 동생을 놀리지 마."},
+{"q": "Many fights between friends ______ small misunderstandings. (많은 싸움은 사소한 오해에서 생긴다.)", "choices": ["arise from", "look for", "put off", "run out of"], "answer": "arise from", "exp": "<b>arise from</b> = ~에서 생기다. 핵심: arise from(생기다) / spring from(비롯되다)은 같은 묶음!"},
+{"q": "<b>frustrated</b> 의 뜻으로 알맞은 것은?", "choices": ["좌절한, 답답한", "신이 난", "졸린", "자랑스러운"], "answer": "좌절한, 답답한", "exp": "frustrated는 일이 뜻대로 안 돼 <b>좌절한, 답답한</b>. 핵심: frustrated(답답) vs disheartened(낙담)을 구분해요."},
+{"q": "His fear of dogs ______ a bad experience when he was little. (그의 개에 대한 두려움은 어릴 때의 나쁜 경험에서 비롯됐다.)", "choices": ["springs from", "falls off", "turns on", "gives up"], "answer": "springs from", "exp": "<b>spring from</b> = ~에서 비롯되다(3인칭 단수라 springs). 핵심: arise from과 같은 뜻으로 함께 외워요."},
+{"q": "Tom felt ______ after his team lost the game three times in a row. (그는 팀이 세 번 연속 지자 ______했다.)", "choices": ["disheartened", "delighted", "relaxed", "satisfied"], "answer": "disheartened", "exp": "<b>disheartened</b> = 낙담한, 의욕을 잃은. 연패해서 힘이 빠진 상황이에요. 나머지는 모두 긍정적인 기분!"},
+{"q": "<b>contrary</b> 의 뜻으로 알맞은 것은?", "choices": ["반대의", "비슷한", "가까운", "정직한"], "answer": "반대의", "exp": "contrary = <b>반대의</b>. 핵심: contrary to ~ = ~와 반대로.", "pre": [{"html": "<div style=\"font-weight:700;font-size:1.05em;margin:4px 0 6px\">단어 Step1 Day4 · 틀린 단어 정리 ②</div><table style=\"width:100%;border-collapse:collapse;font-size:.95em\"><tr><th style=\"text-align:left;border-bottom:2px solid #2e7d6e;padding:4px\">단어</th><th style=\"text-align:left;border-bottom:2px solid #2e7d6e;padding:4px\">뜻</th><th style=\"text-align:left;border-bottom:2px solid #2e7d6e;padding:4px\">예문</th></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">contrary</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">(형) 반대의 · contrary to ~와 반대로</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">Contrary to the forecast, it was sunny all day.</td></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">separate</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">(동) 분리하다 / (형) 별개의</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">Please separate the white clothes from the colored ones.</td></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">sturdy</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">(형) 튼튼한, 견고한</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">She bought a sturdy bag for the hiking trip.</td></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">clueless</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">(형) 아무것도 모르는, 감이 없는</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">I was clueless about how to use the machine.</td></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">fasten</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">(동) 고정하다, (벨트 등을) 매다</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">Fasten your seat belt before the car starts.</td></tr><tr><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\"><b style=\"color:#2e7d6e\">extensive</b></td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">(형) 광범위한, 폭넓은</td><td style=\"border-bottom:1px solid #e2e8e6;padding:5px 4px;vertical-align:top\">She has extensive knowledge of birds.</td></tr></table><div style=\"background:#f3f8f6;border-left:4px solid #2e7d6e;padding:10px 12px;margin:10px 0;border-radius:6px\"><b>헷갈리는 포인트</b><br>① <b style=\"color:#2e7d6e\">contrary</b> 는 contrast(대조)와 닮았지만 \"반대의\"예요. contrary to = ~와 반대로.<br>② <b style=\"color:#2e7d6e\">separate</b> 는 동사(분리하다)와 형용사(별개의)로 둘 다 쓰여요. 동사는 끝이 [에이트], 형용사는 [렛]처럼 발음이 달라요.<br>③ <b style=\"color:#2e7d6e\">clueless</b> = clue(단서) + less(없는) → 단서가 없어 아무것도 모르는.<br>④ <b style=\"color:#2e7d6e\">extensive</b> 는 extend(넓히다)와 연결해서 \"넓게 퍼진 → 광범위한\"으로 기억해요.</div><div style=\"font-size:.9em;color:#555\">왜 틀렸을까? 단어의 앞뒤 조각(clue+less, ex+tens-)을 나눠 보면 뜻이 떠올라요. sturdy와 fasten은 소리만 비슷한 단어와 섞이기 쉬우니 예문으로 한 번 더 확인해요.</div>", "part": "Part 2 · 단어 개념 ②"}]},
+{"q": "Please ______ the paper from the plastic before you throw them away. (버리기 전에 종이와 플라스틱을 분리해 주세요.)", "choices": ["separate", "mix", "hide", "paint"], "answer": "separate", "exp": "<b>separate</b> = 분리하다. 핵심: separate A from B = A를 B에서 분리하다."},
+{"q": "This table is ______ enough to hold five heavy boxes. (이 탁자는 무거운 상자 다섯 개를 올려도 될 만큼 ______하다.)", "choices": ["sturdy", "weak", "tiny", "noisy"], "answer": "sturdy", "exp": "<b>sturdy</b> = 튼튼한. 무거운 상자를 견디므로 weak(약한)은 맞지 않아요."},
+{"q": "<b>clueless</b> 의 뜻으로 알맞은 것은?", "choices": ["아무것도 모르는", "매우 영리한", "몹시 화난", "지나치게 조심하는"], "answer": "아무것도 모르는", "exp": "clue(단서) + less(없는) = <b>단서가 없는 → 아무것도 모르는</b>."},
+{"q": "Please ______ your helmet before you ride the bike. (자전거를 타기 전에 헬멧을 ______ 주세요.)", "choices": ["fasten", "remove", "borrow", "wash"], "answer": "fasten", "exp": "<b>fasten</b> = 단단히 고정하다, (끈·벨트를) 매다. 타기 전에 하는 행동이므로 remove는 반대예요."},
+{"q": "<b>extensive</b> 의 뜻으로 알맞은 것은?", "choices": ["광범위한", "짧은", "비밀의", "값싼"], "answer": "광범위한", "exp": "extensive = <b>광범위한, 폭넓은</b>. extend(넓히다)에서 온 단어예요."},
+{"q": "[주제] In recent decades, more children have needed glasses than ever before. Some researchers point to long hours spent staring at screens. Others believe that too little time outdoors in sunlight matters more. Although no single cause has been proved, both ideas are still being tested.<br>이 글의 주제로 가장 알맞은 것은?", "choices": ["the history of glasses and how they are made", "possible explanations for the rise in nearsighted children", "ways to protect your eyes while using screens", "why outdoor sports are better than indoor games", "the effects of sunlight on plant growth"], "answer": "possible explanations for the rise in nearsighted children", "exp": "여러 연구자의 <b>설명(원인 후보)</b>을 소개하는 글이에요. 핵심 정리: 주제 = 핵심어 + 글의 방향(여기서는 explanations). '화면 보호법(③)'이나 '야외 스포츠(④)'는 글의 일부에서 끌려 나온 너무 좁거나 글에 없는 내용이에요.", "pre": [{"html": "<div style=\"font-weight:700;font-size:1.05em;margin:4px 0 6px\">주제 찾기 (46번 · 65번 · 69번)</div><div style=\"border:1px solid #d8e3df;border-radius:8px;padding:10px 12px;margin:10px 0\"><b>46번 · 천식 글</b><br>태은이 답: ①  ·  정답: ③ <b style=\"color:#2e7d6e\">suggested explanations for the increased asthma rates</b><br>왜 틀렸나: 글은 천식 환자가 늘어난 원인에 대한 여러 설명을 소개하는 글이에요. 주제 문제는 글 속 단어나 한 문장(세부 내용)에 끌려 고르면 틀리기 쉬워요. ①번은 글의 일부 소재만 다룬 선택지였을 가능성이 커요. 정답은 \"여러 설명들을 소개한다\"는 글 전체의 역할을 한 구로 묶은 ③번이에요.</div><div style=\"border:1px solid #d8e3df;border-radius:8px;padding:10px 12px;margin:10px 0\"><b>65번 · 거짓말과 진실 글</b><br>태은이 답: ⑤  ·  정답: ① <b style=\"color:#2e7d6e\">reasons for telling the truth</b><br>왜 틀렸나: 이 글은 진실을 말해야 하는 이유들을 나열해요. 같은 소재(거짓말)가 나온다고 골라도, 글이 말하는 방향(진실의 이점)과 다르면 오답이에요. ⑤번은 소재만 맞고 글이 말하는 방향과는 달랐을 가능성이 커요.</div><div style=\"border:1px solid #d8e3df;border-radius:8px;padding:10px 12px;margin:10px 0\"><b>69번 · 핵융합 에너지 글</b><br>태은이 답: ⑤  ·  정답: ① <b style=\"color:#2e7d6e\">advantages of energy production from fusion</b><br>왜 틀렸나: 핵융합으로 에너지를 만들 때의 장점들을 말하는 글이에요. 정답은 \"장점들(advantages)\"이라는 글 전체 방향을 담은 ①번인데, ⑤번은 글의 일부 내용이거나 글이 말하지 않은 내용이었을 가능성이 커요.</div><div style=\"background:#f3f8f6;border-left:4px solid #2e7d6e;padding:10px 12px;margin:10px 0;border-radius:6px\"><b>개념 정리 · 주제</b><br>규칙: 주제는 글 전체를 한 개의 <b style=\"color:#2e7d6e\">명사구</b>로 묶은 말이에요. 글 속에서 <b style=\"color:#2e7d6e\">반복되는 핵심어</b> + 글이 말하는 <b style=\"color:#2e7d6e\">방향(장점·이유·방법 등)</b>을 합친 것이 정답이에요.<br>예문 1) 글: 수면이 기억력에 좋다는 실험 여러 개 → 주제 <b style=\"color:#2e7d6e\">the effects of sleep on memory</b><br>예문 2) 글: 물을 아끼는 방법 세 가지 소개 → 주제 <b style=\"color:#2e7d6e\">ways to save water</b><br>예문 3) 글: 학생들이 지각하는 이유 설명 → 주제 <b style=\"color:#2e7d6e\">reasons why students are late</b><br>→ 마지막 단어(effects, ways, reasons, advantages)가 글의 방향이에요.</div><div style=\"font-size:.95em\">함정: <b>일부 세부 내용</b>만 말하는 보기(너무 좁음)나, 글에 없는 <b>더 큰 이야기</b>(너무 넓음)는 오답이에요. 글에 나온 단어가 많이 들어 있다고 정답은 아니에요.</div>", "part": "Part 3 · 독해 개념 ① 주제"}]},
+{"q": "[주제] When you keep a promise, you show that your words can be trusted. People begin to rely on you and give you bigger responsibilities. Also, you feel proud of yourself because you did what you said. Even small promises, such as returning a pencil, count.<br>이 글의 주제로 가장 알맞은 것은?", "choices": ["benefits of keeping your promises", "ways to make new friends at school", "why people forget what they promised", "the importance of borrowing things politely", "how to say no to a friend's request"], "answer": "benefits of keeping your promises", "exp": "약속을 지키면 신뢰·책임·자부심을 얻는다는 <b>이점들</b>을 나열한 글이에요. 핵심 정리: 이유·이점을 나열하는 글은 reasons/benefits로 끝나는 명사구가 주제! '연필 돌려주기(④)'는 예시일 뿐이에요."},
+{"q": "[주제] Wind turbines turn moving air into electricity without burning anything. They produce no smoke, so the air stays clean. Once they are built, the wind itself costs nothing, and it will never run out. These features make wind power an attractive choice for the future.<br>이 글의 주제로 가장 알맞은 것은?", "choices": ["advantages of generating electricity from wind", "problems caused by smoke from factories", "difficulties of building turbines on mountains", "reasons why the weather changes every day", "ways to save electricity at home"], "answer": "advantages of generating electricity from wind", "exp": "연기가 없고 비용이 들지 않으며 고갈되지 않는 <b>장점들</b>을 나열하는 글이에요. 핵심 정리: 글의 방향(advantages)까지 맞는 보기가 정답. ②는 글의 일부 소재(smoke)만 끌어온 오답이에요."},
+{"q": "[요지] A diet that works well for one person may not work for another. Your friend may lose weight by skipping dinner, but the same plan may leave you tired and unable to focus. People differ in age, activity, and body type, so the best plan depends on the person.<br>이 글의 요지로 가장 알맞은 것은?", "choices": ["규칙적인 운동이 다이어트의 핵심이다", "저녁을 거르면 집중력이 떨어진다", "모든 사람에게 똑같이 맞는 다이어트는 없다", "친구의 다이어트를 따라 하면 성공한다", "나이가 들수록 식사량을 줄여야 한다"], "answer": "모든 사람에게 똑같이 맞는 다이어트는 없다", "exp": "마지막 문장 'the best plan depends on the person'이 요지예요. 핵심 정리: 요지 = 필자가 말하고 싶은 핵심 한 문장. ②는 예시의 일부(세부 사실)라 오답이에요.", "pre": [{"html": "<div style=\"font-weight:700;font-size:1.05em;margin:4px 0 6px\">요지 찾기 (62번)</div><div style=\"border:1px solid #d8e3df;border-radius:8px;padding:10px 12px;margin:10px 0\"><b>62번 · 슈퍼푸드 글</b><br>정답: ① <b style=\"color:#2e7d6e\">슈퍼푸드가 모두에게 좋은 것은 아니다</b><br>왜 틀렸나: 글은 슈퍼푸드가 몸에 좋다고 알려져 있지만 사람에 따라 맞지 않을 수 있다고 말해요. 요지는 글에 나온 예시 하나가 아니라 필자가 하고 싶은 말(주장 문장)이에요. 예시나 일부 사실(건강에 좋은 점)에 끌리면 틀려요. \"However / But\"로 방향이 바뀌는 문장 뒤에 요지가 있어요.</div><div style=\"background:#f3f8f6;border-left:4px solid #2e7d6e;padding:10px 12px;margin:10px 0;border-radius:6px\"><b>개념 정리 · 요지</b><br>규칙: 요지는 필자가 글 전체에서 말하고 싶은 <b style=\"color:#2e7d6e\">핵심 한 문장</b>이에요. 보통 <b style=\"color:#2e7d6e\">However, But, In short, Therefore</b> 뒤나 글의 맨 마지막 문장에 나와요.<br>예문 1) <i>Many believe that early birds are always smarter. But </i><b style=\"color:#2e7d6e\">what matters is how well you sleep, not when.</b> → 요지: 일찍 일어나는 것보다 잘 자는 것이 중요하다.<br>예문 2) <i>Cats are cute, and dogs are loyal. In short, </i><b style=\"color:#2e7d6e\">every pet has its own charm.</b> → 요지: 모든 반려동물은 각자의 매력이 있다.<br>예문 3) 예시(식당 이야기)가 길어도, 마지막의 <b style=\"color:#2e7d6e\">Therefore</b> 문장이 요지예요.</div><div style=\"font-size:.95em\">함정: 글에서 <b>맞는 말이지만 요지는 아닌 보기</b>(세부 사실). 요지 보기는 \"누구에게나 ~다 / ~하는 것은 아니다\"처럼 글 전체를 일반화한 문장이에요.</div>", "part": "Part 4 · 독해 개념 ② 요지"}]},
+{"q": "[주장] In a relay race, each runner has one job: run his or her section and pass the baton safely. A fast runner who ignores the handoff to chase glory may drop it and ruin the team's chance. Teams win when every member does his or her part carefully, even if the part seems small.<br>필자의 주장으로 가장 알맞은 것은?", "choices": ["빠른 사람이 팀을 이끌어야 한다", "팀에서 각자 맡은 역할에 충실해야 한다", "승리보다 즐기는 것이 더 중요하다", "경기 전에 충분히 연습해야 한다", "작은 실수는 빨리 잊어야 한다"], "answer": "팀에서 각자 맡은 역할에 충실해야 한다", "exp": "마지막 문장 'every member does his or her part'가 주장이에요. 핵심 정리: 주장 = 필자가 권하는 행동. 달리기 연습(④)은 글에 나오지 않은 일반 상식이에요.", "pre": [{"html": "<div style=\"font-weight:700;font-size:1.05em;margin:4px 0 6px\">주장 찾기 (58번 · 66번 · 70번)</div><div style=\"border:1px solid #d8e3df;border-radius:8px;padding:10px 12px;margin:10px 0\"><b>58번</b><br>태은이 답: ④  ·  정답: ⑤ <b style=\"color:#2e7d6e\">자신에게 주어진 역할에 충실해야 한다</b><br>왜 틀렸나: 필자가 \"~해야 한다\"고 권하는 내용을 찾는 문제예요. ④번은 글의 일부 장면이나 일반적으로 맞는 말일 수 있지만, 필자가 글 전체로 권하는 행동은 아니에요. 글의 마지막 부분의 당위 표현을 찾아야 해요.</div><div style=\"border:1px solid #d8e3df;border-radius:8px;padding:10px 12px;margin:10px 0\"><b>66번</b><br>정답: ③ <b style=\"color:#2e7d6e\">습관을 바꾸려면 환경을 바꿔라</b><br>왜 틀렸나: 필자는 의지력 대신 환경을 바꾸라고 권해요. \"의지가 중요하다\"처럼 상식적인 말을 고르면 필자의 주장과 반대가 될 수 있어요. 필자가 말하는 방법이 무엇인지(환경)를 끝까지 확인해야 해요.</div><div style=\"border:1px solid #d8e3df;border-radius:8px;padding:10px 12px;margin:10px 0\"><b>70번</b><br>태은이 답: ④  ·  정답: ⑤ <b style=\"color:#2e7d6e\">한 번에 한 가지 일에 집중해야 한다</b><br>왜 틀렸나: 한꺼번에 여러 일을 하면 효율이 떨어진다는 글이에요. ④번은 글에 나온 예시 하나를 일반 주장으로 바꾼 보기일 가능성이 커요. 주장은 예시가 아니라 필자가 권하는 행동 전체예요.</div><div style=\"background:#f3f8f6;border-left:4px solid #2e7d6e;padding:10px 12px;margin:10px 0;border-radius:6px\"><b>개념 정리 · 주장</b><br>규칙: 주장은 필자가 독자에게 권하거나 요구하는 내용이에요. <b style=\"color:#2e7d6e\">should, must, need to, had better, It is important to</b> 같은 당위 표현 또는 명령문이 있는 문장을 찾아요. 보기는 한국어로 \"~해야 한다\"로 끝나요.<br>예문 1) <b style=\"color:#2e7d6e\">You should</b> drink water before you feel thirsty. → 주장: 목마르기 전에 물을 마셔야 한다.<br>예문 2) <b style=\"color:#2e7d6e\">It is important to</b> ask for help. → 주장: 도움을 요청하는 것이 중요하다.<br>예문 3) <b style=\"color:#2e7d6e\">Never</b> judge a book by its cover. → 주장: 겉모습으로 판단하지 마라.</div><div style=\"font-size:.95em\">함정: 글에 나온 <b>예시나 사실</b>을 주장처럼 바꾼 보기, 그리고 필자가 말하지 않은 상식적인 교훈은 오답이에요.</div>", "part": "Part 5 · 독해 개념 ③ 주장"}]},
+{"q": "[주장] If you want to study more, don't count on willpower alone. Keep your phone in another room and clear your desk of everything except your books. When distractions are out of sight, studying becomes the easy choice, and the habit follows without a fight.<br>필자의 주장으로 가장 알맞은 것은?", "choices": ["공부할 때는 쉬는 시간을 자주 가져야 한다", "스마트폰은 부모님이 관리해 주어야 한다", "의지보다 주변 환경을 바꾸는 것이 효과적이다", "책상은 매일 깨끗이 청소해야 한다", "목표를 세우면 의지가 저절로 강해진다"], "answer": "의지보다 주변 환경을 바꾸는 것이 효과적이다", "exp": "필자는 의지 대신 <b>환경(휴대폰 치우기, 책상 정리)</b>을 바꾸라고 말해요. 핵심 정리: 필자의 방법이 무엇인지 끝까지 확인! ④는 글의 예시 하나만 뽑은 보기예요."},
+{"q": "[주장] A chef who tries to chop, stir, and answer phone calls at the same time often burns the food. His mind jumps from job to job, so none of them gets full attention. Finishing one task before starting the next is faster, and the results are better.<br>필자의 주장으로 가장 알맞은 것은?", "choices": ["요리는 전문가에게 배워야 한다", "여러 일을 동시에 해야 시간을 아낄 수 있다", "한 번에 한 가지 일에 집중하는 것이 좋다", "바쁠수록 다른 사람에게 도움을 청해야 한다", "음식은 불 조절이 가장 중요하다"], "answer": "한 번에 한 가지 일에 집중하는 것이 좋다", "exp": "마지막 문장 'Finishing one task before starting the next'가 필자의 권유예요. 핵심 정리: 주장은 예시(요리사)가 아니라 그 예시가 주는 교훈! ⑤는 예시 속 소재만 가져온 오답이에요."},
+{"q": "[제목] Before a speech, many students feel their hearts pounding. Yet those who rehearse in front of a mirror several times walk on stage calmly. They know their words so well that fear has little room to grow.<br>이 글의 제목으로 가장 알맞은 것은?", "choices": ["Why Mirrors Make Us Nervous", "Rehearsal: The Key to a Calm Speech", "How to Write a Perfect Speech", "Stage Fright Cannot Be Cured", "Famous Speeches That Changed History"], "answer": "Rehearsal: The Key to a Calm Speech", "exp": "연습(rehearse)하면 긴장이 줄어든다는 글 전체의 메시지를 담았어요. 핵심 정리: 제목 = 주제 + 필자의 핵심 메시지. ①은 소재(mirror)만 쓴 오답이에요.", "pre": [{"html": "<div style=\"font-weight:700;font-size:1.05em;margin:4px 0 6px\">제목 찾기 (63번 · 68번)</div><div style=\"border:1px solid #d8e3df;border-radius:8px;padding:10px 12px;margin:10px 0\"><b>63번 · affirmations 글</b><br>태은이 답: ⑤  ·  정답: ④ <b style=\"color:#2e7d6e\">Preparation Sets You Free from Nervousness</b><br>왜 틀렸나: 글이 말하는 것은 \"준비를 하면 긴장에서 벗어난다\"예요. ⑤번은 글의 일부 소재나 어려운 단어(affirmations)에 끌려 고른 선택이었을 가능성이 커요. 제목은 소재가 아니라 글 전체 내용을 대표하는 문장이에요.</div><div style=\"border:1px solid #d8e3df;border-radius:8px;padding:10px 12px;margin:10px 0\"><b>68번</b><br>태은이 답: ④  ·  정답: ③ <b style=\"color:#2e7d6e\">Strategic Thinking Requires Much Practice</b><br>왜 틀렸나: 전략적 사고는 많은 연습이 필요하다는 내용이에요. ④번은 글의 일부에는 맞더라도 글 전체를 대표하지 못해요. 제목은 글의 핵심 주제와 필자의 주장이 함께 드러나야 해요.</div><div style=\"background:#f3f8f6;border-left:4px solid #2e7d6e;padding:10px 12px;margin:10px 0;border-radius:6px\"><b>개념 정리 · 제목</b><br>규칙: 제목은 글 전체를 대표하는 <b style=\"color:#2e7d6e\">짧은 구 또는 문장</b>이에요. 주제(무엇에 대해)에 필자의 <b style=\"color:#2e7d6e\">핵심 메시지</b>를 얹은 것이 정답이에요. 비유적 표현이라도 글의 중심과 연결돼야 해요.<br>예문 1) 글: 매일 10분 독서가 어휘력을 키운다 → <b style=\"color:#2e7d6e\">Ten Minutes a Day Builds a Rich Vocabulary</b><br>예문 2) 글: 쓰레기를 줄이는 작은 습관 → <b style=\"color:#2e7d6e\">Small Habits That Cut Down Waste</b><br>예문 3) 글: 실패에서 배운다 → <b style=\"color:#2e7d6e\">Failure: The Best Teacher</b></div><div style=\"font-size:.95em\">함정: <b>너무 좁은 보기</b>(글의 한 장면만), <b>너무 넓은 보기</b>(글보다 큰 이야기), <b>글에 없는 정보</b>. 제목은 요지와 같은 방향인지 확인해요.</div>", "part": "Part 6 · 독해 개념 ④ 제목"}]},
+{"q": "[제목] Chess masters do not become great overnight. They study old games, solve puzzles every day, and play thousands of matches. Over time, their minds learn to see patterns that beginners miss.<br>이 글의 제목으로 가장 알맞은 것은?", "choices": ["Great Chess Players Are Built by Practice", "Chess Was Invented to Teach Kings", "Why Beginners Should Avoid Puzzles", "The Rules of Chess in Simple Steps", "Winning Is Pure Luck, Not Skill"], "answer": "Great Chess Players Are Built by Practice", "exp": "고수가 되는 과정에서의 <b>꾸준한 연습</b>이 글의 중심이에요. 핵심 정리: 제목은 글 전체를 대표해야 하고, 글에 없는 정보(②, ④)나 글과 반대인 내용(⑤)은 오답!"},
+{"q": "I wonder what time the bakery ______ on Sundays.", "choices": ["opens", "open", "does open", "opening"], "answer": "opens", "exp": "간접의문문은 <b>의문사 + 주어 + 동사</b> 순서이고 do/does를 쓰지 않아요. 주어가 3인칭 단수(the bakery)이므로 동사에 <b>-s</b>: opens. (최근 계속 반복된 3단현 -s 오류!)", "part": "Part 7 · 누적 오답 복습"},
+{"q": "She showed me ______ she had made for the contest.", "choices": ["what", "that", "who", "where"], "answer": "what", "exp": "made의 목적어가 빠져 있어서 선행사 없이 '~한 것'을 뜻하는 관계대명사 <b>what</b>. 뒤 문장이 완전하면 that, 빠져 있으면 what!"},
+{"q": "It was very smart (A) ______ you to save money. It is necessary (B) ______ us to save energy.", "choices": ["of – for", "for – of", "of – of", "for – for"], "answer": "of – for", "exp": "사람의 성격·판단을 나타내는 형용사(kind, smart, nice, careless)는 <b>of + 사람</b>, 그 밖의 형용사(necessary, important, easy)는 <b>for + 사람</b>."},
+{"q": "Some students like math, and ______ prefer art.", "choices": ["others", "another", "the other", "other"], "answer": "others", "exp": "'(여럿 중) 어떤 것들은 ~, 다른 것들은 ~'는 <b>Some ~, others ~</b>. another(하나), the other(둘 중 나머지 하나), other + 명사는 쓰임이 달라요."}
+]
+;
+
+var QUIZ_ID = "clinic-hte-1029";
+var QUIZ_TITLE = "한태은 사진 클리닉 10/29";
+var KEEP = false;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+var prePos = 0;
+function showQuestion() {
+  var q = QUESTIONS[current];
+  if (q.pre && prePos < q.pre.length) {
+    document.getElementById("progress").textContent = "개념 읽기 · 다음 문제 " + (current + 1) + " / " + QUESTIONS.length;
+    var pt0 = document.getElementById("part"), px = q.pre[prePos].part || partFor(current);
+    if (px) { pt0.textContent = px; pt0.classList.remove("hidden"); } else pt0.classList.add("hidden");
+    document.getElementById("qtext").innerHTML = q.pre[prePos].html;
+    var bx = document.getElementById("choices"); bx.innerHTML = "";
+    var cb = document.createElement("button");
+    cb.className = "btn"; cb.id = "concept-btn"; cb.textContent = "다 읽었어요";
+    cb.addEventListener("click", function () { prePos++; showQuestion(); });
+    bx.appendChild(cb);
+    return;
+  }
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+  var u = document.createElement("button");
+  u.className = "unknown"; u.id = "unknown-btn";
+  u.textContent = "🤔 모름";
+  u.addEventListener("click", function () { pick("모름", "", true); });
+  box.appendChild(u);
+}
+
+var locked = false;
+function pick(choice, mark, unknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  var entry = { no: current + 1, ok: ok, chosen: choice, answer: q.answer };
+  if (unknown) { entry.unknown = true; unknownNumbers.push(current + 1); }
+  answersLog.push(entry);
+  prePos = 0;
+  current++;
+  saveProgress();
+  var advance = function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  };
+  if (!ok && !unknown) {
+    var fb = document.createElement("div");
+    fb.className = "exp wrong"; fb.id = "feedback";
+    fb.innerHTML = "<b>오답 (정답: " + q.answer + ")</b><br>" + q.exp;
+    var box2 = document.getElementById("choices"); box2.innerHTML = ""; box2.appendChild(fb);
+    var nb = document.createElement("button");
+    nb.className = "btn"; nb.id = "next-btn"; nb.textContent = "다음 문제";
+    nb.addEventListener("click", advance);
+    box2.appendChild(nb);
+    return;
+  }
+  setTimeout(advance, 250);
+}
+
+function unknownLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var ul = document.createElement("div");
+  ul.className = "sub"; ul.id = "unknown-line"; ul.style.textAlign = "center";
+  ul.textContent = unknownLine();
+  document.getElementById("score-line").insertAdjacentElement("afterend", ul);
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/29 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
