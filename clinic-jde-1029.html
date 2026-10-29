@@ -169,6 +169,7 @@ startBtn.addEventListener("click", function () {
   }
   document.getElementById("start-card").classList.add("hidden");
   document.getElementById("quiz-card").classList.remove("hidden");
+  playQ(current);
   showQuestion();
 });
 
@@ -188,16 +189,18 @@ function partFor(idx) {
   return "";
 }
 
-var SND = {b:"buh",d:"duh",c:"kuh",k:"kuh",g:"guh",j:"juh",f:"fuh",v:"vuh",s:"suh",z:"zuh",p:"puh",l:"luh",r:"ruh"};
-function utt(t, rate){ var u = new SpeechSynthesisUtterance(t); u.lang = "en-US"; u.rate = rate; var v = window.speechSynthesis.getVoices().filter(function(x){ return /en-US/i.test(x.lang); })[0]; if (v) u.voice = v; return u; }
-function say(w){ try { var s = window.speechSynthesis; if(!s) return; s.cancel(); var q = QUESTIONS.filter(function(x){ return x.say === w; })[0]; var sd = q ? SND[q.answer] : ""; if (sd) { s.speak(utt(sd, 0.6)); s.speak(utt(sd, 0.6)); } s.speak(utt(w, 0.7)); } catch(e){} }
+var AUD = new Audio(); AUD.preload = "auto";
+function audUrl(i){ return "audio/jde1029/" + QUESTIONS[i].say + ".wav?v=1"; }
+try { QUESTIONS.forEach(function(q, i){ fetch(audUrl(i)).catch(function(){}); }); } catch(e) {}
+function playQ(i){ try { if (i >= QUESTIONS.length) return; AUD.pause(); AUD.src = audUrl(i); AUD.currentTime = 0; var p = AUD.play(); if (p && p.catch) p.catch(function(){}); } catch(e) {} }
+function say(w){ playQ(current); }
 function showQuestion() {
   var q = QUESTIONS[current];
   document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
   document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
   var pt = document.getElementById("part"), ptxt = partFor(current);
   if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
-  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". 잘 듣고 <b>첫소리</b>를 골라요<div class=\"em-big\">" + q.em + "</div><button class=\"say-btn\" onclick=\"say(QUESTIONS[current].say)\">🔊 다시 듣기</button>"; setTimeout(function(){ say(q.say); }, 300);
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". 잘 듣고 <b>첫소리</b>를 골라요<div class=\"em-big\">" + q.em + "</div><button class=\"say-btn\" onclick=\"say(QUESTIONS[current].say)\">🔊 다시 듣기</button>";
   var box = document.getElementById("choices");
   box.innerHTML = "";
   shuffle(q.choices).forEach(function (c, i) {
@@ -226,6 +229,7 @@ function pick(choice, mark, unknown) {
   answersLog.push(entry);
   current++;
   saveProgress();
+  if (current < QUESTIONS.length) playQ(current);
   setTimeout(function () {
     locked = false;
     if (current < QUESTIONS.length) showQuestion();
