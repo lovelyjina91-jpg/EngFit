@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>김영광 · 영핏 사진 클리닉 10/31</title>
+<meta property="og:title" content="김영광 클리닉 · 10/31 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unknown { display:block; width:100%; margin-top:6px; padding:12px; font-size:1rem; font-weight:bold; color:#8a6d00; background:#fff8e1; border:1.5px dashed #e0b84c; border-radius:10px; cursor:pointer; }
+  .unknown:active { background:#ffefb3; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>김영광 · 영핏 사진 클리닉 10/31 🌱</h1>
+    <p class="sub">누적 오답 다시 잡기 15문제 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="김영광" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+{"q": "다음 빈칸에 들어갈 말로 가장 알맞은 것을 고르세요.<br><div class='pass'>______ the heavy rain, the students finished the school marathon with big smiles.</div>", "choices": ["Although", "Because", "In spite of", "Even though"], "answer": "In spite of", "exp": "빈칸 뒤가 <b>명사구(the heavy rain)</b>라서 전치사 <b>in spite of / despite</b>가 와요. although·even though·because는 뒤에 <b>주어 + 동사</b>가 와야 해요. 10/25 데일리에서 in spite of를 모름으로 남겼던 부분이에요.", "part": "Part 1 · 양보·이유 (despite / although / because of)"},
+{"q": "다음 빈칸에 들어갈 말로 가장 알맞은 것을 고르세요.<br><div class='pass'>______ Junho practiced the piano every day, he made a few mistakes at the concert.</div>", "choices": ["Although", "Despite", "In spite of", "Because of"], "answer": "Although", "exp": "빈칸 뒤에 <b>Junho practiced</b>(주어 + 동사)가 있으니 접속사 <b>Although</b>! 뜻도 '매일 연습했지만 실수했다'로 양보예요. despite·in spite of·because of는 뒤에 명사(구)만 와요."},
+{"q": "다음 글의 (A), (B)에 들어갈 말로 가장 알맞은 것을 고르세요.<br><div class='pass'>The soccer game was put off (A) ______ the strong wind, but many fans stayed at the stadium (B) ______ it was very cold.</div>", "choices": ["(A) because – (B) despite", "(A) despite – (B) because of", "(A) because of – (B) in spite of", "(A) because of – (B) although"], "answer": "(A) because of – (B) although", "exp": "(A) 뒤는 명사구(the strong wind) + 이유 → <b>because of</b>. (B) 뒤는 <b>it was very cold</b>(절) + 양보 → <b>although</b>. 10/21 클리닉에서 (B)에 despite를 골랐던 것과 똑같은 함정이에요. 뒤에 동사가 있는지 먼저 확인!"},
+{"q": "다음 두 문장의 뜻이 같도록 할 때 빈칸에 알맞은 것을 고르세요.<br><div class='pass'>Although she was very tired, Mina helped her mom clean the house.<br>= ______, Mina helped her mom clean the house.</div>", "choices": ["Despite she was very tired", "Despite being very tired", "Although being tired very", "Because of being very tired"], "answer": "Despite being very tired", "exp": "despite 뒤에는 절(she was)이 못 오고 <b>명사나 동명사</b>가 와요 → <b>Despite being very tired</b>. because of는 '피곤해서'라서 뜻이 반대예요."},
+{"q": "다음 중 <b>철자가 바른</b> 문장을 고르세요.", "choices": ["Please keep the reciept in case you want to return the shoes.", "Please keep the receipt in case you want to return the shoes.", "Please keep the receit in case you want to return the shoes.", "Please keep the riceipt in case you want to return the shoes."], "answer": "Please keep the receipt in case you want to return the shoes.", "exp": "영수증은 <b>r-e-c-e-i-p-t</b>. c 뒤에 <b>ei</b>, 그리고 소리 안 나는 <b>p</b>가 있어요. 10/25 데일리에서 receipt를 쓰다 말았던 단어예요.", "part": "Part 2 · 철자 · 전치사 (receipt / received / written in)"},
+{"q": "다음 중 <b>철자나 어법이 틀린 곳이 없는</b> 문장을 고르세요.", "choices": ["Last week I recieved a postcard written in French from my aunt.", "Last week I received a postcard written by French from my aunt.", "Last week I recieved a postcard writing in French from my aunt.", "Last week I received a postcard written in French from my aunt."], "answer": "Last week I received a postcard written in French from my aunt.", "exp": "① <b>received</b>(c 뒤엔 ei) ② 엽서는 '쓰여진' 것이라 <b>written</b> ③ 언어는 <b>in French</b>(by ✕). 10/20 데일리에서 recieved, written by English 두 군데를 틀렸었어요."},
+{"q": "다음 문장에서 <b>어법상 틀린 부분</b>을 바르게 고친 것을 고르세요.<br><div class='pass'>This famous novel was written by Korean, but now people around the world read it.</div>", "choices": ["by Korean → in Korean", "written → writing", "read → reads", "it → them"], "answer": "by Korean → in Korean", "exp": "'한국어로' 쓰였다는 건 언어라서 <b>in Korean</b>. by 뒤에는 쓴 <b>사람</b>이 와요(written by a Korean writer). people은 복수라 read가 맞아요."},
+{"q": "다음 빈칸에 들어갈 말로 가장 알맞은 것을 고르세요.<br><div class='pass'>Please remember ______ your name on the answer sheet before you hand it in.</div>", "choices": ["writing", "to writing", "to write", "written"], "answer": "to write", "exp": "아직 안 한, <b>앞으로 할 일</b>을 기억하라는 뜻이라 <b>remember to + 동사원형</b>. 10/17(locking), 10/20(turning) 데일리에서 두 번이나 -ing를 썼던 부분이에요!", "part": "Part 3 · remember / forget / stop / regret"},
+{"q": "다음 중 <b>어법상 올바른</b> 문장을 고르세요.", "choices": ["I remember to visit this museum with my class two years ago.", "Don't forget turning off the gas before you leave home.", "He stopped to play computer games because his eyes hurt a lot.", "I will never forget meeting the famous actor at the airport last summer."], "answer": "I will never forget meeting the famous actor at the airport last summer.", "exp": "<b>이미 한 일</b>(작년 여름에 만난 것)을 잊지 못한다 → <b>forget -ing</b> ✔. ① two years ago는 과거 → remember <b>visiting</b> ② 앞으로 할 일 → forget <b>to turn</b> ③ 눈이 아파서 게임을 '그만둔' 거니까 stopped <b>playing</b>(stop to play는 '게임하려고 멈추다')."},
+{"q": "다음 문장에서 <b>어법상 틀린 부분</b>을 바르게 고친 것을 고르세요.<br><div class='pass'>I regret telling you that your library books are now two weeks overdue.</div>", "choices": ["telling → told", "telling → to tell", "overdue → overdued", "are → is"], "answer": "telling → to tell", "exp": "지금 소식을 전하면서 '~하게 되어 유감이다'는 <b>regret to tell</b>. regret -ing는 '(예전에) ~한 것을 후회하다'예요. remember·forget과 같은 짝 규칙!"},
+{"q": "다음 우리말과 같은 뜻이 되도록 할 때 빈칸에 알맞은 것을 고르세요.<br><div class='pass'>지호는 강을 따라 자전거를 타다가 노을 사진을 찍으려고 멈췄다.<br>→ Jiho stopped ______ a photo of the sunset during the bike ride along the river.</div>", "choices": ["taking", "to taking", "to take", "take"], "answer": "to take", "exp": "'~하려고 멈췄다'는 <b>stop to + 동사원형</b>(목적). stop -ing는 '~하는 것을 그만두다'라서 뜻이 달라져요."},
+{"q": "다음 빈칸에 들어갈 말로 가장 알맞은 것을 고르세요.<br><div class='pass'>The cookies ______ by our club members were sold out in less than an hour.</div>", "choices": ["baked", "baking", "bake", "were baked"], "answer": "baked", "exp": "쿠키는 '구워진' 것이라 과거분사 <b>baked</b>가 뒤에서 꾸며요(by our club members). 동사는 뒤에 were sold out이 이미 있으니 were baked는 안 돼요. a letter written in English와 같은 구조예요.", "part": "Part 4 · 내신 복습"},
+{"q": "다음 중 <b>어법상 틀린</b> 문장을 고르세요.", "choices": ["We are looking forward to join the science camp this winter.", "She enjoys reading mystery novels before she goes to bed.", "My brother finished cleaning his room before dinner.", "They gave up climbing the mountain because of the snow."], "answer": "We are looking forward to join the science camp this winter.", "exp": "look forward to의 to는 <b>전치사</b>라서 뒤에 <b>-ing</b> → looking forward to <b>joining</b>. enjoy·finish·give up도 모두 -ing를 써요."},
+{"q": "다음 문장에서 <b>어법상 틀린 부분</b>을 바르게 고친 것을 고르세요.<br><div class='pass'>When the class will be over, we are going to visit the new bookstore downtown.</div>", "choices": ["are going → will go", "bookstore → bookstores", "will be → is", "visit → visiting"], "answer": "will be → is", "exp": "때·조건 부사절(when, if) 안에서는 미래라도 <b>현재시제</b>! When the class <b>is</b> over. 10/29 클리닉의 if she will have와 같은 규칙이에요."},
+{"q": "다음 중 <b>어법상 올바른</b> 문장을 고르세요.", "choices": ["Because the loud noise, I couldn't sleep well last night.", "Because of it was snowing, the school bus came late.", "Despite he had a cold, Tom went to the swimming lesson.", "Because of the loud noise, I couldn't hear the teacher's voice."], "answer": "Because of the loud noise, I couldn't hear the teacher's voice.", "exp": "명사구(the loud noise) 앞에는 <b>because of</b> ✔. ① Because + 명사 ✕ ② Because of + 절 ✕ → Because it was snowing ③ Despite + 절 ✕ → Although he had a cold. '뒤에 동사 있나?'로 판단!"}
+]
+;
+
+var QUIZ_ID = "clinic-kyk-1031";
+var QUIZ_TITLE = "김영광 사진 클리닉 10/31";
+var KEEP = false;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+  var u = document.createElement("button");
+  u.className = "unknown"; u.id = "unknown-btn";
+  u.textContent = "🤔 모름";
+  u.addEventListener("click", function () { pick("모름", "", true); });
+  box.appendChild(u);
+}
+
+var locked = false;
+function pick(choice, mark, unknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  var entry = { no: current + 1, ok: ok, chosen: choice, answer: q.answer };
+  if (unknown) { entry.unknown = true; unknownNumbers.push(current + 1); }
+  answersLog.push(entry);
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unknownLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var ul = document.createElement("div");
+  ul.className = "sub"; ul.id = "unknown-line"; ul.style.textAlign = "center";
+  ul.textContent = unknownLine();
+  document.getElementById("score-line").insertAdjacentElement("afterend", ul);
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 10/31 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
