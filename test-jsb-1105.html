@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>장새봄 비교급 맞춤 테스트 11/5</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>장새봄 비교급 맞춤 테스트 11/5 💪</h1>
+    <p class="sub">비교급과 문장 어순을 연습해요 · 15문항<br>비교급 · 어순·문장 만들기 · 형용사·부사</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+    <p class="hint">정말 모르겠으면 찍지 말고 <b>🤔 모름</b>을 눌러 주세요 — 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>컴퓨터: 숫자키 1~4 = 보기 선택 · 0 = 모름</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════
+   tag = 개념 이름 (학습 기록 분석용, records/tools/engfit_records.py CONCEPTS와 같은 이름) */
+var QUESTIONS = [
+  { tag: "비교급",
+    q: "빈칸에 알맞은 말은?<br>My schoolbag is ______ than your schoolbag. (heavy)",
+    choices: ["more heavy","heavier","heavy","heaviest"],
+    answer: "heavier",
+    exp: "비교하는 말 <b>than</b>이 있으면 비교급! heavy는 y를 i로 바꾸고 <b>-er</b> → <b>heavier</b>. 짧은 단어에는 more를 쓰지 않아요." },
+  { tag: "어순·문장 만들기",
+    q: "단어를 바르게 배열한 문장은?<br>(to school / walks / every day / Minsu)",
+    choices: ["Minsu to school walks every day.","Walks Minsu to school every day.","Every day Minsu to school walks.","Minsu walks to school every day."],
+    answer: "Minsu walks to school every day.",
+    exp: "영어는 <b>누가(주어) → 어떻게 하다(동사) → 어디에</b> 순서! Minsu(주어) walks(동사) to school(장소) every day(때)." },
+  { tag: "비교급",
+    q: "빈칸에 알맞은 말은?<br>This game is ______ than that one. (interesting)",
+    choices: ["more interesting","interestinger","most interesting","interesting"],
+    answer: "more interesting",
+    exp: "interesting처럼 긴 단어는 -er을 붙이지 않고 <b>more + 원급</b>으로 비교급을 만들어요. most는 '가장'(최상급)이에요." },
+  { tag: "형용사·부사",
+    q: "빈칸에 알맞은 말은?<br>The turtle moves ______. (slow)",
+    choices: ["slow","slowness","slowly","slowing"],
+    answer: "slowly",
+    exp: "'어떻게 움직이는지'는 동사를 꾸미는 <b>부사</b>! 형용사 slow 뒤에 <b>-ly</b>를 붙여 slowly." },
+  { tag: "비교급",
+    q: "빈칸에 알맞은 말은?<br>Today is ______ than yesterday. (hot)",
+    choices: ["hoter","more hot","hottest","hotter"],
+    answer: "hotter",
+    exp: "hot처럼 <b>짧은 모음 + 자음 하나</b>로 끝나면 자음을 한 번 더 쓰고 -er → <b>hotter</b>. hottest는 '가장 더운'이에요." },
+  { tag: "어순·문장 만들기",
+    q: "우리말에 맞게 바르게 쓴 문장은?<br>나는 어제 친구와 영화를 봤다.",
+    choices: ["I watched a movie with my friend yesterday.","I a movie watched with my friend yesterday.","Watched I a movie with my friend yesterday.","I watched a movie my friend with yesterday."],
+    answer: "I watched a movie with my friend yesterday.",
+    exp: "<b>I(주어) → watched(동사) → a movie(목적어)</b> 순서로 먼저 쓰고, with my friend, yesterday를 뒤에 붙여요." },
+  { tag: "비교급",
+    q: "빈칸에 알맞은 말은?<br>Soccer is more popular ______ baseball in my school.",
+    choices: ["then","that","than","as"],
+    answer: "than",
+    exp: "'~보다 더 …한'은 <b>비교급 + than</b>! then(그때)과 철자가 비슷하니 a를 확인해요." },
+  { tag: "형용사·부사",
+    q: "빈칸에 알맞은 말은?<br>She looks ______ in her new dress.",
+    choices: ["happily","happy","happiness","happyly"],
+    answer: "happy",
+    exp: "look(~해 보이다) 뒤에는 상태를 말하는 <b>형용사</b>가 와요. 부사 happily는 '행복하게'라서 동사 look 뒤에 쓰지 않아요." },
+  { tag: "비교급",
+    q: "빈칸에 알맞은 말은?<br>Mina is the ______ dancer of the three. (good)",
+    choices: ["best","better","goodest","most good"],
+    answer: "best",
+    exp: "good은 불규칙 변화! good - better - <b>best</b>. 'the ~ of the three'는 셋 중 '가장'이라서 최상급 best예요." },
+  { tag: "어순·문장 만들기",
+    q: "단어를 바르게 배열한 문장은?<br>(is / My dog / under the table / sleeping)",
+    choices: ["My dog sleeping is under the table.","Is my dog sleeping under the table.","My dog under the table is sleeping.","My dog is sleeping under the table."],
+    answer: "My dog is sleeping under the table.",
+    exp: "<b>주어 + be동사 + 동사ing + 장소</b> 순서예요. My dog(주어) is(be동사) sleeping(동사ing) under the table(장소)." },
+  { tag: "비교급",
+    q: "다음 중 <u>틀린</u> 문장은?",
+    choices: ["Winter is colder than fall.","My bike is cheaper than yours.","This box is more heavier than that box.","English is more difficult than music for me."],
+    answer: "This box is more heavier than that box.",
+    exp: "heavy는 이미 비교급 <b>heavier</b>! more와 -er을 함께 쓰면 안 돼요 → This box is heavier than that box." },
+  { tag: "어순·문장 만들기",
+    q: "올바른 질문은?",
+    choices: ["What you ate for lunch?","What did you eat for lunch?","What did eat you for lunch?","What for lunch did you eat?"],
+    answer: "What did you eat for lunch?",
+    exp: "의문사 질문 순서는 <b>의문사 + did + 주어 + 동사원형</b>. What did you eat ~? 처럼 쓰고, did가 있으니 eat은 원형이에요." },
+  { tag: "형용사·부사",
+    q: "빈칸에 알맞은 말은?<br>My grandfather speaks very ______. (quiet)",
+    choices: ["quietly","quiet","quietness","quieter"],
+    answer: "quietly",
+    exp: "speaks(말한다)를 꾸미므로 <b>부사 quietly</b>. quiet은 '조용한'이라는 형용사예요." },
+  { tag: "어순·문장 만들기",
+    q: "올바른 문장은?",
+    choices: ["She milk drinks every morning.","Drinks she milk every morning.","She drinks milk every morning.","She drinks every morning milk."],
+    answer: "She drinks milk every morning.",
+    exp: "<b>주어 + 동사 + 목적어</b>: She drinks milk. 그 뒤에 때(every morning)를 붙여요." },
+  { tag: "현재 시제 -s",
+    q: "빈칸에 알맞은 말은?<br>My father ______ coffee every morning. (drink)",
+    choices: ["drink","drinking","is drink","drinks"],
+    answer: "drinks",
+    exp: "My father는 3인칭 한 명 → 동사에 <b>-s</b>를 붙여 drinks." }
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = q.tag;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shownChoices = q.choices.slice();
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput) return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length +
+    (unknownNumbers.length ? "  (🤔 모름 " + unknownNumbers.length + ")" : "");
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : log.unknown ? " unknown" : " wrong");
+    var head = log.ok ? "정답!" : log.unknown ? "🤔 모름 → 정답: " + q.answer + " (이제 알게 됐어요!)" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")";
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "test-jsb-1105-0706",
+    quizTitle: "장새봄 비교급 맞춤 테스트 11/5",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[장새봄 비교급 맞춤 테스트 11/5]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

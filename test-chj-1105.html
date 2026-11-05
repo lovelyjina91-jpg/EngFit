@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>차호진 독해·대명사·현재시제 맞춤 테스트 11/5</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>차호진 독해·대명사·현재시제 맞춤 테스트 11/5 💪</h1>
+    <p class="sub">짧은 글 읽기 · 대명사 · 현재시제/진행 · 단어 · be동사 · 15문항</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+    <p class="hint">정말 모르겠으면 찍지 말고 <b>🤔 모름</b>을 눌러 주세요 — 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>컴퓨터: 숫자키 1~4 = 보기 선택 · 0 = 모름</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "tag": "독해 유형",
+  "q": "글을 읽고 질문에 답하세요.<div class='passage'>Mina gets up at 7:00 every day. She eats breakfast with her family. Then she goes to school by bus.</div><br>How does Mina go to school?",
+  "choices": [
+   "On foot",
+   "By bike",
+   "By bus",
+   "By subway"
+  ],
+  "answer": "By bus",
+  "exp": "글의 마지막 문장 'she goes to school <b>by bus</b>'에 답이 있어요. 질문의 단어(go to school)를 글에서 찾아 그 근처를 읽으면 돼요."
+ },
+ {
+  "tag": "독해 유형",
+  "q": "글을 읽고 질문에 답하세요.<div class='passage'>Jun has a new cap. It is red and blue. He wears it when he plays soccer.</div><br>When does Jun wear the cap?",
+  "choices": [
+   "When he plays soccer",
+   "When he eats lunch",
+   "When he goes to bed",
+   "When he takes a bath"
+  ],
+  "answer": "When he plays soccer",
+  "exp": "'He wears it <b>when he plays soccer</b>.' 질문의 wear를 글에서 찾으면 답이 바로 나와요. it = the cap이에요."
+ },
+ {
+  "tag": "독해 유형",
+  "q": "글의 내용과 같은 것을 고르세요.<div class='passage'>Sora is ten years old. She has two brothers. Her family lives in Daegu.</div>",
+  "choices": [
+   "Sora is eleven years old.",
+   "Sora has two sisters.",
+   "Sora lives in Busan.",
+   "Sora has two brothers."
+  ],
+  "answer": "Sora has two brothers.",
+  "exp": "'She has <b>two brothers</b>.'가 글에 있어요. 나이(ten), 도시(Daegu), brothers/sisters를 하나씩 글과 비교해 보세요."
+ },
+ {
+  "tag": "대명사",
+  "q": "빈칸에 알맞은 말은?<br>Mina and I are sisters. ______ live in Seoul. (우리는 서울에 살아요.)",
+  "choices": [
+   "They",
+   "We",
+   "She",
+   "You"
+  ],
+  "answer": "We",
+  "exp": "'Mina and I'는 나를 포함한 여러 명 → <b>We</b>. 나를 빼고 말할 때만 They를 써요."
+ },
+ {
+  "tag": "대명사",
+  "q": "빈칸에 알맞은 말은?<br>I like my teachers. I see ______ every day. (나는 매일 그분들을 만나요.)",
+  "choices": [
+   "they",
+   "their",
+   "him",
+   "them"
+  ],
+  "answer": "them",
+  "exp": "동사(see) 뒤에서 '~을/를'의 뜻이면 <b>목적격</b> → they의 목적격은 <b>them</b>이에요."
+ },
+ {
+  "tag": "대명사",
+  "q": "빈칸에 알맞은 말은?<br>Jina has a bag. ______ bag is yellow. (그녀의 가방은 노란색이에요.)",
+  "choices": [
+   "Her",
+   "She",
+   "Hers",
+   "Him"
+  ],
+  "answer": "Her",
+  "exp": "'그녀의 + 명사'는 <b>her</b> (she의 소유격). 뒤에 명사 bag이 있으니 her를 써요."
+ },
+ {
+  "tag": "현재시제·현재진행",
+  "q": "빈칸에 알맞은 말은?<br>Dad ______ the car now. (wash)",
+  "choices": [
+   "washes",
+   "wash",
+   "is washing",
+   "washing"
+  ],
+  "answer": "is washing",
+  "exp": "now(지금)는 <b>현재진행</b> → <b>is + 동사-ing</b>. 지금 하고 있는 일을 말할 때 써요."
+ },
+ {
+  "tag": "현재시제·현재진행",
+  "q": "빈칸에 알맞은 말은?<br>My grandpa ______ a walk every morning. (take)",
+  "choices": [
+   "take",
+   "takes",
+   "is take",
+   "taking"
+  ],
+  "answer": "takes",
+  "exp": "every morning(매일 아침)은 <b>습관</b> → 현재시제. grandpa는 한 명(3인칭 단수)이라 take에 <b>-s</b>를 붙여 <b>takes</b>."
+ },
+ {
+  "tag": "현재시제·현재진행",
+  "q": "빈칸에 알맞은 말은?<br>Ben and Sam ______ basketball at the moment. (play)",
+  "choices": [
+   "plays",
+   "is playing",
+   "play",
+   "are playing"
+  ],
+  "answer": "are playing",
+  "exp": "at the moment(지금)는 현재진행. 주어가 Ben and Sam(두 명)이라 <b>are + playing</b>이에요."
+ },
+ {
+  "tag": "단어·철자",
+  "q": "다음 중 철자가 <u>바른</u> 것은? (건강한)",
+  "choices": [
+   "healthy",
+   "helthy",
+   "healty",
+   "healtyh"
+  ],
+  "answer": "healthy",
+  "exp": "<b>h-e-a-l-t-h-y</b>. health(건강)에 y를 붙인 모양이에요."
+ },
+ {
+  "tag": "단어·철자",
+  "q": "다음 중 철자가 <u>바른</u> 것은? (그림, 사진)",
+  "choices": [
+   "picter",
+   "pictuer",
+   "picture",
+   "pickture"
+  ],
+  "answer": "picture",
+  "exp": "<b>p-i-c-t-u-r-e</b>. 'ct'를 기억하세요!"
+ },
+ {
+  "tag": "단어·철자",
+  "q": "'thirsty'의 뜻으로 알맞은 것은?<br>I am <u>thirsty</u>. I want some water.",
+  "choices": [
+   "배고픈",
+   "목마른",
+   "피곤한",
+   "슬픈"
+  ],
+  "answer": "목마른",
+  "exp": "<b>thirsty</b> = 목마른 (water를 마시고 싶은 상태). hungry는 '배고픈'이에요."
+ },
+ {
+  "tag": "be동사",
+  "q": "빈칸에 알맞은 말은?<br>My parents ______ at home now.",
+  "choices": [
+   "are",
+   "is",
+   "am",
+   "be"
+  ],
+  "answer": "are",
+  "exp": "주어 My parents는 <b>여러 명</b>이라 be동사는 <b>are</b>예요."
+ },
+ {
+  "tag": "be동사",
+  "q": "빈칸에 알맞은 말은?<br>I ______ not hungry. I had lunch.",
+  "choices": [
+   "is",
+   "am",
+   "are",
+   "be"
+  ],
+  "answer": "am",
+  "exp": "주어가 <b>I</b>일 때 be동사는 항상 <b>am</b>. 부정은 am not이에요."
+ },
+ {
+  "tag": "소유격",
+  "q": "빈칸에 알맞은 말은?<br>This is ______ house. (유나의 집)",
+  "choices": [
+   "Yuna",
+   "Yunas",
+   "Yuna's",
+   "Yuna is"
+  ],
+  "answer": "Yuna's",
+  "exp": "'~의'는 이름 뒤에 <b>'s</b>를 붙여요 → Yuna's house."
+ }
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = q.tag;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shownChoices = q.choices.slice();
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput) return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length +
+    (unknownNumbers.length ? "  (🤔 모름 " + unknownNumbers.length + ")" : "");
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : log.unknown ? " unknown" : " wrong");
+    var head = log.ok ? "정답!" : log.unknown ? "🤔 모름 → 정답: " + q.answer + " (이제 알게 됐어요!)" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")";
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "test-chj-1105-0706",
+    quizTitle: "차호진 독해·대명사·현재시제 맞춤 테스트 11/5",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[차호진 독해·대명사·현재시제 맞춤 테스트 11/5]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

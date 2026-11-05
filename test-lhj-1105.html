@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>이하진 단어·철자 맞춤 테스트 11/5</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>이하진 단어·철자 맞춤 테스트 11/5 💪</h1>
+    <p class="sub">단어·철자 · 수동태 · 관계대명사 · 현재완료 · 15문항<br>쉬운 문제부터 차근차근 풀어요.</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+    <p class="hint">정말 모르겠으면 찍지 말고 <b>🤔 모름</b>을 눌러 주세요 — 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>컴퓨터: 숫자키 1~4 = 보기 선택 · 0 = 모름</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+ {
+  "tag": "명사 복수형",
+  "q": "There are five ______ in the garden. (남자들)",
+  "choices": [
+   "mans",
+   "mens",
+   "men",
+   "manes"
+  ],
+  "answer": "men",
+  "exp": "man의 복수형은 s를 붙이지 않고 모양이 바뀌는 <b>men</b>이에요. (woman → women, child → children도 같은 종류!)"
+ },
+ {
+  "tag": "단어·철자",
+  "q": "다음 중 철자가 <u>바른</u> 것은? (아름다운)",
+  "choices": [
+   "beautiful",
+   "beutiful",
+   "beatiful",
+   "beautifull"
+  ],
+  "answer": "beautiful",
+  "exp": "<b>b-e-a-u-t-i-f-u-l</b>. 앞부분 'beau'와 끝이 l 하나인 것을 기억해요."
+ },
+ {
+  "tag": "단어·철자",
+  "q": "'safe'의 뜻으로 알맞은 것은?<br>This playground is <u>safe</u> for children.",
+  "choices": [
+   "위험한",
+   "더러운",
+   "시끄러운",
+   "안전한"
+  ],
+  "answer": "안전한",
+  "exp": "<b>safe</b> = 안전한. 반대말은 dangerous(위험한)예요."
+ },
+ {
+  "tag": "수동태",
+  "q": "[개념 확인] 수동태(~되다, ~받다)의 기본 형태는?",
+  "choices": [
+   "be동사 + 동사원형",
+   "be동사 + 과거분사(p.p.)",
+   "have + 과거분사(p.p.)",
+   "will + 동사원형"
+  ],
+  "answer": "be동사 + 과거분사(p.p.)",
+  "exp": "수동태 = <b>be동사 + 과거분사(p.p.)</b>. 예: The door is opened. (문이 열린다) have + p.p.는 현재완료, will + 동사원형은 미래예요."
+ },
+ {
+  "tag": "관계대명사",
+  "q": "[개념 확인] 관계대명사 <b>who</b>는 어떤 말을 꾸며 줄 때 쓸까요?<br>예: I know a boy <u>who</u> plays the piano.",
+  "choices": [
+   "사물(book 같은 말)",
+   "장소(park 같은 말)",
+   "사람(boy 같은 말)",
+   "시간(day 같은 말)"
+  ],
+  "answer": "사람(boy 같은 말)",
+  "exp": "<b>who</b>는 앞에 오는 말이 <b>사람</b>일 때 써요. 사물·동물이면 which를 써요."
+ },
+ {
+  "tag": "현재완료",
+  "q": "[개념 확인] since와 for의 설명으로 맞는 것은?",
+  "choices": [
+   "since 뒤에는 기간(three years), for 뒤에는 시작한 때(2020)",
+   "since 뒤에는 시작한 때(2020, last year), for 뒤에는 기간(three years)",
+   "since와 for 뒤에는 모두 시작한 때가 온다",
+   "since와 for 뒤에는 모두 기간이 온다"
+  ],
+  "answer": "since 뒤에는 시작한 때(2020, last year), for 뒤에는 기간(three years)",
+  "exp": "<b>since + 시작한 때</b> (since 2020), <b>for + 기간</b> (for three years). 예: I have lived here since 2020. = I have lived here for five years."
+ },
+ {
+  "tag": "단어·철자",
+  "q": "다음 중 철자가 <u>바른</u> 것은? (도서관)",
+  "choices": [
+   "libary",
+   "liberary",
+   "lybrary",
+   "library"
+  ],
+  "answer": "library",
+  "exp": "<b>l-i-b-r-a-r-y</b>. 가운데 'brar'에 r이 두 번 들어가요. (libary는 많이 하는 실수!)"
+ },
+ {
+  "tag": "수동태",
+  "q": "The letter ______ by Tom yesterday. (편지는 어제 Tom에 의해 쓰였다.)",
+  "choices": [
+   "was written",
+   "wrote",
+   "is written",
+   "was write"
+  ],
+  "answer": "was written",
+  "exp": "수동태 = be동사 + p.p. 그리고 <b>yesterday(과거)</b>라서 be동사도 과거 <b>was</b>. write의 p.p.는 <b>written</b>이에요."
+ },
+ {
+  "tag": "관계대명사",
+  "q": "This is the book ______ I bought last week. (이것은 내가 지난주에 산 책이다.)",
+  "choices": [
+   "which",
+   "who",
+   "what",
+   "where"
+  ],
+  "answer": "which",
+  "exp": "앞의 말 the book이 <b>사물</b>이니까 <b>which</b>. who는 사람에게 써요."
+ },
+ {
+  "tag": "현재완료",
+  "q": "I have ______ my phone. Can you help me find it? (나는 내 전화기를 잃어버렸다.)",
+  "choices": [
+   "lose",
+   "losed",
+   "lost",
+   "losing"
+  ],
+  "answer": "lost",
+  "exp": "현재완료 = <b>have + 과거분사(p.p.)</b>. lose – lost – <b>lost</b> (불규칙 변화)예요."
+ },
+ {
+  "tag": "수동태",
+  "q": "This song ______ all over the world. (이 노래는 전 세계에서 사랑받는다.)",
+  "choices": [
+   "loves",
+   "is love",
+   "are loved",
+   "is loved"
+  ],
+  "answer": "is loved",
+  "exp": "노래가 '사랑받는' 것이니까 수동태 <b>is loved</b> (be동사 + p.p.). 주어 This song이 하나라서 be동사는 is예요."
+ },
+ {
+  "tag": "단어·철자",
+  "q": "다음 중 철자가 <u>바른</u> 것은? (행복하게)",
+  "choices": [
+   "happyly",
+   "happily",
+   "happly",
+   "happyily"
+  ],
+  "answer": "happily",
+  "exp": "y로 끝나는 단어에 -ly를 붙일 때는 <b>y를 i로 바꾸고</b> -ly → happy → <b>happily</b>. (easy → easily도 같아요)"
+ },
+ {
+  "tag": "관계대명사",
+  "q": "The man ______ is talking to Jina is my uncle. (Jina와 이야기하고 있는 남자는 나의 삼촌이다.)",
+  "choices": [
+   "which",
+   "what",
+   "who",
+   "where"
+  ],
+  "answer": "who",
+  "exp": "꾸며 주는 말 The man이 <b>사람</b>이라 <b>who</b>를 써요. which는 사물에 써요."
+ },
+ {
+  "tag": "현재완료",
+  "q": "She has been sick ______ last Monday. (그녀는 지난 월요일부터 아팠다.)",
+  "choices": [
+   "since",
+   "for",
+   "during",
+   "at"
+  ],
+  "answer": "since",
+  "exp": "last Monday는 <b>시작한 때</b>이므로 <b>since</b>. 기간(three days)이 오면 for를 써요."
+ },
+ {
+  "tag": "단어·철자",
+  "q": "다음 중 철자가 <u>바른</u> 것은? (환경)",
+  "choices": [
+   "enviroment",
+   "environment",
+   "envirnoment",
+   "environmant"
+  ],
+  "answer": "environment",
+  "exp": "<b>environment</b> = environ + <b>n</b> + ment. 가운데 'n'을 빠뜨리기 쉬워요(enviroment ✗)."
+ }
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = q.tag;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shownChoices = q.choices.slice();
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput) return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length +
+    (unknownNumbers.length ? "  (🤔 모름 " + unknownNumbers.length + ")" : "");
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : log.unknown ? " unknown" : " wrong");
+    var head = log.ok ? "정답!" : log.unknown ? "🤔 모름 → 정답: " + q.answer + " (이제 알게 됐어요!)" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")";
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "test-lhj-1105-0706",
+    quizTitle: "이하진 단어·철자 맞춤 테스트 11/5",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[이하진 단어·철자 맞춤 테스트 11/5]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

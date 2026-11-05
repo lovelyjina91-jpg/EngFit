@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>정윤우 5형식·so that·관계대명사 맞춤 테스트 11/5</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>정윤우 5형식·so that·관계대명사 맞춤 테스트 11/5 💪</h1>
+    <p class="sub">배운 문법을 다시 한 번 정확하게 점검해요 · 15문항<br>5형식 보어 · so that · 관계대명사 · 가주어 it · used to · 대명사 지칭 · 과거형 철자 · 내용 일치</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+    <p class="hint">정말 모르겠으면 찍지 말고 <b>🤔 모름</b>을 눌러 주세요 — 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>컴퓨터: 숫자키 1~4 = 보기 선택 · 0 = 모름</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════
+   tag = 개념 이름 (학습 기록 분석용, records/tools/engfit_records.py CONCEPTS와 같은 이름) */
+var QUESTIONS = [
+  { tag: "5형식 보어",
+    q: "빈칸에 알맞은 말은?<br>The long trip made my little brother ______.",
+    choices: ["tired","tiredly","tiring","tiredness"],
+    answer: "tired",
+    exp: "make + 목적어 + <b>형용사</b>: 동생의 상태를 설명하니까 형용사. 지친 쪽은 동생이므로 <b>-ed 형태 tired</b>예요." },
+  { tag: "so that",
+    q: "빈칸에 알맞은 말은?<br>She spoke slowly so that the children ______ understand her.",
+    choices: ["can","will","could","must"],
+    answer: "could",
+    exp: "앞 동사 spoke가 <b>과거</b>이므로 so that 뒤도 과거형 <b>could</b>. 시제를 먼저 맞춰요." },
+  { tag: "관계대명사",
+    q: "빈칸에 알맞은 말은?<br>The man ______ car was stolen is very upset.",
+    choices: ["who","that","which","whose"],
+    answer: "whose",
+    exp: "뒤에 명사(car)가 바로 오고 '그 남자의 차'라는 소유 관계 → <b>whose</b>. who·that·which 뒤에는 명사가 바로 붙지 않아요." },
+  { tag: "5형식 보어",
+    q: "다음 중 어법상 올바른 문장은?",
+    choices: ["I found the old box very heavily.","I found the old box very heavy.","The teacher kept the students quietly.","Please leave the window openly."],
+    answer: "I found the old box very heavy.",
+    exp: "find/keep/leave + 목적어 + <b>형용사</b>. heavy(형용사) ✔. 나머지는 heavily, quietly, openly처럼 부사를 써서 틀렸어요 → quiet, open." },
+  { tag: "가주어 it",
+    q: "빈칸에 알맞은 말은?<br>It is dangerous ______ children to play on the road.",
+    choices: ["of","to","for","with"],
+    answer: "for",
+    exp: "dangerous(위험한)는 사람의 성격이 아니라 <b>상황</b>을 말해요 → 의미상 주어는 <b>for + 사람</b>. of는 kind, smart처럼 사람의 성격을 칭찬/비난할 때 써요." },
+  { tag: "so that",
+    q: "빈칸에 알맞은 말은?<br>I'll set an alarm so that I ______ late for school.",
+    choices: ["won't be","wasn't","didn't","weren't"],
+    answer: "won't be",
+    exp: "앞이 미래(will)이므로 so that 뒤도 미래 의미의 <b>won't be</b>. 과거형(wasn't, weren't, didn't)은 시제가 안 맞아요." },
+  { tag: "관계대명사",
+    q: "두 문장을 한 문장으로 바르게 만든 것은?<br>I have a cousin. Her dog can swim.",
+    choices: ["I have a cousin who her dog can swim.","I have a cousin whose her dog can swim.","I have a cousin that dog can swim.","I have a cousin whose dog can swim."],
+    answer: "I have a cousin whose dog can swim.",
+    exp: "Her가 소유격이므로 <b>whose</b>로 바꾸고 dog 앞의 her는 없애요. whose가 이미 '그의/그녀의' 뜻이라 her를 또 쓰면 안 돼요." },
+  { tag: "5형식 보어",
+    q: "빈칸에 알맞은 말은?<br>Her funny stories always make us ______.",
+    choices: ["to laugh","laugh","laughed","laughter"],
+    answer: "laugh",
+    exp: "make + 목적어 + <b>동사원형</b>(사역동사). make us <b>laugh</b>. to laugh는 쓰지 않아요." },
+  { tag: "대명사 지칭",
+    q: "밑줄 친 <u>she</u>가 가리키는 것은?<div class='passage'>Jiho's mother called Jiho's teacher because <u>she</u> wanted to ask about the field trip.</div>",
+    choices: ["Jiho","Jiho's mother","Jiho's teacher","the field trip"],
+    answer: "Jiho's mother",
+    exp: "전화를 건 사람이 궁금한 것을 물으려는 거예요 → 전화한 <b>Jiho's mother</b>. 대명사는 앞 문장에서 같은 역할의 사람을 찾아요." },
+  { tag: "so that",
+    q: "다음 중 <u>틀린</u> 문장은?",
+    choices: ["I saved money so that I could buy a bike.","She turned up the volume so that everyone could hear.","He ran fast so that he could catch the train.","They hurried so that they will not be late."],
+    answer: "They hurried so that they will not be late.",
+    exp: "hurried(과거)인데 will not(현재·미래)을 써서 틀렸어요 → so that they <b>would not</b> be late. 앞뒤 시제를 맞춰요." },
+  { tag: "관계대명사",
+    q: "빈칸에 알맞은 말은?<br>This is the book ______ I bought yesterday.",
+    choices: ["that","whose","who","what"],
+    answer: "that",
+    exp: "book(사물) 뒤에서 목적어 역할 → <b>that</b>(또는 which). whose는 소유, who는 사람, what은 선행사 없이 쓰는 말이에요." },
+  { tag: "가주어 it",
+    q: "빈칸에 알맞은 말은?<br>It was clever ______ you to find the answer so quickly.",
+    choices: ["for","to","of","with"],
+    answer: "of",
+    exp: "clever는 사람의 <b>성격·태도</b>를 말하는 형용사 → <b>of + 사람</b>. kind, smart, nice, polite 등도 같아요." },
+  { tag: "used to",
+    q: "빈칸에 알맞은 말은?<br>My grandfather ______ to grow vegetables, but now he doesn't.",
+    choices: ["use","is used","was using","used"],
+    answer: "used",
+    exp: "'예전에 ~하곤 했다(지금은 아니다)' = <b>used to + 동사원형</b>. but now he doesn't가 힌트예요." },
+  { tag: "과거형 철자",
+    q: "다음 중 철자가 <b>바른</b> 문장은?",
+    choices: ["She dropped her phone on the floor.","He stoped at the red light.","We planed a picnic.","They carryed the boxes upstairs."],
+    answer: "She dropped her phone on the floor.",
+    exp: "drop → <b>dropped</b>(자음 겹침) ✔. 나머지는 stopped, planned, carried로 써야 해요. carry는 자음 + y → <b>ied</b>." },
+  { tag: "내용 일치",
+    q: "다음 안내문의 내용과 일치하는 것은?<div class='passage'><b>Library Reading Event</b><br>Time: 2:00 p.m. – 4:00 p.m.<br>Place: Room 3<br>Bring: your favorite book<br>Fee: free</div>",
+    choices: ["It starts at 4:00 p.m.","It is free.","It is held in Room 2.","Participants should bring a pen."],
+    answer: "It is free.",
+    exp: "Fee: free → 무료! 시간은 2:00부터 4:00까지, 장소는 Room 3, 가져올 것은 your favorite book이에요." }
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = q.tag;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shownChoices = q.choices.slice();
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput) return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length +
+    (unknownNumbers.length ? "  (🤔 모름 " + unknownNumbers.length + ")" : "");
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : log.unknown ? " unknown" : " wrong");
+    var head = log.ok ? "정답!" : log.unknown ? "🤔 모름 → 정답: " + q.answer + " (이제 알게 됐어요!)" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")";
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "test-jyw-1105-0706",
+    quizTitle: "정윤우 5형식·so that·관계대명사 맞춤 테스트 11/5",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[정윤우 5형식·so that·관계대명사 맞춤 테스트 11/5]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

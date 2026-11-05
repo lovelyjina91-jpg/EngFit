@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>김하은 전치사 맞춤 테스트 11/5</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>김하은 전치사 맞춤 테스트 11/5 💪</h1>
+    <p class="sub">전치사(in · on · at · by · with 등)를 얼마나 알고 있는지 확인해요 · 15문항</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+    <p class="hint">정말 모르겠으면 찍지 말고 <b>🤔 모름</b>을 눌러 주세요 — 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>컴퓨터: 숫자키 1~4 = 보기 선택 · 0 = 모름</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════
+   tag = 개념 이름 (학습 기록 분석용) */
+var QUESTIONS = [
+  {"tag": "전치사", "q": "빈칸에 알맞은 것은?<br>My English class starts ______ 4 o'clock.", "choices": ["at", "in", "on", "to"], "answer": "at", "exp": "정확한 <b>시각</b> 앞에는 <b>at</b>! at 4 o'clock(4시에). 하루 중 짧은 시각은 at을 써요.", "fixed": true},
+  {"tag": "전치사", "q": "빈칸에 알맞은 것은?<br>We have no school ______ Sunday.", "choices": ["in", "at", "on", "to"], "answer": "on", "exp": "<b>요일</b> 앞에는 <b>on</b>! on Sunday(일요일에). on Monday, on Friday도 같아요.", "fixed": true},
+  {"tag": "전치사", "q": "빈칸에 알맞은 것은?<br>It is very hot ______ summer in Korea.", "choices": ["on", "in", "at", "for"], "answer": "in", "exp": "<b>계절·달</b> 앞에는 <b>in</b>! in summer(여름에), in winter, in May. 날짜·요일은 on, 시각은 at이에요.", "fixed": true},
+  {"tag": "전치사", "q": "빈칸에 알맞은 것은?<br>My bag is ______ the desk. (가방이 책상 아래에 있어요 🎒)", "choices": ["on", "at", "to", "under"], "answer": "under", "exp": "<b>under</b> = ~ 아래에. on은 '위에 붙어서'라는 뜻이라 그림과 달라요.", "fixed": true},
+  {"tag": "전치사", "q": "빈칸에 알맞은 것은?<br>I go to school ______ bus. 🚌", "choices": ["in", "by", "on", "at"], "answer": "by", "exp": "<b>교통수단</b>을 말할 때는 <b>by</b> + 탈것! by bus, by bike, by subway. (a/the 없이 써요)", "fixed": true},
+  {"tag": "전치사", "q": "빈칸에 알맞은 것은?<br>I play soccer ______ my friends after school. (친구들과 함께 ⚽)", "choices": ["by", "at", "with", "on"], "answer": "with", "exp": "'~와 함께'는 <b>with</b>! with my friends(내 친구들과). by는 '~ 옆에' 또는 '탈것'일 때 써요.", "fixed": true},
+  {"tag": "전치사", "q": "빈칸에 알맞은 것은?<br>Tom lives ______ Busan. (부산에 살아요)", "choices": ["in", "on", "at", "by"], "answer": "in", "exp": "<b>도시·나라 같은 넓은 장소</b>는 <b>in</b>! in Busan, in Korea. 작은 지점(버스 정류장 등)은 at을 써요.", "fixed": true},
+  {"tag": "전치사", "q": "빈칸에 알맞은 것은?<br>Mina is sitting ______ Jisu and Sora. (지수와 소라 사이에 앉아 있어요)", "choices": ["with", "for", "to", "between"], "answer": "between", "exp": "<b>between A and B</b> = A와 B <b>사이에</b>. 두 사람 가운데 있을 때 써요.", "fixed": true},
+  {"tag": "전치사", "q": "빈칸에 알맞은 것은?<br>This gift is ______ you. Happy birthday! 🎁", "choices": ["at", "on", "for", "in"], "answer": "for", "exp": "'~를 위한'은 <b>for</b>! This gift is for you(이 선물은 너를 위한 거야). for + 받는 사람.", "fixed": true},
+  {"tag": "대명사", "q": "빈칸에 알맞은 것은?<br>My sister is ten years old. ______ likes pizza. 🍕", "choices": ["He", "She", "It", "They"], "answer": "She", "exp": "my sister는 <b>여자 한 명</b> → <b>She</b>. 남자 한 명은 He, 물건·동물은 It, 여러 명은 They예요.", "fixed": true},
+  {"tag": "대명사", "q": "빈칸에 알맞은 것은?<br>Tom and Ben are my cousins. ______ are very tall.", "choices": ["He", "It", "She", "They"], "answer": "They", "exp": "Tom과 Ben은 <b>두 명(여럿)</b> → <b>They</b>. 여러 명이나 여러 개는 They로 바꿔요.", "fixed": true},
+  {"tag": "be동사", "q": "빈칸에 알맞은 것은?<br>I ______ a fifth grader.", "choices": ["am", "is", "are", "be"], "answer": "am", "exp": "주어 <b>I</b>에는 <b>am</b>! I am, You are, He/She/It is 로 짝지어 외워요.", "fixed": true},
+  {"tag": "be동사", "q": "빈칸에 알맞은 것은?<br>My parents ______ in the kitchen now.", "choices": ["is", "am", "are", "be"], "answer": "are", "exp": "My parents(부모님)는 <b>두 분(여럿)</b> → <b>are</b>. 여럿일 때는 are를 써요.", "fixed": true},
+  {"tag": "일반동사", "q": "빈칸에 알맞은 것은?<br>My brother ______ breakfast at seven every day. 🍳", "choices": ["eat", "eats", "eating", "to eat"], "answer": "eats", "exp": "My brother는 <b>한 명(3인칭 단수)</b>이고 매일 하는 일 → 동사 끝에 <b>-s</b>! eats.", "fixed": true},
+  {"tag": "과거형", "q": "빈칸에 알맞은 것은?<br>My mom ______ a cake for me yesterday. (만들어 줬어요 🎂)", "choices": ["made", "maked", "make", "makes"], "answer": "made", "exp": "yesterday는 과거! make의 과거형은 <b>made</b>예요 (-ed를 붙이지 않는 불규칙). maked ✕.", "fixed": true}
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = q.tag;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shownChoices = q.fixed ? q.choices.slice() : shuffle(q.choices);
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput) return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length +
+    (unknownNumbers.length ? "  (🤔 모름 " + unknownNumbers.length + ")" : "");
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : log.unknown ? " unknown" : " wrong");
+    var head = log.ok ? "정답!" : log.unknown ? "🤔 모름 → 정답: " + q.answer + " (이제 알게 됐어요!)" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")";
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "test-khe-1105-0706",
+    quizTitle: "김하은 전치사 맞춤 테스트 11/5",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[김하은 전치사 맞춤 테스트 11/5]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

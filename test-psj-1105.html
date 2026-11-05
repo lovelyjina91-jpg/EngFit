@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>박상준 명사·단어·현재완료 맞춤 테스트 11/5</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>박상준 명사·단어·현재완료 맞춤 테스트 11/5 💪</h1>
+    <p class="sub">명사·복수형 · 단어·철자 · 현재완료 · 주어 찾기 · 독해 유형 · 15문항</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+    <p class="hint">정말 모르겠으면 찍지 말고 <b>🤔 모름</b>을 눌러 주세요 — 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>컴퓨터: 숫자키 1~4 = 보기 선택 · 0 = 모름</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════
+   tag = 개념 이름 (학습 기록 분석용, records/tools/engfit_records.py CONCEPTS와 같은 이름) */
+var QUESTIONS = [
+  {"tag":"명사·복수형","q":"다음 중 복수형이 <u>잘못된</u> 것은?","choices":["photo – photos","hero – heroes","roof – roofs","life – lifes"],"answer":"life – lifes","exp":"<b>life → lives</b> (f/fe로 끝나면 v로 바꾸고 -s/-es). photo(그냥 -s), hero(-es), roof(그냥 -s)는 맞아요. -o로 끝나는 말은 단어마다 달라서 따로 외워야 해요.","fixed":true},
+  {"tag":"명사·복수형","q":"My teacher gave me a useful ______ about studying English.","choices":["advices","piece of advice","advice","pieces of advice"],"answer":"piece of advice","exp":"advice는 <b>셀 수 없는 명사</b>라 advices처럼 쓰지 않고 'a piece of advice'로 세요. 앞에 a가 있으니 단수 piece (pieces ✗).","fixed":true},
+  {"tag":"명사·복수형","q":"We need three ______ to make the pasta sauce. (tomato)","choices":["tomatoes","tomatos","tomatoies","tomataes"],"answer":"tomatoes","exp":"자음 + <b>o</b>로 끝나는 tomato, potato, hero는 <b>-es</b>를 붙여 tomatoes. (photo, piano처럼 -s만 붙이는 예외도 있어요.)","fixed":true},
+  {"tag":"명사·복수형","q":"The news on TV today ______ very sad.","choices":["are","were","is","be"],"answer":"is","exp":"news는 -s로 끝나지만 <b>셀 수 없는 명사(단수 취급)</b>예요 → news <b>is</b>. (mathematics, physics도 단수 취급!)","fixed":true},
+  {"tag":"단어·철자","q":"철자가 <u>바르게</u> 쓰인 단어는?","choices":["neccessary","necesary","necessary","neccesary"],"answer":"necessary","exp":"<b>necessary</b> = n-e-c-e-ss-a-r-y. c는 하나, s는 둘! 'one Collar, two Sleeves'로 기억하면 쉬워요.","fixed":true},
+  {"tag":"단어·철자","q":"나는 도서관에서 <u>환경</u>에 관한 책을 빌렸다.<br>I borrowed a book about the ______ from the library.","choices":["environment","enviroment","environmant","envirnoment"],"answer":"environment","exp":"<b>environ + ment</b> = environment. 가운데 <b>n</b>(environ의 n)을 빠뜨리기 쉬우니 environ / ment 로 나눠 외우기!","fixed":true},
+  {"tag":"단어·철자","q":"다음 중 철자가 <u>틀린</u> 단어는?","choices":["beautiful","different","Wednesday","tomorow"],"answer":"tomorow","exp":"<b>tomorrow</b> = to·mor·<b>r</b>·ow, r이 두 개! beautiful, different, Wednesday(d를 읽지 않지만 쓴다)는 맞아요.","fixed":true},
+  {"tag":"현재완료","q":"We ______ in this town since 2020.","choices":["lived","have lived","live","are living"],"answer":"have lived","exp":"<b>since 2020</b>(2020년부터 지금까지) → 과거에 시작해 지금까지 이어지는 일 = <b>현재완료(have + p.p.)</b>. 단순 과거 lived는 지금과 연결되지 않아요.","fixed":true},
+  {"tag":"현재완료","q":"A: Where is Mina?<br>B: She ______ to the library. She isn't here now.","choices":["has gone","has been","have gone","had been"],"answer":"has gone","exp":"<b>has gone to</b> = 가 버리고 지금 여기 없음. has been to = 갔다 온 적이 있음(지금은 돌아옴). 지금 여기 없다고 했으니 has gone! 주어가 she라 have ✗.","fixed":true},
+  {"tag":"주어 찾기","q":"다음 문장의 <u>주어</u>는?<br>The boys in the garden are playing soccer.","choices":["the garden","soccer","The boys","are playing"],"answer":"The boys","exp":"주어는 '~은/는' 에 해당하는 말 → <b>The boys</b>(소년들은). in the garden은 장소를 나타내는 꾸밈말이라 주어가 아니에요.","fixed":true},
+  {"tag":"주어 찾기","q":"다음 문장의 <u>주어</u>는?<br>Does your brother like pizza?","choices":["Does","your brother","like","pizza"],"answer":"your brother","exp":"의문문에서 Does는 조동사일 뿐이에요. '좋아하니?'의 주인공 = <b>your brother</b>. 평서문으로 바꿔 보면 Your brother likes pizza.","fixed":true},
+  {"tag":"주어 찾기","q":"다음 문장의 <u>주어</u>는?<br>Reading comic books is my hobby.","choices":["comic books","my hobby","is","Reading comic books"],"answer":"Reading comic books","exp":"동명사(-ing)가 이끄는 덩어리가 주어가 될 수 있어요 → <b>Reading comic books</b>(만화책을 읽는 것은). 이때 동사는 단수 is.","fixed":true},
+  {"tag":"독해 유형","q":"다음 글의 <u>주제</u>로 가장 알맞은 것은?<div class='passage'>Many people think breakfast is not important. But eating breakfast gives you energy for the morning. Students who eat breakfast can also focus better in class.</div>","choices":["아침을 먹으면 살이 빠진다.","학생들은 학교에 일찍 가야 한다.","아침 식사는 에너지와 집중력에 도움이 된다.","점심이 하루 중 가장 중요한 식사이다."],"answer":"아침 식사는 에너지와 집중력에 도움이 된다.","exp":"But 뒤에 필자의 진짜 주장이 나와요. <b>energy</b>와 <b>focus better</b> → 아침 식사의 좋은 점이 주제! 글에 없는 내용(살, 점심)을 고르지 않기.","fixed":true},
+  {"tag":"독해 유형","q":"글의 내용과 <u>일치하는</u> 것은?<div class='passage'>Hana joined the school band last month. She plays the drums every Tuesday and Thursday. She practices at home on weekends, too. Next month, the band will play at the school festival.</div>","choices":["Hana는 지난달에 밴드에 들어갔다.","Hana는 기타를 연주한다.","Hana는 주말에는 연습하지 않는다.","밴드는 이번 주에 공연한다."],"answer":"Hana는 지난달에 밴드에 들어갔다.","exp":"joined ... <b>last month</b> = 지난달 가입 ✓. 악기는 drums(기타 ✗), 주말에도 연습(on weekends, too), 공연은 next month(다음 달)라서 나머지는 모두 틀려요.","fixed":true},
+  {"tag":"기본 문법","q":"My sister ______ her homework before dinner yesterday.","choices":["does","did","done","do"],"answer":"did","exp":"<b>yesterday</b>(어제) → 과거형. do의 과거형은 <b>did</b>. done은 p.p.형이라 혼자 쓸 수 없어요.","fixed":true}
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = q.tag;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shownChoices = q.fixed ? q.choices.slice() : shuffle(q.choices);
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput) return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length +
+    (unknownNumbers.length ? "  (🤔 모름 " + unknownNumbers.length + ")" : "");
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : log.unknown ? " unknown" : " wrong");
+    var head = log.ok ? "정답!" : log.unknown ? "🤔 모름 → 정답: " + q.answer + " (이제 알게 됐어요!)" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")";
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "test-psj-1105-0706",
+    quizTitle: "박상준 명사·단어·현재완료 맞춤 테스트 11/5 (명사·복수형 4 · 단어·철자 3 · 현재완료 2 · 주어 찾기 3 · 독해 유형 2 · 기본 문법 1)",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[박상준 명사·단어·현재완료 맞춤 테스트 11/5]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
