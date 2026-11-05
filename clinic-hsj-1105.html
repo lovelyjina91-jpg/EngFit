@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>한승주 · 영핏 사진 클리닉 11/05</title>
+<meta property="og:title" content="한승주 클리닉 · 11/05 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unknown { display:block; width:100%; margin-top:6px; padding:12px; font-size:1rem; font-weight:bold; color:#8a6d00; background:#fff8e1; border:1.5px dashed #e0b84c; border-radius:10px; cursor:pointer; }
+  .unknown:active { background:#ffefb3; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>한승주 학생 클리닉 · 11/05 🌱</h1>
+    <p class="sub">7과 현재완료 · 최상급 · 관계대명사 + 8과 If · Unless 영작 15문제 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="한승주" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+{"q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>내가 지난주에 산 신발은 정말 편하다.", "choices": ["The shoes which I bought them last week are very comfortable.", "The shoes which I bought last week is very comfortable.", "The shoes which I bought last week are very comfortable.", "The shoes I bought which last week are very comfortable."], "answer": "The shoes which I bought last week are very comfortable.", "exp": "The shoes + <b>which I bought last week</b>(목적어 자리 비움) + are. 뒤에 them을 또 쓰면 ✕, 주어 shoes는 복수라 <b>are</b>.", "part": "Part 1 · 7과 목적격 관계대명사 (영작)"},
+{"q": "주어진 말을 바르게 배열한 문장은?<br>시장에서 내가 만난 그 남자는 친절했다.<br>[ the man / whom / I / met / at the market / was kind ]", "choices": ["The man whom met I at the market was kind.", "The man whom I met at the market was kind.", "The man I met whom at the market was kind.", "Whom I met the man at the market was kind."], "answer": "The man whom I met at the market was kind.", "exp": "명사(The man) 바로 뒤에 <b>whom + 주어(I) + 동사(met)</b>, 그다음 진짜 동사 was kind. whom 뒤는 늘 '주어 + 동사' 순서예요."},
+{"q": "빈칸에 알맞은 말은?<br>This is the bag ______ I wanted to buy for a long time.", "choices": ["who", "what", "which", "whom"], "answer": "which", "exp": "앞에 사물 명사(the bag)가 있으니 <b>which</b>(that도 가능). who·whom은 사람, what은 앞에 명사가 없을 때 써요."},
+{"q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>접시에 빵이 조금 있다.", "choices": ["There is a little bread on the plate.", "There are a few bread on the plate.", "There is a few bread on the plate.", "There is little bread on the plate."], "answer": "There is a little bread on the plate.", "exp": "bread는 셀 수 없음 → <b>a little</b>, 동사는 <b>is</b>. little(a 없음)은 '거의 없다'라서 '조금 있다'와 뜻이 달라요.", "part": "Part 2 · 7과 a few · a little · 명사 + to부정사"},
+{"q": "주어진 말을 바르게 배열한 문장은?<br>나는 읽을 책이 많다.<br>[ I / have / many books / to read ]", "choices": ["I have many to read books.", "I many books have to read.", "I have many books to read.", "I have to many books read."], "answer": "I have many books to read.", "exp": "명사 뒤에서 꾸미는 <b>to부정사</b>: many books + <b>to read</b> = 읽을 많은 책. to read가 명사 앞으로 가면 ✕."},
+{"q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>도서관 근처에 나무가 몇 그루 있다.", "choices": ["There is a few trees near the library.", "There are a few trees near the library.", "There are a little trees near the library.", "There are few tree near the library."], "answer": "There are a few trees near the library.", "exp": "trees는 셀 수 있는 복수 → <b>a few</b>, 복수라 <b>There are</b>. a little은 셀 수 없는 명사용, few tree는 -s도 빠지고 '거의 없다' 뜻이에요."},
+{"q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>나는 그 가게에 세 번 가 본 적이 있다.", "choices": ["I visited the store three times ago.", "I have visit the store three times.", "I has visited the store three times.", "I have visited the store three times."], "answer": "I have visited the store three times.", "exp": "경험 → <b>have + visited(p.p.)</b>. 주어 I는 have, ago는 현재완료와 같이 못 쓰고, have 뒤 원형 visit ✕.", "part": "Part 3 · 7과 현재완료"},
+{"q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그녀는 어제부터 (지금까지) 계속 아프다.", "choices": ["She is sick since yesterday.", "She has been sick for yesterday.", "She has been sick since yesterday.", "She has be sick since yesterday."], "answer": "She has been sick since yesterday.", "exp": "과거부터 지금까지 계속 → <b>has been</b>(be의 p.p.). 시작 시점(yesterday) 앞은 <b>since</b>, 기간 앞은 for예요."},
+{"q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>너는 스키를 타 본 적이 있니?", "choices": ["Did you ever skied?", "Have you ever skied?", "Have you ever ski?", "Have you ever skiing?"], "answer": "Have you ever skied?", "exp": "경험 의문문 <b>Have you ever + p.p.?</b> → skied. Did 뒤에는 원형, have 뒤에 원형·-ing ✕."},
+{"q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>그 소녀는 무대 위에서 혼잣말을 했다.", "choices": ["The girl talked to her on the stage.", "The girl talked to herself on the stage.", "The girl talked to herselves on the stage.", "The girl talked herself to on the stage."], "answer": "The girl talked to herself on the stage.", "exp": "혼잣말하다 = <b>talk to oneself</b>. 주어가 the girl이니까 <b>herself</b>. her는 '다른 여자에게'라 뜻이 달라져요.", "part": "Part 4 · 7과 재귀대명사 · 감정 형용사 · 금액 단수"},
+{"q": "빈칸에 알맞은 말은? (우리는 할인 소식에 신이 났다)<br>We got ______ about the sale.", "choices": ["exciting", "excited", "excite", "excitedly"], "answer": "excited", "exp": "사람이 신이 난 것(감정을 느낌) → <b>excited</b>. exciting은 '신나게 하는' 쪽(The sale was exciting.)에 써요."},
+{"q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>20달러는 그 셔츠 값으로 너무 많다.", "choices": ["Twenty dollars are too much for the shirt.", "Twenty dollar is too much for the shirt.", "Twenty dollars is too much for the shirt.", "Twenty dollars too much for the shirt."], "answer": "Twenty dollars is too much for the shirt.", "exp": "금액(Twenty dollars)은 한 덩어리 → 단수 <b>is</b>. dollar 뒤 -s는 그대로 두고, be동사를 빼면 ✕."},
+{"q": "다음 우리말을 영어로 바르게 옮긴 것은?<br>서두르지 않으면, 너는 버스를 놓칠 것이다.", "choices": ["Unless you don't hurry, you will miss the bus.", "If you hurry, you will miss the bus.", "Unless you will hurry, you miss the bus.", "Unless you hurry, you will miss the bus."], "answer": "Unless you hurry, you will miss the bus.", "exp": "<b>Unless = If ~ not</b>이라 not을 또 쓰지 않아요. 조건절은 현재시제(hurry), 주절에 will.", "part": "Part 5 · 8과 If · Unless (영작)"},
+{"q": "주어진 말을 바르게 배열한 문장은?<br>만약 날씨가 좋으면, 우리는 소풍을 갈 것이다.<br>[ if / the weather / is / nice / we / will / go on a picnic ]", "choices": ["If the weather will be nice, we will go on a picnic.", "If is the weather nice, we will go on a picnic.", "If the weather is nice, we will go on a picnic.", "We will go on a picnic if the weather nice is."], "answer": "If the weather is nice, we will go on a picnic.", "exp": "<b>If + 주어 + 현재시제</b>, 주어 + will + 동사원형. If 절에 will ✕, If 뒤도 '주어 + 동사' 순서. If 절이 앞이면 쉼표!"},
+{"q": "다음 문장과 뜻이 같은 것은?<br>If you don't wear a coat, you will catch a cold.", "choices": ["Unless you wear a coat, you will catch a cold.", "Unless you don't wear a coat, you will catch a cold.", "If you wear a coat, you will catch a cold.", "Unless you wear a coat, you won't catch a cold."], "answer": "Unless you wear a coat, you will catch a cold.", "exp": "If ~ don't = <b>Unless</b> ~ (not 없이). 뒷부분 you will catch a cold는 그대로 둬요."}
+];
+
+var QUIZ_ID = "clinic-hsj-1105";
+var QUIZ_TITLE = "한승주 사진 클리닉 11/05";
+var KEEP = false;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+  var u = document.createElement("button");
+  u.className = "unknown"; u.id = "unknown-btn";
+  u.textContent = "🤔 모름";
+  u.addEventListener("click", function () { pick("모름", "", true); });
+  box.appendChild(u);
+}
+
+var locked = false;
+function pick(choice, mark, unknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  var entry = { no: current + 1, ok: ok, chosen: choice, answer: q.answer };
+  if (unknown) { entry.unknown = true; unknownNumbers.push(current + 1); }
+  answersLog.push(entry);
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unknownLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var ul = document.createElement("div");
+  ul.className = "sub"; ul.id = "unknown-line"; ul.style.textAlign = "center";
+  ul.textContent = unknownLine();
+  document.getElementById("score-line").insertAdjacentElement("afterend", ul);
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 11/05 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
