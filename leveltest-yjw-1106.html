@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>영핏 레벨 테스트 (초6)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+  .en { font-weight: normal; color: #667; font-size: .92em; }
+  .say { display:block; width:100%; padding:14px; font-size:1.05rem; margin-bottom:10px; background:#e3efe9; color:#1B4332; border:1.5px solid #b9d3c7; border-radius:10px; cursor:pointer; font-weight:bold; }
+  #type-input { font-size:1.2rem; letter-spacing:.5px; }
+.say.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>영핏 레벨 테스트 ✏️</h1>
+    <p class="sub">English Fit Level Test · 초6 · 39문항 · 약 35~40분<br>
+      어휘(듣고 쓰기 포함) · 문법 · 읽기 · 문장 쓰기<br>
+      <span class=en>Take your time. It's okay not to know everything!</span></p>
+    <input type="text" id="name-input" placeholder="이름 (Name)" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기 (Start)</button>
+    <p class="hint">모르는 문제는 찍지 말고 <b>🤔 모름</b>을 눌러 주세요. 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>
+    소리 문제는 <b>🔊 듣기</b>를 눌러서 여러 번 들어도 돼요.</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <div id="typebox" class="hidden"><button class="say" id="say-btn">🔊 듣기 (Listen)</button><div id="sound-help" class="hidden" style="background:#ffe9ec;border:2px solid #e0383e;border-radius:10px;padding:10px;margin:8px 0;font-size:.92rem;line-height:1.5">소리가 안 나요 😢 무음 모드를 끄고 볼륨을 올려 보세요.<br>그래도 안 되면 아래 버튼으로 <b>다른 브라우저(크롬·사파리)</b>에서 열어 주세요.<button type="button" onclick="openExternal()" style="display:block;width:100%;margin-top:8px;padding:10px;font-size:1rem;font-weight:bold;color:#fff;background:#e0383e;border:0;border-radius:8px">🌐 다른 브라우저로 열기</button></div><input type="text" id="type-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 써요 (Type here)"><button class="btn" id="type-ok">다음 (Next)</button></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>다 했어요! 수고했어요 🎉</h1>
+    <p class="sub" style="text-align:center">You did it! 선생님이 같이 볼게요.</p>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn" style="background:#5d6d69">선생님 확인용 결과 보기</button>
+    <pre id="backup-box" class="hidden" style="white-space:pre-wrap;word-break:break-all;background:#fffbe6;border:2px dashed #d4a017;border-radius:10px;padding:14px;margin-top:12px;font-size:.92rem;line-height:1.55"></pre>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  try {
+    await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(r) });
+    return true;
+  } catch (e) { return false; }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  var key = "engfit_sent_" + r.quizId + "_" + r.student;
+  try { if (localStorage.getItem(key)) { el.textContent = "✓ 결과가 이미 지나티처에게 전송되었어요"; el.style.color = "#1B4332"; return; } } catch (e) {}
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) {
+    try { localStorage.setItem(key, "1"); } catch (e) {}
+    el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332";
+  } else { el.innerHTML = "전송이 안 됐어요. 아래 <b>선생님 확인용 결과</b>를 눌러 선생님께 화면을 보여 주세요."; el.style.color = "#c0392b"; }
+}
+/* ══════ 문제 데이터 ══════
+   tag = 개념 이름 (학습 기록 분석용, records/tools/engfit_records.py CONCEPTS와 같은 이름) */
+var QUESTIONS = [
+  /* ── A. 어휘 (듣고 쓰기 포함) ── */
+  { tag: "어휘", q: "빈칸에 알맞은 말은?<div class=passage>The museum is ______ on Mondays, so we can't go in.</div>",
+    choices: ["closed", "quiet", "famous", "busy", "ancient"], answer: "closed" },
+  { tag: "철자", type: "spell", say: "library. I borrowed two books from the library. library.", answer: "library", q: "듣고 단어를 써 보세요. <span class=en>Listen and type the word.</span>" },
+  { tag: "철자", type: "spell", say: "different. My sister and I have different hobbies. different.", answer: "different", q: "듣고 단어를 써 보세요. <span class=en>Listen and type the word.</span>" },
+  { tag: "철자", type: "spell", say: "favorite. Pizza is my favorite food. favorite.", answer: "favorite", q: "듣고 단어를 써 보세요. <span class=en>Listen and type the word.</span>" },
+  { tag: "어휘", q: "밑줄 친 말의 뜻으로 알맞은 것은?<div class=passage>The bridge is very <u>narrow</u>. Only one car can pass at a time.</div>",
+    choices: ["좁은", "넓은", "긴", "오래된", "튼튼한"], answer: "좁은" },
+  { tag: "어휘", q: "빈칸에 알맞은 말은?<div class=passage>I was so ______ that I fell asleep on the sofa.</div>",
+    choices: ["tired", "hungry", "angry", "excited", "surprised"], answer: "tired" },
+  { tag: "어휘", q: "뜻이 <u>비슷한</u> 짝은?",
+    choices: ["big – large", "hot – cold", "easy – difficult", "buy – sell", "early – late"], answer: "big – large" },
+  { tag: "어휘", q: "우리말 뜻이 바른 것은?",
+    choices: ["invent – 발명하다", "borrow – 빌려주다", "wrap – 기다리다", "join – 떠나다", "fix – 버리다"], answer: "invent – 발명하다" },
+
+  /* ── B. 문법 ── */
+  { tag: "수동태", q: "빈칸에 알맞은 말은?<div class=passage>This song ______ by many teenagers.</div>",
+    choices: ["is loved", "loves", "is loving", "are loved", "loving"], answer: "is loved" },
+  { tag: "수동태", q: "빈칸에 알맞은 말은?<div class=passage>The window ______ by the strong wind last night.</div>",
+    choices: ["was broken", "was broke", "is broken", "were broken", "broken"], answer: "was broken" },
+  { tag: "수동태", q: "빈칸에 알맞은 말은? (Tom이 만든 게 아니에요.)<div class=passage>The cake ______ by Tom. Mina made it.</div>",
+    choices: ["wasn't made", "didn't make", "wasn't make", "weren't made", "isn't made"], answer: "wasn't made" },
+  { tag: "수동태", q: "어법상 바른 문장은?",
+    choices: ["Lunch is served at noon.", "The letters was sent yesterday.", "The car washed by Dad.", "The pictures were took by Jun.", "This book is written of Ms. Kim."], answer: "Lunch is served at noon." },
+  { tag: "주어 찾기", q: "빈칸에 알맞은 말은?<div class=passage>The books on the shelf ______ very old.</div>",
+    choices: ["are", "is", "was", "be", "has"], answer: "are" },
+  { tag: "주어 찾기", q: "빈칸에 알맞은 말은?<div class=passage>One of my friends ______ in Busan.</div>",
+    choices: ["lives", "live", "are living", "living", "have lived"], answer: "lives" },
+  { tag: "주어 찾기", q: "빈칸에 알맞은 말은?<div class=passage>Playing soccer with friends ______ fun.</div>",
+    choices: ["is", "are", "were", "be", "am"], answer: "is" },
+  { tag: "수량 표현", q: "빈칸에 알맞은 말은?<div class=passage>There isn't ______ milk in the bottle.</div>",
+    choices: ["much", "many", "a few", "few", "several"], answer: "much" },
+  { tag: "수량 표현", q: "빈칸에 알맞은 말은?<div class=passage>I have ______ friends at my new school, so I'm not lonely.</div>",
+    choices: ["a few", "a little", "much", "little", "a"], answer: "a few" },
+  { tag: "수량 표현", q: "빈칸에 알맞은 말은?<div class=passage>How ______ water do you drink every day?</div>",
+    choices: ["much", "many", "few", "lot", "little"], answer: "much" },
+  { tag: "과거진행", q: "빈칸에 알맞은 말은?<div class=passage>I ______ TV when Mom came home.</div>",
+    choices: ["was watching", "am watching", "were watching", "watch", "was watch"], answer: "was watching" },
+  { tag: "조동사", q: "빈칸에 알맞은 말은?<div class=passage>You ______ run in the hallway. It's dangerous.</div>",
+    choices: ["must not", "don't have to", "must", "will", "have to"], answer: "must not" },
+  { tag: "최상급", q: "빈칸에 알맞은 말은?<div class=passage>Seoul is ______ city in Korea.</div>",
+    choices: ["the biggest", "bigger", "the bigger", "biggest", "more big"], answer: "the biggest" },
+  { tag: "to부정사", q: "빈칸에 알맞은 말은?<div class=passage>He went to the store ______ some eggs.</div>",
+    choices: ["to buy", "buying", "buy", "buys", "bought"], answer: "to buy" },
+  { tag: "동명사", q: "빈칸에 알맞은 말은?<div class=passage>She finished ______ her room.</div>",
+    choices: ["cleaning", "to clean", "clean", "cleans", "to cleaning"], answer: "cleaning" },
+  { tag: "접속사", q: "빈칸에 알맞은 말은?<div class=passage>I stayed home ______ I had a bad cold.</div>",
+    choices: ["because", "so", "but", "or", "until"], answer: "because" },
+
+  /* ── C. 읽기 ── */
+  { tag: "독해", q: "글을 읽고 답하세요.<div class=passage>Dear students,<br>A black backpack was found in the gym on Tuesday. A math book and a red pencil case were inside it. If it is yours, please come to the teachers' office before Friday. You have to tell us your name and class.<br>— Ms. Park</div>글의 내용과 <u>일치하는</u> 것은?",
+    choices: ["The backpack was found in the gym.", "The backpack is red.", "It was found on Monday.", "There was an English book in it.", "Students can come after Friday."], answer: "The backpack was found in the gym." },
+  { tag: "독해", q: "(위와 같은 글) 가방 주인이 해야 할 일은?<div class=passage>If it is yours, please come to the teachers' office before Friday. You have to tell us your name and class.</div>",
+    choices: ["금요일 전에 교무실에 가서 이름과 반 말하기", "체육관에 가방 갖다 놓기", "금요일에 수학책 사 오기", "박 선생님께 전화하기", "빨간 필통 새로 사기"], answer: "금요일 전에 교무실에 가서 이름과 반 말하기" },
+  { tag: "독해", q: "글을 읽고 답하세요.<div class=passage>Last summer, Jiho's family went camping by a lake. On the first night, it rained hard, and their tent got wet. Jiho was upset. But the next morning, the sky was clear. Jiho and his dad went fishing, and Jiho caught a big fish. His mom cooked <u>it</u> for lunch. It was the best meal of the trip. Now Jiho wants to go camping again.</div>글의 제목으로 가장 알맞은 것은?",
+    choices: ["Jiho's Camping Trip", "How to Build a Tent", "Jiho's New School", "A Rainy Day at Home", "Mom's Favorite Recipe"], answer: "Jiho's Camping Trip" },
+  { tag: "독해", q: "(위와 같은 글) 밑줄 친 <u>it</u>이 가리키는 것은?<div class=passage>Jiho and his dad went fishing, and Jiho caught a big fish. His mom cooked <u>it</u> for lunch.</div>",
+    choices: ["the big fish", "the tent", "the lake", "lunch", "the trip"], answer: "the big fish" },
+  { tag: "독해", q: "(위와 같은 글) 지호의 기분 변화로 알맞은 것은?<div class=passage>On the first night, it rained hard, and their tent got wet. Jiho was upset. But the next morning, the sky was clear. ... It was the best meal of the trip. Now Jiho wants to go camping again.</div>",
+    choices: ["upset → happy", "happy → upset", "bored → scared", "excited → angry", "sad → lonely"], answer: "upset → happy" },
+  { tag: "독해", q: "(위와 같은 글) 글의 내용과 <u>다른</u> 것은?<div class=passage>Last summer, Jiho's family went camping by a lake. On the first night, it rained hard, and their tent got wet. Jiho was upset. But the next morning, the sky was clear. Jiho and his dad went fishing, and Jiho caught a big fish. His mom cooked it for lunch. It was the best meal of the trip.</div>",
+    choices: ["Jiho's mom caught a big fish.", "They went camping by a lake.", "It rained on the first night.", "The tent got wet.", "Jiho went fishing with his dad."], answer: "Jiho's mom caught a big fish." },
+  { tag: "독해", q: "글을 읽고 답하세요.<div class=passage>Paper is made from trees. Every year, many trees are cut down to make paper. But we can help. When we recycle old paper, it is used again to make new paper. So fewer trees are cut down. Pandas live in China. Also, we can use both sides of the paper. Small actions like these can save a lot of trees.</div>글의 주제로 가장 알맞은 것은?",
+    choices: ["ways to save trees by using paper wisely", "how to make paper at home", "why pandas live in China", "how tall trees grow", "the history of books"], answer: "ways to save trees by using paper wisely" },
+  { tag: "독해", q: "(위와 같은 글) 글의 흐름과 <u>관계없는</u> 문장은?<div class=passage>Paper is made from trees. Every year, many trees are cut down to make paper. But we can help. When we recycle old paper, it is used again to make new paper. So fewer trees are cut down. Pandas live in China. Also, we can use both sides of the paper.</div>",
+    choices: ["Pandas live in China.", "Paper is made from trees.", "But we can help.", "So fewer trees are cut down.", "Also, we can use both sides of the paper."], answer: "Pandas live in China." },
+  { tag: "독해", q: "(위와 같은 글) 빈칸에 알맞은 말은?<div class=passage>When we recycle old paper, ______ trees are cut down.</div>",
+    choices: ["fewer", "more", "bigger", "taller", "older"], answer: "fewer" },
+
+  /* ── D. 문장 쓰기 ── */
+  { tag: "어순", q: "단어를 바르게 배열한 것은?<div class=passage>(was / by / painted / the picture / my uncle)</div>",
+    choices: ["The picture was painted by my uncle.", "The picture painted was by my uncle.", "My uncle was painted by the picture.", "The picture was by painted my uncle.", "Was the picture painted my uncle by."], answer: "The picture was painted by my uncle." },
+  { tag: "어순", q: "단어를 바르게 배열한 것은?<div class=passage>(a few / there / in the box / are / apples)</div>",
+    choices: ["There are a few apples in the box.", "There a few are apples in the box.", "A few there are apples in the box.", "There are apples a few in the box.", "In the box are there a few apples."], answer: "There are a few apples in the box." },
+  { tag: "영작", type: "write", q: "우리말을 영어 문장으로 쓰세요.<div class=passage>이 방은 매일 청소된다.</div><span class=en>〈조건〉 this room, is cleaned, every day 를 쓸 것</span>",
+    accept: ["this room is cleaned every day", "every day this room is cleaned"], answer: "This room is cleaned every day." },
+  { tag: "영작", type: "write", q: "우리말을 영어 문장으로 쓰세요.<div class=passage>내 친구들 중 한 명은 기타를 친다.</div><span class=en>〈조건〉 one of, plays, the guitar 를 쓸 것</span>",
+    accept: ["one of my friends plays the guitar"], answer: "One of my friends plays the guitar." },
+  { tag: "영작", type: "write", q: "우리말을 영어 문장으로 쓰세요.<div class=passage>병 안에 물이 조금 있다.</div><span class=en>〈조건〉 there is, a little, water, the bottle 을 쓸 것</span>",
+    accept: ["there is a little water in the bottle", "theres a little water in the bottle"], answer: "There is a little water in the bottle." },
+  { tag: "영작", type: "write", q: "우리 집에 있는 물건 하나를 '~에 의해 만들어졌다/받았다' 문장으로 써 보세요. <span class=en>(예: This table was made by my dad.)</span>",
+    free: true, answer: "(자유 답 — 선생님 확인)" }
+]
+
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function norm(s) { return String(s).toLowerCase().replace(/[.,!?'"’]/g, "").replace(/\s+/g, " ").trim(); }
+/* 듣기: 카톡 안 브라우저는 폰 음성(speechSynthesis)이 막혀 있는 경우가 많아 음성 파일로 바로 재생,
+   그 밖에는 폰 음성 → 1.2초 안에 안 울리면 음성 파일 → 그것도 안 되면 안내 (11/06 서준 듣기 안 됨) */
+var UA = navigator.userAgent || "";
+var INAPP = /KAKAOTALK|NAVER\(inapp|DaumApps|FB_IAB|FBAN|Instagram|Line\//i.test(UA);
+var HAS_TTS = ("speechSynthesis" in window) && typeof SpeechSynthesisUtterance !== "undefined";
+var enVoice = null, ttsDead = false, player = null;
+function loadVoice() {
+  if (!HAS_TTS) return;
+  var vs = speechSynthesis.getVoices().filter(function (v) { return /^en[-_]US/i.test(v.lang); });
+  if (!vs.length) vs = speechSynthesis.getVoices().filter(function (v) { return /^en/i.test(v.lang); });
+  enVoice = vs.filter(function (v) { return /Samantha|Google US|Aria|Jenny|Zira/i.test(v.name); })[0] || vs[0] || null;
+}
+if (HAS_TTS) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+function showSoundHelp() {
+  var n = document.getElementById("sound-help");
+  if (n) n.classList.remove("hidden");
+}
+function playFile(t, part) {
+  var parts = String(t).split(/\.\s+/).filter(Boolean);
+  part = part || 0;
+  if (part >= parts.length) return;
+  if (player) { try { player.pause(); } catch (e) {} }
+  player = new Audio("https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&ttsspeed=0.8&q=" + encodeURIComponent(parts[part]));
+  player.onended = function () { playFile(t, part + 1); };
+  player.onerror = showSoundHelp;
+  var p = player.play();
+  if (p && p.catch) p.catch(showSoundHelp);
+}
+function speak(t) {
+  if (INAPP || !HAS_TTS || ttsDead) { playFile(t); return; }
+  try {
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(t);
+    if (enVoice) u.voice = enVoice;
+    u.lang = (enVoice && enVoice.lang) || "en-US"; u.rate = 0.85; u.volume = 1;
+    var started = false;
+    u.onstart = function () { started = true; };
+    u.onerror = function () { if (!started) { ttsDead = true; playFile(t); } };
+    setTimeout(function () { speechSynthesis.resume(); speechSynthesis.speak(u); }, 60);
+    setTimeout(function () { if (!started) { ttsDead = true; speechSynthesis.cancel(); playFile(t); } }, 1300);
+  } catch (e) { ttsDead = true; playFile(t); }
+}
+function openExternal() {
+  var u = location.href;
+  if (/KAKAOTALK/i.test(UA)) location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(u);
+  else window.open(u, "_blank");
+}
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = ({"철자":"A. 어휘 Vocabulary","어휘":"A. 어휘 Vocabulary","독해":"C. 읽기 Reading","어순":"D. 문장 쓰기 Writing","영작":"D. 문장 쓰기 Writing"})[q.tag] || "B. 문법 Grammar";
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  var tb = document.getElementById("typebox");
+  box.innerHTML = "";
+  shownChoices = [];
+  if (q.type === "spell" || q.type === "write") {
+    tb.classList.remove("hidden");
+    document.getElementById("say-btn").classList.toggle("hidden", q.type !== "spell"); document.getElementById("say-btn").textContent = "🔊 듣기 (Listen) · " + (3 - ((window._sayCnt || {})[current] || 0)) + "번 남음";
+    var inp = document.getElementById("type-input");
+    inp.value = ""; inp.focus();
+    if (q.type === "spell" && !INAPP) setTimeout(function () { speak(q.say); }, 300);
+    return;
+  }
+  tb.classList.add("hidden");
+  shownChoices = q.fixed ? q.choices.slice() : shuffle(q.choices);
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+document.getElementById("say-btn").addEventListener("click", function () { var s = QUESTIONS[current].say; if (!s) return; window._sayCnt = window._sayCnt || {}; var n = (window._sayCnt[current] || 0) + 1; if (n > 3) { this.textContent = "🔇 듣기는 3번까지예요"; return; } window._sayCnt[current] = n; this.textContent = "🔊 듣기 (Listen) · " + (3 - n) + "번 남음"; speak(s); });
+function submitTyped() {
+  var v = document.getElementById("type-input").value.trim();
+  if (!v) return;
+  pick(v);
+}
+document.getElementById("type-ok").addEventListener("click", submitTyped);
+document.getElementById("type-input").addEventListener("keydown", function (e) { if (e.key === "Enter") submitTyped(); });
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok;
+  if (unknown) ok = false;
+  else if (q.type === "spell") ok = norm(choice) === norm(q.answer);
+  else if (q.type === "write") ok = q.free ? true : q.accept.indexOf(norm(choice)) >= 0;
+  else ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput || document.activeElement.id === "type-input") return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  var sec = {};
+  answersLog.forEach(function (l) { var k = l.tag; sec[k] = sec[k] || [0, 0]; sec[k][1]++; if (l.ok) sec[k][0]++; });
+  window._secSummary = Object.keys(sec).map(function (k) { return k + " " + sec[k][0] + "/" + sec[k][1]; }).join(" · ");
+  engfitSubmitWithStatus({
+    quizId: "leveltest-yjw-1106",
+    quizTitle: "유정완 정기 레벨 테스트 11월 (어휘·철자 듣고 쓰기·문법·독해·서술형) — 영역별 " + window._secSummary,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 정기 레벨 테스트 11월]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음") +
+            "\n영역별: " + (window._secSummary || "") +
+            "\n답: " + answersLog.map(function (l) { return l.no + "." + l.chosen; }).join(" | ");
+  var bx = document.getElementById("backup-box"); bx.textContent = msg; bx.classList.remove("hidden");
+  document.getElementById("kakao-btn").textContent = "선생님께 이 화면을 보여 주세요 (사진 찍기)";
+});
+</script>
+<!-- engfit-watermark: 영핏 로고 흐린 배경 (GUIDELINES.md 「로고 배경」) --><div class="engfit-wm" aria-hidden="true" style="position:fixed;left:50%;top:50%;width:min(70vw,520px);aspect-ratio:900/608;transform:translate(-50%,-50%);background:url(assets/engfit-logo.png) center/contain no-repeat;opacity:.06;pointer-events:none;z-index:9999"></div>
+</body>
+</html>
