@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>영핏 소리 듣기 🔊</title>
+<meta property="og:title" content="영핏 소리 듣기 🔊">
+<meta property="og:description" content="학습지 단어를 눌러서 소리를 들어요!">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:#fffaf0;color:#1e2b55;padding:16px 16px 40px}
+.top{background:#0d6e4f;color:#fff;border-radius:18px;padding:16px 18px;margin-bottom:14px}
+.top h1{font-size:24px}.top div{font-size:14px;opacity:.9;margin-top:4px}
+.how{background:#fff;border:2px dashed #f4a100;border-radius:14px;padding:10px 14px;font-size:15px;line-height:1.6;margin-bottom:14px}
+.all{display:block;width:100%;font-size:20px;font-weight:800;color:#fff;background:#f4a100;border:0;border-radius:16px;padding:14px;margin-bottom:14px}
+h2{font-size:17px;margin:16px 0 8px;color:#0d6e4f}
+.g{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+button.w{display:flex;align-items:center;gap:10px;background:#fff;border:3px solid #ffb3c7;border-radius:16px;padding:12px;font:inherit;text-align:left;width:100%}
+button.w .e{font-size:34px;line-height:1}
+button.w .t{font-family:"Comic Sans MS","Segoe UI",sans-serif;font-size:26px;font-weight:700;color:#1e2b55;flex:1}
+button.w .s{font-size:22px}
+button.sn{border-color:#8fb8ff}
+button.sn .t{font-size:21px}
+button.on{background:#fff3c4;border-color:#f4a100}
+.sp{display:flex;gap:8px;margin-top:10px;font-size:15px;align-items:center;flex-wrap:wrap}
+.sp button{font:inherit;border:2px solid #0d6e4f;background:#fff;border-radius:12px;padding:6px 12px;color:#0d6e4f}
+.sp button.on{background:#0d6e4f;color:#fff}
+.no{display:none;background:#ffe9ec;border:2px solid #e0383e;border-radius:12px;padding:10px;margin-bottom:12px;font-size:15px}
+.foot{margin-top:24px;text-align:center;font-size:12px;color:#999}
+</style></head><body>
+<div class="top"><h1 id="h">🔊 소리 듣기</h1><div id="d"></div></div>
+<div class="no" id="no">이 기기에서는 소리가 안 나와요 😢 다른 폰이나 패드로 QR을 찍어 주세요.</div>
+<div class="how">👆 단어를 <b>누르면 소리</b>가 나와요. 듣고 → 따라 말하고 → 학습지에 해요!<br>소리가 안 나면 <b>무음 모드</b>를 끄고 볼륨을 올려 주세요.</div>
+<button class="all" id="all">▶ 처음부터 다 듣기</button>
+<div id="list"></div>
+<div class="sp">빠르기: <button data-r="0.55">천천히 🐢</button><button data-r="0.8">보통 🐰</button></div>
+<div class="foot">영핏영어교습소 · English Fit</div>
+<script>
+// 학습지 QR 전용 (원장님 2026-11-06 "아인이랑 다은이 소리숙제 큐알 박아줘")
+// ?n=학생키&d=날짜&t=학습지이름&w=단어,단어&r=복습단어,…&s=문장~문장  — 단어 목록은 학습지가 QR에 직접 넣는다.
+var NAME={kai:'아인',jde:'다은'},TN={ws:'소리 계단 학습지',hw:'소리 숙제',jw:'쓰고 읽기 학습지'};
+var EM={stop:'🛑',star:'⭐',stamp:'📮',stick:'🥢',step:'👣',stand:'🧍',black:'⬛',blue:'🔵',block:'🧱',blanket:'🛌',blow:'🌬️',blink:'😉',green:'🟢',grass:'🌿',grape:'🍇',grow:'🌱',grin:'😁',grab:'🤏',plane:'✈️',plate:'🍽️',plant:'🪴',plug:'🔌',play:'⚽',plus:'➕',drum:'🥁',dress:'👗',drink:'🥤',drop:'💧',draw:'✏️',dream:'💭',
+ flag:'🚩',glass:'🥛',slow:'🐢',whale:'🐋',three:'3️⃣',brush:'🪥',snake:'🐍',ship:'🚢',tree:'🌳',train:'🚆',glove:'🧤',thumb:'👍',bed:'🛏️',dog:'🐶',
+ ant:'🐜',bear:'🐻',ball:'⚽',cow:'🐄',car:'🚗',door:'🚪',desk:'📚',egg:'🥚',elephant:'🐘',fish:'🐟',fox:'🦊',girl:'👧',gorilla:'🦍',hat:'🎩',hand:'✋',house:'🏠',igloo:'🧊',insect:'🐛',iguana:'🦎',jet:'✈️',jam:'🍓',jacket:'🧥',kangaroo:'🦘',kid:'🧒',king:'🤴',lamp:'💡',lion:'🦁',leaf:'🍃',
+ monster:'👾',mouse:'🐭',map:'🗺️',nest:'🪺',nut:'🥜',ox:'🐂',octopus:'🐙',pen:'🖊️',pig:'🐷',pizza:'🍕',queen:'👸',robot:'🤖',ring:'💍',rabbit:'🐰',sun:'☀️',sock:'🧦',six:'6️⃣',tiger:'🐯',tent:'⛺',umbrella:'☂️',van:'🚐',vase:'🏺',violin:'🎻',web:'🕸️',wolf:'🐺',watch:'⌚',box:'📦','yo-yo':'🪀',yacht:'⛵',zebra:'🦓'};
+var q=new URLSearchParams(location.search);
+function arr(k,sep){var v=q.get(k);return v?v.split(sep).map(function(x){return x.trim();}).filter(Boolean):[];}
+var nm=NAME[q.get('n')]||'';
+document.getElementById('h').textContent='🔊 '+(nm?nm+'이의 ':'')+'소리 듣기';
+document.title=document.getElementById('h').textContent;
+document.getElementById('d').textContent=[TN[q.get('t')]||q.get('t')||'',q.get('d')||''].filter(Boolean).join(' · ');
+var G=[['🌟 오늘의 단어',arr('w',','),0],['🔁 복습 단어',arr('r',','),0],['📚 문장',arr('s','~'),1]];
+var L=document.getElementById('list'),BTN=[];
+G.forEach(function(g){if(!g[1].length)return;var h=document.createElement('h2');h.textContent=g[0];L.appendChild(h);
+ var box=document.createElement('div');box.className=g[2]?'':'g';if(g[2])box.style.cssText='display:grid;gap:10px';L.appendChild(box);
+ g[1].forEach(function(t){var b=document.createElement('button');b.className='w'+(g[2]?' sn':'');
+  b.innerHTML=(g[2]?'':'<span class="e">'+(EM[t.toLowerCase()]||'')+'</span>')+'<span class="t"></span><span class="s">🔊</span>';
+  b.querySelector('.t').textContent=t;b.onclick=function(){say([b]);};box.appendChild(b);BTN.push(b);});});
+var RATE=0.55,voice=null,ss=window.speechSynthesis;
+if(!ss)document.getElementById('no').style.display='block';
+function pick(){if(!ss)return;var v=ss.getVoices().filter(function(x){return /^en[-_]US/i.test(x.lang);});if(!v.length)v=ss.getVoices().filter(function(x){return /^en/i.test(x.lang);});
+ voice=v.filter(function(x){return /Samantha|Google US|Aria|Jenny|Zira/i.test(x.name);})[0]||v[0]||null;}
+if(ss){pick();ss.onvoiceschanged=pick;}
+function say(bs){if(!ss)return;ss.cancel();BTN.forEach(function(x){x.classList.remove('on');});
+ bs.forEach(function(b,i){var u=new SpeechSynthesisUtterance(b.querySelector('.t').textContent);u.lang='en-US';if(voice)u.voice=voice;u.rate=RATE;
+  u.onstart=function(){BTN.forEach(function(x){x.classList.remove('on');});b.classList.add('on');b.scrollIntoView({block:'nearest',behavior:'smooth'});};
+  u.onend=function(){if(i==bs.length-1)b.classList.remove('on');};ss.speak(u);});}
+document.getElementById('all').onclick=function(){say(BTN);};
+var SP=document.querySelectorAll('.sp button');
+SP.forEach(function(b){if(+b.dataset.r==RATE)b.classList.add('on');b.onclick=function(){RATE=+b.dataset.r;SP.forEach(function(x){x.classList.toggle('on',x==b);});};});
+</script>
+</body></html>
