@@ -66,7 +66,8 @@
     <h1>다 했어요! 수고했어요 🎉</h1>
     <p class="sub" style="text-align:center">You did it! 선생님이 같이 볼게요.</p>
     <div id="submit-status"></div>
-    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <button class="btn" id="kakao-btn" style="background:#5d6d69">선생님 확인용 결과 보기</button>
+    <pre id="backup-box" class="hidden" style="white-space:pre-wrap;word-break:break-all;background:#fffbe6;border:2px dashed #d4a017;border-radius:10px;padding:14px;margin-top:12px;font-size:.92rem;line-height:1.55"></pre>
   </div>
 
 </div>
@@ -92,14 +93,37 @@ async function engfitSubmit(r) {
 }
 
 var _engfitSent = false;
+var ENGFIT_PENDING_KEY = "engfit_pending_v1";
+function engfitPendingLoad() { try { return JSON.parse(localStorage.getItem(ENGFIT_PENDING_KEY) || "[]"); } catch (e) { return []; } }
+function engfitPendingSave(a) { try { localStorage.setItem(ENGFIT_PENDING_KEY, JSON.stringify(a)); } catch (e) {} }
+async function engfitFlushPending() {
+  var a = engfitPendingLoad(); if (!a.length) return;
+  var left = [];
+  for (var i = 0; i < a.length; i++) { if (!(await engfitSubmit(a[i]))) left.push(a[i]); }
+  engfitPendingSave(left);
+}
+engfitFlushPending();
 async function engfitSubmitWithStatus(r) {
   if (_engfitSent) return; _engfitSent = true;
   var el = document.getElementById("submit-status");
   el.textContent = "결과 전송 중...";
   el.style.color = "#888";
   var ok = await engfitSubmit(r);
+  var tries = 1;
+  if (!ok) {
+    var a = engfitPendingLoad(); a.push(r); engfitPendingSave(a);
+    el.innerHTML = "전송이 아직 안 됐어요. <b>이 화면을 끄지 말고</b> 기다려 주세요.<br>인터넷이 연결되면 자동으로 다시 보내요.";
+    el.style.color = "#c0392b";
+    while (!ok && tries < 40) {
+      await new Promise(function (res) { setTimeout(res, 15000); });
+      tries++;
+      el.innerHTML = "다시 보내는 중... (" + tries + "번째) <b>화면을 끄지 말아 주세요.</b>";
+      ok = await engfitSubmit(r);
+    }
+    if (ok) engfitPendingSave(engfitPendingLoad().filter(function (x) { return JSON.stringify(x) !== JSON.stringify(r); }));
+  }
   if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
-  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+  else { el.innerHTML = "전송이 안 됐어요. 아래 <b>선생님 확인용 결과</b>를 눌러 선생님께 화면을 보여 주세요."; el.style.color = "#c0392b"; }
 }
 
 /* ══════ 문제 데이터 ══════
@@ -284,11 +308,8 @@ document.getElementById("kakao-btn").addEventListener("click", function () {
             "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음") +
             "\n영역별: " + (window._secSummary || "") +
             "\n답: " + answersLog.map(function (l) { return l.no + "." + l.chosen; }).join(" | ");
-  navigator.clipboard.writeText(msg).then(function () {
-    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
-  }).catch(function () {
-    prompt("아래 내용을 길게 눌러 복사하세요", msg);
-  });
+  var bx = document.getElementById("backup-box"); bx.textContent = msg; bx.classList.remove("hidden");
+  document.getElementById("kakao-btn").textContent = "선생님께 이 화면을 보여 주세요 (사진 찍기)";
 });
 </script>
 <!-- engfit-watermark: 영핏 로고 흐린 배경 (GUIDELINES.md 「로고 배경」) --><div class="engfit-wm" aria-hidden="true" style="position:fixed;left:50%;top:50%;width:min(70vw,520px);aspect-ratio:900/608;transform:translate(-50%,-50%);background:url(assets/engfit-logo.png) center/contain no-repeat;opacity:.06;pointer-events:none;z-index:9999"></div>
