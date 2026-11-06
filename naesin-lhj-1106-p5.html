@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>이하진 L7 본문 ❷❸❹ 질병·스포츠·범죄</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+  .en { font-weight: normal; color: #667; font-size: .92em; }
+  .say { display:block; width:100%; padding:14px; font-size:1.05rem; margin-bottom:10px; background:#e3efe9; color:#1B4332; border:1.5px solid #b9d3c7; border-radius:10px; cursor:pointer; font-weight:bold; }
+  #type-input { font-size:1.2rem; letter-spacing:.5px; }
+.say.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>Lesson 7 · STEP 5</h1>
+    <p class="sub">동아 윤정미 중3 Lesson 7 · 본문 ❷❸❹ 질병·스포츠·범죄 · 14문항<br>
+      책에서 공부한 것을 태블릿으로 한 번 더 풀어 봐요.<br>
+      <span class=en>Read each question carefully. It's okay not to know everything!</span></p>
+    <input type="text" id="name-input" placeholder="이름 (Name)" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기 (Start)</button>
+    <p class="hint">모르는 문제는 찍지 말고 <b>🤔 모름</b>을 눌러 주세요. 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>
+    직접 쓰는 문제는 영어로 쓰고 <b>다음</b>을 눌러요.</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <div id="typebox" class="hidden"><button class="say" id="say-btn">🔊 듣기 (Listen)</button><input type="text" id="type-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 써요 (Type here)"><button class="btn" id="type-ok">다음 (Next)</button></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>다 했어요! 수고했어요 🎉</h1>
+    <p class="sub" style="text-align:center">You did it! 선생님이 같이 볼게요.</p>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn" style="background:#5d6d69">선생님 확인용 결과 보기</button>
+    <pre id="backup-box" class="hidden" style="white-space:pre-wrap;word-break:break-all;background:#fffbe6;border:2px dashed #d4a017;border-radius:10px;padding:14px;margin-top:12px;font-size:.92rem;line-height:1.55"></pre>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  try {
+    await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(r) });
+    return true;
+  } catch (e) { return false; }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  var key = "engfit_sent_" + r.quizId + "_" + r.student;
+  try { if (localStorage.getItem(key)) { el.textContent = "✓ 결과가 이미 지나티처에게 전송되었어요"; el.style.color = "#1B4332"; return; } } catch (e) {}
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) {
+    try { localStorage.setItem(key, "1"); } catch (e) {}
+    el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332";
+  } else { el.innerHTML = "전송이 안 됐어요. 아래 <b>선생님 확인용 결과</b>를 눌러 선생님께 화면을 보여 주세요."; el.style.color = "#c0392b"; }
+}
+/* ══════ 문제 데이터 ══════
+   tag = 개념 이름 (학습 기록 분석용, records/tools/engfit_records.py CONCEPTS와 같은 이름) */
+var QUESTIONS = [
+    {
+        "tag":  "본문",
+        "q":  "(A)에 알맞은 말은?\u003cdiv class=passage\u003eDid you know that health professionals can now forecast a disease just as weather experts forecast the weather? This is possible thanks to big data. For example, when the flu season \u003cb\u003e(A)\u003c/b\u003e, people will buy more flu medicine. They will also search online about flu symptoms more. If this kind of data is analyzed \u003cb\u003e(B)\u003c/b\u003e, the spread of the flu can \u003cb\u003e(C)\u003c/b\u003e.\u003c/div\u003e",
+        "choices":  [
+                        "comes",
+                        "will come",
+                        "come",
+                        "coming"
+                    ],
+        "answer":  "comes"
+    },
+    {
+        "tag":  "본문",
+        "q":  "(B)에 알맞은 말은?\u003cdiv class=passage\u003eDid you know that health professionals can now forecast a disease just as weather experts forecast the weather? This is possible thanks to big data. For example, when the flu season \u003cb\u003e(A)\u003c/b\u003e, people will buy more flu medicine. They will also search online about flu symptoms more. If this kind of data is analyzed \u003cb\u003e(B)\u003c/b\u003e, the spread of the flu can \u003cb\u003e(C)\u003c/b\u003e.\u003c/div\u003e",
+        "choices":  [
+                        "wisely",
+                        "wise",
+                        "wiser",
+                        "wisdom"
+                    ],
+        "answer":  "wisely"
+    },
+    {
+        "tag":  "본문",
+        "q":  "(C)에 알맞은 말은?\u003cdiv class=passage\u003eDid you know that health professionals can now forecast a disease just as weather experts forecast the weather? This is possible thanks to big data. For example, when the flu season \u003cb\u003e(A)\u003c/b\u003e, people will buy more flu medicine. They will also search online about flu symptoms more. If this kind of data is analyzed \u003cb\u003e(B)\u003c/b\u003e, the spread of the flu can \u003cb\u003e(C)\u003c/b\u003e.\u003c/div\u003e",
+        "choices":  [
+                        "be predicted",
+                        "predict",
+                        "predicted",
+                        "is predicted"
+                    ],
+        "answer":  "be predicted"
+    },
+    {
+        "tag":  "본문",
+        "q":  "(위와 같은 글) 독감 확산을 예측하는 데 쓰이는 데이터는?\u003cdiv class=passage\u003eDid you know that health professionals can now forecast a disease just as weather experts forecast the weather? This is possible thanks to big data. For example, when the flu season \u003cb\u003e(A)\u003c/b\u003e, people will buy more flu medicine. They will also search online about flu symptoms more. If this kind of data is analyzed \u003cb\u003e(B)\u003c/b\u003e, the spread of the flu can \u003cb\u003e(C)\u003c/b\u003e.\u003c/div\u003e",
+        "choices":  [
+                        "독감 약 구매와 증상 검색",
+                        "날씨와 기온",
+                        "축구 경기 기록",
+                        "범죄 장소"
+                    ],
+        "answer":  "독감 약 구매와 증상 검색"
+    },
+    {
+        "tag":  "본문",
+        "q":  "(A)에 알맞은 말은?\u003cdiv class=passage\u003eBig data is improving the performance of players, making sports more exciting. A famous example is Germany\u0027s national soccer team. The team built a database by \u003cb\u003e(A)\u003c/b\u003e and analyzing a huge amount of data on players. For example, the data included information about how much each player ran and how long \u003cb\u003e(B)\u003c/b\u003e the ball. With the help of this database, the team was able to improve its performance and win the 2014 World Cup.\u003c/div\u003e",
+        "choices":  [
+                        "collecting",
+                        "collect",
+                        "collected",
+                        "to collect"
+                    ],
+        "answer":  "collecting"
+    },
+    {
+        "tag":  "본문",
+        "q":  "(B)에 알맞은 말은?\u003cdiv class=passage\u003eBig data is improving the performance of players, making sports more exciting. A famous example is Germany\u0027s national soccer team. The team built a database by \u003cb\u003e(A)\u003c/b\u003e and analyzing a huge amount of data on players. For example, the data included information about how much each player ran and how long \u003cb\u003e(B)\u003c/b\u003e the ball. With the help of this database, the team was able to improve its performance and win the 2014 World Cup.\u003c/div\u003e",
+        "choices":  [
+                        "he had",
+                        "did he have",
+                        "had he",
+                        "he having"
+                    ],
+        "answer":  "he had"
+    },
+    {
+        "tag":  "본문",
+        "q":  "(위와 같은 글) 데이터에 들어 있던 정보는?\u003cdiv class=passage\u003eBig data is improving the performance of players, making sports more exciting. A famous example is Germany\u0027s national soccer team. The team built a database by \u003cb\u003e(A)\u003c/b\u003e and analyzing a huge amount of data on players. For example, the data included information about how much each player ran and how long \u003cb\u003e(B)\u003c/b\u003e the ball. With the help of this database, the team was able to improve its performance and win the 2014 World Cup.\u003c/div\u003e",
+        "choices":  [
+                        "선수가 얼마나 달렸는지",
+                        "선수의 키와 몸무게",
+                        "선수의 나이",
+                        "관중의 수"
+                    ],
+        "answer":  "선수가 얼마나 달렸는지"
+    },
+    {
+        "tag":  "본문",
+        "q":  "(위와 같은 글) 독일 축구팀이 우승한 대회는?\u003cdiv class=passage\u003eBig data is improving the performance of players, making sports more exciting. A famous example is Germany\u0027s national soccer team. The team built a database by \u003cb\u003e(A)\u003c/b\u003e and analyzing a huge amount of data on players. For example, the data included information about how much each player ran and how long \u003cb\u003e(B)\u003c/b\u003e the ball. With the help of this database, the team was able to improve its performance and win the 2014 World Cup.\u003c/div\u003e",
+        "choices":  [
+                        "2014년 월드컵",
+                        "2002년 월드컵",
+                        "2018년 월드컵",
+                        "2010년 월드컵"
+                    ],
+        "answer":  "2014년 월드컵"
+    },
+    {
+        "tag":  "본문",
+        "q":  "(A)에 알맞은 말은?\u003cdiv class=passage\u003eThanks to big data, police can now predict crime before it happens. Through the analysis of big data about the type, time and place of crime, police can make a map of crime hot spots. This map identifies when and where \u003cb\u003e(A)\u003c/b\u003e most likely to happen. Police can prevent further crime by \u003cb\u003e(B)\u003c/b\u003e on the areas and the times this map predicts.\u003c/div\u003e",
+        "choices":  [
+                        "crime is",
+                        "is crime",
+                        "does crime",
+                        "crime does"
+                    ],
+        "answer":  "crime is"
+    },
+    {
+        "tag":  "본문",
+        "q":  "(B)에 알맞은 말은?\u003cdiv class=passage\u003eThanks to big data, police can now predict crime before it happens. Through the analysis of big data about the type, time and place of crime, police can make a map of crime hot spots. This map identifies when and where \u003cb\u003e(A)\u003c/b\u003e most likely to happen. Police can prevent further crime by \u003cb\u003e(B)\u003c/b\u003e on the areas and the times this map predicts.\u003c/div\u003e",
+        "choices":  [
+                        "focusing",
+                        "focus",
+                        "focused",
+                        "to focus"
+                    ],
+        "answer":  "focusing"
+    },
+    {
+        "tag":  "본문",
+        "q":  "(위와 같은 글) 경찰이 분석하는 범죄 정보 세 가지는?\u003cdiv class=passage\u003eThanks to big data, police can now predict crime before it happens. Through the analysis of big data about the type, time and place of crime, police can make a map of crime hot spots. This map identifies when and where \u003cb\u003e(A)\u003c/b\u003e most likely to happen. Police can prevent further crime by \u003cb\u003e(B)\u003c/b\u003e on the areas and the times this map predicts.\u003c/div\u003e",
+        "choices":  [
+                        "유형·시간·장소",
+                        "범인 이름·나이·키",
+                        "날씨·기온·바람",
+                        "차·버스·자전거"
+                    ],
+        "answer":  "유형·시간·장소"
+    },
+    {
+        "tag":  "본문",
+        "type":  "write",
+        "q":  "빈칸에 알맞은 한 단어를 쓰세요. (happen) \u003cspan class=en\u003e(직접 써요 · Type)\u003c/span\u003e\u003cdiv class=passage\u003ePolice can predict crime before it ______.\u003c/div\u003e",
+        "answer":  "happens",
+        "accept":  [
+                       "happens"
+                   ]
+    },
+    {
+        "tag":  "본문",
+        "q":  "글의 내용과 \u003cu\u003e일치하는\u003c/u\u003e 것은?\u003cdiv class=passage\u003eNobody knows for sure, but experts agree that big data will play a more and more important role in our lives.\u003c/div\u003e",
+        "choices":  [
+                        "빅데이터의 미래는 아무도 확실히 모른다.",
+                        "전문가들은 빅데이터가 덜 중요해질 거라 한다.",
+                        "모두가 미래를 확실히 안다.",
+                        "빅데이터 산업은 이미 끝났다."
+                    ],
+        "answer":  "빅데이터의 미래는 아무도 확실히 모른다."
+    },
+    {
+        "tag":  "본문",
+        "q":  "빈칸에 알맞은 말은?\u003cdiv class=passage\u003eNobody ______ for sure.\u003c/div\u003e",
+        "choices":  [
+                        "knows",
+                        "doesn\u0027t know",
+                        "know",
+                        "don\u0027t know"
+                    ],
+        "answer":  "knows"
+    }
+];
+
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function norm(s) { return String(s).toLowerCase().replace(/[.,!?'"’]/g, "").replace(/\s+/g, " ").trim(); }
+function speak(t) {
+  try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "en-US"; u.rate = 0.85; speechSynthesis.speak(u); } catch (e) {}
+}
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = ({"단어·철자": "어휘 Vocabulary", "to부정사": "문법 · 가주어 It ~ to", "형용사·보어": "문법 · call / make", "독해 유형": "읽기 Reading", "대화문": "대화 Dialogue", "영작·배열": "쓰기 Writing", "전치사": "문법 · 시간 전치사", "동명사": "문법 · -ing 주어", "주어 찾기": "문법 · 진짜 주어"})[q.tag] || "문법 Grammar";
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  var tb = document.getElementById("typebox");
+  box.innerHTML = "";
+  shownChoices = [];
+  if (q.type === "spell" || q.type === "write") {
+    tb.classList.remove("hidden");
+    document.getElementById("say-btn").classList.toggle("hidden", q.type !== "spell"); document.getElementById("say-btn").textContent = "🔊 듣기 (Listen) · " + (3 - ((window._sayCnt || {})[current] || 0)) + "번 남음";
+    var inp = document.getElementById("type-input");
+    inp.value = ""; inp.focus();
+    if (q.type === "spell") setTimeout(function () { speak(q.say); }, 300);
+    return;
+  }
+  tb.classList.add("hidden");
+  shownChoices = q.fixed ? q.choices.slice() : shuffle(q.choices);
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+document.getElementById("say-btn").addEventListener("click", function () { var s = QUESTIONS[current].say; if (!s) return; window._sayCnt = window._sayCnt || {}; var n = (window._sayCnt[current] || 0) + 1; if (n > 3) { this.textContent = "🔇 듣기는 3번까지예요"; return; } window._sayCnt[current] = n; this.textContent = "🔊 듣기 (Listen) · " + (3 - n) + "번 남음"; speak(s); });
+function submitTyped() {
+  var v = document.getElementById("type-input").value.trim();
+  if (!v) return;
+  pick(v);
+}
+document.getElementById("type-ok").addEventListener("click", submitTyped);
+document.getElementById("type-input").addEventListener("keydown", function (e) { if (e.key === "Enter") submitTyped(); });
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok;
+  if (unknown) ok = false;
+  else if (q.type === "spell") ok = norm(choice) === norm(q.answer);
+  else if (q.type === "write") ok = q.free ? true : q.accept.indexOf(norm(choice)) >= 0;
+  else ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput || document.activeElement.id === "type-input") return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  var sec = {};
+  answersLog.forEach(function (l) { var k = l.tag; sec[k] = sec[k] || [0, 0]; sec[k][1]++; if (l.ok) sec[k][0]++; });
+  window._secSummary = Object.keys(sec).map(function (k) { return k + " " + sec[k][0] + "/" + sec[k][1]; }).join(" · ");
+  engfitSubmitWithStatus({
+    quizId: "naesin-lhj-1106-p5",
+    quizTitle: "이하진 동아 윤정미 중3 L7 STEP5 본문 ❷❸❹ 질병·스포츠·범죄 11/6 — 영역별 " + window._secSummary,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[이하진 동아 윤정미 중3 L7 STEP5 본문 ❷❸❹ 질병·스포츠·범죄 11/6]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음") +
+            "\n영역별: " + (window._secSummary || "") +
+            "\n답: " + answersLog.map(function (l) { return l.no + "." + l.chosen; }).join(" | ");
+  var bx = document.getElementById("backup-box"); bx.textContent = msg; bx.classList.remove("hidden");
+  document.getElementById("kakao-btn").textContent = "선생님께 이 화면을 보여 주세요 (사진 찍기)";
+});
+</script>
+<!-- engfit-watermark: 영핏 로고 흐린 배경 (GUIDELINES.md 「로고 배경」) --><div class="engfit-wm" aria-hidden="true" style="position:fixed;left:50%;top:50%;width:min(70vw,520px);aspect-ratio:900/608;transform:translate(-50%,-50%);background:url(assets/engfit-logo.png) center/contain no-repeat;opacity:.06;pointer-events:none;z-index:9999"></div>
+</body>
+</html>
