@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>아인이의 소리 레벨 테스트</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+  .en { font-weight: normal; color: #667; font-size: .92em; }
+  .say { display:block; width:100%; padding:14px; font-size:1.05rem; margin-bottom:10px; background:#e3efe9; color:#1B4332; border:1.5px solid #b9d3c7; border-radius:10px; cursor:pointer; font-weight:bold; }
+  #type-input { font-size:1.2rem; letter-spacing:.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>아인이의 소리 레벨 테스트 ✏️</h1>
+    <p class="sub">English Fit Level Test · 김아인 · 20문항 · 약 20분<br>
+      <span class=en>Take your time. It's okay not to know everything!</span></p>
+    <input type="text" id="name-input" value="김아인" placeholder="이름 (Name)" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn">시작하기 (Start)</button>
+    <p class="hint">모르는 문제는 찍지 말고 <b>🤔 모름</b>을 눌러 주세요. 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>
+    소리 문제는 <b>🔊 듣기</b>를 눌러서 여러 번 들어도 돼요.</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <div id="typebox" class="hidden"><button class="say" id="say-btn">🔊 듣기 (Listen)</button><div id="sound-help" class="hidden" style="background:#ffe9ec;border:2px solid #e0383e;border-radius:10px;padding:10px;margin:8px 0;font-size:.92rem;line-height:1.5">소리가 안 나요 😢 무음 모드를 끄고 볼륨을 올려 보세요.<br>그래도 안 되면 아래 버튼으로 <b>다른 브라우저(크롬·사파리)</b>에서 열어 주세요.<button type="button" onclick="openExternal()" style="display:block;width:100%;margin-top:8px;padding:10px;font-size:1rem;font-weight:bold;color:#fff;background:#e0383e;border:0;border-radius:8px">🌐 다른 브라우저로 열기</button></div><input type="text" id="type-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 써요 (Type here)"><button class="btn" id="type-ok">다음 (Next)</button></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>다 했어요! 수고했어요 🎉</h1>
+    <p class="sub" style="text-align:center">You did it! 선생님이 같이 볼게요.</p>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn" style="background:#5d6d69">선생님 확인용 결과 보기</button>
+    <pre id="backup-box" class="hidden" style="white-space:pre-wrap;word-break:break-all;background:#fffbe6;border:2px dashed #d4a017;border-radius:10px;padding:14px;margin-top:12px;font-size:.92rem;line-height:1.55"></pre>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+var ENGFIT_PENDING_KEY = "engfit_pending_v1";
+function engfitPendingLoad() { try { return JSON.parse(localStorage.getItem(ENGFIT_PENDING_KEY) || "[]"); } catch (e) { return []; } }
+function engfitPendingSave(a) { try { localStorage.setItem(ENGFIT_PENDING_KEY, JSON.stringify(a)); } catch (e) {} }
+async function engfitFlushPending() {
+  var a = engfitPendingLoad(); if (!a.length) return;
+  var left = [];
+  for (var i = 0; i < a.length; i++) { if (!(await engfitSubmit(a[i]))) left.push(a[i]); }
+  engfitPendingSave(left);
+}
+engfitFlushPending();
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  var tries = 1;
+  if (!ok) {
+    var a = engfitPendingLoad(); a.push(r); engfitPendingSave(a);
+    el.innerHTML = "전송이 아직 안 됐어요. <b>이 화면을 끄지 말고</b> 기다려 주세요.<br>인터넷이 연결되면 자동으로 다시 보내요.";
+    el.style.color = "#c0392b";
+    while (!ok && tries < 40) {
+      await new Promise(function (res) { setTimeout(res, 15000); });
+      tries++;
+      el.innerHTML = "다시 보내는 중... (" + tries + "번째) <b>화면을 끄지 말아 주세요.</b>";
+      ok = await engfitSubmit(r);
+    }
+    if (ok) engfitPendingSave(engfitPendingLoad().filter(function (x) { return JSON.stringify(x) !== JSON.stringify(r); }));
+  }
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
+  else { el.innerHTML = "전송이 안 됐어요. 아래 <b>선생님 확인용 결과</b>를 눌러 선생님께 화면을 보여 주세요."; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════
+   tag = 개념 이름 (학습 기록 분석용, records/tools/engfit_records.py CONCEPTS와 같은 이름) */
+// 김아인(초1 스텝업) 11월 정기 레벨 테스트 — 배운 범위: 첫소리 st·bl·gr·pl·dr·sh·tr, b/d, 짧은 모음 단어, He/She/It 문장 (kai_ws·clinic-kai-1029~1104)
+// type "listen" = 소리 듣고 고르기 (say 를 읽어 줌)
+var META = { code: "kai", name: "김아인", level: "파닉스", title: "아인이의 소리 레벨 테스트", min: 20 };
+var QUESTIONS = [
+  {"tag": "첫소리", "type": "listen", "say": "stop. stop.", "q": "잘 듣고, 처음 두 소리를 골라요. 🛑", "choices": ["bl", "st", "gr"], "answer": "st", "why": "stop 스탑 → st"},
+  {"tag": "첫소리", "type": "listen", "say": "black. black.", "q": "잘 듣고, 처음 두 소리를 골라요. ⬛", "choices": ["bl", "dr", "pl"], "answer": "bl", "why": "black 블랙 → bl"},
+  {"tag": "첫소리", "type": "listen", "say": "green. green.", "q": "잘 듣고, 처음 두 소리를 골라요. 🟢", "choices": ["st", "dr", "gr"], "answer": "gr", "why": "green 그린 → gr"},
+  {"tag": "첫소리", "type": "listen", "say": "plane. plane.", "q": "잘 듣고, 처음 두 소리를 골라요. ✈️", "choices": ["pl", "bl", "gr"], "answer": "pl", "why": "plane 플레인 → pl"},
+  {"tag": "첫소리", "type": "listen", "say": "drum. drum.", "q": "잘 듣고, 처음 두 소리를 골라요. 🥁", "choices": ["gr", "dr", "st"], "answer": "dr", "why": "drum 드럼 → dr"},
+  {"tag": "b·d", "q": "빈칸에 알맞은 글자는? 🐶<div class=passage>__og</div>", "choices": ["b", "p", "d"], "answer": "d", "why": "dog 도그 → d (배가 왼쪽)"},
+  {"tag": "b·d", "q": "빈칸에 알맞은 글자는? 🛏️<div class=passage>__ed</div>", "choices": ["b", "d", "p"], "answer": "b", "why": "bed 베드 → b (배가 오른쪽)"},
+  {"tag": "그림 단어", "q": "그림에 맞는 단어는? 🐟", "choices": ["fox", "fish", "fan"], "answer": "fish", "why": "🐟 물고기 = fish"},
+  {"tag": "그림 단어", "q": "그림에 맞는 단어는? 🦊", "choices": ["box", "six", "fox"], "answer": "fox", "why": "🦊 여우 = fox"},
+  {"tag": "그림 단어", "q": "그림에 맞는 단어는? 🐷", "choices": ["pig", "big", "dig"], "answer": "pig", "why": "🐷 돼지 = pig"},
+  {"tag": "그림 단어", "q": "그림에 맞는 단어는? ☀️", "choices": ["run", "sun", "bun"], "answer": "sun", "why": "☀️ 해 = sun"},
+  {"tag": "첫소리", "q": "<b>ship</b> 🚢 과 첫소리가 같은 것은?", "choices": ["snake 🐍", "three 3️⃣", "sheep 🐑"], "answer": "sheep 🐑", "why": "ship · sheep 둘 다 sh"},
+  {"tag": "첫소리", "q": "<b>tree</b> 🌳 와 첫소리가 같은 것은?", "choices": ["train 🚆", "drum 🥁", "whale 🐋"], "answer": "train 🚆", "why": "tree · train 둘 다 tr"},
+  {"tag": "듣고 단어", "type": "listen", "say": "cat. cat.", "q": "잘 듣고, 들은 단어를 골라요.", "choices": ["cut", "cat", "cap"], "answer": "cat", "why": "cat 캣 (a 애, 끝소리 t)"},
+  {"tag": "듣고 단어", "type": "listen", "say": "bed. bed.", "q": "잘 듣고, 들은 단어를 골라요.", "choices": ["red", "bad", "bed"], "answer": "bed", "why": "bed 베드 (e 에)"},
+  {"tag": "듣고 단어", "type": "listen", "say": "hat. hat.", "q": "잘 듣고, 들은 단어를 골라요.", "choices": ["hat", "hot", "hit"], "answer": "hat", "why": "hat 햇 (a 애)"},
+  {"tag": "문장", "q": "문장에 맞는 그림은?<div class=passage>He is a boy.</div>", "choices": ["👧", "👦", "🐱"], "answer": "👦", "why": "He 그 남자아이 → boy 👦"},
+  {"tag": "문장", "q": "문장에 맞는 그림은?<div class=passage>It is a dog.</div>", "choices": ["🐷", "🐟", "🐶"], "answer": "🐶", "why": "dog 강아지 🐶"},
+  {"tag": "듣고 쓰기", "type": "spell", "say": "dog. I have a dog. dog.", "answer": "dog", "q": "잘 듣고 단어를 써 보세요. 🐶", "why": "d-o-g, d 는 배가 왼쪽"},
+  {"tag": "듣고 쓰기", "type": "spell", "say": "sun. The sun is hot. sun.", "answer": "sun", "q": "잘 듣고 단어를 써 보세요. ☀️", "why": "s-u-n, u 는 '어'"}
+];
+
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function norm(s) { return String(s).toLowerCase().replace(/[.,!?'"’]/g, "").replace(/\s+/g, " ").trim(); }
+/* 듣기: 카톡 안 브라우저는 폰 음성(speechSynthesis)이 막혀 있는 경우가 많아 음성 파일로 바로 재생,
+   그 밖에는 폰 음성 → 1.2초 안에 안 울리면 음성 파일 → 그것도 안 되면 안내 (11/06 서준 듣기 안 됨) */
+var UA = navigator.userAgent || "";
+var INAPP = /KAKAOTALK|NAVER\(inapp|DaumApps|FB_IAB|FBAN|Instagram|Line\//i.test(UA);
+var HAS_TTS = ("speechSynthesis" in window) && typeof SpeechSynthesisUtterance !== "undefined";
+var enVoice = null, ttsDead = false, player = null;
+function loadVoice() {
+  if (!HAS_TTS) return;
+  var vs = speechSynthesis.getVoices().filter(function (v) { return /^en[-_]US/i.test(v.lang); });
+  if (!vs.length) vs = speechSynthesis.getVoices().filter(function (v) { return /^en/i.test(v.lang); });
+  enVoice = vs.filter(function (v) { return /Samantha|Google US|Aria|Jenny|Zira/i.test(v.name); })[0] || vs[0] || null;
+}
+if (HAS_TTS) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+function showSoundHelp() {
+  var n = document.getElementById("sound-help");
+  if (n) n.classList.remove("hidden");
+}
+function playFile(t, part) {
+  var parts = String(t).split(/\.\s+/).filter(Boolean);
+  part = part || 0;
+  if (part >= parts.length) return;
+  if (player) { try { player.pause(); } catch (e) {} }
+  player = new Audio("https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&ttsspeed=0.8&q=" + encodeURIComponent(parts[part]));
+  player.onended = function () { playFile(t, part + 1); };
+  player.onerror = showSoundHelp;
+  var p = player.play();
+  if (p && p.catch) p.catch(showSoundHelp);
+}
+function speak(t) {
+  if (INAPP || !HAS_TTS || ttsDead) { playFile(t); return; }
+  try {
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(t);
+    if (enVoice) u.voice = enVoice;
+    u.lang = (enVoice && enVoice.lang) || "en-US"; u.rate = 0.85; u.volume = 1;
+    var started = false;
+    u.onstart = function () { started = true; };
+    u.onerror = function () { if (!started) { ttsDead = true; playFile(t); } };
+    setTimeout(function () { speechSynthesis.resume(); speechSynthesis.speak(u); }, 60);
+    setTimeout(function () { if (!started) { ttsDead = true; speechSynthesis.cancel(); playFile(t); } }, 1300);
+  } catch (e) { ttsDead = true; playFile(t); }
+}
+function openExternal() {
+  var u = location.href;
+  if (/KAKAOTALK/i.test(UA)) location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(u);
+  else window.open(u, "_blank");
+}
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = q.tag;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  var tb = document.getElementById("typebox");
+  document.getElementById("say-btn").insertAdjacentElement("afterend", document.getElementById("sound-help"));
+  box.innerHTML = "";
+  shownChoices = [];
+  if (q.type === "spell" || q.type === "write") {
+    tb.classList.remove("hidden");
+    document.getElementById("say-btn").classList.toggle("hidden", q.type !== "spell");
+    var inp = document.getElementById("type-input");
+    inp.value = ""; inp.focus();
+    if (q.type === "spell" && !INAPP) setTimeout(function () { speak(q.say); }, 300);
+    return;
+  }
+  tb.classList.add("hidden");
+  if (q.type === "listen") { var lb = document.createElement("button"); lb.className = "say"; lb.textContent = "🔊 듣기 (Listen)"; lb.addEventListener("click", function () { speak(q.say); }); box.appendChild(lb); box.appendChild(document.getElementById("sound-help")); if (!INAPP) setTimeout(function () { speak(q.say); }, 300); }
+  shownChoices = q.fixed ? q.choices.slice() : shuffle(q.choices);
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+document.getElementById("say-btn").addEventListener("click", function () { speak(QUESTIONS[current].say); });
+function submitTyped() {
+  var v = document.getElementById("type-input").value.trim();
+  if (!v) return;
+  pick(v);
+}
+document.getElementById("type-ok").addEventListener("click", submitTyped);
+document.getElementById("type-input").addEventListener("keydown", function (e) { if (e.key === "Enter") submitTyped(); });
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok;
+  if (unknown) ok = false;
+  else if (q.type === "spell") ok = norm(choice) === norm(q.answer);
+  else if (q.type === "write") ok = q.free ? true : q.accept.indexOf(norm(choice)) >= 0;
+  else ok = choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput || document.activeElement.id === "type-input") return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  var sec = {};
+  answersLog.forEach(function (l) { var k = l.tag; sec[k] = sec[k] || [0, 0]; sec[k][1]++; if (l.ok) sec[k][0]++; });
+  window._secSummary = Object.keys(sec).map(function (k) { return k + " " + sec[k][0] + "/" + sec[k][1]; }).join(" · ");
+  engfitSubmitWithStatus({
+    quizId: "leveltest-kai-1106",
+    quizTitle: "김아인 정기 레벨 테스트 11월 — 영역별 " + window._secSummary,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 정기 레벨 테스트 11월]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음") +
+            "\n영역별: " + (window._secSummary || "") +
+            "\n답: " + answersLog.map(function (l) { return l.no + "." + l.chosen; }).join(" | ");
+  var bx = document.getElementById("backup-box"); bx.textContent = msg; bx.classList.remove("hidden");
+  document.getElementById("kakao-btn").textContent = "선생님께 이 화면을 보여 주세요 (사진 찍기)";
+});
+</script>
+<!-- engfit-watermark: 영핏 로고 흐린 배경 (GUIDELINES.md 「로고 배경」) --><div class="engfit-wm" aria-hidden="true" style="position:fixed;left:50%;top:50%;width:min(70vw,520px);aspect-ratio:900/608;transform:translate(-50%,-50%);background:url(assets/engfit-logo.png) center/contain no-repeat;opacity:.06;pointer-events:none;z-index:9999"></div>
+</body>
+</html>
