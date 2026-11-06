@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex">
 <title>영핏 레벨 테스트 (초6)</title>
 <style>
@@ -59,7 +60,7 @@
     <div class="tag" id="qtag"></div>
     <div class="qtext" id="qtext"></div>
     <div id="choices"></div>
-    <div id="typebox" class="hidden"><button class="say" id="say-btn">🔊 듣기 (Listen)</button><input type="text" id="type-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 써요 (Type here)"><button class="btn" id="type-ok">다음 (Next)</button></div>
+    <div id="typebox" class="hidden"><button class="say" id="say-btn">🔊 듣기 (Listen)</button><div id="sound-help" class="hidden" style="background:#ffe9ec;border:2px solid #e0383e;border-radius:10px;padding:10px;margin:8px 0;font-size:.92rem;line-height:1.5">소리가 안 나요 😢 무음 모드를 끄고 볼륨을 올려 보세요.<br>그래도 안 되면 아래 버튼으로 <b>다른 브라우저(크롬·사파리)</b>에서 열어 주세요.<button type="button" onclick="openExternal()" style="display:block;width:100%;margin-top:8px;padding:10px;font-size:1rem;font-weight:bold;color:#fff;background:#e0383e;border:0;border-radius:8px">🌐 다른 브라우저로 열기</button></div><input type="text" id="type-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 써요 (Type here)"><button class="btn" id="type-ok">다음 (Next)</button></div>
     <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
   </div>
 
@@ -212,8 +213,52 @@ function shuffle(arr) {
 var CIRCLED = ["①", "②", "③", "④", "⑤"];
 
 function norm(s) { return String(s).toLowerCase().replace(/[.,!?'"’]/g, "").replace(/\s+/g, " ").trim(); }
+/* 듣기: 카톡 안 브라우저는 폰 음성(speechSynthesis)이 막혀 있는 경우가 많아 음성 파일로 바로 재생,
+   그 밖에는 폰 음성 → 1.2초 안에 안 울리면 음성 파일 → 그것도 안 되면 안내 (11/06 서준 듣기 안 됨) */
+var UA = navigator.userAgent || "";
+var INAPP = /KAKAOTALK|NAVER\(inapp|DaumApps|FB_IAB|FBAN|Instagram|Line\//i.test(UA);
+var HAS_TTS = ("speechSynthesis" in window) && typeof SpeechSynthesisUtterance !== "undefined";
+var enVoice = null, ttsDead = false, player = null;
+function loadVoice() {
+  if (!HAS_TTS) return;
+  var vs = speechSynthesis.getVoices().filter(function (v) { return /^en[-_]US/i.test(v.lang); });
+  if (!vs.length) vs = speechSynthesis.getVoices().filter(function (v) { return /^en/i.test(v.lang); });
+  enVoice = vs.filter(function (v) { return /Samantha|Google US|Aria|Jenny|Zira/i.test(v.name); })[0] || vs[0] || null;
+}
+if (HAS_TTS) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+function showSoundHelp() {
+  var n = document.getElementById("sound-help");
+  if (n) n.classList.remove("hidden");
+}
+function playFile(t, part) {
+  var parts = String(t).split(/\.\s+/).filter(Boolean);
+  part = part || 0;
+  if (part >= parts.length) return;
+  if (player) { try { player.pause(); } catch (e) {} }
+  player = new Audio("https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&ttsspeed=0.8&q=" + encodeURIComponent(parts[part]));
+  player.onended = function () { playFile(t, part + 1); };
+  player.onerror = showSoundHelp;
+  var p = player.play();
+  if (p && p.catch) p.catch(showSoundHelp);
+}
 function speak(t) {
-  try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "en-US"; u.rate = 0.85; speechSynthesis.speak(u); } catch (e) {}
+  if (INAPP || !HAS_TTS || ttsDead) { playFile(t); return; }
+  try {
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(t);
+    if (enVoice) u.voice = enVoice;
+    u.lang = (enVoice && enVoice.lang) || "en-US"; u.rate = 0.85; u.volume = 1;
+    var started = false;
+    u.onstart = function () { started = true; };
+    u.onerror = function () { if (!started) { ttsDead = true; playFile(t); } };
+    setTimeout(function () { speechSynthesis.resume(); speechSynthesis.speak(u); }, 60);
+    setTimeout(function () { if (!started) { ttsDead = true; speechSynthesis.cancel(); playFile(t); } }, 1300);
+  } catch (e) { ttsDead = true; playFile(t); }
+}
+function openExternal() {
+  var u = location.href;
+  if (/KAKAOTALK/i.test(UA)) location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(u);
+  else window.open(u, "_blank");
 }
 function showQuestion() {
   var q = QUESTIONS[current];
@@ -229,7 +274,7 @@ function showQuestion() {
     document.getElementById("say-btn").classList.toggle("hidden", q.type !== "spell");
     var inp = document.getElementById("type-input");
     inp.value = ""; inp.focus();
-    if (q.type === "spell") setTimeout(function () { speak(q.say); }, 300);
+    if (q.type === "spell" && !INAPP) setTimeout(function () { speak(q.say); }, 300);
     return;
   }
   tb.classList.add("hidden");
