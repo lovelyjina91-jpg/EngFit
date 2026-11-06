@@ -79,53 +79,26 @@
 var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
 
 async function engfitSubmit(r) {
-  var body = JSON.stringify(r);
   try {
-    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
-    var j = await res.json();
-    return j.ok === true;
-  } catch (e) {
-    try {
-      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
-      return true;
-    } catch (e2) { return false; }
-  }
+    await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(r) });
+    return true;
+  } catch (e) { return false; }
 }
 
 var _engfitSent = false;
-var ENGFIT_PENDING_KEY = "engfit_pending_v1";
-function engfitPendingLoad() { try { return JSON.parse(localStorage.getItem(ENGFIT_PENDING_KEY) || "[]"); } catch (e) { return []; } }
-function engfitPendingSave(a) { try { localStorage.setItem(ENGFIT_PENDING_KEY, JSON.stringify(a)); } catch (e) {} }
-async function engfitFlushPending() {
-  var a = engfitPendingLoad(); if (!a.length) return;
-  var left = [];
-  for (var i = 0; i < a.length; i++) { if (!(await engfitSubmit(a[i]))) left.push(a[i]); }
-  engfitPendingSave(left);
-}
-engfitFlushPending();
 async function engfitSubmitWithStatus(r) {
   if (_engfitSent) return; _engfitSent = true;
   var el = document.getElementById("submit-status");
+  var key = "engfit_sent_" + r.quizId + "_" + r.student;
+  try { if (localStorage.getItem(key)) { el.textContent = "✓ 결과가 이미 지나티처에게 전송되었어요"; el.style.color = "#1B4332"; return; } } catch (e) {}
   el.textContent = "결과 전송 중...";
   el.style.color = "#888";
   var ok = await engfitSubmit(r);
-  var tries = 1;
-  if (!ok) {
-    var a = engfitPendingLoad(); a.push(r); engfitPendingSave(a);
-    el.innerHTML = "전송이 아직 안 됐어요. <b>이 화면을 끄지 말고</b> 기다려 주세요.<br>인터넷이 연결되면 자동으로 다시 보내요.";
-    el.style.color = "#c0392b";
-    while (!ok && tries < 40) {
-      await new Promise(function (res) { setTimeout(res, 15000); });
-      tries++;
-      el.innerHTML = "다시 보내는 중... (" + tries + "번째) <b>화면을 끄지 말아 주세요.</b>";
-      ok = await engfitSubmit(r);
-    }
-    if (ok) engfitPendingSave(engfitPendingLoad().filter(function (x) { return JSON.stringify(x) !== JSON.stringify(r); }));
-  }
-  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
-  else { el.innerHTML = "전송이 안 됐어요. 아래 <b>선생님 확인용 결과</b>를 눌러 선생님께 화면을 보여 주세요."; el.style.color = "#c0392b"; }
+  if (ok) {
+    try { localStorage.setItem(key, "1"); } catch (e) {}
+    el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332";
+  } else { el.innerHTML = "전송이 안 됐어요. 아래 <b>선생님 확인용 결과</b>를 눌러 선생님께 화면을 보여 주세요."; el.style.color = "#c0392b"; }
 }
-
 /* ══════ 문제 데이터 ══════
    tag = 개념 이름 (학습 기록 분석용, records/tools/engfit_records.py CONCEPTS와 같은 이름) */
 // 김서아 11월 정기 레벨 테스트 — 배운 범위: 대문자·명사 복수(불규칙 포함)·인칭/목적격/소유 대명사·this/these·be동사·'s (clinic-ksa-1103·1104)
