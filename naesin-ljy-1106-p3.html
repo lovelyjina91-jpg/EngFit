@@ -37,6 +37,7 @@
   .en { font-weight: normal; color: #667; font-size: .92em; }
   .say { display:block; width:100%; padding:14px; font-size:1.05rem; margin-bottom:10px; background:#e3efe9; color:#1B4332; border:1.5px solid #b9d3c7; border-radius:10px; cursor:pointer; font-weight:bold; }
   #type-input { font-size:1.2rem; letter-spacing:.5px; }
+.say.hidden{display:none!important}
 </style>
 </head>
 <body>
@@ -343,7 +344,7 @@ function showQuestion() {
   shownChoices = [];
   if (q.type === "spell" || q.type === "write") {
     tb.classList.remove("hidden");
-    document.getElementById("say-btn").classList.toggle("hidden", q.type !== "spell");
+    document.getElementById("say-btn").classList.toggle("hidden", q.type !== "spell"); document.getElementById("say-btn").textContent = "🔊 듣기 (Listen) · " + (3 - ((window._sayCnt || {})[current] || 0)) + "번 남음";
     var inp = document.getElementById("type-input");
     inp.value = ""; inp.focus();
     if (q.type === "spell") setTimeout(function () { speak(q.say); }, 300);
@@ -359,7 +360,7 @@ function showQuestion() {
     box.appendChild(b);
   });
 }
-document.getElementById("say-btn").addEventListener("click", function () { speak(QUESTIONS[current].say); });
+document.getElementById("say-btn").addEventListener("click", function () { var s = QUESTIONS[current].say; if (!s) return; window._sayCnt = window._sayCnt || {}; var n = (window._sayCnt[current] || 0) + 1; if (n > 3) { this.textContent = "🔇 듣기는 3번까지예요"; return; } window._sayCnt[current] = n; this.textContent = "🔊 듣기 (Listen) · " + (3 - n) + "번 남음"; speak(s); });
 function submitTyped() {
   var v = document.getElementById("type-input").value.trim();
   if (!v) return;
