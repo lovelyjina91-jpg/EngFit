@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>한승주 수량 표현 · 형용사·보어 · 현재완료 맞춤 테스트 11/6</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>한승주 수량 표현 · 형용사·보어 · 현재완료 맞춤 테스트 11/6 💪</h1>
+    <p class="sub">한승주에게 딱 맞춘 15문항 · 객관식<br>
+      수량 표현, 형용사·보어, 현재완료, one of the+최상급, 관계대명사</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+    <p class="hint">정말 모르겠으면 찍지 말고 <b>🤔 모름</b>을 눌러 주세요 — 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>컴퓨터: 숫자키 1~4 = 보기 선택 · 0 = 모름</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════
+   tag = 개념 이름 (학습 기록 분석용, records/tools/engfit_records.py CONCEPTS와 같은 이름) */
+var QUESTIONS = [
+  {"tag": "수량 표현", "q": "빈칸에 알맞은 말은?<br>There are ______ students in the library now, so it is very quiet.", "choices": ["little", "few", "much", "a little"], "answer": "few", "exp": "students는 셀 수 있는 복수명사이고 문맥상 '거의 없는'이므로 <b>few</b>예요. little/much/a little은 셀 수 없는 명사 앞에 써요.", "fixed": true},
+  {"tag": "형용사·보어", "q": "look, sound, feel, taste, smell 같은 감각동사 바로 뒤에 보어로 쓰는 말은?", "choices": ["부사", "동명사", "관사", "형용사"], "answer": "형용사", "exp": "감각동사 뒤에는 <b>형용사</b>를 보어로 써요. (The soup smells <b>good</b>.)", "fixed": true},
+  {"tag": "수량 표현", "q": "빈칸에 알맞은 말은?<br>We have ______ time before the train leaves.", "choices": ["little", "few", "many", "a few"], "answer": "little", "exp": "time은 셀 수 없는 명사이므로 <b>little</b>(거의 없는)을 써요.", "fixed": true},
+  {"tag": "형용사·보어", "q": "어법상 올바른 문장은?", "choices": ["The music sounds beautifully.", "The music sounds beauty.", "The music sounds beautiful.", "The music sounds beautify."], "answer": "The music sounds beautiful.", "exp": "감각동사 sound 뒤에는 형용사 <b>beautiful</b>을 써요.", "fixed": true},
+  {"tag": "현재완료", "q": "'지금까지 쭉 ~해 왔다(계속)'를 나타낼 때 쓰는 형태로 알맞은 것은?", "choices": ["had + 동사원형", "will have + 동사원형", "was / were + -ing", "have / has + 과거분사"], "answer": "have / has + 과거분사", "exp": "현재완료의 계속 용법은 <b>have(has) + p.p.</b> 형태이고 for, since와 자주 함께 써요.", "fixed": true},
+  {"tag": "수량 표현", "q": "어법상 올바른 문장은?", "choices": ["I have a few good ideas for the project.", "I have a few good idea for the project.", "I have a little good ideas for the project.", "I have a little good idea for the project."], "answer": "I have a few good ideas for the project.", "exp": "<b>a few</b> 뒤에는 셀 수 있는 명사의 <b>복수형</b>(ideas)이 와요.", "fixed": true},
+  {"tag": "형용사·보어", "q": "빈칸에 알맞은 말은?<br>The news made me ______.", "choices": ["sadly", "sadness", "sad", "sadden"], "answer": "sad", "exp": "<b>make + 목적어 + 형용사</b>: ~을 …하게 만들다. 보어 자리에는 형용사 <b>sad</b>", "fixed": true},
+  {"tag": "최상급(one of the)", "q": "빈칸에 알맞은 말은?<br>He is one of the ______ in our class.", "choices": ["tallest student", "tallest students", "taller students", "most tall students"], "answer": "tallest students", "exp": "<b>one of the + 최상급 + 복수명사</b> 형태예요. tall의 최상급은 tallest(most tall은 X).", "fixed": true},
+  {"tag": "현재완료", "q": "빈칸에 알맞은 말은?<br>I ______ in this town since 2020.", "choices": ["have lived", "lived", "live", "am living"], "answer": "have lived", "exp": "<b>since 2020</b>(2020년 이래로)처럼 과거부터 지금까지 이어지는 일은 현재완료 <b>have lived</b>로 나타내요.", "fixed": true},
+  {"tag": "수량 표현", "q": "much와 a little 뒤에 올 수 있는 명사로 알맞은 것은?", "choices": ["셀 수 있는 복수명사", "반드시 고유명사", "셀 수 없는 명사", "동명사만 가능"], "answer": "셀 수 없는 명사", "exp": "much, a little, little은 <b>셀 수 없는 명사</b>(water, time, money 등) 앞에 써요.", "fixed": true},
+  {"tag": "형용사·보어", "q": "빈칸에 알맞은 말은?<br>The new teacher looks ______ to the students.", "choices": ["angrily", "angry", "anger", "angers"], "answer": "angry", "exp": "look은 감각동사이므로 뒤에 형용사 <b>angry</b>가 와요.", "fixed": true},
+  {"tag": "현재완료", "q": "어법상 올바른 문장은?", "choices": ["Have you ever saw a koala?", "Have you ever see a koala?", "Did you ever seen a koala?", "Have you ever seen a koala?"], "answer": "Have you ever seen a koala?", "exp": "경험을 묻는 현재완료는 <b>Have you ever + p.p.</b> see의 과거분사는 <b>seen</b>이에요.", "fixed": true},
+  {"tag": "최상급(one of the)", "q": "빈칸에 알맞은 말은?<br>Jeju is one of the ______ islands to visit.", "choices": ["more beautiful", "beautifulest", "most beautiful", "most beautifully"], "answer": "most beautiful", "exp": "beautiful은 긴 단어라 최상급은 <b>most beautiful</b>이에요.", "fixed": true},
+  {"tag": "수량 표현", "q": "빈칸에 알맞은 말은?<br>I drank ______ juice after the game.", "choices": ["a few", "a little", "many", "few"], "answer": "a little", "exp": "juice는 셀 수 없는 명사이고 '조금 있는'이므로 <b>a little</b>을 써요.", "fixed": true},
+  {"tag": "관계대명사", "q": "빈칸에 알맞은 말은?<br>The girl ______ is standing by the window is my cousin.", "choices": ["which", "whose", "whom", "who"], "answer": "who", "exp": "선행사가 사람(The girl)이고 뒤에 바로 동사가 이어지므로 주격 관계대명사 <b>who</b>를 써요.", "fixed": true}
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = q.tag;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shownChoices = q.fixed ? q.choices.slice() : shuffle(q.choices);
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput) return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length +
+    (unknownNumbers.length ? "  (🤔 모름 " + unknownNumbers.length + ")" : "");
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : log.unknown ? " unknown" : " wrong");
+    var head = log.ok ? "정답!" : log.unknown ? "🤔 모름 → 정답: " + q.answer + " (이제 알게 됐어요!)" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")";
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "test-hsj-1106-0705",
+    quizTitle: "한승주 수량 표현 · 형용사·보어 · 현재완료 맞춤 테스트 11/6",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[한승주 수량 표현 · 형용사·보어 · 현재완료 맞춤 테스트 11/6]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>

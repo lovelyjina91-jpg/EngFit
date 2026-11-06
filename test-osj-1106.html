@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>오서준 현재시제 3인칭 단수·be동사·어순 맞춤 테스트 11/6</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>오서준 현재시제 3인칭 단수·be동사·어순 맞춤 테스트 11/6 💪</h1>
+    <p class="sub">오서준에게 딱 맞춘 15문항 · 객관식<br>
+      현재시제·현재진행, be동사, 어순·문장 만들기, 단어·철자</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+    <p class="hint">정말 모르겠으면 찍지 말고 <b>🤔 모름</b>을 눌러 주세요 — 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>컴퓨터: 숫자키 1~4 = 보기 선택 · 0 = 모름</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════
+   tag = 개념 이름 (학습 기록 분석용, records/tools/engfit_records.py CONCEPTS와 같은 이름) */
+var QUESTIONS = [
+  {"tag": "현재시제·현재진행", "q": "He, She, It처럼 <b>한 명(하나)</b>이 주어일 때 일반동사 뒤에 붙이는 것은?", "choices": ["-ing", "-s 또는 -es", "-ed", "아무것도 안 붙인다"], "answer": "-s 또는 -es", "exp": "한 명이 주어이면 현재시제 동사에 <b>-s / -es</b>를 붙여요. (he plays, she watches)", "fixed": true},
+  {"tag": "현재시제·현재진행", "q": "다음 중 끝에 <b>-es</b>를 붙이는 동사는?", "choices": ["play", "sing", "brush", "read"], "answer": "brush", "exp": "-sh, -ch, -s, -x, -o로 끝나면 -es: brush → <b>brushes</b>", "fixed": true},
+  {"tag": "현재시제·현재진행", "q": "빈칸에 알맞은 말은?<br>My mom ___ dinner every day.", "choices": ["cook", "cooking", "is cook", "cooks"], "answer": "cooks", "exp": "엄마는 한 명이므로 동사 뒤에 -s: <b>cooks</b>", "fixed": true},
+  {"tag": "현재시제·현재진행", "q": "빈칸에 알맞은 말은?<br>The baby ___ a lot.", "choices": ["cries", "crys", "cry", "crying"], "answer": "cries", "exp": "자음 + y로 끝나면 y를 i로 바꾸고 -es: cry → <b>cries</b>", "fixed": true},
+  {"tag": "현재시제·현재진행", "q": "빈칸에 알맞은 말은?<br>Tom and Amy ___ soccer on Sundays.", "choices": ["plays", "play", "playing", "is play"], "answer": "play", "exp": "Tom and Amy는 두 명이라 -s를 붙이지 않아요: <b>play</b>", "fixed": true},
+  {"tag": "현재시제·현재진행", "q": "빈칸에 알맞은 말은?<br>Look! The birds are ___ in the sky.", "choices": ["fly", "flies", "flying", "flew"], "answer": "flying", "exp": "지금 하고 있는 일: <b>be동사 + 동사-ing</b>. are flying", "fixed": true},
+  {"tag": "현재시제·현재진행", "q": "알맞은 문장은?<br>① The cat sleep on the sofa.<br>② The cat sleeps on the sofa.<br>③ The cat sleepes on the sofa.<br>④ The cat is sleeps on the sofa.", "choices": ["① The cat sleep on the sofa.", "③ The cat sleepes on the sofa.", "④ The cat is sleeps on the sofa.", "② The cat sleeps on the sofa."], "answer": "② The cat sleeps on the sofa.", "exp": "고양이는 한 마리이므로 <b>sleeps</b>. 동사 앞에 is는 필요 없어요.", "fixed": true},
+  {"tag": "be동사", "q": "빈칸에 알맞은 말은?<br>My friends ___ in the park.", "choices": ["are", "is", "am", "do"], "answer": "are", "exp": "my friends는 여러 명이므로 be동사는 <b>are</b>.", "fixed": true},
+  {"tag": "be동사", "q": "알맞은 문장은?<br>① I am eat an apple.<br>② I eat an apple.<br>③ I are eat an apple.<br>④ I eats an apple.", "choices": ["① I am eat an apple.", "② I eat an apple.", "③ I are eat an apple.", "④ I eats an apple."], "answer": "② I eat an apple.", "exp": "동사 eat이 있으면 am / are를 같이 쓰지 않아요. I 뒤에는 <b>eat</b>.", "fixed": true},
+  {"tag": "be동사", "q": "빈칸에 알맞은 말은?<br>___ Ben happy today?", "choices": ["Are", "Do", "Is", "Does"], "answer": "Is", "exp": "happy는 기분(상태)을 말하고 Ben은 한 명이므로 <b>Is</b>.", "fixed": true},
+  {"tag": "어순·문장 만들기", "q": "주어진 말을 알맞게 배열한 문장은?<br>(likes / my sister / pizza)", "choices": ["My sister pizza likes.", "Likes my sister pizza.", "Pizza my sister likes.", "My sister likes pizza."], "answer": "My sister likes pizza.", "exp": "우리말처럼 <b>누가 + 어찌한다 + 무엇을</b> 순서: My sister likes pizza.", "fixed": true},
+  {"tag": "어순·문장 만들기", "q": "주어진 말을 알맞게 배열한 문장은?<br>(I / in the morning / milk / drink)", "choices": ["I drink milk in the morning.", "I milk drink in the morning.", "In the morning drink I milk.", "I in the morning drink milk."], "answer": "I drink milk in the morning.", "exp": "<b>I(누가) + drink(한다) + milk(무엇을) + in the morning(언제)</b>", "fixed": true},
+  {"tag": "어순·문장 만들기", "q": "주어진 말을 알맞게 배열한 문장은?<br>(plays / the piano / Mina / well)", "choices": ["Mina well plays the piano.", "Mina plays the piano well.", "Plays Mina the piano well.", "Mina plays well the piano."], "answer": "Mina plays the piano well.", "exp": "<b>Mina plays the piano well.</b> well은 보통 문장 끝에 와요.", "fixed": true},
+  {"tag": "단어·철자", "q": "빈칸에 알맞은 말은?<br>one child, two ___", "choices": ["childs", "childrens", "children", "childen"], "answer": "children", "exp": "child의 복수형은 불규칙: <b>children</b>", "fixed": true},
+  {"tag": "단어·철자", "q": "다음 중 철자가 맞는 낱말은?", "choices": ["birthdey", "burthday", "birthdai", "birthday"], "answer": "birthday", "exp": "생일은 <b>birthday</b> (birth + day).", "fixed": true}
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = q.tag;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shownChoices = q.fixed ? q.choices.slice() : shuffle(q.choices);
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput) return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length +
+    (unknownNumbers.length ? "  (🤔 모름 " + unknownNumbers.length + ")" : "");
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : log.unknown ? " unknown" : " wrong");
+    var head = log.ok ? "정답!" : log.unknown ? "🤔 모름 → 정답: " + q.answer + " (이제 알게 됐어요!)" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")";
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "test-osj-1106-0705",
+    quizTitle: "오서준 현재시제 3인칭 단수·be동사·어순 맞춤 테스트 11/6",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[오서준 현재시제 3인칭 단수·be동사·어순 맞춤 테스트 11/6]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
