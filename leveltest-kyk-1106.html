@@ -208,10 +208,27 @@ nameInput.addEventListener("keydown", function (e) {
   if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
 });
 
+/* ?댁뼱 ?湲? ?뺢꺼?????곌퉴吏 ???대??곗뿉 ??? ?ㅼ떆 ?대㈃ ?댁뼱??(11/08 ?곴킅 8臾명빆 ?④린怨??뺢?) */
+var PROG_KEY = "_engfitProg_" + location.pathname;
+function saveProg() { try { localStorage.setItem(PROG_KEY, JSON.stringify({ name: studentName, current: current + 1, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: Math.round((Date.now() - startTime) / 1000), at: Date.now() })); } catch (e) {} }
+function loadProg() { try { var s = JSON.parse(localStorage.getItem(PROG_KEY) || "null"); if (s && s.name && s.current > 0 && s.current < QUESTIONS.length && Date.now() - s.at < 3 * 864e5) return s; } catch (e) {} return null; }
+function clearProg() { try { localStorage.removeItem(PROG_KEY); } catch (e) {} }
+(function () {
+  var s = loadProg(); if (!s) return;
+  nameInput.value = s.name; startBtn.disabled = false;
+  startBtn.textContent = "?댁뼱???湲?(" + (s.current + 1) + "踰덈???";
+  var n = document.createElement("div");
+  n.id = "resume-note";
+  n.style.cssText = "margin-top:12px;font-size:15px;color:#c2410c;font-weight:700;line-height:1.5";
+  n.textContent = "??吏?쒕쾲 " + s.current + "踰덇퉴吏 ???듭씠 ??λ뤌 ?덉뼱?? 踰꾪듉???꾨Ⅴ硫?" + (s.current + 1) + "踰덈????댁뼱????댁슂.";
+  startBtn.parentNode.insertBefore(n, startBtn.nextSibling);
+})();
 startBtn.addEventListener("click", function () {
   studentName = nameInput.value.trim();
   if (!studentName) return;
-  startTime = Date.now();
+  var sp = loadProg();
+  if (sp && sp.name === studentName) { current = sp.current; correctCount = sp.correctCount || 0; wrongNumbers = sp.wrongNumbers || []; unknownNumbers = sp.unknownNumbers || []; answersLog = sp.answersLog || []; startTime = Date.now() - (sp.elapsed || 0) * 1000; }
+  else { clearProg(); startTime = Date.now(); }
   document.getElementById("start-card").classList.add("hidden");
   document.getElementById("quiz-card").classList.remove("hidden");
   showQuestion();
@@ -327,6 +344,7 @@ function pick(choice) {
   else wrongNumbers.push(current + 1);
   if (unknown) unknownNumbers.push(current + 1);
   answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  saveProg();
   setTimeout(function () {
     locked = false;
     current++;
@@ -345,6 +363,7 @@ document.addEventListener("keydown", function (e) {
 document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
 
 function showResult() {
+  clearProg();
   document.getElementById("quiz-card").classList.add("hidden");
   document.getElementById("result-card").classList.remove("hidden");
   var sec = {};
