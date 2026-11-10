@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>박지율 when 시간 접속사·비교급 최상급 맞춤 테스트 11/10</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 560px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #1B4332; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; line-height: 1.5; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #1B4332; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 4px; }
+  .tag { display: inline-block; font-size: 0.78rem; color: #1B4332; background: #e3efe9; border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.65; margin-bottom: 16px; font-weight: bold; }
+  .passage { font-weight: normal; background: #f6f9f8; border-radius: 10px; padding: 12px 14px; margin-top: 10px; line-height: 1.8; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; line-height: 1.45; }
+  .choice:active { background: #e2efec; }
+  .num { color: #1B4332; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #1B4332; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #1B4332; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #1B4332; }
+  .exp.wrong b { color: #c0392b; }
+  .idk { display: block; width: 100%; margin-top: 4px; padding: 12px; font-size: 0.98rem; color: #555; background: #fff; border: 1.5px dashed #b9c4c1; border-radius: 10px; cursor: pointer; }
+  .idk:active { background: #f1f1f1; }
+  .exp.unknown { border-left-color: #d68910; }
+  .exp.unknown b { color: #b9770e; }
+  .hint { font-size: 0.8rem; color: #99a; text-align: center; margin-top: 6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>박지율 when 시간 접속사·비교급 최상급 맞춤 테스트 11/10 💪</h1>
+    <p class="sub">박지율에게 딱 맞춘 15문항 · 객관식<br>when 시간 접속사(현재시제), 비교급·최상급, to부정사 부사적 용법, 수여동사, 비인칭 주어 it</p>
+    <input type="text" id="name-input" placeholder="이름" maxlength="20" autocomplete="off">
+    <button class="btn" id="start-btn" disabled>시작하기</button>
+    <p class="hint">정말 모르겠으면 찍지 말고 <b>🤔 모름</b>을 눌러 주세요 — 모르는 걸 알아야 딱 맞게 도와줄 수 있어요!<br>컴퓨터: 숫자키 1~4 = 보기 선택 · 0 = 모름</p>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+    <button class="idk" id="idk-btn">🤔 모름 (찍지 않고 넘어가기)</button>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">지나티처에게 보낼 결과 복사 (백업용)</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "결과 전송 중...";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "✓ 결과가 지나티처에게 자동 전송되었어요"; el.style.color = "#1B4332"; }
+  else { el.textContent = "전송이 안 됐어요 — 아래 버튼으로 복사해서 카톡으로 보내주세요!"; el.style.color = "#c0392b"; }
+}
+
+/* ══════ 문제 데이터 ══════
+   tag = 개념 이름 (학습 기록 분석용, records/tools/engfit_records.py CONCEPTS와 같은 이름) */
+var QUESTIONS = [
+  {"tag": "시간 접속사 when", "q": "빈칸에 알맞은 말은?<br>When my uncle ______ to our house next week, we will cook dinner.", "choices": ["will come", "comes", "came", "come"], "answer": "comes", "exp": "때를 나타내는 <b>when 절</b>은 미래의 일이어도 <b>현재시제</b>. 주어 my uncle(3인칭 단수) → <b>comes</b>. will come은 이 자리에 쓰지 않아요."},
+  {"tag": "시간 접속사 when", "q": "어법상 <b>올바른</b> 문장은?", "choices": ["When it will be sunny tomorrow, we will go hiking.", "When it is sunny tomorrow, we go will hiking.", "When it is sunny tomorrow, we will go hiking.", "When it was sunny tomorrow, we will go hiking."], "answer": "When it is sunny tomorrow, we will go hiking.", "exp": "when 절은 <b>현재시제(is)</b>이고, When 절이 앞에 오면 뒤에 <b>쉼표(,)</b>를 써요. tomorrow가 있다고 will을 쓰기 쉬운 함정이에요."},
+  {"tag": "시간 접속사 when", "q": "빈칸에 알맞은 말은?<br>I will send you a message when I ______ at the airport.", "choices": ["will arrive", "arrive", "arrived", "arriving"], "answer": "arrive", "exp": "when 절이 문장 뒤에 와도 <b>현재시제</b>. I will send(미래) ... when I <b>arrive</b>."},
+  {"tag": "시간 접속사 when", "q": "빈칸에 알맞은 말은?<br>When Sora ______ her homework tonight, she will watch a movie.", "choices": ["will finish", "finishes", "finish", "finished"], "answer": "finishes", "exp": "미래의 일이어도 when 절은 현재시제. 주어 Sora(3인칭 단수) → <b>finishes</b>. (-sh 뒤에는 -es)"},
+  {"tag": "시간 접속사 when", "q": "우리말과 같은 뜻의 문장은?<br>내일 비가 오면 우리는 집에 있을 것이다.", "choices": ["If it will rain tomorrow, we stay home.", "If it rains tomorrow, we will stay home.", "If it rained tomorrow, we will stay home.", "If it rain tomorrow, we stay will home."], "answer": "If it rains tomorrow, we will stay home.", "exp": "if(만약 ~하면) 조건절도 when처럼 <b>현재시제</b>를 써요: it <b>rains</b>. 주절은 will stay. (같은 규칙의 확장 개념이에요.)"},
+  {"tag": "비교급 · 최상급", "q": "우리말과 같은 뜻의 문장은?<br>이 상자는 저 상자보다 2킬로그램 더 무겁다.", "choices": ["This box is heavier 2 kilograms than that one.", "This box is 2 kilograms heavier than that one.", "This box is 2 kilograms more heavy than that one.", "This box is heavy 2 kilograms than that one."], "answer": "This box is 2 kilograms heavier than that one.", "exp": "차이를 나타내는 말(2 kilograms)은 <b>비교급 앞</b> → 2 kilograms <b>heavier</b> than. heavy는 y를 i로 바꿔 -er."},
+  {"tag": "비교급 · 최상급", "q": "빈칸에 알맞은 말은?<br>Jina is the tallest girl ______ her class.", "choices": ["of", "in", "than", "at"], "answer": "in", "exp": "최상급 뒤 범위가 <b>장소·집단(her class)</b>이면 <b>in</b>. 숫자·복수(of the five girls)일 때는 of."},
+  {"tag": "비교급 · 최상급", "q": "빈칸에 알맞은 말은?<br>Tom is the youngest ______ the four brothers.", "choices": ["in", "than", "of", "at"], "answer": "of", "exp": "the four brothers처럼 <b>숫자가 있는 복수 무리</b> 앞에는 <b>of</b>."},
+  {"tag": "비교급 · 최상급", "q": "빈칸에 알맞은 말은?<br>This movie is three years ______ than that one.", "choices": ["old", "older", "oldest", "more old"], "answer": "older", "exp": "than이 있으니 <b>비교급 older</b>. 차이(three years)는 비교급 앞에 와요."},
+  {"tag": "비교급 · 최상급", "q": "어법상 <b>올바른</b> 문장은?", "choices": ["Mt. Halla is the highest mountain of Korea.", "Mt. Halla is the higher mountain in Korea.", "Mt. Halla is the highest mountain in Korea.", "Mt. Halla is highest mountain in Korea."], "answer": "Mt. Halla is the highest mountain in Korea.", "exp": "최상급은 <b>the + -est</b>, 범위가 장소(Korea)이면 <b>in</b>. 비교급 higher는 than과 함께 써요."},
+  {"tag": "to부정사 부사적 용법", "q": "빈칸에 알맞은 말은? (나는 그 소식을 들어서 기뻤다)<br>I was happy ______ the news.", "choices": ["hearing", "to hear", "hear", "for hear"], "answer": "to hear", "exp": "감정(happy) 뒤 ~해서 = <b>to + 동사원형</b>."},
+  {"tag": "to부정사 부사적 용법", "q": "빈칸에 알맞은 말은? (나는 지각하지 않으려고 일찍 일어났다)<br>I got up early ______ late.", "choices": ["to not be", "not to be", "not be", "to be not"], "answer": "not to be", "exp": "~하지 않기 위해 = <b>not to + 동사원형</b>. (to not ✕)"},
+  {"tag": "수여동사", "q": "빈칸에 알맞은 말은?<br>My father cooked dinner ______ us.", "choices": ["to", "for", "of", "at"], "answer": "for", "exp": "cook은 3형식에서 <b>for</b> + 사람 (make, buy, cook, get)."},
+  {"tag": "수여동사", "q": "다음 문장을 3형식으로 바르게 바꾼 것은?<br>Mr. Kim showed us a photo.", "choices": ["Mr. Kim showed a photo for us.", "Mr. Kim showed us to a photo.", "Mr. Kim showed a photo to us.", "Mr. Kim showed to us a photo."], "answer": "Mr. Kim showed a photo to us.", "exp": "show는 <b>to</b> 그룹(give, send, show, tell, teach, pass) → 동사 + 물건 + <b>to</b> + 사람."},
+  {"tag": "비인칭 주어 it", "q": "빈칸에 알맞은 말은?<br>A: What time is it?<br>B: ______ half past six.", "choices": ["Its", "It's", "They're", "That"], "answer": "It's", "exp": "시간을 말할 때는 비인칭 주어 It + is → <b>It's</b>. Its는 '그것의'라는 뜻이에요."}
+];
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var shownChoices = [];
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+nameInput.addEventListener("input", function () {
+  startBtn.disabled = nameInput.value.trim().length === 0;
+});
+nameInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && !startBtn.disabled) startBtn.click();
+});
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("qtag").textContent = q.tag;
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shownChoices = q.fixed ? q.choices.slice() : shuffle(q.choices);
+  shownChoices.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c); });
+    box.appendChild(b);
+  });
+}
+
+var locked = false;
+var IDK = "모름";
+function pick(choice) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var unknown = choice === IDK;
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  if (unknown) unknownNumbers.push(current + 1);
+  answersLog.push({ no: current + 1, ok: ok, chosen: choice, answer: q.answer, tag: q.tag, unknown: unknown });
+  setTimeout(function () {
+    locked = false;
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (document.activeElement === nameInput) return;
+  if (document.getElementById("quiz-card").classList.contains("hidden")) return;
+  if (e.key === "0") { pick(IDK); return; }
+  var n = parseInt(e.key, 10);
+  if (n >= 1 && n <= shownChoices.length) pick(shownChoices[n - 1]);
+});
+document.getElementById("idk-btn").addEventListener("click", function () { pick(IDK); });
+
+function showResult() {
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length +
+    (unknownNumbers.length ? "  (🤔 모름 " + unknownNumbers.length + ")" : "");
+
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : log.unknown ? " unknown" : " wrong");
+    var head = log.ok ? "정답!" : log.unknown ? "🤔 모름 → 정답: " + q.answer + " (이제 알게 됐어요!)" : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")";
+    d.innerHTML = "<b>Q" + (i + 1) + " [" + q.tag + "] " + head + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: "test-pjy-1110-1507",
+    quizTitle: "박지율 when 시간 접속사·비교급 최상급 맞춤 테스트 11/10",
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[박지율 when 시간 접속사·비교급 최상급 맞춤 테스트 11/10]\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n모름: " + (unknownNumbers.length ? unknownNumbers.join(", ") : "없음");
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
