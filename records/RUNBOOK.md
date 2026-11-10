@@ -98,3 +98,13 @@ Claude 루틴(예약 실행)과 채팅 요청이 따르는 절차예요. 사람�
 - 학생용 문항 위에 **개념 이름표를 붙이지 않는다** (답을 알려 줌) — 개념은 정답지에만.
 - 밑줄 모양으로 답이 보이지 않게 밑줄 길이·모양을 비슷하게, 글 속 어법은 보기 5개.
 - 디자인은 화려하게: 영핏·English Fit·큐브 로고를 배경 여러 곳에 흐리게, 영역마다 다른 색.
+
+## F. 데일리 수업 준비 PDF 만들기 (데일리 10 + 등원 브리핑)
+
+1. 로고: 노션 「영핏 데일리 수업 준비」 페이지 이미지 2개를 `notion-get-file-download-urls`로 받아 `$WORK/logos/yeongpit.png`, `englishfit.png` (여백 잘라 360px로: `convert X.png -trim +repage -resize 360x360`), 큐브는 `assets/engfit-cube.png` → `cube.png`.
+2. 지난 데일리 10(노션 날짜별 기록 PDF)을 받아 `$WORK/ws<MMDD>/q_<이름>_<MMDD>.json`으로 풀어 두고 중복 검사(D)에 쓴다.
+3. 문항: `$WORK/ws<MMDD>/q_<이름>_<MMDD>.json` = `{"name","subtitle","memo","items":[{"no","kind","tag","inst","text","hint","answer","point"}]}` (1~4 오답 다시 · 5~8 약점 개념 · 9~10 점검, 빈칸은 `______` 하나).
+4. `python3 -I records/tools/daily10_dupcheck.py ws<MMDD> $WORK` → 0
+5. `python3 -I records/tools/worksheet.py $WORK/ws<MMDD> $WORK/logos 영핏_데일리10_<날짜>.pdf --date <날짜> --order 이름,…` (넘친 쪽 검사 포함, 학생 1명 = 앞면 문제·뒷면 정답)
+6. `python3 -I records/tools/daily_brief.py brief.json $WORK/logos 영핏_등원브리핑_<날짜>.pdf --date <날짜> --qdir $WORK/ws<MMDD>` (요약 1쪽 + 학생 1명당 1쪽)
+7. 두 PDF를 `notion-create-file-upload` + curl로 올리고 바로 페이지 끝에 `## 📅 날짜 (요일) · N명` + `<pdf>` 두 개로 붙인다 (업로드는 1시간 뒤 만료).
