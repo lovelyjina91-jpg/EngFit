@@ -625,14 +625,81 @@ var LESSON = {
  ],
  "quizId": "concept-jhi-1111-p1-f",
  "student": "정혜인",
+ "resultSay": "수고했어요! 결과는 선생님께 자동으로 보냈어요. 다시 볼 문장을 한 번씩 들어 봐요.",
  "counts": {
   "explain": 4,
   "sent": 6
  }
 };
 
-/* ══════ 읽어 주기 엔진 (Web Speech API) ══════ */
-var PH = {"be": "비", "am": "앰", "is": "이즈", "are": "아", "not": "낫", "isn't": "이즌트", "aren't": "안트", "i'm": "아임", "i": "아이", "you": "유", "we": "위", "they": "데이", "he": "히", "she": "쉬", "it": "잇", "yes": "예스", "no": "노", "do": "두", "does": "더즈", "don't": "돈트", "doesn't": "더즌트", "s": "에스", "es": "이 에스", "ing": "아이 엔 지", "y": "와이", "sh": "에스 에이치", "ch": "시 에이치", "x": "엑스", "o": "오", "a": "에이", "e": "이", "u": "유", "have": "해브", "has": "해즈", "play": "플레이", "eat": "이트", "like": "라이크", "likes": "라이크스", "go": "고", "every": "에브리", "day": "데이", "always": "올웨이즈", "usually": "유주얼리", "often": "오픈", "ready": "레디", "open": "오픈", "drive": "드라이브", "brush": "브러시", "study": "스터디", "teach": "티치", "mr": "미스터", "han": "한", "make": "메이크", "swim": "스윔", "pass": "패스", "fly": "플라이", "wear": "웨어", "cold": "콜드", "need": "니드", "clean": "클린", "watch": "워치", "empty": "엠프티", "walk": "워크"};   /* 한국어 음성이 영어 낱말을 또박또박 읽도록 바꿔 주는 소리 표 */
+/* ══════ 읽어 주기 엔진 ══════
+   한국어 설명 = 미리 만들어 둔 음성 파일(audio/ko/….mp3)  →  안 되면 기기 한국어 음성  →  그것도 안 되면 글로만
+   영어 문장   = 미리 만들어 둔 음성 파일(audio/en/….mp3)  →  안 되면 기기 영어 음성    →  그것도 안 되면 글로만 */
+var AUD = {
+"ko": {
+"혜인아, 오늘은 be동사 am, is, are를 배워 볼 거야! 같이 시작해 볼까?": "707c5b6e277c7c46",
+"be동사는 '이다', '하다', '에 있다'라는 뜻이에요.": "bc3ccf1415113e7d",
+"모양은 am, is, are 세 가지예요.": "a22166edaa983b30",
+"셋 중에 무엇을 쓸지는 주어를 보면 정해져요.": "84c5a57e01a86e7a",
+"그래서 문제를 풀 때는 먼저 주어를 찾고, 그다음에 동사 모양을 정해요.": "d08f7cee4c8dee58",
+"주어가 I이면 am을 써요.": "ad316109306fa2db",
+"주어가 you, we, they이거나 둘 이상이면 are를 써요.": "7b35b9645bbc4107",
+"주어가 he, she, it이거나 하나이면 is를 써요.": "969ff1c94c55ec28",
+"우리 이모, 이 가방처럼 사람 한 명, 물건 하나도 is예요. 부모님처럼 둘 이상이면 are예요.": "07b7b3185279f1c4",
+"아니라고 말할 때는 be동사 바로 뒤에 not을 붙여요.": "4fe33ee5d3080315",
+"is not은 isn't로, are not은 aren't로 줄여요.": "e5af1144754ba338",
+"am not은 줄이지 않아요. 대신 I'm not이라고 써요.": "59fb418afab3bde7",
+"물어볼 때는 be동사를 주어 앞으로, 문장 맨 앞으로 보내요.": "9bb1ca9ff505ce8e",
+"문장 끝에는 물음표를 붙여요.": "048984556c9f4936",
+"대답할 때는 주어를 대명사로 바꿔요.": "d1c2b4f07a5b3295",
+"또는": "349ceeacfe3be09e",
+"Yes로 대답할 때는 줄여 쓰지 않아요.": "394f670cfd3fdac7",
+"주어가 I니까 am을 써요. 여기서는 '에 있다'는 뜻이에요.": "1523dcd7897cc5b2",
+"주어가 삼촌 한 명이니까 is를 써요.": "bbfe11bf46bbc9c4",
+"강아지가 둘 이상이니까 are를 써요.": "708052635d055de4",
+"is 바로 뒤에 not을 붙이고, 줄여서 isn't라고 써요.": "d6b860802146282b",
+"장화는 두 짝, 둘 이상이니까 are not, 줄여서 aren't예요.": "73eae31915cbd67c",
+"be동사 Is가 주어 앞으로 나왔어요. 대답할 때는 아빠를 he로 바꿔요.": "4e93fd4ce78c8212",
+"혜인이가 실제로 헷갈렸던 문장이에요. 같이 고쳐 볼까요?": "7f04edf573aca70b",
+"ready는 '준비된'이라는 뜻이에요. 동작이 아니라 상태를 나타내는 말이에요.": "1b36da4b09451344",
+"문장에 일반동사가 없으면 be동사 문장이에요. 그래서 의문문은 Am, Is, Are로 시작해요.": "4f021bbfad96d05f",
+"이제 바로 풀어 볼까요? 한 문제씩 풀어 봐요.": "6482a9afdf2179c5",
+"정말 모르겠으면 찍지 말고 모름을 눌러 주세요.": "65e7be44b0b633c3",
+"새끼 고양이가 두 마리, 둘 이상이니까 are를 써요.": "046039be4a801f11",
+"주어가 I니까 am을 써요.": "6c9563da97cccf1d",
+"가방이 하나니까 is를 써요.": "f49cd84b5c52613c",
+"open은 여기서 '열려 있는'이라는 상태예요. 일반동사가 없으니까 be동사를 쓰고, 창문이 둘 이상이니까 aren't예요.": "566ee8ede1ba568d",
+"'정원에 있다'는 뜻이라서 be동사 문장이에요. 할머니 한 분이니까 Is로 시작해요.": "b40aacc3a12829e3",
+"is not을 줄이면 isn't예요. not의 o를 빼고 그 자리에 작은 점을 찍어요.": "29aaa6ea4fbc2dda",
+"be동사 are를 주어 앞으로 보내요. 문장 첫 글자는 대문자로 써요.": "72e75d034aed24c3",
+"you로 물으면 I로 대답해요. am not은 줄이지 않으니까 I'm not이라고 써요.": "e36ffd21e4488701",
+"수고했어요! 결과는 선생님께 자동으로 보냈어요. 다시 볼 문장을 한 번씩 들어 봐요.": "901200d9a6967876"
+},
+"en": {
+"Yes, it is.": "5ac3169a60ebba0e",
+"No, it isn't.": "ecf3e8130f63b100",
+"I am in the robot club.": "76ead8518e2eacf9",
+"My uncle is a zookeeper.": "9c0b563496533f09",
+"The puppies are under the table.": "f27abcb1cf7c1fff",
+"This soup isn't hot.": "ef72be2dafa215d5",
+"My rain boots aren't muddy.": "f47af08497f0dc03",
+"Is your dad at home? Yes, he is.": "1b185d2bb6a6cc1a",
+"Is your sister ready for the trip?": "0fc0fc317355a4d4",
+"The two kittens are on the sofa.": "2f9b72c3d08ad588",
+"I am hungry after gym class.": "0d72eb927f6425e1",
+"Her backpack is very heavy.": "76a92235ddc1b2de",
+"The windows aren't open.": "57cd77834a28cc3d",
+"Is your grandma in the garden?": "1555e565d0299028",
+"This movie isn't scary.": "68f7aa351b59e5fa",
+"Are Mia and Tom twins?": "9ac407eb50c9835b",
+"Are you sleepy? No, I'm not.": "43dc003d8c700b58"
+}
+};   /* ko: 한국어 설명 한 덩어리 → 파일 이름 · en: 영어 문장 → 파일 이름 */
+var AU_DIR = "audio/";
+var CLEAR_RATE = 0.8;   /* 「한 번 더 또박또박」: 같은 파일을 이 빠르기로 (음높이는 그대로) */
+var AU = { el: null, pre: null, seen: {}, queue: [], fails: 0, dead: false };
+try { if (typeof Audio !== "undefined") { AU.el = new Audio(); AU.el.preload = "auto"; } } catch (eA) { AU.el = null; }
+var PH = {"be": "비", "am": "앰", "is": "이즈", "are": "아", "not": "낫", "isn't": "이즌트", "aren't": "안트", "i'm": "아임", "i": "아이", "you": "유", "we": "위", "they": "데이", "he": "히", "she": "쉬", "it": "잇", "yes": "예스", "no": "노", "do": "두", "does": "더즈", "don't": "돈트", "doesn't": "더즌트", "s": "에스", "es": "이 에스", "ing": "아이 엔 지", "y": "와이", "sh": "에스 에이치", "ch": "시 에이치", "x": "엑스", "o": "오", "a": "에이", "e": "이", "u": "유", "have": "해브", "has": "해즈", "play": "플레이", "eat": "이트", "like": "라이크", "likes": "라이크스", "go": "고", "every": "에브리", "day": "데이", "always": "올웨이즈", "usually": "유주얼리", "often": "오픈", "ready": "레디", "open": "오픈", "drive": "드라이브", "brush": "브러시", "study": "스터디", "teach": "티치", "mr": "미스터", "han": "한", "make": "메이크", "swim": "스윔", "pass": "패스", "fly": "플라이", "wear": "웨어", "cold": "콜드", "need": "니드", "clean": "클린", "watch": "워치", "empty": "엠프티", "walk": "워크"};   /* (음성 파일을 못 쓸 때만) 기기 한국어 음성이 영어 낱말을 또박또박 읽도록 바꿔 주는 소리 표 */
 var SP = { ok: ("speechSynthesis" in window) && (typeof SpeechSynthesisUtterance !== "undefined"),
            ko: null, en: null, loaded: false, muted: false, dead: false, fails: 0, token: 0, pending: [], keep: [] };
 var NOVELTY = /Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Fred|Junior|Kathy|Ralph|Eddy|Flo\b|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Deranged|Hysterical|Pipe|Princess/i;
@@ -669,8 +736,9 @@ function canSpeak(lang) {
   return !!(lang === "ko" ? SP.ko : SP.en);
 }
 function voiceNote() {
-  var t = "";
-  if (!SP.ok || SP.dead) t = "이 기기에서는 읽어 주는 소리가 나오지 않아서, 글로 보여 줄게요.";
+  var t = "", clip = !!AU.el && !AU.dead;      /* 음성 파일이 나오는 동안은 기기 음성이 없어도 됨 */
+  if (clip) t = "";
+  else if (!SP.ok || SP.dead) t = "이 기기에서는 읽어 주는 소리가 나오지 않아서, 글로 보여 줄게요.";
   else if (SP.loaded && !SP.ko && !SP.en) t = "이 기기에는 한국어·영어 음성이 없어서, 글로 보여 줄게요.";
   else if (SP.loaded && !SP.ko) t = "이 기기에는 한국어 음성이 없어서, 설명은 글로 보여 주고 영어 문장만 읽어 줄게요.";
   else if (SP.loaded && !SP.en) t = "이 기기에는 영어 음성이 없어서, 영어 문장은 글로 보여 주고 설명만 읽어 줄게요.";
@@ -759,6 +827,125 @@ function speak(text, lang, o) {
   });
 }
 
+/* ── 음성 파일 ── */
+function clipUrl(lang, text) { var m = AUD[lang]; return m && Object.prototype.hasOwnProperty.call(m, text) ? AU_DIR + lang + "/" + m[text] + ".mp3" : null; }
+function lineClips(t) {          /* 설명 한 줄에서 나오는 파일들 (한국어 덩어리 · <<영어 문장>> 순서대로) */
+  if (!t) return [];
+  return segs(t).map(function (g) { return g.l === "ko" ? clipUrl("ko", g.raw) : clipUrl("en", g.t); });
+}
+function sentClip(markup) { return clipUrl("en", buildSent(markup).plain); }
+function slideSeq(sl) {          /* 이 슬라이드에서 소리가 나오는 순서 */
+  var q = [];
+  if (!sl) return q;
+  function add(x) { q = q.concat(x); }
+  if (sl.type === "explain") sl.lines.forEach(function (l) { add(lineClips(l.t)); });
+  else if (sl.type === "example") { add(lineClips(sl.intro)); sl.sents.forEach(function (c) { add([sentClip(c.en)]); add(lineClips(c.pt)); }); add(lineClips(sl.outro)); }
+  else if (sl.type === "mine") { add(lineClips(sl.say[0])); add(lineClips(sl.say[1])); add([sentClip(sl.good)]); sl.say.slice(2).forEach(function (t) { add(lineClips(t)); }); }
+  else (sl.say || []).forEach(function (t) { add(lineClips(t)); });
+  return q;
+}
+function itemSeq(it) { return it ? [sentClip(it.full)].concat(lineClips(it.rule)) : []; }
+function preload(url) {          /* 다음에 나올 파일을 미리 받아 둠 */
+  if (!url || !AU.el || AU.dead || SP.muted || AU.seen[url]) return;
+  AU.seen[url] = 1;
+  try { var p = new Audio(); p.preload = "auto"; p.src = url; AU.pre = p; } catch (e) {}
+}
+function setQueue(urls) { AU.queue = urls.filter(function (u) { return !!u; }); preload(AU.queue[0]); }
+function unlockAudio() {         /* 수업 시작 터치 안에서 한 번 소리 없이 재생 → 아이패드 사파리가 이후 재생을 허락함 */
+  if (!AU.el) return;
+  try {
+    var n = 400, b = "RIFF" + le(36 + n, 4) + "WAVEfmt " + le(16, 4) + le(1, 2) + le(1, 2) + le(8000, 4) + le(8000, 4) + le(1, 2) + le(8, 2) + "data" + le(n, 4);
+    for (var i = 0; i < n; i++) b += String.fromCharCode(128);
+    AU.el.muted = false; AU.el.src = "data:audio/wav;base64," + btoa(b);
+    var p = AU.el.play(); if (p && p.catch) p.catch(function () {});
+  } catch (e) {}
+  function le(v, k) { var s = ""; for (var j = 0; j < k; j++) s += String.fromCharCode((v >> (8 * j)) & 255); return s; }
+}
+/* 파일 하나 재생.  "ok" 끝까지 재생 · "stop" 중간에 멈춤 · "fail" 시작하지 못함(→ 기기 음성으로)
+   o.rate 재생 빠르기(기본 1) · o.onstart() · o.ontime(지금 초, 전체 초) · o.onend() */
+function setRate(a, r) {
+  try { a.preservesPitch = true; a.webkitPreservesPitch = true; a.mozPreservesPitch = true; } catch (e) {}
+  try { a.defaultPlaybackRate = r; a.playbackRate = r; } catch (e2) {}
+}
+function playClip(url, o) {
+  var a = AU.el, my = SP.token;
+  return new Promise(function (res) {
+    var done = false, started = false, timers = [], tick = null, rate = o.rate || 1;
+    function fin(r) {
+      if (done) return; done = true;
+      timers.forEach(clearTimeout); if (tick) clearInterval(tick);
+      if (a.onplaying === onplaying) a.onplaying = null;
+      if (a.onended === onended) a.onended = null;
+      if (a.onerror === onerror) a.onerror = null;
+      var i = SP.pending.indexOf(stop); if (i >= 0) SP.pending.splice(i, 1);
+      if (started && o.onend) o.onend();
+      if (r === "fail") { try { a.pause(); } catch (e) {} }
+      res(r);
+    }
+    function stop() { try { a.pause(); } catch (e) {} fin(my === SP.token ? "ok" : "stop"); }
+    function onplaying() {
+      if (started || done) return; started = true; AU.fails = 0;
+      if (o.onstart) o.onstart();
+      var d = (isFinite(a.duration) && a.duration > 0) ? a.duration * 1000 : 9000;
+      timers.push(setTimeout(function () { fin("ok"); }, d / rate * 1.6 + 4000));      /* 끝 신호가 안 오는 기기 대비 */
+      if (o.ontime) tick = setInterval(function () { if (!done) o.ontime(a.currentTime, a.duration); }, 50);
+      var k = AU.queue.indexOf(url); if (k >= 0) preload(AU.queue[k + 1]);
+    }
+    function onended() { fin("ok"); }
+    function onerror() { fin(started ? "ok" : "fail"); }
+    SP.pending.push(stop);
+    try {
+      a.onplaying = onplaying; a.onended = onended; a.onerror = onerror;
+      a.muted = SP.muted; a.src = url; setRate(a, rate);
+      var p = a.play();
+      if (p && p.catch) p.catch(function () { if (!started) fin("fail"); });
+    } catch (e) { fin("fail"); return; }
+    timers.push(setTimeout(function () { if (!started && !done) { try { a.pause(); } catch (e) {} fin("fail"); } }, 5000));
+  });
+}
+/* 한국어 한 덩어리:  음성 파일 → 기기 한국어 음성 → 글로만 */
+async function speakKo(raw, o) {
+  var url = clipUrl("ko", raw);
+  if (url && AU.el && !AU.dead && !SP.muted) {
+    var r = await playClip(url, o);
+    if (r === "ok") return true;
+    if (r === "stop") return false;
+    AU.fails++; if (AU.fails >= 3) { AU.dead = true; voiceNote(); }
+  }
+  return speak(koSay(raw).trim(), "ko", o);
+}
+/* 영어 문장:  음성 파일 → 기기 영어 음성 → 글로만.   o.clear = 한 번 더 또박또박 */
+async function speakEnText(text, o) {
+  var url = clipUrl("en", text);
+  if (url && AU.el && !AU.dead && !SP.muted) {
+    var r = await playClip(url, { rate: o.clear ? CLEAR_RATE : 1, onstart: o.onstart, onend: o.onend,
+      ontime: o.onword ? wordClock(text, o.onword) : null });
+    if (r === "ok") return true;
+    if (r === "stop") return false;
+    AU.fails++; if (AU.fails >= 3) { AU.dead = true; voiceNote(); }
+  }
+  return speak(text, "en", { rate: o.clear ? 0.75 : 0.9, onstart: o.onstart, onword: o.onword, onend: o.onend });
+}
+/* 음성 파일에는 낱말 시간 정보가 없어서, 낱말 길이로 어림한 시간표를 파일의 실제 길이에 맞춰 짚어 줌
+   (재생 위치 currentTime 으로 맞추므로 빠르기를 바꿔도 그대로 맞음) */
+function wordClock(text, onword) {
+  var ws = [], re = /\S+/g, m, total = 0;
+  while ((m = re.exec(text))) {
+    var w = m[0], core = w.replace(/[^A-Za-z0-9]/g, "");
+    var syl = (core.toLowerCase().replace(/e$/, "").match(/[aeiouy]+/g) || []).length || 1;
+    var wt = 1.2 + syl * 1.6 + core.length * 0.35;
+    var gap = /[.?!]$/.test(w) ? 4.5 : /[,;:]$/.test(w) ? 2.2 : 0;      /* 문장 부호 뒤의 쉼 */
+    ws.push({ ci: m.index, at: total }); total += wt + gap;
+  }
+  var last = -1, lead = 0.06;      /* 앞 · 뒤의 짧은 무음 */
+  return function (cur, dur) {
+    if (!(dur > 0) || !isFinite(dur) || !ws.length) return;
+    var f = Math.max(0, (cur - lead) / Math.max(0.2, dur - lead - 0.18)) * total, k = 0;
+    for (var i = 0; i < ws.length; i++) { if (ws[i].at <= f) k = i; }
+    if (k !== last) { last = k; onword(ws[k].ci); }
+  };
+}
+
 /* ══════ 글 표시 도우미 ══════ */
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
@@ -782,7 +969,7 @@ function segs(t) {
     last = re.lastIndex;
   }
   if (last < t.length) out.push({ l: "ko", t: t.slice(last) });
-  return out.map(function (s) { if (s.l === "ko") s.t = koSay(s.t).trim(); return s; })
+  return out.map(function (s) { if (s.l === "ko") { s.raw = s.t.trim(); s.t = koSay(s.t).trim(); } return s; })
             .filter(function (s) { return /[가-힣A-Za-z0-9]/.test(s.t); });
 }
 /* 영어 문장 표시:  [s:주어] [v:동사] [b:be동사] [k:짚을 말] [x:지울 말] [o:바른 말] */
@@ -823,19 +1010,25 @@ function hiWord(node, ci) {
   for (var j = 0; j < ws.length; j++) ws[j].classList.toggle("now", ws[j] === hit);
 }
 function speakEn(node, rate) {
-  return speak(node._plain, "en", {
-    rate: rate,
-    onstart: function () { node.classList.add("spk"); },
+  return speakEnText(node._plain, {
+    clear: rate < 0.85,
+    onstart: function () { node.classList.add("spk"); hiWord(node, 0); },
     onword: function (ci) { hiWord(node, ci); },
     onend: function () { node.classList.remove("spk"); hiWord(node, -1); }
   });
 }
 function capTalk(on) { $("cap").classList.toggle("talk", !!on); }
-async function narrate(t, noCap) {
-  if (!noCap) $("captxt").innerHTML = capHtml(t);
-  var ss = segs(t);
+async function narrate(t, noCap, onShow) {
+  var ss = segs(t), shown = false;
+  function show() {            /* 자막 · 줄 짚기는 소리가 실제로 시작될 때 함께 시작 */
+    if (shown) return; shown = true;
+    if (!noCap) $("captxt").innerHTML = capHtml(t);
+    if (onShow) onShow();
+  }
+  var o = { onstart: function () { show(); if (!noCap) capTalk(true); }, onend: function () { capTalk(false); } };
+  if (!ss.length) show();
   for (var i = 0; i < ss.length; i++) {
-    var ok = await speak(ss[i].t, ss[i].l, { onstart: function () { if (!noCap) capTalk(true); }, onend: function () { capTalk(false); } });
+    var ok = ss[i].l === "ko" ? await speakKo(ss[i].raw, o) : await speakEnText(ss[i].t, o);
     if (!ok) return false;
   }
   return true;
@@ -902,6 +1095,7 @@ function renderStart() {
       } catch (e) {}
       loadVoices();
     }
+    unlockAudio();
     mode = "lesson"; si = 0;
     showSlide();
   });
@@ -925,6 +1119,7 @@ function showSlide() {
   var root = el("section", "slide s-" + sl.type);
   root.innerHTML = '<div class="kick"><span class="kt">' + KIND[sl.type] + "</span>" + esc(sl.kick || "") + '</div><h2 class="tt">' + sl.title + "</h2>";
   stage.appendChild(root); curRoot = root;
+  setQueue(slideSeq(sl).concat(slideSeq(list[si + 1]).slice(0, 1), last && mode !== "review" ? itemSeq(ITEMS[0]).slice(0, 1) : []));
   var tk = SP.token, play;
   if (sl.type === "explain") play = buildExplain(sl, root);
   else if (sl.type === "example") play = buildExample(sl, root);
@@ -962,8 +1157,7 @@ function buildExplain(sl, root) {
   }
   return async function () {
     for (var i = 0; i < sl.lines.length; i++) {
-      step(i);
-      if (!(await narrate(sl.lines[i].t))) return false;
+      if (!(await narrate(sl.lines[i].t, false, (function (k) { return function () { step(k); }; })(i)))) return false;
       if (!(await wait(280))) return false;
     }
     return true;
@@ -998,8 +1192,7 @@ function buildExample(sl, root) {
       if (!ok) return false;
       k.c.querySelector(".ko").classList.add("on");
       if (!(await wait(500))) return false;
-      k.en.classList.add("mk"); k.c.querySelector(".pt").classList.add("on");
-      if (!(await narrate(k.s.pt))) return false;
+      if (!(await narrate(k.s.pt, false, (function (c) { return function () { c.en.classList.add("mk"); c.c.querySelector(".pt").classList.add("on"); }; })(k)))) return false;
       k.c.classList.remove("act");
       if (!(await wait(450))) return false;
     }
@@ -1053,6 +1246,7 @@ function showItem() {
   stopAll();
   mode = "quiz"; answered = false;
   var it = ITEMS[qi], no = qi + 1;
+  setQueue(itemSeq(it).concat(ITEMS[qi + 1] ? itemSeq(ITEMS[qi + 1]).slice(0, 1) : lineClips(LESSON.resultSay)));
   setChrome(true, true);
   setProgress(SLIDES.length + no, "바로 풀기 " + no + " / " + ITEMS.length);
   nextBtn.disabled = true; goNext(false);
@@ -1175,7 +1369,7 @@ function showResult() {
     detail: answersLog
   });
   var tk = SP.token;
-  wait(300).then(function (g) { if (g && tk === SP.token) narrate("수고했어요! 결과는 선생님께 자동으로 보냈어요. 다시 볼 문장을 한 번씩 들어 봐요.", true); });
+  wait(300).then(function (g) { if (g && tk === SP.token) narrate(LESSON.resultSay, true); });
 }
 /* 다시 듣기를 마치고 결과 화면으로 (전송은 다시 하지 않음) */
 function backToResult() {
@@ -1206,11 +1400,12 @@ function next() {
 function prev() { if ((mode === "lesson" || mode === "review") && si > 0) { si--; showSlide(); } }
 nextBtn.addEventListener("click", next);
 prevBtn.addEventListener("click", prev);
-replayBtn.addEventListener("click", function () { if (mode === "lesson" || mode === "review") showSlide(); });
+replayBtn.addEventListener("click", function () { if (mode === "lesson" || mode === "review") { AU.fails = 0; AU.dead = false; voiceNote(); showSlide(); } });
 $("snd-btn").addEventListener("click", function () {
   SP.muted = !SP.muted;
   this.textContent = SP.muted ? "🔊 소리 끔" : "🔊 소리 켬";
   this.classList.toggle("off", SP.muted);
+  if (AU.el) { try { AU.el.muted = SP.muted; } catch (e) {} }
   if (SP.muted && SP.ok) { try { window.speechSynthesis.cancel(); } catch (e) {} }
 });
 document.addEventListener("keydown", function (e) {
@@ -1226,7 +1421,7 @@ document.addEventListener("keydown", function (e) {
   if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!nextBtn.disabled) next(); }
   else if (e.key === "ArrowLeft") prev();
 });
-window.addEventListener("pagehide", function () { if (SP.ok) { try { window.speechSynthesis.cancel(); } catch (e) {} } });
+window.addEventListener("pagehide", function () { if (SP.ok) { try { window.speechSynthesis.cancel(); } catch (e) {} } if (AU.el) { try { AU.el.pause(); } catch (e) {} } });
 
 $("brand-no").textContent = LESSON.no;
 renderStart();
