@@ -24,6 +24,7 @@ button.on{background:#fff3c4;border-color:#f4a100}
 .sp button{font:inherit;border:2px solid #0d6e4f;background:#fff;border-radius:12px;padding:6px 12px;color:#0d6e4f}
 .sp button.on{background:#0d6e4f;color:#fff}
 .no{display:none;background:#ffe9ec;border:2px solid #e0383e;border-radius:12px;padding:10px;margin-bottom:12px;font-size:15px}
+.vc{display:flex;gap:8px;margin-top:10px;font-size:15px;align-items:center;flex-wrap:wrap}.vc button{font:inherit;border:2px solid #8a4fd6;background:#fff;border-radius:12px;padding:6px 10px;color:#5a2fa6}.vc button.on{background:#8a4fd6;color:#fff}.vc small{width:100%;font-size:12px;color:#888}
 .foot{margin-top:24px;text-align:center;font-size:12px;color:#999}
 </style></head><body>
 <div class="top"><h1 id="h">🔊 소리 듣기</h1><div id="d"></div></div>
@@ -32,6 +33,7 @@ button.on{background:#fff3c4;border-color:#f4a100}
 <button class="all" id="all">▶ 처음부터 다 듣기</button>
 <div id="list"></div>
 <div class="sp">빠르기: <button data-r="0.55">천천히 🐢</button><button data-r="0.8">보통 🐰</button></div>
+<div class="vc" id="vc">목소리: </div>
 <div class="foot">영핏영어교습소 · English Fit</div>
 <script>
 // 학습지 QR 전용 (원장님 2026-11-06 "아인이랑 다은이 소리숙제 큐알 박아줘")
@@ -59,11 +61,26 @@ G.forEach(function(g){if(!g[1].length)return;var h=document.createElement('h2');
   b.dataset.say=t;NO++;b.querySelector('.t').textContent=HID?NO+'번':t;b.onclick=function(){say([b]);};box.appendChild(b);BTN.push(b);});});
 var RATE=0.55,voice=null,ss=window.speechSynthesis;
 if(!ss)document.getElementById('no').style.display='block';
-function pick(){if(!ss)return;var v=ss.getVoices().filter(function(x){return /^en[-_]US/i.test(x.lang);});if(!v.length)v=ss.getVoices().filter(function(x){return /^en/i.test(x.lang);});
- voice=v.filter(function(x){return /Samantha|Google US|Aria|Jenny|Zira/i.test(x.name);})[0]||v[0]||null;}
+// 목소리 고르기 (원장님 2026-11-11 "음성 다채롭게") — 폰에 있는 무료 음성만 씀. 고른 것은 이 폰에 기억.
+var PITCH=1,EN=[],VI=0,VK='us_f';
+var F_RE=/Samantha|Aria|Jenny|Zira|Karen|Moira|Serena|Kate|Martha|Tessa|Fiona|Victoria|Allison|Ava|Susan|Libby|Sonia|Emma|Michelle|Female|여성/i,M_RE=/Daniel|Alex|Fred|Guy|David|Mark|Arthur|Aaron|Ryan|Thomas|Oliver|George|Rishi|Tom|Christopher|Eric|Male|남성/i;
+var PRE=[['us_f','👧 미국 여자','US',F_RE,1],['us_m','👦 미국 남자','US',M_RE,1],['uk_f','👩 영국 여자','GB',F_RE,1],['uk_m','👨 영국 남자','GB',M_RE,1],['cute','🐣 귀여운 목소리','US',F_RE,1.6]];
+function lang(v,c){return new RegExp('^en[-_]'+c,'i').test(v.lang);}
+function find(p){var a=EN.filter(function(v){return lang(v,p[2]);}),m=a.filter(function(v){return p[3].test(v.name)&&!(p[3]===F_RE&&M_RE.test(v.name));});return m[0]||((p[0]=='cute'||p[0]=='us_f')?a[0]:null)||null;}
+function setVoice(k){VK=k;var p=PRE.filter(function(x){return x[0]==k;})[0];if(p){voice=find(p)||voice;PITCH=p[4];}
+ try{localStorage.setItem('sori_voice',k);}catch(e){}
+ document.querySelectorAll('#vc button').forEach(function(b){b.classList.toggle('on',b.dataset.k==k);});}
+function pick(){if(!ss)return;EN=ss.getVoices().filter(function(x){return /^en/i.test(x.lang);});
+ var box=document.getElementById('vc');box.innerHTML='목소리: ';
+ PRE.forEach(function(p){if(!find(p))return;var b=document.createElement('button');b.dataset.k=p[0];b.textContent=p[1];b.onclick=function(){setVoice(p[0]);say([BTN[0]].filter(Boolean));};box.appendChild(b);});
+ if(EN.length>1){var r=document.createElement('button');r.dataset.k='mix';r.textContent='🎲 다른 목소리';r.onclick=function(){VI=(VI+1)%EN.length;voice=EN[VI];PITCH=1;VK='mix';document.querySelectorAll('#vc button').forEach(function(b){b.classList.toggle('on',b==r);});say([BTN[0]].filter(Boolean));};box.appendChild(r);}
+ if(EN.length<2){var sm=document.createElement('small');sm.textContent='이 폰에는 영어 목소리가 하나뿐이에요 (🐣 귀여운 목소리는 돼요)';box.appendChild(sm);}
+ var k='us_f';try{k=localStorage.getItem('sori_voice')||'us_f';}catch(e){}
+ if(!box.querySelector('[data-k="'+k+'"]'))k='us_f';
+ voice=EN.filter(function(x){return lang(x,'US');})[0]||EN[0]||null;setVoice(k);}
 if(ss){pick();ss.onvoiceschanged=pick;}
 function say(bs){if(!ss)return;ss.cancel();BTN.forEach(function(x){x.classList.remove('on');});
- bs.forEach(function(b,i){var u=new SpeechSynthesisUtterance(b.dataset.say);u.lang='en-US';if(voice)u.voice=voice;u.rate=RATE;
+ bs.forEach(function(b,i){var u=new SpeechSynthesisUtterance(b.dataset.say);u.lang=voice?voice.lang:'en-US';if(voice)u.voice=voice;u.rate=RATE;u.pitch=PITCH;
   u.onstart=function(){BTN.forEach(function(x){x.classList.remove('on');});b.classList.add('on');b.scrollIntoView({block:'nearest',behavior:'smooth'});};
   u.onend=function(){if(i==bs.length-1)b.classList.remove('on');};ss.speak(u);});}
 document.getElementById('all').onclick=function(){say(BTN);};
