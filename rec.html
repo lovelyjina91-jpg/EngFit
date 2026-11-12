@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>원장님 목소리 녹음 🎙️</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:#fffaf0;color:#1e2b55;padding:16px 16px 40px;max-width:820px;margin:auto}
+.top{background:#7b2d8e;color:#fff;border-radius:18px;padding:16px 18px;margin-bottom:14px}
+.top h1{font-size:24px}.top div{font-size:14px;opacity:.92;margin-top:4px;line-height:1.6}
+.row{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #e3d7ee;border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.row.done{border-color:#2e9e5b;background:#f2fbf5}
+.no{font-weight:800;color:#7b2d8e;min-width:30px}
+.tx{flex:1;font-size:18px;line-height:1.4}
+button{font-family:inherit;font-size:16px;font-weight:700;border:0;border-radius:10px;padding:9px 12px;cursor:pointer}
+.r{background:#e23b3b;color:#fff}.r.on{background:#222;animation:bl 1s infinite}
+.p{background:#eef}.p:disabled{opacity:.35}
+@keyframes bl{50%{opacity:.6}}
+.save{display:block;width:100%;font-size:20px;background:#2e9e5b;color:#fff;padding:14px;margin-top:14px}
+.save:disabled{opacity:.4}
+#msg{margin-top:10px;font-size:15px;line-height:1.6}
+</style></head><body>
+<div class="top"><h1>🎙️ 원장님 목소리 녹음 (다은이 데일리)</h1>
+<div>① <b>🔴 녹음</b> 누르고 문장을 읽은 뒤 <b>⏹ 멈춤</b> → ② <b>▶</b> 로 들어 보기 (다시 하려면 또 🔴)<br>③ 다 하고 맨 아래 <b>💾 모두 저장</b> → 「다운로드」 폴더에 들어가요. 그다음 Claude 에게 "녹음 다 했어" 라고만 말씀해 주세요.<br>※ "○ 하세요" 는 "동그라미 하세요" 로 읽어 주세요. 몇 개만 해도 되고, 남은 번호는 기계 목소리로 읽어요.</div></div>
+<div id="list"></div>
+<button class="save" id="save" disabled>💾 모두 저장 (0개)</button>
+<div id="msg"></div>
+<script src="voice/jde/list.js"></script>
+<script>
+var REC={},cur=null,stream=null,L=document.getElementById('list'),SV=document.getElementById('save'),MSG=document.getElementById('msg');
+function upd(){var n=Object.keys(REC).length;SV.textContent='💾 모두 저장 ('+n+'개)';SV.disabled=!n;}
+async function getMic(){if(stream)return stream;stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});return stream;}
+Object.keys(VOICE_JDE).forEach(function(id){
+ var row=document.createElement('div');row.className='row'+(VOICE_HAVE[id]?' done':'');
+ row.innerHTML='<span class="no">'+id+'</span><span class="tx"></span><button class="r">🔴 녹음</button><button class="p" disabled>▶</button>';
+ row.querySelector('.tx').textContent=VOICE_JDE[id]+(VOICE_HAVE[id]?'  ✅ 이미 있음':'');
+ var rb=row.querySelector('.r'),pb=row.querySelector('.p');
+ rb.onclick=async function(){
+  if(cur&&cur.id===id){cur.mr.stop();return;}
+  if(cur){cur.mr.stop();}
+  try{var s=await getMic();}catch(e){MSG.textContent='❌ 마이크를 쓸 수 없어요. 주소창 옆 🎙️ 에서 "허용"을 눌러 주세요.';return;}
+  var ch=[],mr=new MediaRecorder(s);mr.ondataavailable=function(e){if(e.data.size)ch.push(e.data);};
+  mr.onstop=function(){rb.classList.remove('on');rb.textContent='🔴 다시';cur=null;
+   var b=new Blob(ch,{type:mr.mimeType||'audio/webm'});REC[id]=b;pb.disabled=false;row.classList.add('done');upd();};
+  cur={id:id,mr:mr};mr.start();rb.classList.add('on');rb.textContent='⏹ 멈춤';};
+ pb.onclick=function(){if(REC[id])new Audio(URL.createObjectURL(REC[id])).play();};
+ L.appendChild(row);});
+SV.onclick=function(){var ids=Object.keys(REC),i=0;
+ (function next(){if(i>=ids.length){MSG.innerHTML='✅ '+ids.length+'개 저장했어요. Claude 에게 <b>"녹음 다 했어"</b> 라고 말씀해 주세요.';return;}
+  var id=ids[i++],a=document.createElement('a');a.href=URL.createObjectURL(REC[id]);a.download='jde_v'+id+'.webm';document.body.appendChild(a);a.click();a.remove();setTimeout(next,400);})();};
+</script>
+</body></html>
