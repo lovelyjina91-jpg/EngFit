@@ -68,9 +68,12 @@ if(!ss)document.getElementById('no').style.display='block';
 var PITCH=1,F_RE=/Samantha|Aria|Jenny|Zira|Allison|Ava|Susan|Michelle|Female|여성/i,M_RE=/Daniel|Alex|Fred|Guy|David|Mark|Aaron|Ryan|Tom|Christopher|Eric|Male|남성/i;
 function pick(){if(!ss)return;var us=ss.getVoices().filter(function(x){return /^en[-_]US/i.test(x.lang);});
  voice=us.filter(function(x){return F_RE.test(x.name)&&!M_RE.test(x.name);})[0]||us.filter(function(x){return !M_RE.test(x.name);})[0]||us[0]||null;}
-if(ss){pick();ss.onvoiceschanged=pick;}
+// 한글 문제 읽기 (원장님 2026-11-12 "정다은은 아직 어려서 문제를 한글로 읽어줘"): 한글이 들어간 말은 ko-KR 목소리(여자 우선)로 읽는다. 영어는 위 미국 여자 그대로.
+var kvoice=null,KF_RE=/SunHi|Yuna|Heami|Sora|Jimin|Seoyeon|Female|여성|여자/i;
+function pickK(){if(!ss)return;var ks=ss.getVoices().filter(function(x){return /^ko/i.test(x.lang);});kvoice=ks.filter(function(x){return KF_RE.test(x.name)&&!M_RE.test(x.name);})[0]||ks.filter(function(x){return !M_RE.test(x.name);})[0]||ks[0]||null;}
+if(ss){pick();pickK();ss.onvoiceschanged=function(){pick();pickK();};}
 function say(bs){if(!ss)return;ss.cancel();BTN.forEach(function(x){x.classList.remove('on');});
- bs.forEach(function(b,i){var u=new SpeechSynthesisUtterance(b.dataset.say);u.lang=voice?voice.lang:'en-US';if(voice)u.voice=voice;u.rate=RATE;u.pitch=PITCH;
+ bs.forEach(function(b,i){var KO=/[가-힣]/.test(b.dataset.say);var u=new SpeechSynthesisUtterance(b.dataset.say);if(KO){u.lang=kvoice?kvoice.lang:'ko-KR';if(kvoice)u.voice=kvoice;u.rate=Math.min(1,RATE+0.3);}else{u.lang=voice?voice.lang:'en-US';if(voice)u.voice=voice;u.rate=RATE;}u.pitch=PITCH;
   u.onstart=function(){BTN.forEach(function(x){x.classList.remove('on');});b.classList.add('on');b.scrollIntoView({block:'nearest',behavior:'smooth'});};
   u.onend=function(){if(i==bs.length-1)b.classList.remove('on');};ss.speak(u);});}
 if(QI.length){var h2=document.createElement('h2');h2.textContent='📝 데일리 문제';L.appendChild(h2);var bx=document.createElement('div');bx.style.cssText='display:grid;gap:10px';L.appendChild(bx);
