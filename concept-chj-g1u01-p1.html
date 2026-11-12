@@ -266,6 +266,7 @@ table.rt td .ar{color:var(--org-d);font-weight:800;padding:0 3px}
 .nb.next:active{transform:translateY(2px);box-shadow:0 2px 0 #c98400}
 .nb.next:disabled{background:#e9e3d3;border-color:#e9e3d3;box-shadow:none;color:#9a9482;opacity:1}
 .nb.next.go{animation:pulse 1.3s ease-in-out infinite}
+body.listening #stage .sb{pointer-events:none;opacity:.45}
 @keyframes pulse{0%,100%{box-shadow:0 4px 0 #c98400,0 0 0 0 rgba(244,161,0,.5)}50%{box-shadow:0 4px 0 #c98400,0 0 0 10px rgba(244,161,0,0)}}
 
 /* ── 세로 화면 · 작은 화면 ── */
@@ -1073,6 +1074,23 @@ function setProgress(pos, label) {
   $("step-label").textContent = label;
 }
 function goNext(on) { nextBtn.classList.toggle("go", !!on); }
+/* 선생님 말이 끝나야 [다음]이 눌려요 (선생님 지시 2026-11-12).  한 번 끝까지 들은 화면 · 다시 듣기에서는 바로 눌려요. */
+var HEARD = {}, LOCK = { n: 0, label: "", timer: null };
+function lockNext(label) {
+  LOCK.n++; LOCK.label = label; clearTimeout(LOCK.timer);
+  nextBtn.disabled = true; nextBtn.textContent = "끝까지 듣고 눌러요"; goNext(false);
+  document.body.classList.add("listening");
+  var my = LOCK.n;
+  LOCK.timer = setTimeout(function () { if (my === LOCK.n) unlockNext(my); }, 120000);      /* 소리가 끝내 안 끝나는 기기 대비 */
+  return my;
+}
+function unlockNext(my) {
+  if (my !== LOCK.n || !document.body.classList.contains("listening")) return;
+  clearTimeout(LOCK.timer);
+  document.body.classList.remove("listening");
+  nextBtn.textContent = LOCK.label; nextBtn.disabled = false; goNext(true);
+}
+function clearLock() { LOCK.n++; clearTimeout(LOCK.timer); document.body.classList.remove("listening"); }
 
 /* ── 시작 화면 ── */
 function renderStart() {
@@ -1124,9 +1142,11 @@ function showSlide() {
   setProgress(mode === "review" ? si + 1 : si + 1, (mode === "review" ? "다시 듣기 " : KIND[sl.type] + " ") + (si + 1) + " / " + list.length);
   prevBtn.disabled = si === 0;
   var last = si === list.length - 1;
+  clearLock();
   nextBtn.disabled = false;
   nextBtn.textContent = !last ? "다음" : (mode === "review" ? "결과로 돌아가기" : "바로 풀기 시작");
   goNext(false);
+  var hk = "s" + si, lk = (mode === "lesson" && !HEARD[hk]) ? lockNext(nextBtn.textContent) : 0;
   $("captxt").innerHTML = "";
   stage.innerHTML = ""; stage.scrollTop = 0;
   var root = el("section", "slide s-" + sl.type);
@@ -1139,7 +1159,7 @@ function showSlide() {
   else if (sl.type === "mine") play = buildMine(sl, root);
   else play = buildBridge(sl, root);
   wait(140).then(function (ok) { if (ok && tk === SP.token) return play(); return false; })
-    .then(function (fin) { if (tk === SP.token) { revealAll(root); if (fin) goNext(true); } });
+    .then(function (fin) { if (tk === SP.token) { revealAll(root); if (lk) { HEARD[hk] = true; unlockNext(lk); } else if (fin) goNext(true); } });
 }
 function revealAll(root) {
   var q = root.querySelectorAll("[data-on],.ln,.sent,.ko,.pt,.mrow2,.marrow,.why");
@@ -1262,6 +1282,7 @@ function showItem() {
   setQueue(itemSeq(it).concat(ITEMS[qi + 1] ? itemSeq(ITEMS[qi + 1]).slice(0, 1) : lineClips(LESSON.resultSay)));
   setChrome(true, true);
   setProgress(SLIDES.length + no, "바로 풀기 " + no + " / " + ITEMS.length);
+  clearLock();
   nextBtn.disabled = true; goNext(false);
   nextBtn.textContent = qi === ITEMS.length - 1 ? "결과 보기" : "다음 문제";
   stage.innerHTML = ""; stage.scrollTop = 0;
@@ -1324,17 +1345,19 @@ function pick(choice) {
     '<div class="fbtn"><button class="sb" type="button" id="fb-play">🔊 문장 듣기</button><button class="sb t" type="button" id="fb-clear">한 번 더 또박또박</button></div>';
   $("fb-play").addEventListener("click", function () { stopAll(); speakEn(qen, 0.9); });
   $("fb-clear").addEventListener("click", function () { stopAll(); speakEn(qen, 0.75); });
-  nextBtn.disabled = false; goNext(true);
+  var lk = lockNext(nextBtn.textContent);
   try { fb.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {}
   stopAll();
   var tk = SP.token;
   wait(250).then(function (g) { if (g && tk === SP.token) return speakEn(qen, 0.9); return false; })
-    .then(function (g) { if (g && tk === SP.token) return narrate(it.rule, true); });
+    .then(function (g) { if (g && tk === SP.token) return narrate(it.rule, true); })
+    .then(function () { if (tk === SP.token) unlockNext(lk); });
 }
 
 /* ── 결과 ── */
 function showResult() {
   stopAll();
+  clearLock();
   mode = "result";
   setChrome(false);
   $("top").classList.remove("hidden");
