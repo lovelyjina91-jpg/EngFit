@@ -608,7 +608,7 @@ var LESSON = {
    "ins": "알맞은 대답을 골라요.",
    "q": "Does your mom work on Saturdays? — Yes, ___.",
    "answer": "she does",
-   "full": "Does your mom work on Saturdays? Yes, [o:she does].",
+   "full": "Does your mom work on Saturdays? || Yes, [o:she does].",
    "rule": "Does로 물으면 does로 대답해요. 엄마는 she로 바꿔요.",
    "choices": [
     "she is",
@@ -694,8 +694,26 @@ var AUD = {
 "Does Kate play the drums?": "d271c4d950f2707e",
 "He doesn't like foggy mornings.": "fa4a77d1f4d2e474",
 "Do they have a test today?": "e0ecfb822cd4966d",
-"Does your mom work on Saturdays? Yes, she does.": "7feaa7e6b64bbc62",
+"Does your mom work on Saturdays? Yes, she does.": "f325a0a21be657f0",
 "My friends don't walk to school.": "41fcc69f93bf60c5"
+},
+"dlg": {
+"f325a0a21be657f0": {
+"t": [
+[
+0.05,
+1.63
+],
+[
+2.08,
+3.02
+]
+],
+"c": [
+0,
+33
+]
+}
 }
 };   /* ko: 한국어 설명 한 줄 → 파일 이름 · en: 영어 문장 → 파일 이름 */
 var AU_DIR = "audio/";
@@ -910,7 +928,7 @@ async function speakEnText(text, o) {
   var url = clipUrl("en", text);
   if (url && AU.el && !AU.dead && !SP.muted) {
     var r = await playClip(url, { rate: o.clear ? CLEAR_RATE : 1, onstart: o.onstart, onend: o.onend,
-      ontime: o.onword ? wordClock(text, o.onword) : null });
+      ontime: o.onword ? wordClock(text, o.onword, AUD.dlg && AUD.dlg[AUD.en[text]]) : null });
     if (r === "ok") return true;
     if (r === "stop") return false;
     AU.fails++; if (AU.fails >= 3) { AU.dead = true; voiceNote(); }
@@ -919,7 +937,8 @@ async function speakEnText(text, o) {
 }
 /* 음성 파일에는 낱말 시간 정보가 없어서, 낱말 길이로 어림한 시간표를 파일의 실제 길이에 맞춰 짚어 줌
    (재생 위치 currentTime 으로 맞추므로 빠르기를 바꿔도 그대로 맞음) */
-function wordClock(text, onword) {
+function wordClock(text, onword, dlg) {      /* dlg = 대화 파일: 차례마다 시작 · 끝 시간(t)과 글자 위치(c) → 차례 사이의 쉼을 건너뛰고 짚음 */
+  if (dlg) return turnClock(text, onword, dlg);
   var ws = [], re = /\S+/g, m, total = 0;
   while ((m = re.exec(text))) {
     var w = m[0], core = w.replace(/[^A-Za-z0-9]/g, "");
@@ -934,6 +953,24 @@ function wordClock(text, onword) {
     var f = Math.max(0, (cur - lead) / Math.max(0.2, dur - lead - 0.18)) * total, k = 0;
     for (var i = 0; i < ws.length; i++) { if (ws[i].at <= f) k = i; }
     if (k !== last) { last = k; onword(ws[k].ci); }
+  };
+}
+
+function turnClock(text, onword, dlg) {
+  var times = [], last = -1;
+  dlg.c.forEach(function (c0, k) {
+    var c1 = k + 1 < dlg.c.length ? dlg.c[k + 1] : text.length, ws = [], total = 0, re = /\S+/g, m, part = text.slice(c0, c1);
+    while ((m = re.exec(part))) {
+      var w = m[0], core = w.replace(/[^A-Za-z0-9]/g, "");
+      var syl = (core.toLowerCase().replace(/e$/, "").match(/[aeiouy]+/g) || []).length || 1;
+      ws.push({ ci: c0 + m.index, at: total }); total += 1.2 + syl * 1.6 + core.length * 0.35 + (/[,;:]$/.test(w) ? 2.2 : 0);
+    }
+    ws.forEach(function (x) { times.push({ ci: x.ci, t: dlg.t[k][0] + 0.05 + (dlg.t[k][1] - dlg.t[k][0]) * x.at / (total || 1) }); });
+  });
+  return function (cur) {
+    var k = 0;
+    for (var i = 0; i < times.length; i++) { if (times[i].t <= cur) k = i; }
+    if (times.length && k !== last) { last = k; onword(times[k].ci); }
   };
 }
 
@@ -965,6 +1002,7 @@ function segs(t) {
 }
 /* 영어 문장 표시:  [s:주어] [v:동사] [b:be동사] [k:짚을 말] [x:지울 말] [o:바른 말] */
 function buildSent(markup) {
+  markup = String(markup).replace(/\s*\|\|\s*(\{[A-Z]\}\s*)?/g, " ");      /* || = 대화에서 말하는 사람이 바뀌는 곳 (소리 파일에만 쓰임, 화면 글은 그대로) */
   var re = /\[([a-z]):([^\]]+)\]|([^\[]+)/g, m, html = "", plain = "";
   function words(chunk) {
     var out = "", wr = /(\s*)(\S+)/g, w;
