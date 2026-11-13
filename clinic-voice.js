@@ -12,13 +12,45 @@
   var aud = new Audio();
   var playToken = 0;
   var greeted = false;
+  // ── 배경음악·효과음 (원장님 2026-11-13 일레븐랩스 Pro "배경음악이나 목소리 아주 다양하게") ──
+  // audio/fx/bgm.mp3 (작게, 목소리 나오면 더 작게), ding(맞음)·oops(틀림, 부드럽게)·tada(결과). 🎵 버튼으로 끄고 켬(기기에 기억).
+  var FXV = "20261113b";
+  var FX = (function () {
+    var on = true; try { on = localStorage.getItem("engfit-bgm") !== "off"; } catch (e) {}
+    var bgm = new Audio("audio/fx/bgm.mp3?v=" + FXV); bgm.loop = true; bgm.volume = 0.13;
+    var sfx = new Audio(); var speaking = 0, started = false, btn = null;
+    function target() { return speaking > 0 ? 0.035 : 0.13; }
+    var fadeT = null;
+    function fadeTo(v) { clearInterval(fadeT); fadeT = setInterval(function () { var d = v - bgm.volume; if (Math.abs(d) < 0.01) { bgm.volume = v; clearInterval(fadeT); return; } bgm.volume = Math.max(0, Math.min(1, bgm.volume + d * 0.35)); }, 40); }
+    function watch(a) {
+      if (!a || a.__fxw) return; a.__fxw = 1;
+      a.addEventListener("playing", function () { speaking = 1; fadeTo(target()); });
+      var off = function () { setTimeout(function () { if (a.paused || a.ended) { speaking = 0; fadeTo(target()); } }, 350); };
+      a.addEventListener("pause", off); a.addEventListener("ended", off); a.addEventListener("error", off);
+    }
+    function paint() { if (btn) { btn.textContent = on ? "🎵" : "🔇"; btn.title = on ? "배경음악 끄기" : "배경음악 켜기"; } }
+    function start() {
+      started = true;
+      if (!btn) {
+        btn = document.createElement("button"); btn.type = "button";
+        btn.style.cssText = "position:fixed;right:12px;bottom:12px;z-index:9999;width:46px;height:46px;border-radius:50%;border:0;font-size:22px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18);cursor:pointer";
+        btn.onclick = function () { on = !on; try { localStorage.setItem("engfit-bgm", on ? "on" : "off"); } catch (e) {} paint(); if (on) { var p = bgm.play(); if (p && p.catch) p.catch(function () {}); } else bgm.pause(); };
+        document.body.appendChild(btn); paint();
+      }
+      if (on) { bgm.volume = target(); var p = bgm.play(); if (p && p.catch) p.catch(function () {}); }
+    }
+    function play(name, vol) { try { sfx.pause(); sfx.src = "audio/fx/" + name + ".mp3?v=" + FXV; sfx.volume = vol || 0.8; var p = sfx.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+    function end() { fadeTo(0); setTimeout(function () { bgm.pause(); }, 900); }
+    return { watch: watch, start: start, play: play, end: end, started: function () { return started; } };
+  })();
+  FX.watch(aud);
   // 인사·명언만 (사진 클리닉 hte 처럼 QUESTIONS/showQuestion 이 없는 페이지): 첫 화면에서 인사, 결과 화면에서 명언
   if (CV.greetOnly) {
     if (typeof window.show === "function") {
       var origShow0 = window.show;
       window.show = function () {
         var r = origShow0.apply(this, arguments);
-        if (!greeted) { greeted = true; aud.src = BASE + "g.mp3?v=" + (CV.ver || "1"); var p = aud.play(); if (p && p.catch) p.catch(function () {}); }
+        if (!greeted) { greeted = true; FX.start(); aud.src = BASE + "g.mp3?v=" + (CV.ver || "1"); var p = aud.play(); if (p && p.catch) p.catch(function () {}); }
         return r;
       };
     }
@@ -30,6 +62,7 @@
   var PAGE = !!(CV.pageAudio && typeof window.playQ === "function" && window.AUD);
   var origPlayQ = PAGE ? window.playQ : null, quietPage = false;
   if (PAGE) {
+    FX.watch(window.AUD);
     window.playQ = function (i) { if (quietPage) return; return origPlayQ.apply(this, arguments); };
   }
   function pageSay(i, done) {
@@ -97,6 +130,7 @@
     var idx = window.current, it = items[idx] || {}, n = idx + 1;
     var seq = [];
     if (!greeted) { greeted = true; seq.push("g"); }
+    if (!FX.started()) FX.start();
     if (it.k) seq.push("k" + n);
     seq = seq.concat(parts("q", n, it.q));
     var box = document.getElementById("choices");
@@ -135,6 +169,7 @@
     if (!advance) return;
     stop();
     var ok = !unknown && choice === q.answer;
+    if (!unknown) FX.play(ok ? "ding" : "oops", ok ? 0.75 : 0.55);
     document.querySelectorAll(".cv-bar").forEach(function (b) { b.remove(); });
     var box = document.getElementById("choices");
     var btns = box.querySelectorAll("button");
@@ -155,7 +190,8 @@
       say.className = "cv-say"; say.type = "button"; say.textContent = "🔊 " + it.as;
       say.onclick = function () { nx.disabled = true; nx.textContent = "👂 듣는 중…"; playSeq(parts("a", idx + 1, it.a), ready); };
       p.appendChild(say);
-      playSeq(parts("a", idx + 1, it.a), ready);
+      var aList = parts("a", idx + 1, it.a);
+      setTimeout(function () { if (!nx.disabled) return; playSeq(aList, ready); }, unknown ? 0 : 900);
     } else {
       setTimeout(ready, 1200);
     }
@@ -172,7 +208,8 @@
     var origResult = window.showResult;
     window.showResult = function () {
       var r = origResult.apply(this, arguments);
-      try { showQuote(); } catch (e) {}
+      try { FX.end(); FX.play("tada", 0.8); } catch (e) {}
+      try { setTimeout(function () { try { showQuote(); } catch (e) {} }, 2600); } catch (e) {}
       return r;
     };
   }
