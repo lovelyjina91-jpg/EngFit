@@ -109,11 +109,12 @@
       if (my !== playToken) return;
       if (i >= names.length) { if (done) done(); return; }
       var n = names[i++];
-      aud.onended = next; aud.onerror = next;
-      guard = setTimeout(next, 20000);
+      // 소리가 안 나와도(파일 오류·재생 막힘) 바로 풀리지 않게 최소 2.5초는 잠가 둔다 (원장님 11/13 "다 듣기 전에는 아무것도 못 누르게")
+      aud.onended = next; aud.onerror = function () { if (my !== playToken) return; clearTimeout(guard); guard = setTimeout(next, 2500); };
+      guard = setTimeout(next, 45000);
       aud.src = url(n);
       var p = aud.play();
-      if (p && p.catch) p.catch(function () { if (my === playToken) { clearTimeout(guard); guard = setTimeout(next, 1500); } });
+      if (p && p.catch) p.catch(function () { if (my === playToken) { clearTimeout(guard); guard = setTimeout(next, 2500); } });
     }
     next();
   }
@@ -127,13 +128,68 @@
     }
   }
 
+  // ── 개념 먼저 (원장님 11/13 유정완: "지나선생님 목소리로 개념설명 하고 클리닉 진행") ──
+  // voice.js 의 concepts:[{at:문항번호(0부터), title, body(html), c:소리 파일 수}] → 그 문항 앞에서 개념 카드 + cN(_k).mp3 (지나쌤 한글)
+  //   끝까지 다 들어야 「이해했어요! 문제 풀기 ▶」가 열린다. 그동안 문제·보기·모름은 안 보이고 못 누른다.
+  var CONC = CV.concepts || [], cdone = {};
+  if (CONC.length) {
+    var cst = document.createElement("style");
+    cst.textContent = ".cv-concept{margin:6px 0 10px;border-radius:18px;padding:16px 16px 14px;background:linear-gradient(135deg,#eef4ff,#f3fbf6);border:2px solid #b9cdf3}" +
+      ".cv-concept .h{font-size:13px;font-weight:800;color:#3a5bb8;letter-spacing:.3px}" +
+      ".cv-concept .t{font-size:21px;font-weight:900;color:#1e2b55;margin:4px 0 10px;line-height:1.35}" +
+      ".cv-concept .b{font-size:16.5px;line-height:1.7;color:#24304f}.cv-concept .b b{color:#c0392b}.cv-concept .b .ex{display:block;background:#fff;border-radius:10px;padding:6px 10px;margin:6px 0;font-weight:700;color:#1e2b55}" +
+      ".cv-concept .b ul{margin:4px 0 4px 18px;padding:0}.cv-concept .b li{margin:3px 0}" +
+      ".cv-hide{display:none!important}";
+    document.head.appendChild(cst);
+  }
+  function conceptAt(idx) { for (var i = 0; i < CONC.length; i++) if (CONC[i].at === idx && !cdone[i]) return i; return -1; }
+  function hideQ(on) {
+    ["qtext", "choices", "part"].forEach(function (id) { var e = document.getElementById(id); if (e) e.classList.toggle("cv-hide", on); });
+    document.querySelectorAll(".cv-bar").forEach(function (b) { b.classList.toggle("cv-hide", on); });
+  }
+  function showConcept(ci, pre, done) {
+    var C = CONC[ci], q = document.getElementById("qtext");
+    var box = document.createElement("div"); box.className = "cv-concept";
+    box.innerHTML = '<div class="h">📘 개념 먼저! (' + (ci + 1) + " / " + CONC.length + ') · 끝까지 듣고 문제 풀어요</div><div class="t"></div><div class="b"></div>';
+    box.querySelector(".t").textContent = C.title;
+    box.querySelector(".b").innerHTML = C.body;
+    var bar = document.createElement("div"); bar.className = "cv-bar";
+    var again = document.createElement("button"); again.className = "cv-btn"; again.type = "button"; again.textContent = "🔊 설명 다시 듣기";
+    bar.appendChild(again); box.appendChild(bar);
+    var go = document.createElement("button"); go.className = "cv-next"; go.type = "button";
+    box.appendChild(go);
+    q.parentNode.insertBefore(box, q);
+    var list = parts("c", ci + 1, C.c || 1);
+    function run(l) {
+      go.disabled = true; go.textContent = "👂 선생님 설명 듣는 중…"; again.disabled = true;
+      playSeq(l, function () { go.disabled = false; go.textContent = "이해했어요! 문제 풀기 ▶"; again.disabled = false; });
+    }
+    again.onclick = function () { run(list); };
+    go.onclick = function () { if (go.disabled) return; stop(); box.remove(); done(); };
+    run(pre.concat(list));
+    try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
+  }
+
   var origShow = window.showQuestion;
   window.showQuestion = function () {
     var r = origShow.apply(this, arguments);
-    var idx = window.current, it = items[idx] || {}, n = idx + 1;
+    var idx = window.current;
+    if (!FX.started()) FX.start();
+    var ci = conceptAt(idx);
+    if (ci >= 0) {
+      cdone[ci] = 1;
+      var pre = []; if (!greeted) { greeted = true; pre.push("g"); }
+      hideQ(true);
+      showConcept(ci, pre, function () { hideQ(false); startQ(idx); });
+      return r;
+    }
+    startQ(idx);
+    return r;
+  };
+  function startQ(idx) {
+    var it = items[idx] || {}, n = idx + 1;
     var seq = [];
     if (!greeted) { greeted = true; seq.push("g"); }
-    if (!FX.started()) FX.start();
     if (it.k) seq.push("k" + n);
     seq = seq.concat(parts("q", n, it.q));
     var box = document.getElementById("choices");
@@ -158,8 +214,7 @@
     }
     again.onclick = function () { run(qseq); };
     if (seq.length || PAGE) run(seq); else hint.style.display = "none";
-    return r;
-  };
+  }
 
   var origPick = window.pick;
   window.pick = function (choice, mark, unknown) {
