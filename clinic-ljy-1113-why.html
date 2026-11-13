@@ -320,9 +320,15 @@ var SAVE_KEY = "engfit-" + QUIZ_ID;
 var TEACHER_MODE = false;
 try { TEACHER_MODE = new URLSearchParams(location.search).get("t") === "1"; } catch (e) {}
 
-/* ══════ 읽어 주기 (기기 음성) ══════
-   한국어 = 기기 한국어 음성, 영어 낱말·문장 = 기기 영어 음성(가능하면 Google US English).
+/* ══════ 읽어 주기 ══════
+   한국어 설명 = 선생님 목소리 음성 파일(audio/ko/….mp3, 한 줄에 파일 하나)
+   영어 문장   = 영어 목소리 음성 파일(audio/en/….mp3)
+   파일이 안 되면 기기 음성으로 (한국어 = 기기 한국어 음성, 영어 = 기기 영어 음성).
    소리가 안 나는 기기·소리 끔에서도 글이 한 줄씩 나오고, 읽는 시간만큼 기다린 뒤 [다음]이 풀려요. */
+var AUD = {"ko":{"주연아, 안녕! 틀린 문제를 하나씩 같이 살펴보자.":"6d0f61ac79df80e7","바른 문장을 들어 봐요.":"c9856a8985a8d621","이제 바른 문장을 영어로 써 봐요.":"1102738279418d6a","잘했어요!":"2e8c2ff83ef58db5","괜찮아요. 바른 문장을 보고 그대로 따라 써 봐요.":"fc680539c8732cd3","아쉬워요, 힌트를 보고 한 번 더 써 봐요.":"b8e91736ae8c9296","수고했어요! 결과 복사하기를 눌러서 카톡으로 선생님께 꼭 보내 주세요.":"8ae41bd56adff4e5","tall은 키가 큰, 이라는 모습을 나타내는 말이에요.":"244e072997da9c58","모습이나 상태를 말할 때는 be동사를 써요. is는 ~한 상태이다, 라는 뜻이에요.":"42c9fc0d774604f4","likes는 좋아하다, 라는 행동이라서 뒤에 tall이 오면 뜻이 맞지 않아요.":"80793c0285f87f6e","좋아하다는 행동이에요. 행동은 일반동사 하나로 써요.":"cf4c58cf19642dd6","am은 be동사예요. be동사와 일반동사는 한 자리에 같이 쓰지 않아요.":"c54a28e6de82b92a","주어가 I라서 like를 그대로 써요.":"25a359e83ae697a3","Jiho는 한 명이라서 동사에 s를 붙여요.":"859e488b1341abba","study는 자음 d 다음에 y로 끝나요. 이럴 때는 y를 i로 바꾸고 es를 붙여요.":"29d93e1774bd54f1","그래서 study는 studies가 돼요.":"c074b900deb6a7b5","Sora and Jin은 두 사람, 여럿이에요.":"13019a373b1abecc","주어가 여럿이면 동사에 s를 붙이지 않고 원형을 써요.":"99e6813af3784c2d","그래서 rides가 아니라 ride예요.":"0067ab4a7a9b924e","먼저 진짜 주어를 찾아요. next door는 꾸미는 말이라 괄호로 묶어요.":"df8c0ae036818978","진짜 주어는 kids, 아이들이에요. 여럿이에요.":"aa6f2bf4ad286612","여럿 주어 뒤에는 원형 sing을 써요.":"97483fa2ba814f8a","They는 여럿이에요.":"2a2f6a6f058ce12c","has는 한 명 주어일 때만 써요. 여럿 주어와 I, you는 have를 써요.":"a6b20ff54e226c94","이 문제는 고친 낱말만이 아니라 문장 전체를 써야 해요.":"80401c2e23754962","가르치다는 행동이라서 is를 빼고 일반동사 하나만 써요.":"b09dac9975e08af4","My uncle은 한 명이고, teach는 ch로 끝나서 es를 붙여 teaches가 돼요.":"ecd5dc515dae0ab3","on Fridays는 금요일마다, 늘 하는 일이라서 현재형으로 써요. watched는 지난 일을 말할 때 쓰는 모양이에요.":"424690f1eb2225c9","watch는 ch로 끝나서 s가 아니라 es를 붙여요. 그래서 watches.":"9ed9d8c5a939f590","그리고 이 문제는 문장 전체를 써야 해요.":"9cf03d30acbc9ec4","carries로 고친 건 맞았어요!":"29dedf21d5053340","그런데 이 문제는 문장 전체를 쓰라는 조건이 있어요. 낱말만 쓰면 조건을 지키지 않은 거예요.":"7286692844a7890b","carry는 자음 r 다음에 y라서, y를 i로 바꾸고 es를 붙여요.":"04aca2fe4fb01cc3","틀린 곳은 friends가 아니라 동사예요. friends는 이미 여럿을 나타내는 바른 모양이에요.":"b4f4c42391d05682","주어가 여럿이면 동사는 원형이에요. plays에서 s를 빼서 play.":"397e181326aa4ca2","has로 고친 건 맞았어요!":"bda0c4d660c03de2","이 문제는 문장 전체를 써야 해요.":"d01802a3a943bf8a","Yena는 한 명이라서 has를 써요.":"5d4bc2776290865d","sleeps로 고친 건 맞았어요!":"68eadca2300a8bd4","every afternoon, 매일 오후 하는 일이라서 현재형 sleeps를 써요.":"d9be42cbcd556bec","이 문제도 문장 전체를 써야 해요.":"0d1115d5de1d1a16","비어 있는 문제예요. 같이 하나씩 만들어 봐요.":"98c4b5b7af895989","주어는 그 소녀, the girl이에요. 한 명이에요.":"a76b094b4e8908b8","쓰다는 write예요. 한 명 주어라서 writes.":"81f5639539333d2e","뒤에 in her diary, every day를 붙이면 8단어가 돼요.":"b31966f6e5149f84","Jisu는 한 명이라서 study에 s를 붙여요.":"9f66265bee3da6c1","study는 자음 + y로 끝나요. y를 i로 바꾸고 es를 붙여서 studies.":"16deb16ba9a6efff","이름은 Jisu로 써요.":"b70995e9fb6379ff","친구들은 여럿이에요. 그래서 friend에 s를 붙여 friends.":"3e86e2f40b5ba124","주어가 여럿이니까 동사는 원형 play를 그대로 써요.":"6903e96d29e881fe","그러면 6단어가 맞아요.":"bb7b70e8846dfae1","문을 연다는 행동이에요. 행동은 일반동사 하나만 써요. 그래서 is는 빼요.":"be4fd85945dc67b9","the science museum은 하나라서 open에 s를 붙여 opens.":"74a2113129ad89fb","낱말 순서는 잘 맞췄어요!":"e9e41d74cd026080","영어 문장은 첫 글자를 대문자로 시작해요. he가 아니라 He.":"1573c0e2ab154a33","요일 이름도 언제나 대문자로 시작해요. Sunday.":"fc881c75b7063032","-s 붙이는 법은 동사의 끝 모양에 따라 달라요.":"ac6a2118a7baec07","study는 자음 + y라서 studies가 맞아요. studys는 틀린 모양이에요.":"1b14892ea49f4241","play는 모음 + y라서 그냥 s를 붙여 plays. go는 o로 끝나서 goes.":"dd364bf3b0e10857","watch는 ch로 끝나서 es를 붙여 watches. 그래서 정답은 2번이에요.":"c841bebcc78aaac5","이제 watches를 넣은 문장을 써 봐요.":"fbd14c173ec22d2a","이 문제는 문장 전체를 써야 하는데, 낱말만 써서 조건을 지키지 못했어요.":"d826a4f19c0d878a","그리고 틀린 곳은 하나만 고쳐요. cousins는 그대로 두고 동사만 고쳐요.":"cec75d55169dd7c6","cousins는 여럿이라서 동사는 원형 live.":"a24b15175b3e82cf","가다는 행동이에요. 행동 문장에는 be동사를 같이 쓰지 않아요.":"8338795129ae37e6","그래서 is를 are로 바꾸는 게 아니라, is를 빼야 해요.":"ac304e53f2e08098","Junsu는 한 명이라서 goes는 그대로 둬요.":"50441868e14fd477","Yuna는 한 명이라서 carry에 s를 붙여요.":"f41ac120a53dbf74","carry는 자음 r 다음에 y예요. y를 i로 바꾸고 es를 붙여 carries.":"92751aa85519b2cc","are로 고친 건 맞았어요! 다만 문장 전체를 써야 하는 문제예요.":"bf10a68ab7589bc0","There 뒤의 be동사는 뒤에 오는 말을 보고 골라요.":"4866201851fc4a8e","four boys는 여럿이라서 are를 써요.":"aff66aa19a855c99","My dad는 한 명이에요.":"6255b6bb7bf3b47b","한 명 주어 뒤의 일반동사에는 s를 붙여요. drink는 drinks가 돼요.":"3af8a2b66806e324","the students는 여럿이라서 동사는 원형 go예요. goes는 한 명 주어일 때 써요.":"54befd2212dd17b6","Minji는 한 명이라서 practice에 s를 붙여 practices.":"a3a820bce4bb22ad","매일은 every day, 두 낱말로 띄어 써요. 그래야 6단어가 돼요.":"b8599ec611466265","이름은 Minji로 써요.":"e272a65fac8b5011","Sumin은 한 명이라서 study에 s가 붙어요.":"147c2b9f5f3f5740","study는 자음 + y로 끝나서, y를 i로 바꾸고 es를 붙여 studies.":"7aa1b231521e630d","주어가 I예요. I와 you, 그리고 여럿 주어는 don't를 써요.":"aded414fb7712d22","doesn't는 he, she, Mina처럼 한 명 주어일 때만 써요.":"c5f033fde3e2b788","주어가 you예요. you로 물을 때는 Do를 맨 앞에 써요.":"53e101db662c0dd4","Does는 he, she, Jina처럼 한 명 주어일 때 써요.":"efe516a70609081d","여기서 clean은 깨끗한, 이라는 상태예요.":"78bd68f9d5c8ffa5","상태 문장은 be동사로 써요. is는 ~한 상태이다, 라는 뜻이에요. 아니라고 할 때는 isn't.":"2c2e33df3c797a05","doesn't는 행동, 일반동사 문장에서만 써요.":"68ae0d95f510f8a4","in my family는 꾸미는 말이에요. 괄호로 묶어요.":"a875f3deae9432bc","진짜 주어는 kids, 여럿이에요. family를 보고 고르지 않아요.":"84726530990b232d","여럿 주어는 don't를 써요.":"7f032128d5db3309","our는 우리의, 라는 뜻이라서 주어가 여럿처럼 보일 수 있어요.":"445d2d51a86daf3a","그런데 진짜 주어는 cat, 고양이 한 마리예요.":"13c1fd972544151f","한 마리 주어는 doesn't를 써요.":"01fc4f6a82c73c54","I는 한 사람이지만, s를 붙이지 않는 주어예요.":"e5583a6777b8ff8e","그래서 I는 언제나 don't와 짝이에요.":"49bfb3072955864c","your parents, 부모님은 두 분이에요. 여럿이에요.":"9da9b1c7b0274b77","여럿 주어로 물을 때는 Do를 맨 앞에 써요.":"190f39f6265db4fb","주어는 you예요.":"014dabd72f33ab55","you는 언제나 Do와 짝이에요.":"c16324f07892f049","Does를 맨 앞에 쓴 건 좋았어요!":"318356d27ffe1923","그런데 주어 Minsu가 빠졌어요. 질문은 Does, 주어, 동사원형 순서예요.":"3ddc6b0bb0ce6835","the bakery, 빵집은 하나예요.":"84b3bdb7811b93d4","하나, 한 명 주어는 doesn't를 써요. 뒤에는 원형 sell.":"0691dafb186923a4","Does the bakery까지는 맞았어요!":"30642d5dc23cd0b9","그런데 동사 sell이 빠졌어요. Does, 주어, 동사원형 순서로 써요.":"7fbc7afca257581f","이 문장에는 is가 있어요. is가 있는 상태 문장이에요.":"697b7f49daf117c6","be동사 문장으로 물을 때는 Does를 쓰지 않고, is를 맨 앞으로 옮겨요.":"12580cf73c29316c","the도 빠뜨리지 않아요.":"b7ef3667ab189622","cold는 차가운, 이라는 상태예요. 행동이 아니에요.":"888f8ca16b9ba08e","상태 문장은 be동사로 써요. 아니라고 할 때는 isn't.":"19d4b55359181a4c","don't와 doesn't는 행동 문장에서만 써요.":"c9056ebf7a08e0fc","낱말은 모두 맞았어요!":"1c4e2e53f815db87","묻는 문장은 끝에 꼭 물음표를 붙여요.":"d59e20b5d5ba354a","Does, 주어, 동사원형 순서가 잘 맞았어요!":"19e02aa3798d2e06","묻는 문장이라서 끝에 물음표를 붙여야 해요.":"43b93baf630716e4","묻는 문장이라서 끝에 물음표를 붙여요. 첫 글자 Do도 대문자예요.":"f8568189bdc941b0","질문은 Does, 주어, 동사원형 순서예요.":"a325e194360e5452","주어 the train이 Does 바로 뒤에 와야 해요. 그다음에 stop.":"ca422569e7e0d16f","끝에는 물음표를 붙여요.":"c9d02f588cf061c4","the students in my class가 한 덩어리 주어예요. in my class는 students 바로 뒤에 붙어요.":"d56d15e56aed8690","주어 덩어리 다음에 don't, 그다음에 동사 wear를 써요.":"5645a6478c8327be","like는 좋아하다, 행동이에요. 그래서 isn't, aren't는 아니에요.":"9442b3a1ce0732ad","my sister는 한 명이에요. 한 명 주어는 doesn't를 써요.":"bb609a2a172da9d4","정답은 2번이에요.":"6ac311b58a472bd8","play는 행동이라서 Is, Are는 아니에요.":"fb9fd786c1b8914b","your friends는 여럿이에요. 여럿 주어로 물을 때는 Do를 써요.":"7d0e2742deaabf50","정답은 1번이에요.":"e600c8dde707ad5e","Jun은 한 명이라서 study에 s가 붙어요. 그래서 3번은 아니에요.":"c36120afb04ea3e8","study는 자음 + y라서 studies. 1번 studys는 틀린 모양이에요.":"5063e30a0a759607","공부하다는 행동이라서 is를 같이 쓰지 않아요. 그래서 4번도 아니에요.":"d71d5db881afe88a","the students는 여럿이에요. 여럿 주어로 물을 때는 Does가 아니라 Do를 써요.":"360d9c0094dac693","그리고 끝에는 물음표를 붙여요.":"56d7286e9c636a14","일어나다는 행동이에요. 행동 문장에서 ~하지 않는다는 isn't가 아니라 don't, doesn't로 써요.":"d9cb44a924ee3297","Minho는 한 명이라서 doesn't. 뒤에는 원형 get을 써요.":"7d3c3cc250119d28","big은 상태라서 isn't를 쓴 건 잘했어요!":"e826dfc279660d04","near my house는 park를 꾸미는 말이에요. park 바로 뒤에 붙여서 주어 덩어리를 만들어요.":"3162de1ab3e54e66","The park near my house가 주어 덩어리, 그다음에 isn't big을 써요.":"d5d88262473c753c","children은 child의 여럿 모양이에요. s가 없어도 여럿이에요.":"beac72102b9df08b","children은 여럿이라서 Does가 아니라 Do로 물어요.":"ab61293db121821f"},"en":{"Our coach is tall.":"1a6076404388894c","I like spicy noodles.":"a5cdc2098b1cb751","Jiho studies math after dinner.":"858e0ad0e8619454","Sora and Jin ride their bikes to school.":"a6127b4c3ac56a50","The kids next door sing very well.":"bddd9dfe9b2ba4e8","They have a big dog.":"a19c734f73fe3f92","My uncle teaches English.":"5dd8d82ccbe5ebd5","Jimin watches movies on Fridays.":"1e1fa6ac10a3c61f","The boy carries a big box.":"200553d90a2b86cf","My friends play basketball in the park.":"160e9108f62eed7a","Yena has two cats.":"c5a69b858a63deb4","Our dog sleeps on the sofa every afternoon.":"b9977c6e36dac2bc","The girl writes in her diary every day.":"e6a55e95a58f24a2","Jisu studies science after dinner.":"a7cf8bd38596024e","My friends play badminton on Saturdays.":"ccce3bc62de7ef32","The science museum opens at nine.":"0affb74b1bd71d6f","He washes his car every Sunday.":"ae037d648f8c2668","Ken watches the news.":"64010e49f9d54b04","My cousins live in Gangneung.":"2934abf2c31e5219","Junsu goes to the gym every day.":"ab181d2efb264d20","Yuna carries an umbrella in her bag.":"5622a7eaca3a8c94","There are four boys in the gym.":"81a17da3e998ce19","My dad drinks green tea every morning.":"e5c6ab936ced95bd","The students go to the library after school.":"9afb70651ef0c6ed","Minji practices the piano every day.":"216df5deab580446","Sumin studies Japanese after school.":"4bca56e979d27095","I don't drink milk tea.":"f8c51d86991ac826","Do you ride the subway?":"8a88f170fcad1719","The hallway isn't clean.":"a32fe998345449d3","The kids in my family don't go to bed early.":"4f2a30cf07fc74c9","Our cat doesn't like water.":"4127063e574abd85","I don't wear glasses.":"e634db8f79f91107","Do your parents cook together?":"4bb21c0e43d7b8d4","Do you need an umbrella?":"7a23dfb547d652bf","Does Minsu play computer games?":"cb20ca1f7fa70ab4","The bakery doesn't sell cakes.":"6b0e88319368c90a","Does the bakery sell cakes?":"6e198bfa7d437b9a","Is the test hard?":"9e07bb59ba7ce7da","The lemonade isn't cold.":"419e327ab551874c","Do you like history?":"4d3946d2fd829f4a","Does Jiho play soccer after school?":"810cdf3316303a74","Do your parents speak English?":"61cd5caa09f9fea5","Does the train stop at this station?":"07da828763cfdbf7","The students in my class don't wear uniforms.":"8722ef5480269e66","My sister doesn't like cucumbers.":"df274c560298ec96","Do your friends play online games?":"094150e5e4ef47cb","Jun studies late at night.":"0c2009b47db3476c","Do the students eat lunch at noon?":"bbc576bdc697641a","Minho doesn't get up early.":"d1e2934f69d62212","The park near my house isn't big.":"38c95ce453c138dc","The children don't walk to school.":"73f72b4635cb960a","Do the children walk to school?":"9460986d9668f5ca"}};
+var AU_DIR = "audio/";
+var AU = { el: null, pre: null, seen: {}, fails: 0, dead: false };
+try { if (typeof Audio !== "undefined") { AU.el = new Audio(); AU.el.preload = "auto"; } } catch (eA) { AU.el = null; }
 var SP = { ok: ("speechSynthesis" in window) && (typeof SpeechSynthesisUtterance !== "undefined"),
            ko: null, en: null, loaded: false, muted: false, dead: false, fails: 0, token: 0, pending: [], keep: [] };
 var EN_PREF = [/Google US English/i, /Samantha/i, /Natural/i, /Enhanced/i, /Premium/i, /Ava|Allison|Aria|Jenny|Zira/i, /Google/i];
@@ -356,6 +362,7 @@ function canSpeak(lang) {
 function voiceNote() {
   var t = "";
   if (SP.muted) t = "소리를 껐어요. 글을 끝까지 읽고 넘어가요.";
+  else if (AU.el && !AU.dead) t = "";
   else if (!SP.ok || SP.dead) t = "이 기기에서는 읽어 주는 소리가 나오지 않아서, 글로 보여 줄게요. 끝까지 읽어요.";
   else if (SP.loaded && !SP.ko && !SP.en) t = "이 기기에는 한국어·영어 음성이 없어서, 글로 보여 줄게요.";
   else if (SP.loaded && !SP.ko) t = "이 기기에는 한국어 음성이 없어서, 설명은 글로 보여 주고 영어만 읽어 줄게요.";
@@ -411,7 +418,77 @@ function speak(text, lang) {
     } catch (e) { silent(); }
   });
 }
-/* 한 줄을 한국어 조각 / 영어 조각으로 나눠 차례로 읽기 */
+/* ── 음성 파일 ── */
+function clipUrl(lang, text) { var m = AUD[lang]; return m && Object.prototype.hasOwnProperty.call(m, text) ? AU_DIR + lang + "/" + m[text] + ".mp3" : null; }
+function preload(url) {
+  if (!url || !AU.el || AU.dead || SP.muted || AU.seen[url]) return;
+  AU.seen[url] = 1;
+  try { var p = new Audio(); p.preload = "auto"; p.src = url; AU.pre = p; } catch (e) {}
+}
+function unlockAudio() {         /* 시작 터치 안에서 한 번 소리 없이 재생 → 아이패드 사파리가 이후 재생을 허락함 */
+  if (!AU.el) return;
+  try {
+    var n = 400, b = "RIFF" + le(36 + n, 4) + "WAVEfmt " + le(16, 4) + le(1, 2) + le(1, 2) + le(8000, 4) + le(8000, 4) + le(1, 2) + le(8, 2) + "data" + le(n, 4);
+    for (var i = 0; i < n; i++) b += String.fromCharCode(128);
+    AU.el.muted = false; AU.el.src = "data:audio/wav;base64," + btoa(b);
+    var p = AU.el.play(); if (p && p.catch) p.catch(function () {});
+  } catch (e) {}
+  function le(v, k) { var s = ""; for (var j = 0; j < k; j++) s += String.fromCharCode((v >> (8 * j)) & 255); return s; }
+}
+/* 파일 하나 재생.  "ok" 끝까지 재생 · "stop" 중간에 멈춤 · "fail" 시작하지 못함(→ 기기 음성으로) */
+function playClip(url) {
+  var a = AU.el, my = SP.token;
+  return new Promise(function (res) {
+    var done = false, started = false, timers = [];
+    function fin(r) {
+      if (done) return; done = true;
+      timers.forEach(clearTimeout);
+      if (a.onplaying === onplaying) a.onplaying = null;
+      if (a.onended === onended) a.onended = null;
+      if (a.onerror === onerror) a.onerror = null;
+      var i = SP.pending.indexOf(stop); if (i >= 0) SP.pending.splice(i, 1);
+      if (r === "fail") { try { a.pause(); } catch (e) {} }
+      res(r);
+    }
+    function stop() { try { a.pause(); } catch (e) {} fin(my === SP.token ? "ok" : "stop"); }
+    function onplaying() {
+      if (started || done) return; started = true; AU.fails = 0;
+      var d = (isFinite(a.duration) && a.duration > 0) ? a.duration * 1000 : 9000;
+      timers.push(setTimeout(function () { fin("ok"); }, d * 1.6 + 4000));      /* 끝 신호가 안 오는 기기 대비 */
+    }
+    function onended() { fin("ok"); }
+    function onerror() { fin(started ? "ok" : "fail"); }
+    SP.pending.push(stop);
+    try {
+      a.onplaying = onplaying; a.onended = onended; a.onerror = onerror;
+      a.muted = SP.muted; a.src = url;
+      try { a.playbackRate = 1; } catch (e2) {}
+      var p = a.play();
+      if (p && p.catch) p.catch(function () { if (!started) fin("fail"); });
+    } catch (e) { fin("fail"); return; }
+    timers.push(setTimeout(function () { if (!started && !done) { try { a.pause(); } catch (e) {} fin("fail"); } }, 5000));
+  });
+}
+/* 한 줄 읽기:  음성 파일 → (안 되면) 기기 음성 → (그것도 안 되면) 글로만.  끝까지 읽으면 true, 중간에 멈추면 false */
+function sayClip(lang, t, fallback) {
+  var url = clipUrl(lang, t), my = SP.token;
+  if (!url || !AU.el || AU.dead || SP.muted) return fallback();
+  return playClip(url).then(function (r) {
+    if (r === "ok") return my === SP.token;
+    if (r === "stop") return false;
+    AU.fails++; if (AU.fails >= 3) { AU.dead = true; voiceNote(); }
+    return my === SP.token ? fallback() : false;
+  });
+}
+function sayKo(t) { return sayClip("ko", t, function () { return speakMixed(t); }); }
+function sayEn(t) { return sayClip("en", t, function () { return speak(t, "en"); }); }
+function preloadItem(k) {        /* 다음에 나올 파일을 미리 받아 둠 */
+  var it = ITEMS[k]; if (!it) return;
+  it.say.forEach(function (t) { preload(clipUrl("ko", t)); });
+  preload(clipUrl("en", it.ans));
+}
+
+/* 한 줄을 한국어 조각 / 영어 조각으로 나눠 차례로 읽기 (음성 파일을 못 쓸 때) */
 var EN_RUN = /[A-Za-z][A-Za-z'’\-]*(?:[ ,.?!]+[A-Za-z][A-Za-z'’\-]*)*[.?!]?/g;
 function splitLang(t) {
   var out = [], last = 0, m;
@@ -509,6 +586,7 @@ function renderStart() {
     if (s2 && s2.name === studentName && s2.log && s2.log.length > 0 && s2.log.length < ITEMS.length) {
       answersLog = s2.log; idx = s2.log.length; elapsedBefore = s2.elapsed || 0;
     }
+    unlockAudio();
     try { if (SP.ok) { var w = new SpeechSynthesisUtterance(" "); w.volume = 0; window.speechSynthesis.speak(w); } } catch (e) {}   /* 아이패드: 첫 터치에서 음성 허락 */
     $("top").classList.remove("hidden"); $("bar").classList.remove("hidden");
     showExplain();
@@ -541,7 +619,8 @@ function narrate(first, lk) {
   stopAll();
   var it = ITEMS[idx], tk = SP.token;
   var lines = stage.querySelectorAll(".ln"), al = $("ansline");
-  var intro = first && idx === 0 && !answersLog.length ? speakMixed(CALL + ", 안녕! 틀린 문제를 하나씩 같이 살펴보자.") : Promise.resolve(true);
+  var intro = first && idx === 0 && !answersLog.length ? sayKo(CALL + ", 안녕! 틀린 문제를 하나씩 같이 살펴보자.") : Promise.resolve(true);
+  preloadItem(idx);
   var p = intro.then(function (g) { return g && wait(250); });
   it.say.forEach(function (t, i) {
     p = p.then(function (g) {
@@ -549,7 +628,7 @@ function narrate(first, lk) {
       for (var k = 0; k < lines.length; k++) lines[k].classList.remove("hot");
       lines[i].classList.add("on", "hot");
       try { lines[i].scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {}
-      return speakMixed(t).then(function (g2) { return g2 && wait(200); });
+      return sayKo(t).then(function (g2) { return g2 && wait(200); });
     });
   });
   p.then(function (g) {
@@ -557,7 +636,7 @@ function narrate(first, lk) {
     for (var k = 0; k < lines.length; k++) lines[k].classList.remove("hot");
     al.classList.add("on");
     try { al.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {}
-    return speak("바른 문장을 들어 봐요.", "ko").then(function (g2) { return g2 && speak(it.ans, "en"); });
+    return sayKo("바른 문장을 들어 봐요.").then(function (g2) { return g2 && sayEn(it.ans); });
   }).then(function (g) { if (g && lk && tk === SP.token) unlockNext(lk); });
 }
 
@@ -611,7 +690,7 @@ function showWrite() {
   $("check-btn").addEventListener("click", check);
   inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); check(); } });
   setTimeout(function () { try { inp.focus(); } catch (e) {} }, 150);
-  speak("이제 바른 문장을 영어로 써 봐요.", "ko");
+  sayKo("이제 바른 문장을 영어로 써 봐요.");
 }
 function check() {
   var it = ITEMS[idx], inp = $("ans-in"), fb = $("fb"), v = inp.value;
@@ -629,18 +708,19 @@ function check() {
     var lk = lockNext(idx < ITEMS.length ? "다음 문제 ▶" : "결과 보기 ▶");
     stopAll();
     var tk = SP.token;
-    speak("잘했어요!", "ko").then(function (g) { return g && speak(it.ans, "en"); }).then(function () { if (tk === SP.token) unlockNext(lk); });
+    preloadItem(idx);
+    sayKo("잘했어요!").then(function (g) { return g && sayEn(it.ans); }).then(function () { if (tk === SP.token) unlockNext(lk); });
     var ab = $("again-btn"); ab.classList.remove("hidden");
-    ab.onclick = function () { stopAll(); speak(it.ans, "en"); };
+    ab.onclick = function () { stopAll(); sayEn(it.ans); };
     return;
   }
   inp.classList.remove("bad"); void inp.offsetWidth; inp.classList.add("bad");
   if (tries >= 3) {
     fb.innerHTML = '<span class="bad">괜찮아요. 바른 문장을 보고 그대로 따라 써 봐요.</span><span class="show">' + esc(it.ans) + "</span>";
-    stopAll(); speak("괜찮아요. 바른 문장을 보고 그대로 따라 써 봐요.", "ko").then(function (g) { return g && speak(it.ans, "en"); });
+    stopAll(); sayKo("괜찮아요. 바른 문장을 보고 그대로 따라 써 봐요.").then(function (g) { return g && sayEn(it.ans); });
   } else {
     fb.innerHTML = '<span class="bad">아쉬워요, 한 번 더 써 봐요.</span><br>' + hintFor(v, it);
-    stopAll(); speak("아쉬워요, 힌트를 보고 한 번 더 써 봐요.", "ko");
+    stopAll(); sayKo("아쉬워요, 힌트를 보고 한 번 더 써 봐요.");
   }
   inp.focus();
 }
@@ -692,7 +772,7 @@ function showResult() {
   };
   if (TEACHER_MODE) { _engfitSent = true; var st = $("submit-status"); st.textContent = "(선생님 들어 보기 모드: 결과를 보내지 않아요)"; st.style.color = "#888"; }
   else engfitSubmitWithStatus(payload);
-  wait(300).then(function (g) { if (g) speak("수고했어요! 결과 복사하기를 눌러서 카톡으로 선생님께 꼭 보내 주세요.", "ko"); });
+  wait(300).then(function (g) { if (g) sayKo("수고했어요! 결과 복사하기를 눌러서 카톡으로 선생님께 꼭 보내 주세요."); });
 }
 
 $("snd-btn").addEventListener("click", function () {
@@ -700,6 +780,7 @@ $("snd-btn").addEventListener("click", function () {
   this.textContent = SP.muted ? "소리 끔" : "🔊 소리 켬";
   this.classList.toggle("off", SP.muted);
   if (SP.muted && SP.ok) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+  if (AU.el) { try { AU.el.muted = SP.muted; } catch (e) {} }
   voiceNote();
 });
 renderStart();
