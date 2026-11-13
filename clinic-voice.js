@@ -17,7 +17,8 @@
   var FXV = "20261113b";
   var FX = (function () {
     var on = true; try { on = localStorage.getItem("engfit-bgm") !== "off"; } catch (e) {}
-    var bgm = new Audio("audio/fx/bgm.mp3?v=" + FXV); bgm.loop = true; bgm.volume = 0.13;
+    var bgmName = "bgm"; try { var qb = new URLSearchParams(location.search).get("bgm"); if (qb === "1") bgmName = "bgm_a"; else if (qb === "2") bgmName = "bgm_b"; } catch (e) {}
+    var bgm = new Audio("audio/fx/" + bgmName + ".mp3?v=" + FXV); bgm.loop = true; bgm.volume = 0.13;
     var sfx = new Audio(); var speaking = 0, started = false, btn = null;
     function target() { return speaking > 0 ? 0.035 : 0.13; }
     var fadeT = null;
