@@ -314,10 +314,18 @@ function pick(choice) {
   });
   var h = '<div class="exp' + (ok ? "" : " wrong") + '"><b>' + (ok ? "정답! 🎉" : "아쉬워요 — 정답: " + st.answer) + "</b><br>" + st.exp + "</div>";
   if (!ok) h += '<div class="lab2">📖 개념 정리 다시 보기</div>' + CONCEPT_OF[cur];
+  h += '<button class="btn" id="say-btn" style="background:#eef3ff;color:#2c3e8f;margin-bottom:8px">🔊 정답 문장 다시 듣기</button>';
   h += '<button class="btn" id="next-btn">' + (twinNo + 1 < TW.length ? "다음 ▶" : "결과 보기") + "</button>";
   $("fb").innerHTML = h;
-  $("next-btn").addEventListener("click", function () { locked = false; twinNo++; cur++; show(); });
+  playTwin(twinNo + 1);
+  $("say-btn").addEventListener("click", function () { playTwin(twinNo + 1); });
+  $("next-btn").addEventListener("click", function () { stopTwin(); locked = false; twinNo++; cur++; show(); });
 }
+
+/* 원장님 11/14 "태은이 링크도 영어 문장은 정답 누르면 읽어줘" — 답을 고르면 정답 영어 문장을 소리로 (문항마다 다른 목소리, Eleven v4) */
+var twinAud = new Audio();
+function playTwin(n) { try { twinAud.pause(); twinAud.src = "audio/clinic/clinic-hte-1113/t" + n + ".mp3?v=202611140130"; var p = twinAud.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+function stopTwin() { try { twinAud.pause(); } catch (e) {} }
 
 function unknown() {
   if (locked) return; locked = true;
