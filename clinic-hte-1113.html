@@ -350,6 +350,16 @@ function pick(choice) {
   feedback(ok, st);
 }
 
+/* 11/14 원장님 목소리(v4) 칭찬·틀림·모름 한 마디 → 정답 문장. 칭찬은 원장님 선택 전부 3번 */
+var CHEER = { ok: ["praise/p1_3","praise/p2_3","praise/p3_3","praise/p4_3","praise/p5_3","praise/p6_3","praise/p7_3","praise/p8_3","praise/p9_3"], no: ["oops/p1_3","oops/p2_3","oops/p3_1","oops/p4_3","oops/p5_3"], un: ["oops/p6_3","oops/p7_3","oops/p8_3"] };
+var cheerAud = new Audio();
+function cheerHte(kind, done) {
+  var list = CHEER[kind] || [], fin = false;
+  function f() { if (fin) return; fin = true; cheerAud.onended = cheerAud.onerror = null; done(); }
+  if (!list.length) return f();
+  cheerAud.onended = f; cheerAud.onerror = f; setTimeout(f, 4000);
+  try { cheerAud.pause(); cheerAud.src = "audio/fx/" + list[Math.floor(Math.random() * list.length)] + ".mp3?v=1114"; var pr = cheerAud.play(); if (pr && pr.catch) pr.catch(f); } catch (e) { f(); }
+}
 function feedback(ok, st, isUnknown) {
   var h = '<div class="exp' + (ok ? "" : " wrong") + '"><b>' + (ok ? "정답! 🎉" : (isUnknown ? "🤔 괜찮아요! 정답: " : "아쉬워요 — 정답: ") + st.answer) + "</b><br>" + st.exp + "</div>";
   if (!ok) h += '<div class="lab2">📖 개념 정리 다시 보기</div>' + CONCEPT_OF[cur];
@@ -359,7 +369,8 @@ function feedback(ok, st, isUnknown) {
   var nb = $("next-btn"), nLabel = nb.textContent;
   function ready() { nb.disabled = false; nb.style.opacity = ""; nb.textContent = nLabel; }
   function listen() { nb.disabled = true; nb.style.opacity = ".5"; nb.textContent = "👂 정답 문장 듣는 중…"; playTwin(twinNo + 1, ready); }
-  listen();
+  nb.disabled = true; nb.style.opacity = ".5"; nb.textContent = "👂 정답 문장 듣는 중…";
+  cheerHte(isUnknown ? "un" : (ok ? "ok" : "no"), listen);
   $("say-btn").addEventListener("click", listen);
   nb.addEventListener("click", function () { if (nb.disabled) return; stopTwin(); locked = false; twinNo++; cur++; show(); });
 }
@@ -442,6 +453,6 @@ document.getElementById("kakao-btn").addEventListener("click", function () {
 </script>
 <script src="audio/clinic/clinic-hte-1113/voice.js?v=202611140830"></script>
 <script src="audio/quotes/quotes.js?v=202611131425"></script>
-<script src="clinic-voice.js?v=202611141100"></script>
+<script src="clinic-voice.js?v=202611141110"></script>
 </body>
 </html>
