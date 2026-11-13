@@ -1,0 +1,2 @@
+// clinic-jde-1112 읽어 주기: g=원장님 목소리 인사, k=지시문(지나쌤 한글), 단어는 페이지 엠마 소리 3번(pageAudio), a=엠마 단어
+var CLINIC_VOICE={id:"clinic-jde-1112",ver:"202611131425",pageAudio:true,items:[{"k":1,"a":1,"as":"fox"},{"k":1,"a":1,"as":"tent"},{"k":1,"a":1,"as":"mouse"},{"k":1,"a":1,"as":"robot"},{"k":1,"a":1,"as":"watch"},{"k":1,"a":1,"as":"hat"},{"k":1,"a":1,"as":"umbrella"},{"k":1,"a":1,"as":"nut"},{"k":1,"a":1,"as":"rabbit"},{"k":1,"a":1,"as":"wolf"},{"k":1,"a":1,"as":"sock"},{"k":1,"a":1,"as":"kid"},{"k":1,"a":1,"as":"pizza"},{"k":1,"a":1,"as":"jet"},{"k":1,"a":1,"as":"map"}]};

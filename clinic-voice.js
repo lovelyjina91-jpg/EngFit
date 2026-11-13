@@ -6,12 +6,39 @@
    - 페이지의 showQuestion / pick / QUESTIONS / current 를 감싸서 동작 (기존 자동 전송·모름 기록은 그대로) */
 (function () {
   var CV = window.CLINIC_VOICE;
-  if (!CV || !window.QUESTIONS || typeof window.showQuestion !== "function" || typeof window.pick !== "function") return;
+  if (!CV) return;
   var BASE = "audio/clinic/" + CV.id + "/";
   var items = CV.items || [];
   var aud = new Audio();
   var playToken = 0;
   var greeted = false;
+  // 인사·명언만 (사진 클리닉 hte 처럼 QUESTIONS/showQuestion 이 없는 페이지): 첫 화면에서 인사, 결과 화면에서 명언
+  if (CV.greetOnly) {
+    if (typeof window.show === "function") {
+      var origShow0 = window.show;
+      window.show = function () {
+        var r = origShow0.apply(this, arguments);
+        if (!greeted) { greeted = true; aud.src = BASE + "g.mp3?v=" + (CV.ver || "1"); var p = aud.play(); if (p && p.catch) p.catch(function () {}); }
+        return r;
+      };
+    }
+    hookResult();
+    return;
+  }
+  if (!window.QUESTIONS || typeof window.showQuestion !== "function" || typeof window.pick !== "function") return;
+  // 페이지가 단어 소리를 직접 내는 경우(다은 jde: playQ 가 엠마 단어를 3번): 우리 인사·지시문 뒤에 페이지 소리를 이어서, 3번 다 들은 뒤 풀림
+  var PAGE = !!(CV.pageAudio && typeof window.playQ === "function" && window.AUD);
+  var origPlayQ = PAGE ? window.playQ : null, quietPage = false;
+  if (PAGE) {
+    window.playQ = function (i) { if (quietPage) return; return origPlayQ.apply(this, arguments); };
+  }
+  function pageSay(i, done) {
+    var A = window.AUD, n = 0, fin = false, g = setTimeout(end, 9000);
+    function end() { if (fin) return; fin = true; clearTimeout(g); A.removeEventListener("ended", on); A.removeEventListener("error", end); done(); }
+    function on() { n++; if (n >= 3) end(); }
+    A.addEventListener("ended", on); A.addEventListener("error", end);
+    origPlayQ(i);
+  }
 
   var css = document.createElement("style");
   css.textContent =
@@ -36,7 +63,7 @@
     var r = []; for (var i = 1; i <= cnt; i++) r.push(kind + n + "_" + i); return r;
   }
   function url(name) { return BASE + name + ".mp3?v=" + (CV.ver || "1"); }
-  function stop() { playToken++; try { aud.pause(); } catch (e) {} }
+  function stop() { playToken++; try { aud.pause(); } catch (e) {} try { if (PAGE) { clearTimeout(window.REPT); window.AUD.pause(); } } catch (e) {} }
   // 이름 목록을 차례로 재생, 끝나면 done(). 파일이 없거나 재생이 막히면 건너뜀. 안전장치: 한 파일당 최대 20초.
   function playSeq(names, done) {
     stop();
@@ -82,13 +109,18 @@
     bar.appendChild(again); bar.appendChild(hint);
     box.parentNode.insertBefore(bar, box);
     var qseq = seq.filter(function (s) { return s !== "g"; });
-    if (!qseq.length) { again.style.display = "none"; }
+    if (!qseq.length && !PAGE) { again.style.display = "none"; }
     function run(list) {
       setLocked(true); again.disabled = true; hint.style.display = "";
-      playSeq(list, function () { setLocked(false); again.disabled = false; hint.style.display = "none"; });
+      var my;
+      playSeq(list, function () {
+        function open() { if (my !== playToken) return; setLocked(false); again.disabled = false; hint.style.display = "none"; }
+        my = playToken;
+        if (PAGE) pageSay(idx, open); else open();
+      });
     }
     again.onclick = function () { run(qseq); };
-    if (seq.length) run(seq); else hint.style.display = "none";
+    if (seq.length || PAGE) run(seq); else hint.style.display = "none";
     return r;
   };
 
@@ -98,7 +130,8 @@
     var idx = window.current, q = window.QUESTIONS[idx], it = items[idx] || {};
     var advance = null, realST = window.setTimeout;
     window.setTimeout = function (fn, ms) { advance = fn; return 0; };
-    try { origPick.apply(this, arguments); } finally { window.setTimeout = realST; }
+    quietPage = true;
+    try { origPick.apply(this, arguments); } finally { window.setTimeout = realST; quietPage = false; }
     if (!advance) return;
     stop();
     var ok = !unknown && choice === q.answer;
@@ -132,8 +165,10 @@
     try { p.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
   };
 
+  hookResult();
   // 마지막 명언 (audio/quotes/quotes.js 의 ENGFIT_QUOTES, 날짜+퀴즈 이름으로 돌아가며 하나)
-  if (typeof window.showResult === "function") {
+  function hookResult() {
+    if (typeof window.showResult !== "function") return;
     var origResult = window.showResult;
     window.showResult = function () {
       var r = origResult.apply(this, arguments);
