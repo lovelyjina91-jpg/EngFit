@@ -218,6 +218,20 @@
     if (seq.length || PAGE) run(seq); else hint.style.display = "none";
   }
 
+  // 11/14 원장님 목소리(v4) 칭찬·틀림·모름 한 마디 → 그다음 정답 문장. 원장님 선택: 칭찬 전부 3번
+  var CHEER = {
+    ok: ["praise/p1_3", "praise/p2_3", "praise/p3_3", "praise/p4_3", "praise/p5_3", "praise/p6_3", "praise/p7_3", "praise/p8_3", "praise/p9_3"],
+    no: ["oops/p1_3", "oops/p2_3", "oops/p3_1", "oops/p4_3", "oops/p5_3"],
+    un: ["oops/p6_3", "oops/p7_3", "oops/p8_3"]
+  };
+  var vfx = new Audio(); FX.watch(vfx);
+  function cheer(kind, done) {
+    var list = CHEER[kind] || [], fin = false;
+    function f() { if (fin) return; fin = true; vfx.onended = vfx.onerror = null; done(); }
+    if (!list.length) return f();
+    vfx.onended = f; vfx.onerror = f; setTimeout(f, 4000);
+    try { vfx.pause(); vfx.src = "audio/fx/" + list[Math.floor(Math.random() * list.length)] + ".mp3?v=1114"; var pr = vfx.play(); if (pr && pr.catch) pr.catch(f); } catch (e) { f(); }
+  }
   var origPick = window.pick;
   window.pick = function (choice, mark, unknown) {
     if (window.locked) return;
@@ -230,6 +244,7 @@
     stop();
     var ok = !unknown && choice === q.answer;
     if (!unknown) FX.play(ok ? "ding" : "oops", ok ? 0.75 : 0.55);
+    var cheerKind = unknown ? "un" : (ok ? "ok" : "no");
     document.querySelectorAll(".cv-bar").forEach(function (b) { b.remove(); });
     var box = document.getElementById("choices");
     var btns = box.querySelectorAll("button");
@@ -251,9 +266,9 @@
       say.onclick = function () { nx.disabled = true; nx.textContent = "👂 듣는 중…"; playSeq(parts("a", idx + 1, it.a), ready); };
       p.appendChild(say);
       var aList = parts("a", idx + 1, it.a);
-      setTimeout(function () { if (!nx.disabled) return; playSeq(aList, ready); }, unknown ? 0 : 900);
+      setTimeout(function () { cheer(cheerKind, function () { if (!nx.disabled) return; playSeq(aList, ready); }); }, unknown ? 0 : 450);
     } else {
-      setTimeout(ready, 1200);
+      setTimeout(function () { cheer(cheerKind, ready); }, unknown ? 0 : 450);
     }
     nx.onclick = function () { if (nx.disabled) return; stop(); p.remove(); advance(); };
     p.appendChild(nx);
