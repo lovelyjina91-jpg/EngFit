@@ -309,11 +309,17 @@ function show() {
     var u = document.createElement("button"); u.className = "unk"; u.id = "unk-btn"; u.textContent = "🤔 모름";
     u.addEventListener("click", function () { unknown(); });
     box.appendChild(u);
-    /* 문제 읽을 시간(3~8초) 동안 보기·모름 잠금 */
+    /* 원장님 11/14 "태은이도 문제 나오면 영어문장 읽어줘야징" — 지시문(한글)→영어 문장(→영어 보기)을 끝까지 읽어 줄 때까지 보기·모름 잠금 */
     var kids = [].slice.call(box.children); kids.forEach(function (b) { b.disabled = true; b.style.opacity = ".45"; });
-    var tip = document.createElement("div"); tip.style.cssText = "text-align:center;color:#8a6d00;font-weight:700;margin-top:8px"; tip.textContent = "📖 문제를 먼저 끝까지 읽어요…"; box.appendChild(tip);
-    clearTimeout(waitTimer);
-    waitTimer = setTimeout(function () { kids.forEach(function (b) { b.disabled = false; b.style.opacity = ""; }); tip.remove(); }, Math.min(8, Math.max(3, Math.round(textLen(st.q) / 10))) * 1000);
+    var tip = document.createElement("div"); tip.style.cssText = "text-align:center;color:#8a6d00;font-weight:700;margin-top:8px"; tip.textContent = "👂 지나티처가 문제 읽는 중…"; box.appendChild(tip);
+    var again = document.createElement("button"); again.className = "btn"; again.style.cssText = "background:#eef3ff;color:#2c3e8f;margin-top:8px"; again.textContent = "🔊 문제 다시 듣기"; again.disabled = true; again.style.opacity = ".5";
+    box.parentNode.insertBefore(again, box.nextSibling); qAgainBtn = again;
+    var n = twinNo + 1, info = QSEQ[n] || { seq: [], ch: 0 }, list = info.seq.slice();
+    if (info.ch) kids.forEach(function (b) { var c = b.getAttribute("data-c"); var k = st.choices.indexOf(c); if (k >= 0 && !/[가-힣]/.test(c)) list.push("c" + n + "_" + (k + 1)); });
+    function open() { kids.forEach(function (b) { b.disabled = false; b.style.opacity = ""; }); tip.remove(); again.disabled = false; again.style.opacity = ""; }
+    function readQ() { again.disabled = true; again.style.opacity = ".5"; playList(list, open); }
+    again.addEventListener("click", function () { if (!again.disabled && !locked) readQ(); });
+    readQ();
     window.scrollTo(0, 0);
   }
 }
@@ -349,6 +355,7 @@ function feedback(ok, st, isUnknown) {
 var twinAud = new Audio();
 var twinDone = null, twinGuard = null;
 function playTwin(n, done) {
+  listToken++; if (qAgainBtn) { qAgainBtn.remove(); qAgainBtn = null; }
   clearTimeout(twinGuard); twinDone = done || null;
   function fin() { clearTimeout(twinGuard); var f = twinDone; twinDone = null; if (f) f(); }
   /* 소리가 막히거나 안 나오면 6초 뒤 열어 줌 (갇히지 않게) */
@@ -356,7 +363,24 @@ function playTwin(n, done) {
   try { twinAud.pause(); twinAud.onended = fin; twinAud.onerror = fin; twinAud.onplaying = function () { clearTimeout(twinGuard); twinGuard = setTimeout(fin, 20000); };
     twinAud.src = "audio/clinic/clinic-hte-1113/t" + n + ".mp3?v=202611140130"; var p = twinAud.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
 }
-function stopTwin() { clearTimeout(twinGuard); twinDone = null; try { twinAud.pause(); } catch (e) {} }
+var QSEQ = {"1":{"seq":["k1","p1"],"ch":0},"2":{"seq":["k2","p2_1","p2_2"],"ch":0},"3":{"seq":["k3"],"ch":1},"4":{"seq":["k4","p4"],"ch":0},"5":{"seq":["k5","p5"],"ch":0},"6":{"seq":["k6","p6"],"ch":1},"7":{"seq":["k7","p7"],"ch":0},"8":{"seq":["k8","p8"],"ch":0},"9":{"seq":["k9"],"ch":1},"10":{"seq":["k10","p10"],"ch":0},"11":{"seq":["k11","p11"],"ch":0},"12":{"seq":["k12","p12"],"ch":1},"13":{"seq":["k13","p13"],"ch":0},"14":{"seq":["k14","p14"],"ch":0},"15":{"seq":["k15"],"ch":1}};
+var qAgainBtn = null, listToken = 0;
+/* 파일 여러 개를 차례로 (같은 Audio 하나로 → 휴대폰에서도 계속 소리). 막히면 파일당 6초 뒤 다음으로 */
+function playList(list, done) {
+  var my = ++listToken, i = 0;
+  function nextOne() {
+    if (my !== listToken) return;
+    if (i >= list.length) { clearTimeout(twinGuard); twinDone = null; if (done) done(); return; }
+    var name = list[i++]; clearTimeout(twinGuard); twinDone = null;
+    twinGuard = setTimeout(nextOne, 6000);
+    try { twinAud.pause(); twinAud.onended = function () { if (my === listToken) { clearTimeout(twinGuard); setTimeout(nextOne, 250); } };
+      twinAud.onerror = function () { if (my === listToken) { clearTimeout(twinGuard); nextOne(); } };
+      twinAud.onplaying = function () { if (my === listToken) { clearTimeout(twinGuard); twinGuard = setTimeout(nextOne, 20000); } };
+      twinAud.src = "audio/clinic/clinic-hte-1113/" + name + ".mp3?v=202611140200"; var p = twinAud.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  }
+  nextOne();
+}
+function stopTwin() { listToken++; if (qAgainBtn) { qAgainBtn.remove(); qAgainBtn = null; } clearTimeout(twinGuard); twinDone = null; try { twinAud.pause(); } catch (e) {} }
 
 function unknown() {
   if (locked) return; locked = true;
