@@ -270,7 +270,16 @@ startBtn.addEventListener("click", function () {
   $("quiz-card").classList.remove("hidden");
   show();
 });
-$("read-btn").addEventListener("click", function () { cur++; show(); });
+$("read-btn").addEventListener("click", function () { if ($("read-btn").disabled) return; cur++; show(); });
+/* 원장님 11/14 "태은이는 왜 막찍고 넘어가져?" — 막 넘기기 방지: 개념은 읽을 시간만큼 잠금, 문제는 읽을 시간 뒤에 보기 열림, 정답 문장을 끝까지 들어야 다음 */
+var waitTimer = null;
+function textLen(html) { var d = document.createElement("div"); d.innerHTML = html; return (d.textContent || "").replace(/\s+/g, "").length; }
+function holdBtn(btn, sec, label, after) {
+  clearInterval(waitTimer); btn.disabled = true; btn.style.opacity = ".5";
+  var left = sec; btn.textContent = "📖 읽는 중… " + left + "초";
+  waitTimer = setInterval(function () { left--; if (left > 0) { btn.textContent = "📖 읽는 중… " + left + "초"; return; }
+    clearInterval(waitTimer); btn.disabled = false; btn.style.opacity = ""; btn.textContent = label; if (after) after(); }, 1000);
+}
 
 function show() {
   if (cur >= STEPS.length) return showResult();
@@ -283,6 +292,8 @@ function show() {
     $("concept-box").innerHTML = st.html; $("concept-box").classList.remove("hidden");
     $("read-btn").classList.remove("hidden");
     $("qtext").innerHTML = ""; $("choices").innerHTML = "";
+    if (!$("read-btn").getAttribute("data-label")) $("read-btn").setAttribute("data-label", $("read-btn").textContent);
+    holdBtn($("read-btn"), Math.min(25, Math.max(8, Math.round(textLen(st.html) / 12))), $("read-btn").getAttribute("data-label"));
     window.scrollTo(0, 0);
   } else {
     $("progress").textContent = "쌍둥이 문제 " + (twinNo + 1) + " / " + TW.length;
@@ -298,6 +309,11 @@ function show() {
     var u = document.createElement("button"); u.className = "unk"; u.id = "unk-btn"; u.textContent = "🤔 모름";
     u.addEventListener("click", function () { unknown(); });
     box.appendChild(u);
+    /* 문제 읽을 시간(3~8초) 동안 보기·모름 잠금 */
+    var kids = [].slice.call(box.children); kids.forEach(function (b) { b.disabled = true; b.style.opacity = ".45"; });
+    var tip = document.createElement("div"); tip.style.cssText = "text-align:center;color:#8a6d00;font-weight:700;margin-top:8px"; tip.textContent = "📖 문제를 먼저 끝까지 읽어요…"; box.appendChild(tip);
+    clearTimeout(waitTimer);
+    waitTimer = setTimeout(function () { kids.forEach(function (b) { b.disabled = false; b.style.opacity = ""; }); tip.remove(); }, Math.min(8, Math.max(3, Math.round(textLen(st.q) / 10))) * 1000);
     window.scrollTo(0, 0);
   }
 }
@@ -312,27 +328,44 @@ function pick(choice) {
     if (b.getAttribute("data-c") === st.answer) b.classList.add("right");
     else if (b.getAttribute("data-c") === choice) b.classList.add("bad");
   });
-  var h = '<div class="exp' + (ok ? "" : " wrong") + '"><b>' + (ok ? "정답! 🎉" : "아쉬워요 — 정답: " + st.answer) + "</b><br>" + st.exp + "</div>";
+  feedback(ok, st);
+}
+
+function feedback(ok, st, isUnknown) {
+  var h = '<div class="exp' + (ok ? "" : " wrong") + '"><b>' + (ok ? "정답! 🎉" : (isUnknown ? "🤔 괜찮아요! 정답: " : "아쉬워요 — 정답: ") + st.answer) + "</b><br>" + st.exp + "</div>";
   if (!ok) h += '<div class="lab2">📖 개념 정리 다시 보기</div>' + CONCEPT_OF[cur];
   h += '<button class="btn" id="say-btn" style="background:#eef3ff;color:#2c3e8f;margin-bottom:8px">🔊 정답 문장 다시 듣기</button>';
   h += '<button class="btn" id="next-btn">' + (twinNo + 1 < TW.length ? "다음 ▶" : "결과 보기") + "</button>";
   $("fb").innerHTML = h;
-  playTwin(twinNo + 1);
-  $("say-btn").addEventListener("click", function () { playTwin(twinNo + 1); });
-  $("next-btn").addEventListener("click", function () { stopTwin(); locked = false; twinNo++; cur++; show(); });
+  var nb = $("next-btn"), nLabel = nb.textContent;
+  function ready() { nb.disabled = false; nb.style.opacity = ""; nb.textContent = nLabel; }
+  function listen() { nb.disabled = true; nb.style.opacity = ".5"; nb.textContent = "👂 정답 문장 듣는 중…"; playTwin(twinNo + 1, ready); }
+  listen();
+  $("say-btn").addEventListener("click", listen);
+  nb.addEventListener("click", function () { if (nb.disabled) return; stopTwin(); locked = false; twinNo++; cur++; show(); });
 }
 
 /* 원장님 11/14 "태은이 링크도 영어 문장은 정답 누르면 읽어줘" — 답을 고르면 정답 영어 문장을 소리로 (문항마다 다른 목소리, Eleven v4) */
 var twinAud = new Audio();
-function playTwin(n) { try { twinAud.pause(); twinAud.src = "audio/clinic/clinic-hte-1113/t" + n + ".mp3?v=202611140130"; var p = twinAud.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
-function stopTwin() { try { twinAud.pause(); } catch (e) {} }
+var twinDone = null, twinGuard = null;
+function playTwin(n, done) {
+  clearTimeout(twinGuard); twinDone = done || null;
+  function fin() { clearTimeout(twinGuard); var f = twinDone; twinDone = null; if (f) f(); }
+  /* 소리가 막히거나 안 나오면 6초 뒤 열어 줌 (갇히지 않게) */
+  twinGuard = setTimeout(fin, 6000);
+  try { twinAud.pause(); twinAud.onended = fin; twinAud.onerror = fin; twinAud.onplaying = function () { clearTimeout(twinGuard); twinGuard = setTimeout(fin, 20000); };
+    twinAud.src = "audio/clinic/clinic-hte-1113/t" + n + ".mp3?v=202611140130"; var p = twinAud.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+}
+function stopTwin() { clearTimeout(twinGuard); twinDone = null; try { twinAud.pause(); } catch (e) {} }
 
 function unknown() {
   if (locked) return; locked = true;
   var st = STEPS[cur];
   wrongNumbers.push(twinNo + 1); unknownNumbers.push(twinNo + 1);
   answersLog.push({ no: twinNo + 1, ok: false, chosen: "모름", answer: st.answer, unknown: true });
-  locked = false; twinNo++; cur++; show();
+  /* 모름도 정답·해설 보고 정답 문장 들은 뒤 넘어가기 */
+  [].forEach.call($("choices").children, function (b) { b.disabled = true; if (b.getAttribute && b.getAttribute("data-c") === st.answer) b.classList.add("right"); });
+  feedback(false, st, true);
 }
 
 function unknownLine() {
