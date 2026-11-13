@@ -27,6 +27,8 @@
   #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
   .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
   .exp.wrong { border-left-color: #c0392b; }
+  #concept-box .ctitle, #concept-box .box, #concept-box .why, #concept-box .rule, #concept-box .trap { transition: all .3s; }
+  #concept-box .talking { outline: 3px solid #f5b400; box-shadow: 0 0 0 6px rgba(245,180,0,.25); background-color: #fffbe6 !important; transform: scale(1.02); border-radius: 10px; }
   .exp b { color: #2e7d6e; }
   .exp.wrong b { color: #c0392b; }
   .hidden { display: none; }
@@ -61,7 +63,7 @@
     <p class="sub">틀린 이유를 천천히 읽고 쌍둥이 문제를 풀어요 · 이름 확인 후 시작하세요</p><p class="sub">모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
     <input type="text" id="name-input" value="한태은" placeholder="이름" maxlength="20" autocomplete="off">
     <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
-    <p class="sub" style="margin-top:8px">🔊 소리를 켜고 시작해요!</p>
+    <p class="sub" style="margin-top:8px">🔊 소리를 켜고 시작해요! 지나티처가 설명하고 문제도 읽어 줘요.</p>
     <button class="btn" id="start-btn">시작하기</button>
   </div>
 
@@ -270,7 +272,7 @@ startBtn.addEventListener("click", function () {
   $("quiz-card").classList.remove("hidden");
   show();
 });
-$("read-btn").addEventListener("click", function () { if ($("read-btn").disabled) return; cur++; show(); });
+$("read-btn").addEventListener("click", function () { if ($("read-btn").disabled) return; stopTwin(); cur++; show(); });
 /* 원장님 11/14 "태은이는 왜 막찍고 넘어가져?" — 막 넘기기 방지: 개념은 읽을 시간만큼 잠금, 문제는 읽을 시간 뒤에 보기 열림, 정답 문장을 끝까지 들어야 다음 */
 var waitTimer = null;
 function textLen(html) { var d = document.createElement("div"); d.innerHTML = html; return (d.textContent || "").replace(/\s+/g, "").length; }
@@ -292,8 +294,19 @@ function show() {
     $("concept-box").innerHTML = st.html; $("concept-box").classList.remove("hidden");
     $("read-btn").classList.remove("hidden");
     $("qtext").innerHTML = ""; $("choices").innerHTML = "";
-    if (!$("read-btn").getAttribute("data-label")) $("read-btn").setAttribute("data-label", $("read-btn").textContent);
-    holdBtn($("read-btn"), Math.min(25, Math.max(8, Math.round(textLen(st.html) / 12))), $("read-btn").getAttribute("data-label"));
+    /* 원장님 11/14 "초반부분 설명좀 내 목소리로 읽어주던가… 애들이 뭔 재미로 글자를 보것냐" — 원장님 목소리 설명 + 지금 읽는 칸 반짝, 다 듣기 전 잠금 */
+    var rb = $("read-btn"); if (!rb.getAttribute("data-label")) rb.setAttribute("data-label", rb.textContent);
+    var ci = 0; for (var s = 0; s <= cur; s++) if (STEPS[s].type === "concept") ci++;
+    var cb = $("concept-box"), two = cb.querySelectorAll(".two .box");
+    var spots = [cb.querySelector(".ctitle"), cb.querySelector(":scope > .box"), cb.querySelector(":scope > .box"), two[0], two[1], cb.querySelector(".why"), cb.querySelector(".rule"), cb.querySelector(".trap")];
+    var list = []; if (ci === 1) list.push("g"); for (var z = 1; z <= 8; z++) list.push("n" + ci + "_" + z);
+    var again = document.createElement("button"); again.className = "btn"; again.style.cssText = "background:#eef3ff;color:#2c3e8f;margin-top:8px"; again.textContent = "🔊 설명 다시 듣기";
+    rb.parentNode.insertBefore(again, rb.nextSibling); qAgainBtn = again;
+    function lit(i) { [].forEach.call(cb.querySelectorAll(".talking"), function (e) { e.classList.remove("talking"); }); var nm = list[i] || ""; var m = /_(\d)$/.exec(nm); var el = m ? spots[+m[1] - 1] : spots[0]; if (el) { el.classList.add("talking"); try { el.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {} } }
+    function talk(first) { rb.disabled = true; rb.style.opacity = ".5"; rb.textContent = "👂 지나티처 설명 듣는 중…"; again.disabled = true; again.style.opacity = ".5";
+      playList(first ? list : list.filter(function (x) { return x !== "g"; }), function () { [].forEach.call(cb.querySelectorAll(".talking"), function (e) { e.classList.remove("talking"); }); rb.disabled = false; rb.style.opacity = ""; rb.textContent = rb.getAttribute("data-label"); again.disabled = false; again.style.opacity = ""; window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); }, lit); }
+    again.addEventListener("click", function () { if (!again.disabled) talk(false); });
+    talk(true);
     window.scrollTo(0, 0);
   } else {
     $("progress").textContent = "쌍둥이 문제 " + (twinNo + 1) + " / " + TW.length;
@@ -366,11 +379,12 @@ function playTwin(n, done) {
 var QSEQ = {"1":{"seq":["k1","p1"],"ch":0},"2":{"seq":["k2","p2_1","p2_2"],"ch":0},"3":{"seq":["k3"],"ch":1},"4":{"seq":["k4","p4"],"ch":0},"5":{"seq":["k5","p5"],"ch":0},"6":{"seq":["k6","p6"],"ch":1},"7":{"seq":["k7","p7"],"ch":0},"8":{"seq":["k8","p8"],"ch":0},"9":{"seq":["k9"],"ch":1},"10":{"seq":["k10","p10"],"ch":0},"11":{"seq":["k11","p11"],"ch":0},"12":{"seq":["k12","p12"],"ch":1},"13":{"seq":["k13","p13"],"ch":0},"14":{"seq":["k14","p14"],"ch":0},"15":{"seq":["k15"],"ch":1}};
 var qAgainBtn = null, listToken = 0;
 /* 파일 여러 개를 차례로 (같은 Audio 하나로 → 휴대폰에서도 계속 소리). 막히면 파일당 6초 뒤 다음으로 */
-function playList(list, done) {
+function playList(list, done, onEach) {
   var my = ++listToken, i = 0;
   function nextOne() {
     if (my !== listToken) return;
     if (i >= list.length) { clearTimeout(twinGuard); twinDone = null; if (done) done(); return; }
+    if (onEach) try { onEach(i); } catch (e) {}
     var name = list[i++]; clearTimeout(twinGuard); twinDone = null;
     twinGuard = setTimeout(nextOne, 6000);
     try { twinAud.pause(); twinAud.onended = function () { if (my === listToken) { clearTimeout(twinGuard); setTimeout(nextOne, 250); } };
