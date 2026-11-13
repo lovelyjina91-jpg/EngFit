@@ -29,6 +29,12 @@
     ".cv-next:disabled{background:#b9c7bf;cursor:default}";
   document.head.appendChild(css);
 
+  // 대화문은 줄마다 나뉜 파일 (q3_1, q3_2 …: A=지나티처, B=다른 목소리, A/B 는 읽지 않음)
+  function parts(kind, n, cnt) {
+    if (!cnt) return [];
+    if (cnt === 1 || cnt === true) return [kind + n];
+    var r = []; for (var i = 1; i <= cnt; i++) r.push(kind + n + "_" + i); return r;
+  }
   function url(name) { return BASE + name + ".mp3?v=" + (CV.ver || "1"); }
   function stop() { playToken++; try { aud.pause(); } catch (e) {} }
   // 이름 목록을 차례로 재생, 끝나면 done(). 파일이 없거나 재생이 막히면 건너뜀. 안전장치: 한 파일당 최대 20초.
@@ -65,7 +71,7 @@
     var seq = [];
     if (!greeted) { greeted = true; seq.push("g"); }
     if (it.k) seq.push("k" + n);
-    if (it.q) seq.push("q" + n);
+    seq = seq.concat(parts("q", n, it.q));
     var box = document.getElementById("choices");
     var bar = document.createElement("div");
     bar.className = "cv-bar";
@@ -114,9 +120,9 @@
     if (it.a) {
       var say = document.createElement("button");
       say.className = "cv-say"; say.type = "button"; say.textContent = "🔊 " + it.as;
-      say.onclick = function () { nx.disabled = true; nx.textContent = "👂 듣는 중…"; playSeq(["a" + (idx + 1)], ready); };
+      say.onclick = function () { nx.disabled = true; nx.textContent = "👂 듣는 중…"; playSeq(parts("a", idx + 1, it.a), ready); };
       p.appendChild(say);
-      playSeq(["a" + (idx + 1)], ready);
+      playSeq(parts("a", idx + 1, it.a), ready);
     } else {
       setTimeout(ready, 1200);
     }
