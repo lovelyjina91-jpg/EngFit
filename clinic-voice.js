@@ -5,6 +5,8 @@
    - 소리: audio/clinic/<quizId>/{g,kN,qN,aN}.mp3 , 목록: audio/clinic/<quizId>/voice.js (CLINIC_VOICE)
    - 페이지의 showQuestion / pick / QUESTIONS / current 를 감싸서 동작 (기존 자동 전송·모름 기록은 그대로) */
 (function () {
+  // 원장님 들어 보기 모드 (?t=1): 결과를 구글시트로 보내지 않음 (원장님 11/13 "그날 보낸 링크 전부 개인톡에, 다 들어보게")
+  try { if (new URLSearchParams(location.search).get("t") === "1") { window.fetch = function () { return Promise.resolve({ ok: true, json: function () { return {}; } }); }; window._engfitSent = true; try { localStorage.removeItem("engfit-" + (window.QUIZ_ID || "")); } catch (e) {} } } catch (e) {}
   var CV = window.CLINIC_VOICE;
   if (!CV) return;
   var BASE = "audio/clinic/" + CV.id + "/";
