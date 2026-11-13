@@ -49,6 +49,7 @@
   FX.watch(aud);
   // 인사·명언만 (사진 클리닉 hte 처럼 QUESTIONS/showQuestion 이 없는 페이지): 첫 화면에서 인사, 결과 화면에서 명언
   if (CV.greetOnly) {
+    if (window.twinAud) FX.watch(window.twinAud); // hte: 페이지 소리 나올 때 배경음악 줄이기
     if (typeof window.show === "function") {
       var origShow0 = window.show;
       window.show = function () {
