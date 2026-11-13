@@ -1,0 +1,2 @@
+// clinic-jde-1110 읽어 주기: g=원장님 목소리 인사, k=지시문(지나쌤 한글), 단어는 페이지 엠마 소리 3번(pageAudio), a=엠마 단어
+var CLINIC_VOICE={id:"clinic-jde-1110",ver:"202611132108",pageAudio:true,items:[{"k":1,"a":1,"as":"jacket"},{"k":1,"a":1,"as":"van"},{"k":1,"a":1,"as":"dog"},{"k":1,"a":1,"as":"pig"},{"k":1,"a":1,"as":"zebra"},{"k":1,"a":1,"as":"girl"},{"k":1,"a":1,"as":"fish"},{"k":1,"a":1,"as":"kangaroo"},{"k":1,"a":1,"as":"cow"},{"k":1,"a":1,"as":"ball"},{"k":1,"a":1,"as":"bear"},{"k":1,"a":1,"as":"sun"},{"k":1,"a":1,"as":"box"},{"k":1,"a":1,"as":"door"},{"k":1,"a":1,"as":"lion"}]};
