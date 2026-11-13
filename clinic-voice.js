@@ -53,7 +53,7 @@
       var origShow0 = window.show;
       window.show = function () {
         var r = origShow0.apply(this, arguments);
-        if (!greeted) { greeted = true; FX.start(); aud.src = BASE + "g.mp3?v=" + (CV.ver || "1"); var p = aud.play(); if (p && p.catch) p.catch(function () {}); }
+        if (!greeted && !CV.noGreet) { greeted = true; FX.start(); aud.src = BASE + "g.mp3?v=" + (CV.ver || "1"); var p = aud.play(); if (p && p.catch) p.catch(function () {}); }
         return r;
       };
     }
