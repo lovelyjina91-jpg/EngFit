@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>정윤우 · 영핏 사진 클리닉 11/14</title>
+<meta property="og:title" content="정윤우 클리닉 · 11/14 🌱">
+<meta property="og:description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<meta name="description" content="다 풀고 나면 결과를 복사해서 카톡에 붙여넣어 줘!">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f0f4f4; color: #2d3436; min-height: 100vh; display: flex; justify-content: center; padding: 20px 14px; }
+  .wrap { width: 100%; max-width: 520px; }
+  .card { background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 14px; }
+  h1 { font-size: 1.25rem; color: #2e7d6e; margin-bottom: 6px; }
+  .sub { font-size: 0.88rem; color: #778; margin-bottom: 18px; }
+  input[type=text] { width: 100%; padding: 13px; font-size: 1.05rem; border: 1.5px solid #cdd; border-radius: 10px; }
+  .btn { display: block; width: 100%; margin-top: 14px; padding: 14px; font-size: 1.05rem; font-weight: bold; color: #fff; background: #2e7d6e; border: none; border-radius: 10px; cursor: pointer; }
+  .btn:disabled { background: #b8c4c2; cursor: default; }
+  .progress { font-size: 0.85rem; color: #789; margin-bottom: 10px; }
+  .qtext { font-size: 1.05rem; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+  .choice { display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px; font-size: 1rem; background: #f6f9f8; border: 1.5px solid #dde5e3; border-radius: 10px; cursor: pointer; }
+  .choice:active { background: #e2efec; }
+  .num { color: #2e7d6e; font-weight: bold; margin-right: 6px; }
+  .score-big { font-size: 2rem; font-weight: bold; color: #2e7d6e; text-align: center; margin: 10px 0; }
+  #submit-status { text-align: center; font-size: 0.92rem; margin: 12px 0; min-height: 1.2em; }
+  .exp { background: #f6f9f8; border-left: 4px solid #2e7d6e; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.92rem; line-height: 1.55; }
+  .exp.wrong { border-left-color: #c0392b; }
+  .exp b { color: #2e7d6e; }
+  .exp.wrong b { color: #c0392b; }
+  .hidden { display: none; }
+  .unknown { display:block; width:100%; margin-top:6px; padding:12px; font-size:1rem; font-weight:bold; color:#8a6d00; background:#fff8e1; border:1.5px dashed #e0b84c; border-radius:10px; cursor:pointer; }
+  .unknown:active { background:#ffefb3; }
+  .pass { background:#f6f9f8; border-radius:8px; padding:10px 12px; margin:10px 0 0; font-weight:normal; font-size:.93rem; line-height:1.6; }
+  .part{font-size:0.9rem;font-weight:bold;color:#fff;background:#2e7d6e;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .bar{height:6px;background:#e2efec;border-radius:4px;margin-bottom:12px;overflow:hidden}.bar>i{display:block;height:100%;background:#2e7d6e;width:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="start-card">
+    <h1>정윤우 · 영핏 사진 클리닉 11/14 🌱</h1>
+    <p class="sub">누적 오답 다시 잡기 15문제 · 이름 확인 후 시작하세요<br>모르면 찍지 말고 🤔 모름을 눌러요. 모르는 걸 알려 주는 것도 실력이에요!</p>
+    <input type="text" id="name-input" value="정윤우" placeholder="이름" maxlength="20" autocomplete="off">
+    <div id="resume-note" class="sub hidden" style="margin-top:10px"></div>
+    <button class="btn" id="start-btn">시작하기</button>
+  </div>
+
+  <div class="card hidden" id="quiz-card">
+    <div class="progress" id="progress"></div>
+    <div class="bar"><i id="bar-fill"></i></div>
+    <div class="part hidden" id="part"></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result-card">
+    <h1>수고했어요! 🎉</h1>
+    <div class="score-big" id="score-line"></div>
+    <div id="submit-status"></div>
+    <button class="btn" id="kakao-btn">📋 결과 복사하기 → 카톡으로 지나티처에게 보내기</button>
+    <div style="margin-top:20px">
+      <p class="sub" style="margin-bottom:10px">📝 전체 해설</p>
+      <div id="explanations"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ══════ 결과 자동 전송 (영핏 공통) ══════ */
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec";
+
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try {
+      await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body });
+      return true;
+    } catch (e2) { return false; }
+  }
+}
+
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return; _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  el.textContent = "📱 아래 버튼을 눌러 결과를 복사하고, 카톡으로 지나티처에게 꼭 보내요!";
+  el.style.color = "#888";
+  var ok = await engfitSubmit(r);
+  if (ok) { el.textContent = "📱 아래 버튼을 눌러 결과를 복사하고, 카톡으로 지나티처에게 꼭 보내요!"; el.style.color = "#2e7d6e"; }
+  else { el.textContent = "📱 아래 버튼을 눌러 결과를 복사하고, 카톡으로 지나티처에게 꼭 보내요!"; el.style.color = "#c0392b"; }
+}
+
+
+/* ══════ 문제 데이터 ══════ */
+var QUESTIONS = [
+{"part": "Part 1 · 5형식 (목적어 + 형용사 / 동사원형) · 감정 -ing / -ed", "q": "빈칸에 알맞은 말은?<br>The electric fan kept the room ______ during the heat wave.", "choices": ["coolly", "cool", "coolness", "to cool"], "answer": "cool", "exp": "keep + 목적어(the room) + <b>형용사</b> → kept the room <b>cool</b>. 부사(coolly)·명사(coolness) ✕."},
+{"q": "빈칸에 알맞은 말은?<br>The coach made the players ______ around the field twice.", "choices": ["to jog", "jogging", "jog", "jogs"], "answer": "jog", "exp": "make + 목적어 + <b>동사원형</b> → made the players <b>jog</b>. to jog ✕ (레벨테스트 36번과 같은 개념)."},
+{"q": "빈칸에 알맞은 말은?<br>Many people left early because the speech was so ______.", "choices": ["bored", "bore", "boredom", "boring"], "answer": "boring", "exp": "연설이 지루함을 <b>일으키는</b> 쪽 → <b>-ing</b> (boring). 사람이 지루함을 느낄 때만 bored (11/07 클리닉 3번 개념)."},
+{"q": "다음 중 어법상 <b>틀린</b> 문장은?", "choices": ["I was confused by the map.", "The haunted house at the fair was terrified.", "The ending of the novel was surprising.", "The kids got tired after the long hike."], "answer": "The haunted house at the fair was terrified.", "exp": "유령의 집은 무서움을 <b>주는</b> 쪽 → terrify<b>ing</b>. confused · tired 는 사람이 느끼는 것, surprising 은 결말이 주는 것이라 맞아요."},
+{"part": "Part 2 · 가주어 It · 의미상 주어 for / of · 가목적어 it", "q": "빈칸에 알맞은 말은?<br>It was careless ______ to leave the gate unlocked.", "choices": ["of him", "for him", "of he", "him"], "answer": "of him", "exp": "careless(부주의한)는 사람의 <b>성격·태도</b> → <b>of + 목적격</b> → of him."},
+{"q": "빈칸에 알맞은 말은?<br>It is impossible ______ to answer this riddle in one minute.", "choices": ["of me", "for I", "for me", "me"], "answer": "for me", "exp": "impossible 은 일에 대한 <b>판단</b> → <b>for + 목적격</b> → for me (for I ✕)."},
+{"q": "다음 중 어법상 <b>올바른</b> 문장은?", "choices": ["My sister thinks exciting to ski down steep hills.", "My sister thinks it exciting ski down steep hills.", "My sister thinks that exciting to ski down steep hills.", "My sister thinks it exciting to ski down steep hills."], "answer": "My sister thinks it exciting to ski down steep hills.", "exp": "think + <b>가목적어 it</b> + 형용사 + <b>to + 동사원형</b>. it 생략 ✕, to 생략 ✕, that ✕."},
+{"part": "Part 3 · 관계대명사 whose · so that 시제", "q": "빈칸에 알맞은 말은?<br>I have a cousin ______ hobby is collecting old coins.", "choices": ["who", "which", "whose", "what"], "answer": "whose", "exp": "빈칸 뒤에 명사 hobby 가 바로 오고 '그 사촌<b>의</b> 취미' → <b>whose</b>."},
+{"q": "두 문장을 한 문장으로 바르게 만든 것은?<br>This is the house. Its roof is painted red.", "choices": ["This is the house whose roof is painted red.", "This is the house whose its roof is painted red.", "This is the house which roof is painted red.", "This is the house who roof is painted red."], "answer": "This is the house whose roof is painted red.", "exp": "Its roof → <b>whose roof</b>. whose 가 '그것의' 뜻을 이미 가지니 its 를 또 쓰면 ✕. 사물에도 whose."},
+{"q": "빈칸에 알맞은 말은?<br>Grandma put on her glasses so that she ______ read the tiny print.", "choices": ["can", "could", "will", "does"], "answer": "could", "exp": "앞 동사 put(과거) → so that 뒤도 과거 <b>could</b> (11/01 클리닉 10번 개념)."},
+{"part": "Part 4 · 구문독해 (문장 구조 보고 해석하기)", "q": "다음 문장의 뜻으로 알맞은 것은?<br>Reading in dim light makes it hard for your eyes to focus.", "choices": ["어두운 곳에서 읽으려면 눈의 초점을 맞춰야 한다.", "어두운 빛에서 읽는 것은 눈이 초점을 맞추기 어렵게 만든다.", "눈이 초점을 맞추기 어려워서 어두운 곳에서 읽는다.", "눈은 어두운 빛을 읽기 어렵게 만든다."], "answer": "어두운 빛에서 읽는 것은 눈이 초점을 맞추기 어렵게 만든다.", "exp": "주어 = <b>Reading in dim light</b>(동명사 주어) · makes + <b>it(가목적어)</b> + hard + <b>for your eyes</b>(의미상 주어) + <b>to focus</b>(진목적어)."},
+{"q": "빈칸에 알맞은 말은?<br>The students in the back row ______ it hard to see the stage.", "choices": ["finds", "finding", "to find", "find"], "answer": "find", "exp": "in the back row 는 꾸미는 말 → 진짜 주어 <b>The students</b>(여럿) → <b>find</b>. 그 뒤는 find + it + 형용사 + to ~."},
+{"q": "다음 문장의 뜻으로 알맞은 것은?<br>We put the milk in the fridge so that it wouldn't go bad.", "choices": ["우유가 상해서 냉장고에 넣었다.", "냉장고에 넣었지만 우유가 상했다.", "우유가 상하지 않도록 냉장고에 넣었다.", "우유가 너무 상해서 냉장고에 넣을 수 없었다."], "answer": "우유가 상하지 않도록 냉장고에 넣었다.", "exp": "<b>so that + 주어 + wouldn't</b> = '~하지 않도록' (목적). go bad = 상하다."},
+{"q": "다음 문장의 뜻으로 알맞은 것은?<br>It was kind of the old man to show us the way to the station.", "choices": ["그 노인이 우리에게 역으로 가는 길을 알려 준 것은 친절했다.", "그 노인은 친절한 종류의 사람이라 역에 갔다.", "우리가 그 노인에게 역으로 가는 길을 알려 준 것은 친절했다.", "그 노인은 우리에게 친절한 역을 보여 주었다."], "answer": "그 노인이 우리에게 역으로 가는 길을 알려 준 것은 친절했다.", "exp": "<b>It</b>(가주어) was kind <b>of the old man</b>(의미상 주어) <b>to show ~</b>(진주어). 여기서 kind of 는 '~종류'가 아니에요!"},
+{"q": "다음 문장의 뜻으로 알맞은 것은?<br>I found the new math teacher strict but fair.", "choices": ["나는 엄격하고 공정한 새 수학 선생님을 찾았다.", "새 수학 선생님이 나를 엄격하지만 공정하게 대하셨다.", "나는 새 수학 선생님을 엄격하게 찾았지만 공정했다.", "나는 새 수학 선생님이 엄격하지만 공정하다는 것을 알게 되었다."], "answer": "나는 새 수학 선생님이 엄격하지만 공정하다는 것을 알게 되었다.", "exp": "find + 목적어 + <b>형용사</b> = '목적어가 ~하다는 것을 알게 되다'. 여기서 found 는 '찾았다'가 아니에요."}
+];
+
+var QUIZ_ID = "clinic-jyw-1114";
+var QUIZ_TITLE = "정윤우 사진 클리닉 11/14";
+var KEEP = false;
+var SAVE_KEY = "engfit-" + QUIZ_ID;
+
+/* ══════ 진행 로직 ══════ */
+var studentName = "";
+var current = 0;
+var correctCount = 0;
+var wrongNumbers = [];
+var unknownNumbers = [];
+var answersLog = [];
+var startTime = 0;
+var elapsedBefore = 0;
+
+var nameInput = document.getElementById("name-input");
+var startBtn = document.getElementById("start-btn");
+
+function loadSaved() {
+  if (!KEEP) return null;
+  try { var s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+}
+function saveProgress() {
+  if (!KEEP) return;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ name: studentName, current: current, correctCount: correctCount, wrongNumbers: wrongNumbers, unknownNumbers: unknownNumbers, answersLog: answersLog, elapsed: elapsedBefore + Math.round((Date.now() - startTime) / 1000) })); } catch (e) {}
+}
+function clearSaved() { if (!KEEP) return; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+var saved = loadSaved();
+if (saved && saved.answersLog && saved.answersLog.length > 0 && saved.answersLog.length < QUESTIONS.length) {
+  var note = document.getElementById("resume-note");
+  note.textContent = "이어 풀기 가능: " + saved.answersLog.length + "/" + QUESTIONS.length + " 풀었어요. 시작하기를 누르면 이어서 풀어요.";
+  note.classList.remove("hidden");
+  if (saved.name) nameInput.value = saved.name;
+}
+
+startBtn.addEventListener("click", function () {
+  studentName = nameInput.value.trim();
+  if (!studentName) return;
+  startTime = Date.now();
+  var sv = loadSaved();
+  if (sv && sv.name === studentName && sv.answersLog && sv.answersLog.length > 0 && sv.answersLog.length < QUESTIONS.length) {
+    current = sv.current; correctCount = sv.correctCount; wrongNumbers = sv.wrongNumbers; unknownNumbers = sv.unknownNumbers || []; answersLog = sv.answersLog; elapsedBefore = sv.elapsed || 0;
+  }
+  document.getElementById("start-card").classList.add("hidden");
+  document.getElementById("quiz-card").classList.remove("hidden");
+  showQuestion();
+});
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+function partFor(idx) {
+  for (var i = idx; i >= 0; i--) if (QUESTIONS[i].part) return QUESTIONS[i].part;
+  return "";
+}
+
+function showQuestion() {
+  var q = QUESTIONS[current];
+  document.getElementById("progress").textContent = (current + 1) + " / " + QUESTIONS.length;
+  document.getElementById("bar-fill").style.width = Math.round(current / QUESTIONS.length * 100) + "%";
+  var pt = document.getElementById("part"), ptxt = partFor(current);
+  if (ptxt) { pt.textContent = ptxt; pt.classList.remove("hidden"); } else pt.classList.add("hidden");
+  document.getElementById("qtext").innerHTML = "Q" + (current + 1) + ". " + q.q;
+  var box = document.getElementById("choices");
+  box.innerHTML = "";
+  shuffle(q.choices).forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "choice";
+    b.innerHTML = '<span class="num">' + CIRCLED[i] + "</span>" + c;
+    b.addEventListener("click", function () { pick(c, CIRCLED[i]); });
+    box.appendChild(b);
+  });
+  var u = document.createElement("button");
+  u.className = "unknown"; u.id = "unknown-btn";
+  u.textContent = "🤔 모름";
+  u.addEventListener("click", function () { pick("모름", "", true); });
+  box.appendChild(u);
+}
+
+var locked = false;
+function pick(choice, mark, unknown) {
+  if (locked) return; locked = true;
+  var q = QUESTIONS[current];
+  var ok = !unknown && choice === q.answer;
+  if (ok) correctCount++;
+  else wrongNumbers.push(current + 1);
+  var entry = { no: current + 1, ok: ok, chosen: choice, answer: q.answer };
+  if (unknown) { entry.unknown = true; unknownNumbers.push(current + 1); }
+  answersLog.push(entry);
+  current++;
+  saveProgress();
+  setTimeout(function () {
+    locked = false;
+    if (current < QUESTIONS.length) showQuestion();
+    else showResult();
+  }, 250);
+}
+
+function unknownLine() {
+  return "🤔 모름: " + unknownNumbers.length + "개" + (unknownNumbers.length ? " (" + unknownNumbers.join(", ") + "번)" : "");
+}
+
+function showResult() {
+  clearSaved();
+  document.getElementById("quiz-card").classList.add("hidden");
+  document.getElementById("result-card").classList.remove("hidden");
+  document.getElementById("score-line").textContent = correctCount + " / " + QUESTIONS.length;
+
+  var ul = document.createElement("div");
+  ul.className = "sub"; ul.id = "unknown-line"; ul.style.textAlign = "center";
+  ul.textContent = unknownLine();
+  document.getElementById("score-line").insertAdjacentElement("afterend", ul);
+  var expBox = document.getElementById("explanations");
+  QUESTIONS.forEach(function (q, i) {
+    var log = answersLog[i];
+    var d = document.createElement("div");
+    d.className = "exp" + (log.ok ? "" : " wrong");
+    d.innerHTML = "<b>Q" + (i + 1) + ". " + (log.ok ? "정답!" : (log.unknown ? "🤔 모름 → 정답: " + q.answer : "오답 (내 답: " + log.chosen + " → 정답: " + q.answer + ")")) + "</b><br>" + q.exp;
+    expBox.appendChild(d);
+  });
+
+  engfitSubmitWithStatus({
+    quizId: QUIZ_ID,
+    quizTitle: QUIZ_TITLE,
+    student: studentName,
+    score: correctCount,
+    total: QUESTIONS.length,
+    wrong: wrongNumbers,
+    unknown: unknownNumbers,
+    durationSec: elapsedBefore + Math.round((Date.now() - startTime) / 1000),
+    detail: answersLog
+  });
+}
+
+document.getElementById("kakao-btn").addEventListener("click", function () {
+  var msg = "[영핏 사진 클리닉 11/14 결과]\n퀴즈ID: " + QUIZ_ID + "\n학생: " + studentName +
+            "\n점수: " + correctCount + "/" + QUESTIONS.length +
+            "\n틀린 문항: " + (wrongNumbers.length ? wrongNumbers.join(", ") : "없음") +
+            "\n" + unknownLine();
+  navigator.clipboard.writeText(msg).then(function () {
+    document.getElementById("kakao-btn").textContent = "복사 완료! 카톡에 붙여넣기 하세요 ✓";
+  }).catch(function () {
+    prompt("아래 내용을 길게 눌러 복사하세요", msg);
+  });
+});
+</script>
+</body>
+</html>
