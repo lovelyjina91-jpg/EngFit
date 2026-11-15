@@ -1,8 +1,8 @@
-/* 영핏 링크 비밀번호 (원장님 11/15 "모든 링크에 비밀번호 8806")
+/* 영핏 링크 비밀번호 (원장님 11/15)
    한 번 맞히면 그 기기에서는 다시 안 물어봄. 비밀번호 바꾸려면 H 값과 KEY 를 바꾸면 됨. */
 (function () {
   var KEY = "engfit_gate_v1";
-  var H = "f18d";           // 8806 의 간단 해시
+  var H = "f18d";
   function hash(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) & 0xffff; return h.toString(16); }
   function ok() { try { if (localStorage.getItem(KEY) === H) return true; } catch (e) {} try { if (sessionStorage.getItem(KEY) === H) return true; } catch (e) {} return false; }
   function save() { try { localStorage.setItem(KEY, H); } catch (e) {} try { sessionStorage.setItem(KEY, H); } catch (e) {} }
