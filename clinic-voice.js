@@ -14,6 +14,43 @@
   var aud = new Audio();
   var playToken = 0;
   var greeted = false;
+  // ── 소리 파형 (원장님 11/15 "파형이 있으면 들린다는 심리, 안 들으면 미치게") ──
+  // 목소리가 나오는 동안 화면 아래 가운데 작은 파형이 춤춘다. 소리를 꺼 두면 파형만 움직이는 걸 보며 기다려야 함.
+  var WAVE = (function () {
+    var live = [], box = null, cv = null, cx = null, lab = null, raf = 0, amp = 0, t0 = 0, N = 22, ph = [];
+    for (var i = 0; i < N; i++) ph.push(Math.random() * 6.28);
+    function ensure() {
+      if (box || !document.body) return;
+      box = document.createElement("div");
+      box.style.cssText = "position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9998;display:flex;align-items:center;gap:8px;padding:6px 14px 6px 10px;border-radius:999px;background:rgba(255,255,255,.96);box-shadow:0 2px 12px rgba(0,0,0,.16);pointer-events:none;font-family:inherit;transition:opacity .3s";
+      cv = document.createElement("canvas"); cv.width = 132 * 2; cv.height = 30 * 2; cv.style.cssText = "width:132px;height:30px;display:block";
+      lab = document.createElement("span"); lab.style.cssText = "font-size:13px;font-weight:800;color:#2a3a8c;white-space:nowrap";
+      box.appendChild(cv); box.appendChild(lab); document.body.appendChild(box); cx = cv.getContext("2d"); draw();
+    }
+    function speaking() { for (var i = 0; i < live.length; i++) if (!live[i].paused && !live[i].ended) return true; return false; }
+    function draw() {
+      if (!cx) return;
+      var on = speaking(); amp += ((on ? 1 : 0) - amp) * 0.12;
+      var W = cv.width, H = cv.height, bw = W / N; cx.clearRect(0, 0, W, H);
+      var t = (Date.now() - t0) / 1000;
+      for (var i = 0; i < N; i++) {
+        var e = 0.35 + 0.65 * Math.abs(Math.sin(t * (5 + i % 5) + ph[i]) * Math.sin(t * 2.3 + i * 0.7));
+        var h = Math.max(4, (H - 8) * e * amp + 6 * (1 - amp));
+        cx.fillStyle = on ? "hsl(" + (210 + i * 5) + ",75%,52%)" : "#c9cfdf";
+        var x = i * bw + bw * 0.2, w = bw * 0.6, y = (H - h) / 2;
+        cx.beginPath(); if (cx.roundRect) cx.roundRect(x, y, w, h, w / 2); else cx.rect(x, y, w, h); cx.fill();
+      }
+      lab.textContent = on ? "🔊 지나티처가 말하는 중" : "🔊 소리 켜 두기!";
+      lab.style.color = on ? "#2a3a8c" : "#8a93ad";
+      if (on || amp > 0.02) raf = requestAnimationFrame(draw); else raf = 0;
+    }
+    function kick() { ensure(); if (!raf) { t0 = t0 || Date.now(); raf = requestAnimationFrame(draw); } }
+    function watch(a) {
+      if (!a || a.__wv) return; a.__wv = 1; live.push(a);
+      a.addEventListener("playing", kick); a.addEventListener("pause", kick); a.addEventListener("ended", kick);
+    }
+    return { watch: watch, show: ensure };
+  })();
   // ── 배경음악·효과음 (원장님 2026-11-13 일레븐랩스 Pro "배경음악이나 목소리 아주 다양하게") ──
   // audio/fx/bgm.mp3 (작게, 목소리 나오면 더 작게), ding(맞음)·oops(틀림, 부드럽게)·tada(결과). 🎵 버튼으로 끄고 켬(기기에 기억).
   var FXV = "20261113b";
@@ -26,14 +63,14 @@
     var fadeT = null;
     function fadeTo(v) { clearInterval(fadeT); fadeT = setInterval(function () { var d = v - bgm.volume; if (Math.abs(d) < 0.01) { bgm.volume = v; clearInterval(fadeT); return; } bgm.volume = Math.max(0, Math.min(1, bgm.volume + d * 0.35)); }, 40); }
     function watch(a) {
-      if (!a || a.__fxw) return; a.__fxw = 1;
+      if (!a || a.__fxw) return; a.__fxw = 1; WAVE.watch(a);
       a.addEventListener("playing", function () { speaking = 1; fadeTo(target()); });
       var off = function () { setTimeout(function () { if (a.paused || a.ended) { speaking = 0; fadeTo(target()); } }, 350); };
       a.addEventListener("pause", off); a.addEventListener("ended", off); a.addEventListener("error", off);
     }
     function paint() { if (btn) { btn.textContent = on ? "🎵" : "🔇"; btn.title = on ? "배경음악 끄기" : "배경음악 켜기"; } }
     function start() {
-      started = true;
+      started = true; WAVE.show();
       if (!btn) {
         btn = document.createElement("button"); btn.type = "button";
         btn.style.cssText = "position:fixed;right:12px;bottom:12px;z-index:9999;width:46px;height:46px;border-radius:50%;border:0;font-size:22px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18);cursor:pointer";
@@ -172,8 +209,63 @@
     try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
   }
 
+  // ── 소리 확인 (원장님 11/15 "소리를 안 듣고는 못 배기게") ──
+  // 첫 문제 전에 단어 하나를 들려주고 그림 3개 중 고르기. 2번 연속 맞혀야 시작. 다 듣기 전에는 그림 잠금.
+  // 소리 파일이 아예 안 열리면(오류) 막히지 않게 통과.
+  var SC = [["bear","🐻"],["car","🚗"],["cow","🐄"],["egg","🥚"],["fish","🐟"],["fox","🦊"],["lion","🦁"],["pig","🐷"],["pizza","🍕"],["plane","✈️"],["rabbit","🐰"],["robot","🤖"],["ship","🚢"],["snake","🐍"],["star","⭐"],["sun","☀️"],["tiger","🐯"],["train","🚆"],["tree","🌳"],["umbrella","☂️"],["whale","🐳"],["zebra","🦓"],["octopus","🐙"],["elephant","🐘"],["drum","🥁"],["house","🏠"]];
+  var soundOK = false; try { if (new URLSearchParams(location.search).get("t") === "1") soundOK = true; } catch (e) {}
+  function soundCheck(done) {
+    var sa = new Audio(); FX.watch(sa);
+    var ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;z-index:9997;background:rgba(20,28,60,.55);display:flex;align-items:center;justify-content:center;padding:16px";
+    ov.innerHTML = '<div style="background:#fff;border-radius:22px;max-width:420px;width:100%;padding:22px 18px 18px;text-align:center;font-family:inherit;box-shadow:0 8px 30px rgba(0,0,0,.25)">' +
+      '<div style="font-size:22px;font-weight:900;color:#1e2b55">🔊 소리 확인!</div>' +
+      '<div class="sc-msg" style="font-size:16px;color:#444;margin:8px 0 14px;line-height:1.5">소리를 <b style="color:#c0392b">최대로</b> 키우고<br>들리는 단어의 그림을 눌러요</div>' +
+      '<div class="sc-ch" style="display:flex;gap:10px;justify-content:center"></div>' +
+      '<div class="sc-dots" style="margin:14px 0 10px;font-size:20px;letter-spacing:6px"></div>' +
+      '<button type="button" class="sc-again cv-btn">🔊 다시 듣기</button></div>';
+    document.body.appendChild(ov);
+    var ch = ov.querySelector(".sc-ch"), msg = ov.querySelector(".sc-msg"), dots = ov.querySelector(".sc-dots"), again = ov.querySelector(".sc-again");
+    var need = 2, got = 0, ans = null, errs = 0, last = "";
+    function paintDots() { var s = ""; for (var i = 0; i < need; i++) s += i < got ? "🟢" : "⚪"; dots.textContent = s; }
+    function lock(on) { ch.querySelectorAll("button").forEach(function (b) { b.disabled = on; b.style.opacity = on ? .45 : 1; }); again.disabled = on; }
+    function say() {
+      lock(true);
+      sa.onended = function () { lock(false); };
+      sa.onerror = function () { errs++; if (errs >= 2) { finish(); } else { lock(false); } };
+      sa.src = "audio/emma/" + ans[0] + ".mp3?v=1";
+      var p = sa.play(); if (p && p.catch) p.catch(function () { lock(false); });
+    }
+    function round() {
+      var pool = SC.filter(function (w) { return w[0] !== last; }), pick3 = [];
+      while (pick3.length < 3) { var w = pool[Math.floor(Math.random() * pool.length)]; if (pick3.indexOf(w) < 0) pick3.push(w); }
+      ans = pick3[Math.floor(Math.random() * 3)]; last = ans[0];
+      ch.innerHTML = "";
+      pick3.forEach(function (w) {
+        var b = document.createElement("button"); b.type = "button"; b.textContent = w[1];
+        b.style.cssText = "font-size:46px;width:96px;height:96px;border-radius:18px;border:3px solid #d8def8;background:#f6f8ff;cursor:pointer";
+        b.onclick = function () {
+          if (b.disabled) return;
+          if (w === ans) { got++; FX.play("ding", 0.75); paintDots(); if (got >= need) { msg.innerHTML = "<b style='color:#2e9e5b'>잘 들려요! 시작해요 👏</b>"; lock(true); setTimeout(finish, 900); return; } msg.innerHTML = "맞았어요! 하나 더 👂"; }
+          else { got = 0; FX.play("oops", 0.55); paintDots(); msg.innerHTML = "<b style='color:#c0392b'>앗! 소리가 안 들렸나요?</b><br>볼륨을 <b>끝까지</b> 올리고 다시 들어 봐요"; }
+          setTimeout(function () { round(); say(); }, 700);
+        };
+        ch.appendChild(b);
+      });
+    }
+    function finish() { if (soundOK) return; soundOK = true; try { sa.pause(); } catch (e) {} ov.remove(); done(); }
+    again.onclick = function () { if (!again.disabled) say(); };
+    paintDots(); round(); say();
+  }
+
   var origShow = window.showQuestion;
   window.showQuestion = function () {
+    var self = this, args = arguments;
+    if (!soundOK) {
+      if (!FX.started()) FX.start();
+      soundCheck(function () { window.showQuestion.apply(self, args); });
+      return;
+    }
     var r = origShow.apply(this, arguments);
     var idx = window.current;
     if (!FX.started()) FX.start();
