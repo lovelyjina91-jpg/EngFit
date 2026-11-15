@@ -246,7 +246,7 @@
         b.style.cssText = "font-size:46px;width:96px;height:96px;border-radius:18px;border:3px solid #d8def8;background:#f6f8ff;cursor:pointer";
         b.onclick = function () {
           if (b.disabled) return;
-          if (w === ans) { got++; FX.play("ding", 0.75); paintDots(); if (got >= need) { msg.innerHTML = "<b style='color:#2e9e5b'>잘 들려요! 시작해요 👏</b>"; lock(true); setTimeout(finish, 900); return; } msg.innerHTML = "맞았어요! 하나 더 👂"; }
+          if (w === ans) { got++; paintDots(); if (got >= need) { msg.innerHTML = "<b style='color:#2e9e5b'>잘 들려요! 시작해요 👏</b>"; lock(true); var pl = ["praise/p1_3", "praise/p2_3", "praise/p3_3", "praise/p4_3", "praise/p5_3", "praise/p6_3", "praise/p7_3", "praise/p8_3", "praise/p9_3"]; sa.onended = sa.onerror = finish; setTimeout(finish, 5000); sa.src = "audio/fx/" + pl[Math.floor(Math.random() * pl.length)] + ".mp3?v=1114"; var pp = sa.play(); if (pp && pp.catch) pp.catch(function () { setTimeout(finish, 600); }); return; } msg.innerHTML = "맞았어요! 하나 더 👂"; }
           else { got = 0; FX.play("oops", 0.55); paintDots(); msg.innerHTML = "<b style='color:#c0392b'>앗! 소리가 안 들렸나요?</b><br>볼륨을 <b>끝까지</b> 올리고 다시 들어 봐요"; }
           setTimeout(function () { round(); say(); }, 700);
         };
@@ -335,7 +335,7 @@
     if (!advance) return;
     stop();
     var ok = !unknown && choice === q.answer;
-    if (!unknown) FX.play(ok ? "ding" : "oops", ok ? 0.75 : 0.55);
+    if (!unknown && !ok) FX.play("oops", 0.55); // 원장님 11/15 "맞을 때 땡 소리 말고 지나티처 목소리만"
     var cheerKind = unknown ? "un" : (ok ? "ok" : "no");
     document.querySelectorAll(".cv-bar").forEach(function (b) { b.remove(); });
     var box = document.getElementById("choices");
