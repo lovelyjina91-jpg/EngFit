@@ -53,17 +53,18 @@
   })();
   // ── 배경음악·효과음 (원장님 2026-11-13 일레븐랩스 Pro "배경음악이나 목소리 아주 다양하게") ──
   // audio/fx/bgm.mp3 (작게, 목소리 나오면 더 작게), ding(맞음)·oops(틀림, 부드럽게)·tada(결과). 🎵 버튼으로 끄고 켬(기기에 기억).
-  var FXV = "20261113b";
+  var FXV = "20261116q";
   var FX = (function () {
     var on = true; try { on = localStorage.getItem("engfit-bgm") !== "off"; } catch (e) {}
     var bgmName = "bgm"; try { var qb = new URLSearchParams(location.search).get("bgm"); if (qb === "1") bgmName = "bgm_a"; else if (qb === "2") bgmName = "bgm_b"; } catch (e) {}
     // 원장님 11/16: 배경음악은 목소리의 10분의 1 크기, 목소리 나오면 확 사라지게 (파일마다 소리 크기가 달라 맞춤 값)
-    var BASE_VOL = { bgm: 0.05, bgm_a: 0.05, bgm_b: 0.11 }[bgmName] || 0.05;
+    // 11/16 저녁: 아이패드·아이폰은 소리 크기 조절(volume)이 안 먹어서 → 음악 파일 자체를 목소리의 10분의 1로 줄여 두고, 목소리 나오면 음악을 멈춤(pause)
+    var BASE_VOL = 1;
     var bgm = new Audio("audio/fx/" + bgmName + ".mp3?v=" + FXV); bgm.loop = true; bgm.volume = BASE_VOL;
     var sfx = new Audio(); var speaking = 0, started = false, btn = null;
     function target() { return speaking > 0 ? 0 : BASE_VOL; }
     var fadeT = null;
-    function fadeTo(v) { clearInterval(fadeT); if (v < bgm.volume) { bgm.volume = v; return; } fadeT = setInterval(function () { var d = v - bgm.volume; if (Math.abs(d) < 0.01) { bgm.volume = v; clearInterval(fadeT); return; } bgm.volume = Math.max(0, Math.min(1, bgm.volume + d * 0.35)); }, 40); }
+    function fadeTo(v) { clearInterval(fadeT); if (v <= 0) { bgm.volume = 0; try { bgm.pause(); } catch (e) {} return; } if (on && started && !speaking && bgm.paused) { bgm.volume = 0; var pq = bgm.play(); if (pq && pq.catch) pq.catch(function () {}); } fadeT = setInterval(function () { var d = v - bgm.volume; if (Math.abs(d) < 0.01) { bgm.volume = v; clearInterval(fadeT); return; } bgm.volume = Math.max(0, Math.min(1, bgm.volume + d * 0.35)); }, 40); }
     var watched = [];
     function anyLive() { for (var i = 0; i < watched.length; i++) { var x = watched[i]; if (!x.paused && !x.ended) return true; } return false; }
     function watch(a) {
@@ -81,10 +82,10 @@
         btn.onclick = function () { on = !on; try { localStorage.setItem("engfit-bgm", on ? "on" : "off"); } catch (e) {} paint(); if (on) { var p = bgm.play(); if (p && p.catch) p.catch(function () {}); } else bgm.pause(); };
         document.body.appendChild(btn); paint();
       }
-      if (on) { bgm.volume = target(); var p = bgm.play(); if (p && p.catch) p.catch(function () {}); }
+      if (on && !speaking) { bgm.volume = target(); var p = bgm.play(); if (p && p.catch) p.catch(function () {}); }
     }
     function play(name, vol) { try { sfx.pause(); sfx.src = "audio/fx/" + name + ".mp3?v=" + FXV; sfx.volume = vol || 0.8; var p = sfx.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
-    function end() { fadeTo(0); setTimeout(function () { bgm.pause(); }, 900); }
+    function end() { started = false; fadeTo(0); }
     return { watch: watch, start: start, play: play, end: end, started: function () { return started; } };
   })();
   FX.watch(aud);
