@@ -57,15 +57,19 @@
   var FX = (function () {
     var on = true; try { on = localStorage.getItem("engfit-bgm") !== "off"; } catch (e) {}
     var bgmName = "bgm"; try { var qb = new URLSearchParams(location.search).get("bgm"); if (qb === "1") bgmName = "bgm_a"; else if (qb === "2") bgmName = "bgm_b"; } catch (e) {}
-    var bgm = new Audio("audio/fx/" + bgmName + ".mp3?v=" + FXV); bgm.loop = true; bgm.volume = 0.13;
+    // 원장님 11/16: 배경음악은 목소리의 10분의 1 크기, 목소리 나오면 확 사라지게 (파일마다 소리 크기가 달라 맞춤 값)
+    var BASE_VOL = { bgm: 0.05, bgm_a: 0.05, bgm_b: 0.11 }[bgmName] || 0.05;
+    var bgm = new Audio("audio/fx/" + bgmName + ".mp3?v=" + FXV); bgm.loop = true; bgm.volume = BASE_VOL;
     var sfx = new Audio(); var speaking = 0, started = false, btn = null;
-    function target() { return speaking > 0 ? 0.035 : 0.13; }
+    function target() { return speaking > 0 ? 0 : BASE_VOL; }
     var fadeT = null;
-    function fadeTo(v) { clearInterval(fadeT); fadeT = setInterval(function () { var d = v - bgm.volume; if (Math.abs(d) < 0.01) { bgm.volume = v; clearInterval(fadeT); return; } bgm.volume = Math.max(0, Math.min(1, bgm.volume + d * 0.35)); }, 40); }
+    function fadeTo(v) { clearInterval(fadeT); if (v < bgm.volume) { bgm.volume = v; return; } fadeT = setInterval(function () { var d = v - bgm.volume; if (Math.abs(d) < 0.01) { bgm.volume = v; clearInterval(fadeT); return; } bgm.volume = Math.max(0, Math.min(1, bgm.volume + d * 0.35)); }, 40); }
+    var watched = [];
+    function anyLive() { for (var i = 0; i < watched.length; i++) { var x = watched[i]; if (!x.paused && !x.ended) return true; } return false; }
     function watch(a) {
-      if (!a || a.__fxw) return; a.__fxw = 1; WAVE.watch(a);
+      if (!a || a.__fxw || a === bgm || a === sfx) return; a.__fxw = 1; watched.push(a); WAVE.watch(a);
       a.addEventListener("playing", function () { speaking = 1; fadeTo(target()); });
-      var off = function () { setTimeout(function () { if (a.paused || a.ended) { speaking = 0; fadeTo(target()); } }, 350); };
+      var off = function () { setTimeout(function () { if (!anyLive()) { speaking = 0; fadeTo(target()); } }, 1200); };
       a.addEventListener("pause", off); a.addEventListener("ended", off); a.addEventListener("error", off);
     }
     function paint() { if (btn) { btn.textContent = on ? "🎵" : "🔇"; btn.title = on ? "배경음악 끄기" : "배경음악 켜기"; } }
@@ -84,6 +88,7 @@
     return { watch: watch, start: start, play: play, end: end, started: function () { return started; } };
   })();
   FX.watch(aud);
+  try { var _pp = HTMLMediaElement.prototype.play; HTMLMediaElement.prototype.play = function () { try { FX.watch(this); } catch (e) {} return _pp.apply(this, arguments); }; } catch (e) {}
   // 인사·명언만 (사진 클리닉 hte 처럼 QUESTIONS/showQuestion 이 없는 페이지): 첫 화면에서 인사, 결과 화면에서 명언
   if (CV.greetOnly) {
     if (window.twinAud) FX.watch(window.twinAud); if (window.cheerAud) FX.watch(window.cheerAud); // hte: 페이지 소리 나올 때 배경음악 줄이기
