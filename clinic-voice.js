@@ -76,6 +76,7 @@
     function paint() { if (btn) { btn.textContent = on ? "🎵" : "🔇"; btn.title = on ? "배경음악 끄기" : "배경음악 켜기"; } }
     function start() {
       started = true; WAVE.show();
+      if (window.CV_NO_BGM) return;   /* 선생님 11/17: 앞으로 만드는 쪽은 배경음악 없음 (쪽에서 CV_NO_BGM=true) — 예전 쪽은 그대로 */
       if (!btn) {
         btn = document.createElement("button"); btn.type = "button";
         btn.style.cssText = "position:fixed;right:12px;bottom:12px;z-index:9999;width:46px;height:46px;border-radius:50%;border:0;font-size:22px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18);cursor:pointer";
