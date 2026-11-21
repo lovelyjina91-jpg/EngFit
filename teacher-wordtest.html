@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>단어 시험 점수 적기</title>
+<style>
+:root{--bg:#f5f1ea;--ink:#1c1c1e;--mute:#7a746b;--line:#d9d2c6;--navy:#1f3a63;--accent:#c9a45c;--card:#fffdf9;--ok:#2e7d6e;--bad:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;padding:16px}
+.wrap{max-width:520px;margin:0 auto}
+h1{font-size:22px;margin:8px 0 4px;color:var(--navy)}
+.sub{color:var(--mute);font-size:14px;margin-bottom:16px;line-height:1.5}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:14px;font-weight:700;margin:12px 0 6px}
+label:first-child{margin-top:0}
+input,select{width:100%;font-size:18px;padding:10px 12px;border:2px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+input:focus,select:focus{outline:none;border-color:var(--navy)}
+.row{display:flex;gap:10px}.row>div{flex:1}
+.seg{display:flex;gap:8px}.seg button{flex:1;font-size:17px;padding:10px;border:2px solid var(--line);border-radius:10px;background:#fff;cursor:pointer}
+.seg button.on{border-color:var(--navy);background:var(--navy);color:#fff;font-weight:700}
+.big{width:100%;font-size:19px;font-weight:800;color:#fff;background:var(--navy);border:0;border-radius:12px;padding:14px;margin-top:16px;cursor:pointer}
+.big:disabled{opacity:.5}
+.ghost{width:100%;font-size:16px;color:var(--navy);background:#fff;border:2px solid var(--navy);border-radius:12px;padding:11px;margin-top:10px;cursor:pointer}
+.res{font-size:16px;line-height:1.6;margin-top:8px}
+.pass{color:var(--ok);font-weight:800}.again{color:var(--bad);font-weight:800}
+#submit-status{margin-top:8px;font-weight:700}
+.hint{font-size:13px;color:var(--mute);margin-top:4px}
+.log{font-size:14px;line-height:1.7;color:#4a463f}
+</style></head><body><div class="wrap">
+<h1>단어 시험 점수 적기</h1>
+<div class="sub">선생님용 · 적으면 결과기록 시트로 가고, 밤마다 노션 「학습 기록」에 들어가요.<br>통과 기준: DAY 하나에 20개 중 18개 (90%).</div>
+
+<div class="card" id="form">
+  <label for="nm">학생 이름</label>
+  <input id="nm" placeholder="예: 홍길동" autocomplete="off" list="recent">
+  <datalist id="recent"></datalist>
+
+  <label>오늘 본 DAY 수</label>
+  <div class="seg" id="cnt"><button type="button" data-v="1">DAY 1개 (초1~4)</button><button type="button" data-v="2" class="on">DAY 2개 (초5 이상)</button></div>
+
+  <div class="row">
+    <div><label for="day">첫 DAY</label><input id="day" type="number" inputmode="numeric" min="1" max="40" placeholder="예: 3"></div>
+    <div><label for="per">DAY당 문항</label><input id="per" type="number" inputmode="numeric" value="20" min="1" max="40"></div>
+  </div>
+
+  <div class="row">
+    <div><label for="sc">맞은 개수</label><input id="sc" type="number" inputmode="numeric" min="0" placeholder="예: 37"></div>
+    <div><label>전체</label><input id="tot" type="number" readonly></div>
+  </div>
+
+  <label for="ww">틀린 단어 (있으면, 쉼표로)</label>
+  <input id="ww" placeholder="예: weather, important" autocomplete="off">
+  <div class="hint">틀린 단어를 적어 두면 다음 시험·클리닉에 쓸 수 있어요.</div>
+
+  <button class="big" id="go" type="button">적기</button>
+  <div class="res" id="res"></div>
+  <div id="submit-status"></div>
+  <button class="ghost" id="next" type="button" style="display:none">다음 학생</button>
+</div>
+
+<div class="card"><div style="font-weight:700;margin-bottom:6px">오늘 적은 것</div><div class="log" id="log">아직 없어요.</div></div>
+</div>
+
+<script>
+var ENGFIT_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbz5IC3cEtaBGW10qZhrjwtjdtGugmcmYb4ZTHS4k-1LOqTRYzW-LfoAPyFB_ShjAqNp/exec"; // 2026-07-02 배포, 작동 확인됨
+async function engfitSubmit(r) {
+  var body = JSON.stringify(r);
+  try {
+    var res = await fetch(ENGFIT_SUBMIT_URL, { method: "POST", body: body });
+    var j = await res.json();
+    return j.ok === true;
+  } catch (e) {
+    try { await fetch(ENGFIT_SUBMIT_URL, { method: "POST", mode: "no-cors", body: body }); return true; }
+    catch (e2) { return false; }
+  }
+}
+var _engfitSent = false;
+async function engfitSubmitWithStatus(r) {
+  if (_engfitSent) return;
+  _engfitSent = true;
+  var el = document.getElementById("submit-status");
+  if (el) { el.textContent = "결과 전송 중..."; el.style.color = "#888"; }
+  var ok = await engfitSubmit(r);
+  if (el) {
+    if (ok) { el.textContent = "✓ 결과기록 시트로 보냈어요"; el.style.color = "#2e7d6e"; }
+    else { el.textContent = "전송이 안 됐어요 — 와이파이를 확인하고 「다음 학생」 없이 다시 눌러 주세요"; el.style.color = "#c0392b"; _engfitSent = false; }
+  }
+  return ok;
+}
+
+function $(i){return document.getElementById(i)}
+function sget(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}}
+function sset(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var n = 2;
+function tot(){ var p = parseInt($('per').value,10)||20; $('tot').value = p*n; }
+document.querySelectorAll('#cnt button').forEach(function(b){ b.onclick=function(){
+  document.querySelectorAll('#cnt button').forEach(function(x){x.classList.remove('on')}); b.classList.add('on'); n=parseInt(b.dataset.v,10); tot(); }; });
+$('per').addEventListener('input',tot); tot();
+function recent(){ var r=sget('ef_wt_names')||[]; $('recent').innerHTML=r.map(function(x){return '<option value="'+x.replace(/"/g,'')+'">'}).join(''); }
+recent();
+function today(){ var d=new Date(); return (d.getMonth()+1)+'/'+d.getDate(); }
+function pad(x){return (x<10?'0':'')+x}
+function drawLog(){ var L=sget('ef_wt_log_'+today())||[]; $('log').innerHTML=L.length?L.map(function(x){return x}).join('<br>'):'아직 없어요.'; }
+drawLog();
+
+$('go').onclick = async function(){
+  var name=$('nm').value.trim(), day=parseInt($('day').value,10), sc=parseInt($('sc').value,10), total=parseInt($('tot').value,10), per=parseInt($('per').value,10)||20;
+  if(!name){$('res').textContent='학생 이름을 넣어 주세요.';return}
+  if(!(day>=1)){$('res').textContent='첫 DAY 번호를 넣어 주세요.';return}
+  if(!(sc>=0) || sc>total){$('res').textContent='맞은 개수를 0~'+total+' 사이로 넣어 주세요.';return}
+  var days=[]; for(var i=0;i<n;i++) days.push(day+i);
+  var dl=days.map(function(d){return 'DAY '+pad(d)}).join('·');
+  var need=Math.ceil(total*0.9), pass=sc>=need;
+  var words=$('ww').value.split(/[,，]/).map(function(s){return s.trim()}).filter(Boolean);
+  var detail=words.map(function(w,i){return {no:i+1, ok:false, chosen:'', answer:w, tag:'단어·철자'}});
+  $('go').disabled=true;
+  $('res').innerHTML=name+' · '+dl+' · <b>'+sc+'/'+total+'</b> → '+(pass?'<span class="pass">통과</span>':'<span class="again">다음 시간 같은 DAY 다시</span>');
+  var ok = await engfitSubmitWithStatus({
+    quizId: 'vocab-wordtest',
+    quizTitle: name+' 단어 시험 '+dl+' '+today()+(pass?' 통과':' 다시'),
+    student: name, score: sc, total: total,
+    wrong: words.map(function(_,i){return i+1}), durationSec: 0, detail: detail
+  });
+  if(ok){
+    var r=sget('ef_wt_names')||[]; r=[name].concat(r.filter(function(x){return x!==name})).slice(0,60); sset('ef_wt_names',r); recent();
+    var L=sget('ef_wt_log_'+today())||[]; L.push(name+' · '+dl+' · '+sc+'/'+total+(pass?' 통과':' 다시')); sset('ef_wt_log_'+today(),L); drawLog();
+    $('next').style.display='block';
+  } else { $('go').disabled=false; }
+};
+$('next').onclick=function(){ _engfitSent=false; $('nm').value=''; $('day').value=''; $('sc').value=''; $('ww').value=''; $('res').textContent=''; $('submit-status').textContent=''; $('go').disabled=false; $('next').style.display='none'; $('nm').focus(); };
+</script>
+<!-- engfit-watermark: 영핏 로고 흐린 배경 (GUIDELINES.md 「로고 배경」) --><div class="engfit-wm" aria-hidden="true" style="position:fixed;left:50%;top:50%;width:min(70vw,520px);aspect-ratio:900/608;transform:translate(-50%,-50%);background:url(assets/engfit-logo.png) center/contain no-repeat;opacity:.06;pointer-events:none;z-index:9999"></div>
+</body></html>
